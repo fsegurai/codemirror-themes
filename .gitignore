@@ -4,5 +4,7 @@
 **/test/*.js
 **/test/*.d.ts
 **/test/*.d.ts.map
+**/.idea/*
+**/.vscode/*
 .tern-*
 .DS_STORE
