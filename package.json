@@ -1,17 +1,17 @@
 {
-  "name": "@codemirror/theme",
+  "name": "codemirror-themes",
   "description": "Theme packages for the CodeMirror code editor",
   "workspaces": [
     "packages/*"
   ],
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": true,
   "type": "module",
   "scripts": {
     "clean": "rimraf --glob ./packages/*/dist ./example/dist",
     "example": "rollup -c rollup.example.config.js",
     "example:watch": "rollup -w -c rollup.example.config.js",
-    "prepare": "npm run -w '*' prepare"
+    "prepare:themes": "npm run -w '*' prepare"
   },
   "keywords": [
     "editor",
