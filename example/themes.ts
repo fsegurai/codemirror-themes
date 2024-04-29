@@ -1,3 +1,4 @@
+import { abcdef } from '../packages/abcdef/src'
 import { basicDark } from '../packages/basic-dark/src'
 import { basicLight } from '../packages/basic-light/src'
 import { gruvboxDark } from '../packages/gruvbox-dark/src'
@@ -9,6 +10,10 @@ import { solarizedDark } from '../packages/solarized-dark'
 import { solarizedLight } from '../packages/solarized-light/src'
 
 const themes = [
+  {
+    name: 'abcdef',
+    extension: abcdef
+  },
   {
     name: 'basic-dark',
     extension: basicDark
