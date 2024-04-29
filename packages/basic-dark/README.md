@@ -1,6 +1,6 @@
 <!-- NOTE: README.md is generated from src/README.md -->
 
-# codemirror-theme-basic-dark [![NPM version](https://img.shields.io/npm/v/codemirror-theme-basic-dark.svg)](https://www.npmjs.org/package/codemirror-theme-basic-dark)
+# @fsegurai/codemirror-theme-basic-dark [![NPM version](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-basic-dark.svg)](https://www.npmjs.org/package/@fsegurai/codemirror-theme-basic-dark)
 
 [ [**WEBSITE**](https://codemirror.net/6/) | [**ISSUES**](https://github.com/codemirror/codemirror.next/issues) | [**FORUM**](https://discuss.codemirror.net/c/next/) | [**CHANGELOG**](https://github.com/codemirror/theme-one-dark/blob/main/CHANGELOG.md) ]
 

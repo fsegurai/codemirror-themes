@@ -1,6 +1,6 @@
 <!-- NOTE: README.md is generated from src/README.md -->
 
-# codemirror-theme-material-light [![NPM version](https://img.shields.io/npm/v/codemirror-theme-material-light.svg)](https://www.npmjs.org/package/codemirror-theme-material-light)
+# @fsegurai/codemirror-theme-material-light [![NPM version](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-material-light.svg)](https://www.npmjs.org/package/@fsegurai/codemirror-theme-material-light)
 
 [ [**WEBSITE**](https://codemirror.net/6/) | [**ISSUES**](https://github.com/codemirror/codemirror.next/issues) | [*
 *FORUM**](https://discuss.codemirror.net/c/next/) | [**CHANGELOG
