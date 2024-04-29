@@ -10,6 +10,7 @@ Themes for [CodeMirror 6](https://codemirror.net/).
 
 - [Abcdef](./packages/abcdef)
 - [Abyss](./packages/abyss)
+- [Android Studio](./packages/android-studio)
 - [Basic Light](./packages/basic-light)
 - [Basic Dark](./packages/basic-dark)
 - [Solarized Light](./packages/solarized-light)

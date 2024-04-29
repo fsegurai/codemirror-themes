@@ -1,5 +1,6 @@
 import { abcdef } from '../packages/abcdef/src'
 import { abyss } from '../packages/abyss/src'
+import { androidStudio } from '../packages/android-studio/src'
 import { basicDark } from '../packages/basic-dark/src'
 import { basicLight } from '../packages/basic-light/src'
 import { gruvboxDark } from '../packages/gruvbox-dark/src'
@@ -18,6 +19,10 @@ const themes = [
   {
     name: 'abyss',
     extension: abyss
+  },
+  {
+    name: 'android-studio',
+    extension: androidStudio
   },
   {
     name: 'basic-dark',
