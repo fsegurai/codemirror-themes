@@ -1,6 +1,6 @@
 <!-- NOTE: README.md is generated from src/README.md -->
 
-# codemirror-theme-nord [![NPM version](https://img.shields.io/npm/v/codemirror-theme-nord.svg)](https://www.npmjs.org/package/codemirror-theme-nord)
+# @fsegurai/codemirror-theme-nord [![NPM version](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-nord.svg)](https://www.npmjs.org/package/@fsegurai/codemirror-theme-nord)
 
 [ [**WEBSITE**](https://codemirror.net/6/) | [**ISSUES**](https://github.com/codemirror/codemirror.next/issues) | [*
 *FORUM**](https://discuss.codemirror.net/c/next/) | [**CHANGELOG

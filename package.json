@@ -1,10 +1,10 @@
 {
-  "name": "codemirror-themes",
+  "name": "@fsegurai/codemirror-themes",
   "description": "Theme packages for the CodeMirror code editor",
   "workspaces": [
     "packages/*"
   ],
-  "version": "0.5.1",
+  "version": "0.5.2",
   "private": true,
   "type": "module",
   "scripts": {

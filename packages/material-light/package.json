@@ -1,5 +1,5 @@
 {
-  "name": "codemirror-theme-material-light",
+  "name": "@fsegurai/codemirror-theme-material-light",
   "description": "Material Light theme for the CodeMirror code editor",
   "version": "6.0.1-alpha.0",
   "type": "module",

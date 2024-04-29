@@ -1,6 +1,6 @@
 <!-- NOTE: README.md is generated from src/README.md -->
 
-# codemirror-theme-gruvbox-dark [![NPM version](https://img.shields.io/npm/v/codemirror-theme-gruvbox-dark.svg)](https://www.npmjs.org/package/codemirror-theme-gruvbox-dark)
+# @fsegurai/codemirror-theme-gruvbox-dark [![NPM version](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-gruvbox-dark.svg)](https://www.npmjs.org/package/@fsegurai/codemirror-theme-gruvbox-dark)
 
 [ [**WEBSITE**](https://codemirror.net/6/) | [**ISSUES**](https://github.com/codemirror/codemirror.next/issues) | [*
 *FORUM**](https://discuss.codemirror.net/c/next/) | [**CHANGELOG

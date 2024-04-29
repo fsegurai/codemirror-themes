@@ -13,13 +13,13 @@ Themes for [CodeMirror 6](https://codemirror.net/).
 - [Android Studio](./packages/android-studio)
 - [Basic Light](./packages/basic-light)
 - [Basic Dark](./packages/basic-dark)
-- [Solarized Light](./packages/solarized-light)
-- [Solarized Dark](./packages/solarized-dark)
+- [Gruvbox Light](./packages/gruvbox-light)
+- [Gruvbox Dark](./packages/gruvbox-dark)
 - [Material Dark](./packages/material-dark)
 - [Material Light](./packages/material-light)
 - [Nord](./packages/nord)
-- [Gruvbox Light](./packages/gruvbox-light)
-- [Gruvbox Dark](./packages/gruvbox-dark)
+- [Solarized Light](./packages/solarized-light)
+- [Solarized Dark](./packages/solarized-dark)
 
 ## How to use
 
