@@ -1,4 +1,5 @@
 import { abcdef } from '../packages/abcdef/src'
+import { abyss } from '../packages/abyss/src'
 import { basicDark } from '../packages/basic-dark/src'
 import { basicLight } from '../packages/basic-light/src'
 import { gruvboxDark } from '../packages/gruvbox-dark/src'
@@ -13,6 +14,10 @@ const themes = [
   {
     name: 'abcdef',
     extension: abcdef
+  },
+  {
+    name: 'abyss',
+    extension: abyss
   },
   {
     name: 'basic-dark',
