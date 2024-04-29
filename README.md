@@ -11,6 +11,7 @@ Themes for [CodeMirror 6](https://codemirror.net/).
 - [Abcdef](./packages/abcdef)
 - [Abyss](./packages/abyss)
 - [Android Studio](./packages/android-studio)
+- [Andromeda](./packages/andromeda)
 - [Basic Light](./packages/basic-light)
 - [Basic Dark](./packages/basic-dark)
 - [Gruvbox Light](./packages/gruvbox-light)
