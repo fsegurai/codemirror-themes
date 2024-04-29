@@ -3,6 +3,7 @@ import { basicLight } from '../packages/basic-light/src'
 import { gruvboxDark } from '../packages/gruvbox-dark/src'
 import { gruvboxLight } from '../packages/gruvbox-light/src'
 import { materialDark } from '../packages/material-dark/src'
+import { nord } from '../packages/nord/src'
 import { solarizedDark } from '../packages/solarized-dark'
 import { solarizedLight } from '../packages/solarized-light/src'
 
@@ -26,6 +27,10 @@ const themes = [
   {
     name: 'material-dark',
     extension: materialDark
+  },
+  {
+    name: 'nord',
+    extension: nord
   },
   {
     name: 'solarized-dark',
