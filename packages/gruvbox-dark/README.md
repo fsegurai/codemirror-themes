@@ -6,7 +6,7 @@
 *FORUM**](https://discuss.codemirror.net/c/next/) | [**CHANGELOG
 **](https://github.com/codemirror/theme-one-dark/blob/main/CHANGELOG.md) ]
 
-This package implements the Solarized Dark theme for the
+This package implements the Gruvbox Dark theme for the
 [CodeMirror](https://codemirror.net/6/) code editor.
 
 The [project page](https://codemirror.net/6/) has more information, a
