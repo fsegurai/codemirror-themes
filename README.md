@@ -8,6 +8,7 @@ Themes for [CodeMirror 6](https://codemirror.net/).
 
 ## Available themes
 
+- [Abcdef](./packages/abcdef)
 - [Basic Light](./packages/basic-light)
 - [Basic Dark](./packages/basic-dark)
 - [Solarized Light](./packages/solarized-light)
