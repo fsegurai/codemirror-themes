@@ -4,6 +4,8 @@ import { androidStudio } from '../packages/android-studio/src'
 import { andromeda } from '../packages/andromeda'
 import { basicDark } from '../packages/basic-dark/src'
 import { basicLight } from '../packages/basic-light/src'
+import { githubDark } from '../packages/github-dark/src'
+import { githubLight } from '../packages/github-light/src'
 import { gruvboxDark } from '../packages/gruvbox-dark/src'
 import { gruvboxLight } from '../packages/gruvbox-light/src'
 import { materialDark } from '../packages/material-dark/src'
@@ -36,6 +38,14 @@ const themes = [
   {
     name: 'basic-light',
     extension: basicLight
+  },
+  {
+    name: 'github-dark',
+    extension: githubDark
+  },
+  {
+    name: 'github-light',
+    extension: githubLight
   },
   {
     name: 'gruvbox-dark',
