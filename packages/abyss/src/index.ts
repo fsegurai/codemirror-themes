@@ -22,6 +22,7 @@ const base00 = '#000c18', // Background
   base0E = '#ddbb88', // Class
   base0F = '#6688cc', // Heading
   base10 = '#225588', // Tag
+  base11 = '#ff00ff8a', // Link
   invalid = '#A22D44' // Invalid
 
 // Define the editor theme styles for Abyss.
@@ -36,8 +37,17 @@ export const abyssTheme = EditorView.theme({
   '.cm-cursor, .cm-dropCursor': {
     borderLeftColor: base05
   },
-  '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-content ::selection': {
+  '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
     backgroundColor: base02
+  },
+  '.cm-searchMatch': {
+    backgroundColor: base0C,
+    outline: `1px solid ${base03}`,
+    color: base07
+  },
+  '.cm-searchMatch.cm-searchMatch-selected': {
+    backgroundColor: base11,
+    color: base07
   },
   '.cm-panels': {
     backgroundColor: base03,

@@ -30,7 +30,7 @@ export const androidStudioTheme = EditorView.theme({
   '&.cm-focused .cm-cursor': {
     borderLeftColor: base04
   },
-  '&.cm-focused .cm-selectionBackground, .cm-content ::selection': {
+  '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
     backgroundColor: base02
   },
   '.cm-activeLine': {
