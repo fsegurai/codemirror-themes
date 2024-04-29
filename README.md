@@ -22,15 +22,16 @@ Themes for [CodeMirror 6](https://codemirror.net/).
 
 ```js
 import { EditorView, basicSetup } from 'codemirror'
-import { javascript } from "@codemirror/lang-javascript"
-import { solarizedDark } from 'codemirror-theme-solarized-dark'
+import { javascript } from '@codemirror/lang-javascript'
+import { markdown } from '@codemirror/lang-markdown'
+import { basicLight } from 'codemirror-theme-basic-light'
 
 let editor = new EditorView({
-  doc: 'Hello',
+  doc: '# Hello World',
   extensions: [
     basicSetup,
-    javascript(),
-    solarizedDark
+    markdown(),
+    basicLight
   ],
   parent: document.body
 })
