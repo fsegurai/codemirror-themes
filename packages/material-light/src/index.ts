@@ -10,7 +10,6 @@ const base00 = '#FAFAFA', // Lighter background
   base04 = '#B0BEC5', // Cursor and line numbers
   base05 = '#557C8D', // Variables and attributes
   base06 = '#ECEFF1', // Light borders or divisions
-  base07 = '#FFFFFF', // Active line background
   base_red = '#FF0000', // For errors and invalid
   base_deeporange = '#FF7043', // Deep orange for tags
   base_pink = '#FF4081', // Pink for definitions
@@ -20,15 +19,15 @@ const base00 = '#FAFAFA', // Lighter background
   base_indigo = '#5C6BC0', // Indigo for operators
   base_purple = '#AB47BC', // Purple for labels and braces
   base_green = '#1E951D',
-  base_lightgreen = '#689E34',
-  base_teal = '#26A69A' // Teal for matching brackets
+  base_lightgreen = '#689E34'
 
 const invalid = base_red,
-  darkBackground = base05, // Lightened for visibility
   highlightBackground = '#ECEFF1', // More visible highlight background
   background = base00,
   tooltipBackground = base01,
   selection = '#DDEEFF',
+  selectionMatch = '#90a4ae26',
+  match = '#b0bec56b',
   cursor = base04
 
 // Theme configuration adjusted for better contrast and color consistency
@@ -53,10 +52,14 @@ export const materialLightTheme = EditorView.theme({
       outline: `1px solid ${base_yellow}`,
       backgroundColor: 'rgba(255, 215, 64, 0.3)' // Semi-transparent
     },
+    '.cm-searchMatch.cm-searchMatch-selected': {
+      backgroundColor: selectionMatch
+    },
     '.cm-activeLine': {
-      backgroundColor: base07,
+      backgroundColor: selectionMatch,
       color: base02
     },
+    '.cm-selectionMatch': { backgroundColor: match },
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
       backgroundColor: selection // Updated selection color
     },
