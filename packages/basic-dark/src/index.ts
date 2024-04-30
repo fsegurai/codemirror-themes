@@ -7,7 +7,6 @@ const base00 = '#2E3235',
   base01 = '#DDDDDD',
   base02 = '#B9D2FF',
   base03 = '#b0b0b0',
-  base04 = '#d0d0d0',
   base05 = '#e0e0e0',
   base06 = '#808080',
   base07 = '#000000',
@@ -25,7 +24,7 @@ const invalid = base09,
   highlightBackground = base02 + '30',
   background = base00,
   tooltipBackground = base01,
-  selection = '#202325',
+  selection = '#b2cbf9b8',
   cursor = base01
 
 /// The editor theme styles for Basic Dark.
@@ -42,7 +41,10 @@ export const basicDarkTheme = EditorView.theme(
 
     '.cm-cursor, .cm-dropCursor': { borderLeftColor: cursor },
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
-      { backgroundColor: selection },
+      {
+        backgroundColor: selection,
+        color: '#000000'
+      },
 
     '.cm-panels': { backgroundColor: darkBackground, color: base03 },
     '.cm-panels.cm-panels-top': { borderBottom: '2px solid black' },
@@ -55,6 +57,15 @@ export const basicDarkTheme = EditorView.theme(
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
       backgroundColor: base05,
+      color: base07
+    },
+    '.cm-searchMatch .cm-selectionMatch': {
+      color: base07
+    },
+    '.cm-searchMatch .cm-selectionMatch .ͼ3w': {
+      color: base07
+    },
+    '.cm-searchMatch .ͼ3w': {
       color: base07
     },
 
@@ -77,7 +88,8 @@ export const basicDarkTheme = EditorView.theme(
     },
 
     '.cm-activeLineGutter': {
-      backgroundColor: highlightBackground
+      backgroundColor: selection,
+      color: '#000000'
     },
 
     '.cm-foldPlaceholder': {
