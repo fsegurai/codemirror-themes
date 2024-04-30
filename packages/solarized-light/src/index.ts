@@ -22,10 +22,10 @@ const base00 = '#657b83',
 
 const invalid = '#d30102',
   darkBackground = '#dfd9c8',
-  highlightBackground = darkBackground,
+  highlightBackground = '#cceeff7a',
   background = base3,
   tooltipBackground = base01,
-  selection = darkBackground,
+  selection = '#ffbc00',
   cursor = base01
 
 /// The editor theme styles for Solarized Light.
@@ -53,11 +53,12 @@ export const solarizedLightTheme = EditorView.theme(
       outline: '1px solid #457dff'
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-      backgroundColor: '#6199ff2f'
+      backgroundColor: selection,
+      color: '#000000'
     },
 
     '.cm-activeLine': { backgroundColor: highlightBackground },
-    '.cm-selectionMatch': { backgroundColor: '#aafe661a' },
+    '.cm-selectionMatch': { backgroundColor: '#aafe66' },
 
     '&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket': {
       outline: `1px solid ${base1}`
@@ -70,7 +71,7 @@ export const solarizedLightTheme = EditorView.theme(
     },
 
     '.cm-activeLineGutter': {
-      backgroundColor: highlightBackground
+      backgroundColor: selection
     },
 
     '.cm-foldPlaceholder': {
