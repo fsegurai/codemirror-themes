@@ -52,7 +52,6 @@ export const andromedaTheme = EditorView.theme({
   '.cm-search.cm-panel': {
     color: base06
   },
-  '.cm-activeLine': { backgroundColor: highlightBackground },
   '.cm-selectionMatch': { backgroundColor: highlightBackground },
   '&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket': {
     outline: `1px solid ${base03}`
