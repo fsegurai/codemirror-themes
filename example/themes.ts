@@ -15,6 +15,8 @@ import { monokai } from '../packages/monokai/src'
 import { nord } from '../packages/nord/src'
 import { solarizedDark } from '../packages/solarized-dark'
 import { solarizedLight } from '../packages/solarized-light/src'
+import { tokyoNightStorm } from '../packages/tokyo-night-storm/src'
+import { tokyoNightDay } from '../packages/tokyo-night-day/src'
 import { volcano } from '../packages/volcano/src'
 
 const themes = [
@@ -85,6 +87,14 @@ const themes = [
   {
     name: 'solarized-light',
     extension: solarizedLight
+  },
+  {
+    name: 'tokyo-night-storm',
+    extension: tokyoNightStorm
+  },
+  {
+    name: 'tokyo-night-day',
+    extension: tokyoNightDay
   },
   {
     name: 'volcano',
