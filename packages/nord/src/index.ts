@@ -34,6 +34,7 @@ const invalid = '#d30102',
   background = base00,
   tooltipBackground = base01,
   selection = base03,
+  selectionMatch = '#4c566a80',
   cursor = base04
 
 /// The editor theme styles for Nord.
@@ -65,10 +66,9 @@ export const nordTheme = EditorView.theme(
       color: base00
     },
 
-    '.cm-activeLine': { backgroundColor: highlightBackground },
+    '.cm-activeLine': { backgroundColor: selectionMatch },
     '.cm-selectionMatch': {
-      backgroundColor: base05,
-      color: base01
+      backgroundColor: base05
     },
 
     '&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket': {
