@@ -21,7 +21,8 @@ const darkBackground = '#2b303b',  // Dropdown background - deep shade found und
   highlightBackground = '#3e3d3257', // Active line and Matching bracket - moss on a rock
   tooltipBackground = base01,        // Tooltip using foreground color
   cursor = base04,                   // Caret color
-  selection = base02                // Selection color
+  selection = '#398450c2',                // Selection color
+  selectionMatch = '#5d3535'
 
 // Define the editor theme styles for Forest.
 export const forestTheme = EditorView.theme({
@@ -36,7 +37,8 @@ export const forestTheme = EditorView.theme({
     borderLeftColor: cursor
   },
   '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-    backgroundColor: selection
+    backgroundColor: selection,
+    color: '#FFFFFF'
   },
   '.cm-panels': {
     backgroundColor: darkBackground,
@@ -55,8 +57,15 @@ export const forestTheme = EditorView.theme({
     backgroundColor: darkBackground,
     color: base03
   },
+  '.cm-activeLineGutter': {
+    backgroundColor: selection,
+    color: '#FFFFFF'
+  },
   '.cm-tooltip': {
     backgroundColor: tooltipBackground
+  },
+  '.cm-selectionMatch': {
+    backgroundColor: selectionMatch,
   },
   '.cm-searchMatch': {
     backgroundColor: base02,  // Use the selection color for search matches
@@ -66,6 +75,18 @@ export const forestTheme = EditorView.theme({
   '.cm-searchMatch.cm-searchMatch-selected': {
     backgroundColor: base05,  // Use the keyword color for the selected search match
     color: base00             // Background color for high visibility
+  },
+  '.cm-searchMatch.cm-searchMatch-selected .ͼ5k': {
+    color: base00
+  },
+  '.cm-searchMatch .cm-selectionMatch': {
+    color: base01
+  },
+  '.cm-searchMatch .cm-selectionMatch .ͼ5k': {
+    color: base01
+  },
+  '.cm-searchMatch .ͼ5k': {
+    color: base01
   }
 }, { dark: true })
 
