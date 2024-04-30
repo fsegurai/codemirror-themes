@@ -14,6 +14,7 @@ Themes for [CodeMirror 6](https://codemirror.net/).
 - [Andromeda](./packages/andromeda)
 - [Basic Light](./packages/basic-light)
 - [Basic Dark](./packages/basic-dark)
+- [Forest](./packages/forest)
 - [GitHub Light](./packages/github-light)
 - [GitHub Dark](./packages/github-dark)
 - [Gruvbox Light](./packages/gruvbox-light)

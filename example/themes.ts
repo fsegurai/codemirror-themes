@@ -4,6 +4,7 @@ import { androidStudio } from '../packages/android-studio/src'
 import { andromeda } from '../packages/andromeda'
 import { basicDark } from '../packages/basic-dark/src'
 import { basicLight } from '../packages/basic-light/src'
+import { forest } from '../packages/forest/src'
 import { githubDark } from '../packages/github-dark/src'
 import { githubLight } from '../packages/github-light/src'
 import { gruvboxDark } from '../packages/gruvbox-dark/src'
@@ -40,6 +41,10 @@ const themes = [
   {
     name: 'basic-light',
     extension: basicLight
+  },
+  {
+    name: 'forest',
+    extension: forest
   },
   {
     name: 'github-dark',
