@@ -29,10 +29,11 @@ const base0b = '#bf616a', // red
 
 const invalid = '#d30102',
   darkBackground = base06,
+  highlightBackground = '#7692a033',
   background = '#ffffff',
   tooltipBackground = base05,
-  selection = darkBackground,
-  selectionMatch = base06,
+  selection = '#6dceff85',
+  selectionMatch = '#02b8ff57',
   cursor = base01
 
 /// The editor theme styles for Basic Light.
@@ -49,7 +50,10 @@ export const basicLightTheme = EditorView.theme(
 
     '.cm-cursor, .cm-dropCursor': { borderLeftColor: cursor },
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
-      { backgroundColor: selection },
+      {
+        backgroundColor: selection,
+        color: '#00008b'
+      },
 
     '.cm-panels': { backgroundColor: darkBackground, color: base03 },
     '.cm-panels.cm-panels-top': { borderBottom: '2px solid black' },
@@ -63,8 +67,9 @@ export const basicLightTheme = EditorView.theme(
       backgroundColor: base05
     },
 
+    '.cm-activeLine': { backgroundColor: highlightBackground },
     '.cm-selectionMatch': {
-      backgroundColor: selectionMatch,
+      backgroundColor: selectionMatch
     },
 
     '&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket': {
@@ -79,6 +84,10 @@ export const basicLightTheme = EditorView.theme(
       backgroundColor: base06,
       color: base00,
       border: 'none'
+    },
+    '.cm-activeLineGutter': {
+      backgroundColor: selection,
+      color: '#00008b'
     },
 
     '.cm-foldPlaceholder': {
