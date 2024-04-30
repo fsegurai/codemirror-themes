@@ -20,6 +20,7 @@ Themes for [CodeMirror 6](https://codemirror.net/).
 - [Gruvbox Dark](./packages/gruvbox-dark)
 - [Material Light](./packages/material-light)
 - [Material Dark](./packages/material-dark)
+- [Monokai](./packages/monokai)
 - [Nord](./packages/nord)
 - [Solarized Light](./packages/solarized-light)
 - [Solarized Dark](./packages/solarized-dark)
