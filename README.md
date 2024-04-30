@@ -1,7 +1,7 @@
 Themes for CodeMirror 6
 ===========================
 
-[//]: # "[ [**DEMO**](https://fsegurai.github.io/@codemirror/theme) ]"
+[ [**DEMO**](https://fsegurai.github.io/codemirror-themes/) ]
 
 
 Themes for [CodeMirror 6](https://codemirror.net/).
