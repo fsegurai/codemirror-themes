@@ -14,6 +14,7 @@ import { monokai } from '../packages/monokai/src'
 import { nord } from '../packages/nord/src'
 import { solarizedDark } from '../packages/solarized-dark'
 import { solarizedLight } from '../packages/solarized-light/src'
+import { volcano } from '../packages/volcano/src'
 
 const themes = [
   {
@@ -79,6 +80,10 @@ const themes = [
   {
     name: 'solarized-light',
     extension: solarizedLight
+  },
+  {
+    name: 'volcano',
+    extension: volcano
   }
 ]
 
