@@ -33,7 +33,6 @@ Themes for [CodeMirror 6](https://codemirror.net/).
 
 ```js
 import { EditorView, basicSetup } from 'codemirror'
-import { javascript } from '@codemirror/lang-javascript'
 import { markdown } from '@codemirror/lang-markdown'
 import { basicLight } from 'codemirror-theme-basic-light'
 
