@@ -28,7 +28,7 @@ const invalid = base_red,
   highlightBackground = '#545b61',
   background = base00,
   tooltipBackground = base01,
-  selection = '#707880',
+  selection = '#600000',
   selectionMatch = '#4A707A ',
   cursor = base04
 
@@ -83,8 +83,8 @@ export const materialDarkTheme = EditorView.theme(
     },
 
     '.cm-activeLineGutter': {
-      backgroundColor: highlightBackground,
-      color: base07
+      backgroundColor: selection,
+      color: '#FFFFFF'
     },
 
     '.cm-foldPlaceholder': {
