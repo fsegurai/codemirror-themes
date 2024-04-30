@@ -2,9 +2,7 @@
 
 # @fsegurai/codemirror-theme-volcano [![NPM version](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-volcano.svg)](https://www.npmjs.org/package/@fsegurai/codemirror-theme-volcano)
 
-[ [**WEBSITE**](https://codemirror.net/6/) | [**ISSUES**](https://github.com/codemirror/codemirror.next/issues) | [*
-*FORUM**](https://discuss.codemirror.net/c/next/) | [**CHANGELOG
-**](https://github.com/codemirror/theme-one-dark/blob/main/CHANGELOG.md) ]
+[ [**WEBSITE**](https://codemirror.net/6/) | [**ISSUES**](https://github.com/codemirror/codemirror.next/issues) | [**DEMO**](https://fsegurai.github.io/codemirror-themes/) ]
 
 This package implements the Volcano theme for the
 [CodeMirror](https://codemirror.net/6/) code editor.
