@@ -5,52 +5,30 @@ import { tags as t } from '@lezer/highlight'
 
 const dark0 = '#282828',
   dark1 = '#3c3836',
-  dark2 = '#504945',
   dark3 = '#665c54',
-  dark4 = '#7c6f64',
-  dark4_256 = '#7c6f64',
   gray_245 = '#928374',
-  gray_244 = '#928374',
   light0 = '#fbf1c7',
   light1 = '#ebdbb2',
   light2 = '#d5c4a1',
   light3 = '#bdae93',
   light4 = '#a89984',
-  light4_256 = '#a89984',
   bright_red = '#fb4934',
   bright_green = '#b8bb26',
   bright_yellow = '#fabd2f',
   bright_blue = '#83a598',
   bright_purple = '#d3869b',
   bright_aqua = '#8ec07c',
-  bright_orange = '#fe8019',
-  neutral_red = '#cc241d',
-  neutral_green = '#98971a',
-  neutral_yellow = '#d79921',
-  neutral_blue = '#458588',
-  neutral_purple = '#b16286',
-  neutral_aqua = '#689d6a',
-  neutral_orange = '#d65d0e',
-  faded_red = '#9d0006',
-  faded_green = '#79740e',
-  faded_yellow = '#b57614',
-  faded_blue = '#076678',
-  faded_purple = '#8f3f71',
-  faded_aqua = '#427b58',
-  faded_orange = '#af3a03'
+  bright_orange = '#fe8019'
 
 const bg0 = dark0,
   bg1 = dark1,
-  bg2 = dark2,
   bg3 = dark3,
-  bg4 = dark4,
   gray = gray_245,
   fg0 = light0,
   fg1 = light1,
   fg2 = light2,
   fg3 = light3,
   fg4 = light4,
-  fg4_256 = light4_256,
   red = bright_red,
   green = bright_green,
   yellow = bright_yellow,
@@ -61,10 +39,11 @@ const bg0 = dark0,
 
 const invalid = red,
   darkBackground = bg1,
-  highlightBackground = darkBackground,
+  highlightBackground = '#815841',
   background = bg0,
   tooltipBackground = bg1,
   selection = darkBackground,
+  selectionMatch = '#8158414A',
   cursor = orange
 
 /// The editor theme styles for Gruvbox Dark.
@@ -96,7 +75,7 @@ export const gruvboxDarkTheme = EditorView.theme(
       backgroundColor: bg3
     },
 
-    '.cm-activeLine': { backgroundColor: highlightBackground },
+    '.cm-activeLine': { backgroundColor: selectionMatch },
     '.cm-selectionMatch': { backgroundColor: bg3 },
 
     '&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket': {
@@ -115,7 +94,8 @@ export const gruvboxDarkTheme = EditorView.theme(
     },
 
     '.cm-activeLineGutter': {
-      backgroundColor: highlightBackground
+      backgroundColor: highlightBackground,
+      color: fg0
     },
 
     '.cm-foldPlaceholder': {
