@@ -24,6 +24,7 @@ Themes for [CodeMirror 6](https://codemirror.net/).
 - [Nord](./packages/nord)
 - [Solarized Light](./packages/solarized-light)
 - [Solarized Dark](./packages/solarized-dark)
+- [Volcano](./packages/volcano)
 
 ## How to use
 
