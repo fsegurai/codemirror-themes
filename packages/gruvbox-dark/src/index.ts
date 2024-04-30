@@ -39,11 +39,11 @@ const bg0 = dark0,
 
 const invalid = red,
   darkBackground = bg1,
-  highlightBackground = '#815841',
+  highlightBackground = '#8158414A',
   background = bg0,
   tooltipBackground = bg1,
   selection = darkBackground,
-  selectionMatch = '#8158414A',
+  selectionMatch = '#815841',
   cursor = orange
 
 /// The editor theme styles for Gruvbox Dark.
@@ -72,10 +72,10 @@ export const gruvboxDarkTheme = EditorView.theme(
       outline: `1px solid ${bg3}`
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-      backgroundColor: bg3
+      backgroundColor: selectionMatch
     },
 
-    '.cm-activeLine': { backgroundColor: selectionMatch },
+    '.cm-activeLine': { backgroundColor: highlightBackground },
     '.cm-selectionMatch': { backgroundColor: bg3 },
 
     '&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket': {
@@ -94,7 +94,7 @@ export const gruvboxDarkTheme = EditorView.theme(
     },
 
     '.cm-activeLineGutter': {
-      backgroundColor: highlightBackground,
+      backgroundColor: selectionMatch,
       color: fg0
     },
 
