@@ -26,7 +26,7 @@ const invalid = '#d30102',
   highlightBackground = '#173541',
   background = base00,
   tooltipBackground = base01,
-  selection = '#173541',
+  selection = '#02b8ff57',
   cursor = base04
 
 /// The editor theme styles for Solarized Dark.
@@ -42,8 +42,10 @@ export const solarizedDarkTheme = EditorView.theme(
     },
 
     '.cm-cursor, .cm-dropCursor': { borderLeftColor: cursor },
-    '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
-      { backgroundColor: selection },
+    '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
+      backgroundColor: selection,
+      color: '#FFFFFF'
+    },
 
     '.cm-panels': { backgroundColor: darkBackground, color: base03 },
     '.cm-panels.cm-panels-top': { borderBottom: '2px solid black' },
@@ -51,14 +53,21 @@ export const solarizedDarkTheme = EditorView.theme(
 
     '.cm-searchMatch': {
       backgroundColor: '#72a1ff59',
-      outline: '1px solid #457dff'
+      outline: '1px solid #457dff',
+      color: '#a7a7a7 !important'
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-      backgroundColor: '#6199ff2f'
+      backgroundColor: '#6199ff2f',
+      color: '#FFFFFF !important'
+    },
+    '.cm-searchMatch .cm-selectionMatch': {
+      color: '#a7a7a7 !important'
     },
 
-    '.cm-activeLine': { backgroundColor: highlightBackground },
-    '.cm-selectionMatch': { backgroundColor: '#aafe661a' },
+    '.cm-selectionMatch': {
+      backgroundColor: '#aafe6673',
+      color: '#FFFFFF'
+    },
 
     '&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket': {
       outline: `1px solid ${base06}`
@@ -71,7 +80,8 @@ export const solarizedDarkTheme = EditorView.theme(
     },
 
     '.cm-activeLineGutter': {
-      backgroundColor: highlightBackground
+      backgroundColor: selection,
+      color: '#FFFFFF'
     },
 
     '.cm-foldPlaceholder': {
