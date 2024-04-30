@@ -3,7 +3,6 @@ import { Extension } from '@codemirror/state'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { tags as t } from '@lezer/highlight'
 
-// Colors from https://www.nordtheme.com/docs/colors-and-palettes
 // Polar Night
 const base00 = '#2e3440', // black
   base01 = '#3b4252', // dark grey
@@ -30,10 +29,11 @@ const base0b = '#bf616a', // red
 
 const invalid = '#d30102',
   darkBackground = base06,
-  highlightBackground = darkBackground,
+  highlightBackground = '#7692a033',
   background = '#ffffff',
   tooltipBackground = base05,
-  selection = darkBackground,
+  selection = '#6dceff85',
+  selectionMatch = '#02b8ff57',
   cursor = base01
 
 /// The editor theme styles for Basic Light.
@@ -50,7 +50,10 @@ export const basicLightTheme = EditorView.theme(
 
     '.cm-cursor, .cm-dropCursor': { borderLeftColor: cursor },
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
-      { backgroundColor: selection },
+      {
+        backgroundColor: selection,
+        color: '#00008b'
+      },
 
     '.cm-panels': { backgroundColor: darkBackground, color: base03 },
     '.cm-panels.cm-panels-top': { borderBottom: '2px solid black' },
@@ -65,7 +68,9 @@ export const basicLightTheme = EditorView.theme(
     },
 
     '.cm-activeLine': { backgroundColor: highlightBackground },
-    '.cm-selectionMatch': { backgroundColor: base05 },
+    '.cm-selectionMatch': {
+      backgroundColor: selectionMatch
+    },
 
     '&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket': {
       outline: `1px solid ${base03}`
@@ -80,9 +85,9 @@ export const basicLightTheme = EditorView.theme(
       color: base00,
       border: 'none'
     },
-
     '.cm-activeLineGutter': {
-      backgroundColor: highlightBackground
+      backgroundColor: selection,
+      color: '#00008b'
     },
 
     '.cm-foldPlaceholder': {
@@ -105,7 +110,6 @@ export const basicLightTheme = EditorView.theme(
     },
     '.cm-tooltip-autocomplete': {
       '& > ul > li[aria-selected]': {
-        backgroundColor: highlightBackground,
         color: base03
       }
     }
