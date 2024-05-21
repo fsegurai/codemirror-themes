@@ -8,6 +8,7 @@ Themes for [CodeMirror 6](https://codemirror.net/).
 
 ## Available themes
 
+- [All - Bundle](./packages/bundle)
 - [Abcdef](./packages/abcdef)
 - [Abyss](./packages/abyss)
 - [Android Studio](./packages/android-studio)
