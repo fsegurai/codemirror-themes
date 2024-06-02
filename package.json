@@ -1,31 +1,31 @@
 {
   "name": "@fsegurai/codemirror-themes",
+  "version": "1.2.1",
   "description": "Theme packages for the CodeMirror code editor",
-  "workspaces": [
-    "packages/*"
-  ],
-  "version": "1.2.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "clean": "rimraf --glob ./packages/*/dist ./example/dist",
-    "example": "rollup -c rollup.example.config.js",
-    "example:watch": "rollup -w -c rollup.example.config.js",
-    "prepare:themes": "npm run -w '*' prepare"
+  "homepage": "https://github.com/fsegurai/codemirror-themes",
+  "license": "MIT",
+  "author": {
+    "name": "Fabián Segura",
+    "url": "https://www.fsegurai.com/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fsegurai/codemirror-themes.git"
   },
   "keywords": [
     "editor",
     "code",
     "codemirror"
   ],
-  "author": {
-    "name": "Fabián Segura",
-    "url": "https://www.fsegurai.com/"
-  },
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/fsegurai/cm6-themes.git"
+  "workspaces": [
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "clean": "rimraf --glob ./packages/*/dist ./example/dist",
+    "example": "rollup -c rollup.example.config.js",
+    "example:watch": "rollup -w -c rollup.example.config.js",
+    "prepare:themes": "npm run -w '*' prepare"
   },
   "prettier": {
     "arrowParens": "avoid",
