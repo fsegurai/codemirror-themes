@@ -33,7 +33,7 @@ jobs:
         run: npm i
 
       - name: Build project
-        run: npm run example
+        run: npm run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
