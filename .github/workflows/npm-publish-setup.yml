@@ -1,12 +1,16 @@
 name: Publish Packages
 
 on:
+  pull_request:
   push:
     branches:
       - main
 
 jobs:
-  publish:
+  Publish:
+    if: |
+      github.ref == 'refs/heads/main' &&
+      github.event.repository.fork == false
     runs-on: ubuntu-latest
     environment: FSI_DEP_NodeJs
     strategy:
