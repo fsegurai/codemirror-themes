@@ -1,0 +1,71 @@
+name: Publish Packages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: FSI_DEP_NodeJs
+    strategy:
+      matrix:
+        package:
+          [
+            abcdef,
+            abyss,
+            android=studio,
+            andromeda,
+            basic-dark,
+            basic-light,
+            forest,
+            github-dark,
+            github-light,
+            gruvbox-dark,
+            gruvbox-light,
+            material-dark,
+            material-light,
+            monokai,
+            nord,
+            solarized-dark,
+            solarized-light,
+            tokyo-night-day,
+            tokyo-night-storm,
+            volcano
+          ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org/'
+          scope: ${{ vars.NPM_ORG }}
+          always-auth: true
+
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      - name: Build packages
+        run: |
+          npm run prepare:themes
+
+      - name: Publish to npm registry
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd packages/${{ matrix.package }}
+          npm publish --access public
+
+      - name: Publish to GitHub npm registry
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            NODE_AUTH_TOKEN: ${{ secrets.NPM_GH_TOKEN }}  
+        run: |
+          cd packages/${{ matrix.package }}
+          npm publish --registry=https://npm.pkg.github.com/
