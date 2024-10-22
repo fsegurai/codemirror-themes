@@ -51,9 +51,10 @@ jobs:
         run: |
           npm install
 
-      - name: Build packages
+      - name: Build ${{ matrix.package }} package
         run: |
-          npm run prepare:themes
+          cd packages/${{ matrix.package }}
+          npm run prepare
 
       - name: Publish to npm registry
         env:
@@ -64,8 +65,8 @@ jobs:
 
       - name: Publish to GitHub npm registry
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            NODE_AUTH_TOKEN: ${{ secrets.NPM_GH_TOKEN }}  
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_GH_TOKEN }}
         run: |
           cd packages/${{ matrix.package }}
           npm publish --registry=https://npm.pkg.github.com/
