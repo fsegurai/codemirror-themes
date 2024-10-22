@@ -15,7 +15,7 @@ jobs:
           [
             abcdef,
             abyss,
-            android=studio,
+            android-studio,
             andromeda,
             basic-dark,
             basic-light,
@@ -47,9 +47,16 @@ jobs:
           scope: ${{ vars.NPM_ORG }}
           always-auth: true
 
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install dependencies
-        run: |
-          npm install
+        run: npm install
 
       - name: Build ${{ matrix.package }} package
         run: |
@@ -61,7 +68,15 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd packages/${{ matrix.package }}
-          npm publish --access public
+          npm publish --access public || echo "Package already published in NPM, skipping..."
+
+      - name: Set up Node.js for GitHub registry
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+          registry-url: 'https://npm.pkg.github.com/'
+          scope: ${{ vars.NPM_ORG }}
+          always-auth: true
 
       - name: Publish to GitHub npm registry
         env:
@@ -69,4 +84,4 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_GH_TOKEN }}
         run: |
           cd packages/${{ matrix.package }}
-          npm publish --registry=https://npm.pkg.github.com/
+          npm publish || echo "Package already published in GitHub NPM, skipping..."
