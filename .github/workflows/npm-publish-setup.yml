@@ -1,12 +1,16 @@
 name: Publish Packages
 
 on:
+  pull_request:
   push:
     branches:
       - main
 
 jobs:
-  publish:
+  Publish:
+    if: |
+      github.ref == 'refs/heads/main' &&
+      github.event.repository.fork == false
     runs-on: ubuntu-latest
     environment: FSI_DEP_NodeJs
     strategy:
@@ -39,7 +43,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Set up Node.js - Version ${{ vars.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ vars.NODE_VERSION }}
@@ -56,14 +60,14 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build ${{ matrix.package }} package
         run: |
           cd packages/${{ matrix.package }}
           npm run prepare
 
-      - name: Publish to npm registry
+      - name: Release to NPM registry 🚀
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -78,7 +82,7 @@ jobs:
           scope: ${{ vars.NPM_ORG }}
           always-auth: true
 
-      - name: Publish to GitHub npm registry
+      - name: Release to GitHub NPM registry 🚀
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_GH_TOKEN }}
