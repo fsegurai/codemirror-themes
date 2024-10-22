@@ -1,7 +1,7 @@
 {
   "name": "@fsegurai/codemirror-theme-bundle",
   "description": "Bundle themes for the CodeMirror code editor",
-  "version": "6.0.0",
+  "version": "6.0.4",
   "type": "module",
   "main": "dist/index.cjs",
   "exports": {
@@ -62,6 +62,6 @@
     "@codemirror/view": "^6.0.0"
   },
   "devDependencies": {
-    "@codemirror/buildhelper": "^1.0.1"
+    "@codemirror/buildhelper": "^1.0.2"
   }
 }
