@@ -35,7 +35,7 @@ Themes for [CodeMirror 6](https://codemirror.net/).
 ```js
 import { EditorView, basicSetup } from 'codemirror'
 import { markdown } from '@codemirror/lang-markdown'
-import { basicLight } from 'codemirror-theme-basic-light'
+import { basicLight } from '@fsegurai/codemirror-theme-basic-light'
 
 let editor = new EditorView({
   doc: '# Hello World',
