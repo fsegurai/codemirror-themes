@@ -1,13 +1,13 @@
-name: Publish Packages
+name: NPM Publish Setup
 
 on:
-  pull_request:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
-  Publish:
+  Release:
     if: |
       github.ref == 'refs/heads/main' &&
       github.event.repository.fork == false

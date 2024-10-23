@@ -1,9 +1,128 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+libpeerconnection.log
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+node_modules/
 **/node_modules
+jspm_packages/
+bower_components
+
+# Build/Compiled output
+build/Release/
+dist/
 **/dist
-**/test/*.js
+.next/
+.nuxt/
+.cache/
+.vuepress/dist
+documentation/
+tmp/
+out-tsc
+.serverless/
+fusebox/
+
+# Coverage directories
+coverage/
+*.lcov
+.nyc_output
+**/coverage
+
+# TypeScript
+*.tsbuildinfo
+typings/
 **/test/*.d.ts
 **/test/*.d.ts.map
-**/.idea/*
-**/.vscode/*
-.tern-*
-.DS_STORE
+**/test/*.spec.ts
+**/test/*.spec.js
+
+# Optional npm cache
+.npm
+*.tgz
+
+# Yarn files
+.yarn-integrity
+
+# Miscellaneous caches and history
+.eslintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+.node_repl_history
+.node_modules
+.angular/cache
+.sass-cache/
+.history/
+
+# IDE and editor files
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# OS-specific/system files
+.DS_Store
+Thumbs.db
+
+# Testing
+**/test/*.js
+test-results.xml
+eslint.xml
+junittest.xml
+junit.xml
+
+# Profiling files
+chrome-profiler-events*.json
+
+# System/package locks
+.lock-wscript
+connect.lock
+package-lock.json
+
+# Environment variables
+.env
+.env.test
+*.env*
+
+# Parcel, Azure, and other tool-specific files
+.azurefunctions/
+.fusebox/
+.dynamodb/
+bin/
+obj/
+appsettings.json
+local.settings.json
+
+# Azure Azurite artifacts
+__blobstorage__
+__queuestorage__
+__azurite_db*__.json
+
+# Miscellaneous
+lib-cov
+package/
+tern-port
+.dynamodb/
