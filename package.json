@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-themes",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "Theme packages for the CodeMirror code editor",
   "homepage": "https://github.com/fsegurai/codemirror-themes",
   "license": "MIT",
@@ -22,11 +22,15 @@
   ],
   "type": "module",
   "scripts": {
+    "clean:demo": "rimraf --glob ./demo/dist && rimraf --glob ./demo/README.md && rimraf --glob ./demo/LICENSE",
+    "clean:packages": "rimraf --glob ./packages/*/dist",
     "start": "rollup -w -c rollup.demo.config.js",
-    "build": "rollup -c rollup.demo.config.js",
-    "prepare:themes": "npm run -w '*' prepare",
-    "clean:demo": "rimraf --glob ./demo/dist",
-    "clean:themes": "rimraf --glob ./packages/*/dist"
+    "build:demo": "rollup -c rollup.demo.config.js",
+    "postBuild:demo": "cpy ./README.md ./demo && cpy ./LICENSE ./demo",
+    "build:packages": "npm run -w '*' prepare",
+    "lint": "npm run lint:demo && npm run lint:packages",
+    "lint:demo": "eslint ./demo",
+    "lint:packages": "eslint ./packages/*/src/**"
   },
   "prettier": {
     "arrowParens": "avoid",
@@ -47,14 +51,19 @@
   },
   "devDependencies": {
     "@codemirror/buildhelper": "^1.0.2",
+    "@eslint/js": "^9.14.0",
     "@rollup/plugin-commonjs": "^28.0.1",
     "@rollup/plugin-node-resolve": "^15.3.0",
+    "cpy-cli": "^5.0.0",
+    "eslint": "^9.14.0",
+    "globals": "^15.12.0",
     "prettier": "^3.3.3",
     "rimraf": "^6.0.1",
     "rollup": "^4.24.0",
     "rollup-plugin-dev": "^2.0.5",
     "rollup-plugin-typescript2": "^0.36.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.13.0"
   }
 }
