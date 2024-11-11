@@ -31,7 +31,6 @@ jobs:
       github.ref == 'refs/heads/main' &&
       github.event.repository.fork == false
     runs-on: ubuntu-latest
-    timeout-minutes: 2
     environment: FSI_DEP_NodeJs
     strategy:
       matrix:
@@ -67,6 +66,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ vars.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org/'
+          scope: ${{ vars.NPM_ORG }}
+          always-auth: true
 
       - name: Cache node modules
         uses: actions/cache@v4
@@ -83,65 +85,6 @@ jobs:
         run: |
           cd packages/${{ matrix.package }}
           npm run prepare
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.package }}-build
-          path: packages/${{ matrix.package }}
-          if-no-files-found: error
-
-  release:
-    if: |
-      github.ref == 'refs/heads/main' &&
-      github.event.repository.fork == false
-    needs: [build]
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    environment: FSI_DEP_NodeJs
-    strategy:
-      matrix:
-        package:
-          [
-            abcdef,
-            abyss,
-            android-studio,
-            andromeda,
-            basic-dark,
-            basic-light,
-            forest,
-            github-dark,
-            github-light,
-            gruvbox-dark,
-            gruvbox-light,
-            material-dark,
-            material-light,
-            monokai,
-            nord,
-            solarized-dark,
-            solarized-light,
-            tokyo-night-day,
-            tokyo-night-storm,
-            volcano,
-            bundle
-          ]
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js ${{ vars.NODE_VERSION }} for NPM registry
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ vars.NODE_VERSION }}
-          registry-url: 'https://registry.npmjs.org/'
-          scope: ${{ vars.NPM_ORG }}
-          always-auth: true
-
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ matrix.package }}-build
 
       - name: Get package version
         id: get_version
@@ -170,7 +113,7 @@ jobs:
           cd ${{ steps.download_artifact.outputs.download-path }}
           npm publish --tag ${{ steps.determine_tag.outputs.TAG }} --access public || echo "Package already published in NPM, skipping..."
 
-      - name: Set up Node.js ${{ vars.NODE_VERSION }} for GitHub NPM registry
+      - name: Set up Node.js for GitHub registry
         uses: actions/setup-node@v4
         with:
           node-version: ${{ vars.NODE_VERSION }}
