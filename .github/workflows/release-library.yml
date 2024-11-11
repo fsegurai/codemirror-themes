@@ -145,6 +145,10 @@ jobs:
           name: ${{ env.ARTIFACT_NAME }}-${{ matrix.package }}
           path: packages/${{ matrix.package }}
 
+      # ls to check if the package is downloaded
+      - name: List downloaded package
+        run: ls -l
+
       - name: Get package version
         id: get_version
         run: echo "VERSION=$(jq -r .version < packages/${{ matrix.package }}/package.json)" >> $GITHUB_OUTPUT
