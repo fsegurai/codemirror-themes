@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-themes",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": "Theme packages for the CodeMirror code editor",
   "homepage": "https://github.com/fsegurai/codemirror-themes",
   "license": "MIT",
@@ -22,9 +22,9 @@
   ],
   "type": "module",
   "scripts": {
-    "clean": "rimraf --glob ./packages/*/dist ./example/dist",
-    "start": "rollup -w -c rollup.example.config.js",
-    "build": "rollup -c rollup.example.config.js",
+    "clean": "rimraf --glob ./packages/*/dist ./demo/dist",
+    "start": "rollup -w -c rollup.demo.config.js",
+    "build": "rollup -c rollup.demo.config.js",
     "prepare:themes": "npm run -w '*' prepare"
   },
   "prettier": {
