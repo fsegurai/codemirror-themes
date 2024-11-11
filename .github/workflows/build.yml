@@ -1,17 +1,15 @@
-name: NPM Publish Setup
+name: Build Lib-Demo
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_call:
+
+env:
+  LIB_ARTIFACT_NAME: 'build-lib-artifact'
 
 jobs:
-  Release:
-    if: |
-      github.ref == 'refs/heads/main' &&
-      github.event.repository.fork == false
+  build_library:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     environment: FSI_DEP_NodeJs
     strategy:
       matrix:
@@ -36,20 +34,18 @@ jobs:
             solarized-light,
             tokyo-night-day,
             tokyo-night-storm,
-            volcano
+            volcano,
+            bundle
           ]
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Node.js - Version ${{ vars.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ vars.NODE_VERSION }}
-          registry-url: 'https://registry.npmjs.org/'
-          scope: ${{ vars.NPM_ORG }}
-          always-auth: true
 
       - name: Cache node modules
         uses: actions/cache@v4
@@ -60,32 +56,43 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci # package-lock.json is present
 
       - name: Build ${{ matrix.package }} package
         run: |
           cd packages/${{ matrix.package }}
           npm run prepare
 
-      - name: Release to NPM registry 🚀
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          cd packages/${{ matrix.package }}
-          npm publish --access public || echo "Package already published in NPM, skipping..."
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.LIB_ARTIFACT_NAME }}-${{ matrix.package }}
+          path: packages/${{ matrix.package }}/dist
+          if-no-files-found: error
 
-      - name: Set up Node.js for GitHub registry
+  build_demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    environment: github-pages
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js - Version ${{ vars.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ vars.NODE_VERSION }}
-          registry-url: 'https://npm.pkg.github.com/'
-          scope: ${{ vars.NPM_ORG }}
-          always-auth: true
 
-      - name: Release to GitHub NPM registry 🚀
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_GH_TOKEN }}
-        run: |
-          cd packages/${{ matrix.package }}
-          npm publish || echo "Package already published in GitHub NPM, skipping..."
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci # package-lock.json is present
+
+      - name: Build demo
+        run: npm run build
