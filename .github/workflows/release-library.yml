@@ -5,7 +5,7 @@ on:
   push:
     branches: ['main']
     paths-ignore:
-      - '!.github/workflows/**'
+      - '!.github/workflows/*.yml'
       - '.github/**'
       - 'docs/**'
       - 'assets/**'
