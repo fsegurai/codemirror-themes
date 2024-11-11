@@ -142,6 +142,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.package }}-build
+          path: packages/${{ matrix.package }}
 
       - name: Confirm artifact path
         run: |
