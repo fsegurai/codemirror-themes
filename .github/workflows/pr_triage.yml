@@ -1,0 +1,52 @@
+name: "Pull Request Triage"
+on:
+  pull_request_target:
+    types: [ opened, ready_for_review ]
+
+jobs:
+  triage:
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      # Grab sources to get latest labeler.yml
+      - name: Fetch sources
+        uses: actions/checkout@v4
+        with:
+          # Ensure we pin the source origin as pull_request_target run under forks.
+          fetch-depth: 0
+          repository: fsegurai/codemirror-themes
+          ref: main
+
+      - name: Update labels based on changes
+        uses: actions/labeler@v5
+        with:
+          sync-labels: true
+          dot: true
+
+      - name: Assign PR creator
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const assignees = pr.assignees.map(assignee => assignee.login);
+            let assignee = pr.user.login;
+
+            if (!assignees.includes(assignee)) {
+              if (assignee.includes('bot')) {
+                await github.rest.pulls.requestReviewers({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  reviewers: ['fsegurai']
+                });
+              } else {
+                await github.rest.issues.addAssignees({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  assignees: [assignee]
+                });
+              }
+            }

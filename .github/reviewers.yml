@@ -1,0 +1,32 @@
+infra:
+  - fsegurai
+  
+dependencies:
+  - fsegurai
+
+ci-cd:
+  - fsegurai
+
+demo:
+  - fsegurai
+
+assets:
+  - fsegurai
+
+styles:
+  - fsegurai
+
+library:
+  - fsegurai
+
+tests-library:
+  - fsegurai
+
+tests-demo:
+    - fsegurai
+
+documentation:
+  - fsegurai
+
+default:
+  - '@developers'

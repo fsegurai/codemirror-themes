@@ -1,0 +1,28 @@
+name: Build PR
+# Job will only run on pull requests to the main branch
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - '**'
+      - '.github/workflows/*.yml'
+      - '!.github/**'
+      - '!*.yml'
+      - '!*.config'
+      - '!*.md'
+  workflow_dispatch:
+    inputs: { }
+
+permissions:
+  pull-requests: write
+  checks: write
+
+concurrency:
+  group: pr-checks-${{ github.event.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr_build:
+    uses: ./.github/workflows/build.yml
+    secrets: inherit

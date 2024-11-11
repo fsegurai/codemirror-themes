@@ -4,11 +4,11 @@ import resolve from '@rollup/plugin-node-resolve'
 import dev from 'rollup-plugin-dev'
 
 export default {
-  input: './example/index.ts',
+  input: './demo/index.ts',
   output: [
     {
       format: 'es',
-      dir: './example/dist/',
+      dir: 'dist/demo/browser',
       externalLiveBindings: false
     }
   ],
@@ -28,7 +28,7 @@ export default {
     resolve(),
     commonjs(),
     dev({
-      dirs: ['example'],
+      dirs: ['demo'],
       port: 8000
     })
   ]
