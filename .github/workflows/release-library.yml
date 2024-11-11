@@ -18,7 +18,9 @@ on:
   workflow_dispatch:
     inputs: {}
 
-concurrency: release-library
+concurrency:
+  group: 'release-library'
+  cancel-in-progress: true
 
 env:
   ARTIFACT_NAME: 'build-lib-artifact'
@@ -57,31 +59,29 @@ jobs:
             volcano,
             bundle
           ]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js - Version ${{ vars.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ vars.NODE_VERSION }}
+      - name: Install Bun
+        run: curl -fsSL https://bun.sh/install | bash
 
-      - name: Cache node modules
+      - name: Cache bun modules
         uses: actions/cache@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          path: ~/.bun
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: |
-            ${{ runner.os }}-node-
-  
+            ${{ runner.os }}-bun-
+
       - name: Install dependencies
-        run: npm ci
+        run: bun install
 
       - name: Build ${{ matrix.package }} package
         run: |
           cd packages/${{ matrix.package }}
-          npm run prepare
+          bun run prepare
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -129,13 +129,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js ${{ vars.NODE_VERSION }} for NPM registry
-        uses: actions/setup-node@v4
+      - name: Install Bun
+        run: curl -fsSL https://bun.sh/install | bash
+
+      - name: Cache bun modules
+        uses: actions/cache@v4
         with:
-          node-version: ${{ vars.NODE_VERSION }}
-          registry-url: 'https://registry.npmjs.org/'
-          scope: ${{ vars.NPM_ORG }}
-          always-auth: true
+          path: ~/.bun
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -168,15 +171,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd packages/${{ matrix.package }}/dist
-          npm publish --tag ${{ steps.determine_tag.outputs.TAG }} --access public || echo "Package already published in NPM, skipping..."
-
-      - name: Set up Node.js ${{ vars.NODE_VERSION }} for GitHub NPM registry
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ vars.NODE_VERSION }}
-          registry-url: 'https://npm.pkg.github.com/'
-          scope: ${{ vars.NPM_ORG }}
-          always-auth: true
+          bun publish --tag ${{ steps.determine_tag.outputs.TAG }} --access public || echo "Package already published in NPM, skipping..."
 
       - name: Release to GitHub NPM registry 🚀
         env:
@@ -184,4 +179,4 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_GH_TOKEN }}
         run: |
           cd packages/${{ matrix.package }}/dist
-          npm publish --tag ${{ steps.determine_tag.outputs.TAG }} && npx semantic-release || echo "Package already published in GitHub NPM, skipping..."
+          bun publish --tag ${{ steps.determine_tag.outputs.TAG }} --registry https://npm.pkg.github.com/ || echo "Package already published in GitHub NPM, skipping..."
