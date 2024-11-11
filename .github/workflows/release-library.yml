@@ -12,13 +12,15 @@ on:
       - '*.json'
       - '*.config'
       - '*.md'
-  # workflow_run:
-  #   workflows: [ "Test Lib-Demo" ]
-  #   types: [ completed ]
+  workflow_run:
+    workflows: ['Test Lib-Demo']
+    types: [completed]
   workflow_dispatch:
     inputs: {}
 
-concurrency: release-library
+concurrency:
+  group: 'release-library'
+  cancel-in-progress: true
 
 env:
   ARTIFACT_NAME: 'build-lib-artifact'
@@ -29,7 +31,7 @@ jobs:
       github.ref == 'refs/heads/main' &&
       github.event.repository.fork == false
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 2
     environment: FSI_DEP_NodeJs
     strategy:
       matrix:
@@ -57,7 +59,7 @@ jobs:
             volcano,
             bundle
           ]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -74,7 +76,7 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
-  
+
       - name: Install dependencies
         run: npm ci
 
@@ -96,7 +98,7 @@ jobs:
       github.event.repository.fork == false
     needs: [build]
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 2
     environment: FSI_DEP_NodeJs
     strategy:
       matrix:

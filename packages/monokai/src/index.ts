@@ -1,7 +1,7 @@
-import { EditorView } from '@codemirror/view'
-import { Extension } from '@codemirror/state'
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
-import { tags as t } from '@lezer/highlight'
+import { EditorView } from '@codemirror/view';
+import { Extension } from '@codemirror/state';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { tags as t } from '@lezer/highlight';
 
 // Monokai theme colors aligned with the schema
 const base00 = '#272822',  // Background
@@ -15,59 +15,59 @@ const base00 = '#272822',  // Background
   base08 = '#E6DB74',  // String, RegExp
   base09 = '#AE81FF',  // Constant, Number
   base0A = '#A6E22E',  // Class, Heading
-  invalid = '#F44747' // Invalid
+  invalid = '#F44747'; // Invalid
 
 const darkBackground = '#414339',  // Dropdown background
   highlightBackground = '#3e3d3257', // Line highlight with some opacity
   tooltipBackground = base01,  // Tooltips using foreground color
   cursor = base04,  // Caret color
-  selection = base02  // Selection color
+  selection = base02;  // Selection color
 
 // Define the editor theme styles for Monokai.
 export const monokaiTheme = EditorView.theme({
   '&': {
     color: base01,
-    backgroundColor: base00
+    backgroundColor: base00,
   },
   '.cm-content': {
-    caretColor: cursor
+    caretColor: cursor,
   },
   '.cm-cursor, .cm-dropCursor': {
-    borderLeftColor: cursor
+    borderLeftColor: cursor,
   },
   '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-    backgroundColor: selection
+    backgroundColor: selection,
   },
   '.cm-searchMatch': {
     backgroundColor: base02,  // Use the selection color for search matches
     color: base01,  // Foreground color for text
-    outline: `1px solid ${base03}`  // Outline using comment color
+    outline: `1px solid ${base03}`,  // Outline using comment color
   },
   '.cm-searchMatch.cm-searchMatch-selected': {
     backgroundColor: base05,  // Use the keyword color for the selected search match
-    color: base00  // Background color for high visibility
+    color: base00,  // Background color for high visibility
   },
   '.cm-panels': {
     backgroundColor: darkBackground,
-    color: base01
+    color: base01,
   },
   '.cm-panels.cm-panels-top': {
-    borderBottom: '2px solid black'
+    borderBottom: '2px solid black',
   },
   '.cm-panels.cm-panels-bottom': {
-    borderTop: '2px solid black'
+    borderTop: '2px solid black',
   },
   '.cm-activeLine': {
-    backgroundColor: highlightBackground
+    backgroundColor: highlightBackground,
   },
   '.cm-gutters': {
     backgroundColor: darkBackground,  // Using dropdown background for gutter
-    color: base03
+    color: base03,
   },
   '.cm-tooltip': {
-    backgroundColor: tooltipBackground
-  }
-}, { dark: true })
+    backgroundColor: tooltipBackground,
+  },
+}, { dark: true });
 
 // Define the highlighting style for code in the Monokai theme.
 export const monokaiHighlightStyle = HighlightStyle.define([
@@ -91,11 +91,11 @@ export const monokaiHighlightStyle = HighlightStyle.define([
   { tag: t.heading, fontWeight: 'bold', color: base0A },
   { tag: [t.atom, t.bool, t.special(t.variableName)], color: base06 },
   { tag: t.invalid, color: invalid },
-  { tag: t.strikethrough, textDecoration: 'line-through' }
-])
+  { tag: t.strikethrough, textDecoration: 'line-through' },
+]);
 
 // Extension to enable the Monokai theme (both the editor theme and the highlight style).
 export const monokai: Extension = [
   monokaiTheme,
-  syntaxHighlighting(monokaiHighlightStyle)
-]
+  syntaxHighlighting(monokaiHighlightStyle),
+];
