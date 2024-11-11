@@ -29,7 +29,6 @@ jobs:
     timeout-minutes: 2
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -66,7 +65,9 @@ jobs:
       github.event.repository.fork == false
     runs-on: ubuntu-latest
     timeout-minutes: 2
-    environment: github-pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     needs: [build]
     steps:
       - name: Checkout code
