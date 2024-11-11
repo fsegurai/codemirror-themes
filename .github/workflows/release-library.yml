@@ -5,13 +5,14 @@ on:
   push:
     branches: ['main']
     paths-ignore:
-      - '.github/**'
+      - '.github/workflows/*.yml'
       - 'docs/**'
       - 'assets/**'
       - '*.yml'
       - '*.json'
       - '*.config'
       - '*.md'
+      - '!.github/**'
   # workflow_run:
   #   workflows: [ "Test Lib-Demo" ]
   #   types: [ completed ]
