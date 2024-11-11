@@ -144,7 +144,8 @@ jobs:
           name: ${{ matrix.package }}-build
 
       - name: Confirm artifact path
-        run: echo "Downloaded artifact path: ${{ steps.download_artifact.outputs.download-path }}"
+        run: |
+          echo "Downloaded artifact path: ${{ steps.download_artifact.outputs.download-path }}"
 
       - name: Get package version
         id: get_version
