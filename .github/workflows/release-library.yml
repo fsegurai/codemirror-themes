@@ -55,8 +55,7 @@ jobs:
             solarized-light,
             tokyo-night-day,
             tokyo-night-storm,
-            volcano,
-            bundle
+            volcano
           ]
 
     steps:
@@ -87,66 +86,11 @@ jobs:
           cd packages/${{ matrix.package }}
           npm run prepare
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.package }}-build
-          path: packages/${{ matrix.package }}/dist
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    environment: FSI_DEP_NodeJs
-    strategy:
-      matrix:
-        package:
-          [
-            abcdef,
-            abyss,
-            android-studio,
-            andromeda,
-            basic-dark,
-            basic-light,
-            forest,
-            github-dark,
-            github-light,
-            gruvbox-dark,
-            gruvbox-light,
-            material-dark,
-            material-light,
-            monokai,
-            nord,
-            solarized-dark,
-            solarized-light,
-            tokyo-night-day,
-            tokyo-night-storm,
-            volcano,
-            bundle
-          ]
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ matrix.package }}-build
-          path: packages/${{ matrix.package }}/dist
-
-      # List all files in the dist folder
-      - name: List files in dist folder
-        run: |
-          ls -a packages/${{ matrix.package }}
-          ls -R packages/${{ matrix.package }}/dist
-
-      - name: Set up Node.js - Version ${{ vars.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ vars.NODE_VERSION }}
-          registry-url: 'https://registry.npmjs.org/'
-          scope: ${{ vars.NPM_ORG }}
-          always-auth: true
+          path: packages/${{ matrix.package }}
 
       - name: Release to NPM registry 🚀
         env:
