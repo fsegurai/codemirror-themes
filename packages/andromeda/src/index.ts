@@ -1,7 +1,7 @@
-import { EditorView } from '@codemirror/view'
-import { Extension } from '@codemirror/state'
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
-import { tags as t } from '@lezer/highlight'
+import { EditorView } from '@codemirror/view';
+import { Extension } from '@codemirror/state';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { tags as t } from '@lezer/highlight';
 
 // Andromeda theme colors mapped to Basic Dark template structure
 const base00 = '#23262E',  // Background
@@ -17,22 +17,22 @@ const base00 = '#23262E',  // Background
   base0A = '#A0A1A7cc',  // Comment
   base0B = '#ff00aa',    // Heading
   base0C = '#f92672',    // Tag
-  invalid = 'red'      // Invalid (fallback color)
+  invalid = 'red';      // Invalid (fallback color)
 
 const darkBackground = '#292d30',
   highlightBackground = base02,
   tooltipBackground = base01,
   cursor = base04,
-  selection = base02
+  selection = base02;
 
 // Define the editor theme styles for Andromeda.
 export const andromedaTheme = EditorView.theme({
   '&': {
     color: base01,
-    backgroundColor: base00
+    backgroundColor: base00,
   },
   '.cm-content': {
-    caretColor: cursor
+    caretColor: cursor,
   },
   '.cm-cursor, .cm-dropCursor': { borderLeftColor: cursor },
   '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
@@ -43,55 +43,55 @@ export const andromedaTheme = EditorView.theme({
   '.cm-searchMatch': {
     backgroundColor: base02,
     outline: `1px solid ${base03}`,
-    color: base07
+    color: base07,
   },
   '.cm-searchMatch.cm-searchMatch-selected': {
     backgroundColor: base00,
-    color: base07
+    color: base07,
   },
   '.cm-search.cm-panel': {
-    color: base06
+    color: base06,
   },
   '.cm-selectionMatch': { backgroundColor: highlightBackground },
   '&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket': {
-    outline: `1px solid ${base03}`
+    outline: `1px solid ${base03}`,
   },
   '&.cm-focused .cm-matchingBracket': {
     backgroundColor: base02,
-    color: base07
+    color: base07,
   },
   '.cm-gutters': {
-    borderRight: `1px solid #ffffff10`,
+    borderRight: '1px solid #ffffff10',
     color: base06,
-    backgroundColor: darkBackground
+    backgroundColor: darkBackground,
   },
   '.cm-activeLineGutter': {
-    backgroundColor: highlightBackground
+    backgroundColor: highlightBackground,
   },
   '.cm-foldPlaceholder': {
     backgroundColor: 'transparent',
     border: 'none',
-    color: base02
+    color: base02,
   },
   '.cm-tooltip': {
     border: 'none',
-    backgroundColor: tooltipBackground
+    backgroundColor: tooltipBackground,
   },
   '.cm-tooltip .cm-tooltip-arrow:before': {
     borderTopColor: 'transparent',
-    borderBottomColor: 'transparent'
+    borderBottomColor: 'transparent',
   },
   '.cm-tooltip .cm-tooltip-arrow:after': {
     borderTopColor: tooltipBackground,
-    borderBottomColor: tooltipBackground
+    borderBottomColor: tooltipBackground,
   },
   '.cm-tooltip-autocomplete': {
     '& > ul > li[aria-selected]': {
       backgroundColor: highlightBackground,
-      color: base03
-    }
-  }
-}, { dark: true })
+      color: base03,
+    },
+  },
+}, { dark: true });
 
 // Define the highlighting style for code in the Andromeda theme.
 export const andromedaHighlightStyle = HighlightStyle.define([
@@ -130,11 +130,11 @@ export const andromedaHighlightStyle = HighlightStyle.define([
   { tag: [t.atom, t.bool, t.special(t.variableName)], color: base0B },
   { tag: [t.processingInstruction, t.inserted], color: base0B },
   { tag: [t.contentSeparator], color: base06 },
-  { tag: t.invalid, color: base02, borderBottom: `1px dotted ${invalid}` }
-])
+  { tag: t.invalid, color: base02, borderBottom: `1px dotted ${invalid}` },
+]);
 
 // Extension to enable the Andromeda theme (both the editor theme and the highlight style).
 export const andromeda: Extension = [
   andromedaTheme,
-  syntaxHighlighting(andromedaHighlightStyle)
-]
+  syntaxHighlighting(andromedaHighlightStyle),
+];

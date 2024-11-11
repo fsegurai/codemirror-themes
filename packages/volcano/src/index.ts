@@ -1,7 +1,7 @@
-import { EditorView } from '@codemirror/view'
-import { Extension } from '@codemirror/state'
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
-import { tags as t } from '@lezer/highlight'
+import { EditorView } from '@codemirror/view';
+import { Extension } from '@codemirror/state';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { tags as t } from '@lezer/highlight';
 
 // Volcano theme color definitions aligned with the schema
 const base00 = '#390000',  // Background
@@ -17,59 +17,59 @@ const base00 = '#390000',  // Background
   base0A = '#fec758ff', // Class, Heading
   base0B = '#994646ff', // Number
   base0C = '#aa5507ff', // Tag
-  invalid = '#ffffffff' // Invalid
+  invalid = '#ffffffff'; // Invalid
 
 const darkBackground = '#580000',   // Dropdown background
   highlightBackground = '#ff000033', // Active line and Matching bracket
   tooltipBackground = base01,     // Tooltip using foreground color
   cursor = base04,               // Caret color
-  selection = base02            // Selection color
+  selection = base02;            // Selection color
 
 // Define the editor theme styles for Volcano.
 export const volcanoTheme = EditorView.theme({
   '&': {
     color: base01,
-    backgroundColor: base00
+    backgroundColor: base00,
   },
   '.cm-content': {
-    caretColor: cursor
+    caretColor: cursor,
   },
   '.cm-cursor, .cm-dropCursor': {
-    borderLeftColor: cursor
+    borderLeftColor: cursor,
   },
   '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-    backgroundColor: selection
+    backgroundColor: selection,
   },
   '.cm-searchMatch': {
     backgroundColor: base02,  // Use the selection color for search matches
     color: base01,            // Foreground color for text
-    outline: `1px solid ${base03}`  // Outline using comment color
+    outline: `1px solid ${base03}`,  // Outline using comment color
   },
   '.cm-searchMatch.cm-searchMatch-selected': {
     backgroundColor: base05,  // Use the keyword color for the selected search match
-    color: base00             // Background color for high visibility
+    color: base00,             // Background color for high visibility
   },
   '.cm-panels': {
     backgroundColor: darkBackground,
-    color: base01
+    color: base01,
   },
   '.cm-panels.cm-panels-top': {
-    borderBottom: '2px solid black'
+    borderBottom: '2px solid black',
   },
   '.cm-panels.cm-panels-bottom': {
-    borderTop: '2px solid black'
+    borderTop: '2px solid black',
   },
   '.cm-activeLine': {
-    backgroundColor: highlightBackground
+    backgroundColor: highlightBackground,
   },
   '.cm-gutters': {
     backgroundColor: darkBackground,
-    color: base03
+    color: base03,
   },
   '.cm-tooltip': {
-    backgroundColor: tooltipBackground
-  }
-}, { dark: true })
+    backgroundColor: tooltipBackground,
+  },
+}, { dark: true });
 
 // Define the highlighting style for code in the Volcano theme.
 export const volcanoHighlightStyle = HighlightStyle.define([
@@ -93,11 +93,11 @@ export const volcanoHighlightStyle = HighlightStyle.define([
   { tag: t.heading, fontWeight: 'bold', color: base0A },
   { tag: [t.atom, t.bool, t.special(t.variableName)], color: base06 },
   { tag: t.invalid, color: invalid },
-  { tag: t.strikethrough, textDecoration: 'line-through' }
-])
+  { tag: t.strikethrough, textDecoration: 'line-through' },
+]);
 
 // Extension to enable the Volcano theme (both the editor theme and the highlight style).
 export const volcano: Extension = [
   volcanoTheme,
-  syntaxHighlighting(volcanoHighlightStyle)
-]
+  syntaxHighlighting(volcanoHighlightStyle),
+];
