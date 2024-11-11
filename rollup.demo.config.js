@@ -8,7 +8,7 @@ export default {
   output: [
     {
       format: 'es',
-      dir: './demo/dist/',
+      dir: 'dist/demo/browser',
       externalLiveBindings: false
     }
   ],
