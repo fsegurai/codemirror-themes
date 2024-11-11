@@ -31,6 +31,7 @@ jobs:
       github.ref == 'refs/heads/main' &&
       github.event.repository.fork == false
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     environment: FSI_DEP_NodeJs
     strategy:
       matrix:
@@ -66,9 +67,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ vars.NODE_VERSION }}
-          registry-url: 'https://registry.npmjs.org/'
-          scope: ${{ vars.NPM_ORG }}
-          always-auth: true
 
       - name: Cache node modules
         uses: actions/cache@v4
@@ -91,15 +89,88 @@ jobs:
         with:
           name: ${{ matrix.package }}-build
           path: packages/${{ matrix.package }}
+          if-no-files-found: error
+
+  release:
+    if: |
+      github.ref == 'refs/heads/main' &&
+      github.event.repository.fork == false
+    needs: [build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    environment: FSI_DEP_NodeJs
+    strategy:
+      matrix:
+        package:
+          [
+            abcdef,
+            abyss,
+            android-studio,
+            andromeda,
+            basic-dark,
+            basic-light,
+            forest,
+            github-dark,
+            github-light,
+            gruvbox-dark,
+            gruvbox-light,
+            material-dark,
+            material-light,
+            monokai,
+            nord,
+            solarized-dark,
+            solarized-light,
+            tokyo-night-day,
+            tokyo-night-storm,
+            volcano,
+            bundle
+          ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ vars.NODE_VERSION }} for NPM registry
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org/'
+          scope: ${{ vars.NPM_ORG }}
+          always-auth: true
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.package }}-build
+
+      - name: Get package version
+        id: get_version
+        run: echo "VERSION=$(jq -r .version < packages/${{ matrix.package }}/package.json)" >> $GITHUB_ENV
+
+      - name: Determine tag
+        id: determine_tag
+        run: |
+          VERSION=${{ steps.get_version.outputs.VERSION }}
+          if [[ "$VERSION" == *"-beta"* ]]; then
+            echo "TAG=beta" >> $GITHUB_OUTPUT
+          elif [[ "$VERSION" == *"-alpha"* ]]; then
+            echo "TAG=alpha" >> $GITHUB_OUTPUT
+          elif [[ "$VERSION" == *"-rc"* ]]; then
+            echo "TAG=rc" >> $GITHUB_OUTPUT
+          elif [[ "$VERSION" == *"-next"* ]]; then
+            echo "TAG=next" >> $GITHUB_OUTPUT
+          else
+            echo "TAG=latest" >> $GITHUB_OUTPUT
+          fi
 
       - name: Release to NPM registry 🚀
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd packages/${{ matrix.package }}
-          npm publish --access public || echo "Package already published in NPM, skipping..."
+          npm publish --tag ${{ steps.determine_tag.outputs.TAG }} --access public || echo "Package already published in NPM, skipping..."
 
-      - name: Set up Node.js for GitHub registry
+      - name: Set up Node.js ${{ vars.NODE_VERSION }} for GitHub NPM registry
         uses: actions/setup-node@v4
         with:
           node-version: ${{ vars.NODE_VERSION }}
@@ -113,4 +184,4 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_GH_TOKEN }}
         run: |
           cd packages/${{ matrix.package }}
-          npm publish || echo "Package already published in GitHub NPM, skipping..."
+          npm publish --tag ${{ steps.determine_tag.outputs.TAG }} && npx semantic-release || echo "Package already published in GitHub NPM, skipping..."
