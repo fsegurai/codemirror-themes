@@ -26,31 +26,29 @@ jobs:
       github.ref == 'refs/heads/main' &&
       github.event.repository.fork == false
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 1
     environment:
       name: github-pages
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js - Version ${{ vars.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ vars.NODE_VERSION }}
+      - name: Install Bun
+        run: curl -fsSL https://bun.sh/install | bash
 
-      - name: Cache node modules
+      - name: Cache bun modules
         uses: actions/cache@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          path: ~/.bun
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: |
-            ${{ runner.os }}-node-
+            ${{ runner.os }}-bun-
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install
 
       - name: Build project
-        run: npm run build
+        run: bun run build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -64,7 +62,7 @@ jobs:
       github.ref == 'refs/heads/main' &&
       github.event.repository.fork == false
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 1
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
