@@ -147,7 +147,7 @@ jobs:
 
       - name: Get package version
         id: get_version
-        run: echo "VERSION=$(jq -r .version < packages/${{ matrix.package }}/dist/package.json)" >> $GITHUB_OUTPUT
+        run: echo "VERSION=$(jq -r .version < packages/${{ matrix.package }}/package.json)" >> $GITHUB_OUTPUT
 
       - name: Determine tag
         id: determine_tag
