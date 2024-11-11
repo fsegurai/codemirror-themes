@@ -1,4 +1,4 @@
-name: Test Lib
+name: Test Lib-Demo
 # Job will only run on push and pull requests to the main branch
 
 on:
