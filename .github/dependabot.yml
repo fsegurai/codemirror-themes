@@ -4,8 +4,22 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    labels:
+      - "infra"
+    open-pull-requests-limit: 10
+    assignees:
+      - fsegurai
+    commit-message:
+      prefix: "ci"
+
   - package-ecosystem: "npm"
-    versioning-strategy: "increase"
     directory: "/"
     schedule:
       interval: "weekly"
+    labels:
+      - "infra"
+    open-pull-requests-limit: 10
+    assignees:
+      - fsegurai
+    commit-message:
+      prefix: "npm"
