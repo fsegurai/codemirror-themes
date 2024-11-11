@@ -31,7 +31,6 @@ jobs:
       github.ref == 'refs/heads/main' &&
       github.event.repository.fork == false
     runs-on: ubuntu-latest
-    timeout-minutes: 2
     environment: FSI_DEP_NodeJs
     strategy:
       matrix:
@@ -61,13 +60,16 @@ jobs:
           ]
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Node.js - Version ${{ vars.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ vars.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org/'
+          scope: ${{ vars.NPM_ORG }}
+          always-auth: true
 
       - name: Cache node modules
         uses: actions/cache@v4
@@ -86,19 +88,14 @@ jobs:
           npm run prepare
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.ARTIFACT_NAME }}-${{ matrix.package }}
-          path: packages/${{ matrix.package }}
-          if-no-files-found: error
+          name: ${{ matrix.package }}-build
+          path: packages/${{ matrix.package }}/dist
 
   release:
-    if: |
-      github.ref == 'refs/heads/main' &&
-      github.event.repository.fork == false
-    needs: [build]
+    needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 2
     environment: FSI_DEP_NodeJs
     strategy:
       matrix:
@@ -128,10 +125,22 @@ jobs:
           ]
 
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js ${{ vars.NODE_VERSION }} for NPM registry
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ matrix.package }}-build
+          path: packages/${{ matrix.package }}/dist
+
+      # List all files in the dist folder
+      - name: List files in dist folder
+        run: |
+          ls -a packages/${{ matrix.package }}
+          ls -R packages/${{ matrix.package }}/dist
+
+      - name: Set up Node.js - Version ${{ vars.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ vars.NODE_VERSION }}
@@ -139,44 +148,14 @@ jobs:
           scope: ${{ vars.NPM_ORG }}
           always-auth: true
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ env.ARTIFACT_NAME }}-${{ matrix.package }}
-          path: packages/${{ matrix.package }}
-
-      # ls to check if the package is downloaded
-      - name: List downloaded package
-        run: ls -l
-
-      - name: Get package version
-        id: get_version
-        run: echo "VERSION=$(jq -r .version < packages/${{ matrix.package }}/package.json)" >> $GITHUB_OUTPUT
-
-      - name: Determine tag
-        id: determine_tag
-        run: |
-          VERSION=${{ steps.get_version.outputs.VERSION }}
-          if [[ "$VERSION" == *"-beta"* ]]; then
-            echo "TAG=beta" >> $GITHUB_OUTPUT
-          elif [[ "$VERSION" == *"-alpha"* ]]; then
-            echo "TAG=alpha" >> $GITHUB_OUTPUT
-          elif [[ "$VERSION" == *"-rc"* ]]; then
-            echo "TAG=rc" >> $GITHUB_OUTPUT
-          elif [[ "$VERSION" == *"-next"* ]]; then
-            echo "TAG=next" >> $GITHUB_OUTPUT
-          else
-            echo "TAG=latest" >> $GITHUB_OUTPUT
-          fi
-
       - name: Release to NPM registry 🚀
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd packages/${{ matrix.package }}
-          npm publish --tag ${{ steps.determine_tag.outputs.TAG }} --access public || echo "Package already published in NPM, skipping..."
+          npm publish --access public || echo "Package already published in NPM, skipping..."
 
-      - name: Set up Node.js ${{ vars.NODE_VERSION }} for GitHub NPM registry
+      - name: Set up Node.js for GitHub registry
         uses: actions/setup-node@v4
         with:
           node-version: ${{ vars.NODE_VERSION }}
@@ -190,4 +169,4 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_GH_TOKEN }}
         run: |
           cd packages/${{ matrix.package }}
-          npm publish --tag ${{ steps.determine_tag.outputs.TAG }} && npx semantic-release || echo "Package already published in GitHub NPM, skipping..."
+          npm publish || echo "Package already published in GitHub NPM, skipping..."
