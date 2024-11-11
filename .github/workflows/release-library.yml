@@ -163,6 +163,12 @@ jobs:
             echo "TAG=latest" >> $GITHUB_OUTPUT
           fi
 
+      - name: List files in artifact
+        run: ls -l ${{ steps.download_artifact.outputs.download-path }}
+
+      - name: Current directory files
+        run: ls -l
+
       - name: Release to NPM registry 🚀
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
