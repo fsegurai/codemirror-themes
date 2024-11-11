@@ -35,8 +35,7 @@ jobs:
     environment: FSI_DEP_NodeJs
     strategy:
       matrix:
-        package:
-          [
+        package: [
             abcdef,
             abyss,
             android-studio,
@@ -57,11 +56,11 @@ jobs:
             tokyo-night-day,
             tokyo-night-storm,
             volcano,
-            bundle
+            bundle # This is a special package that bundles all themes together and is published as a separate package
           ]
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Node.js - Version ${{ vars.NODE_VERSION }}
@@ -85,10 +84,10 @@ jobs:
           cd packages/${{ matrix.package }}
           npm run prepare
 
-      - name: Upload build artifacts
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}-${{ matrix.package }}
+          name: ${{ matrix.package }}-build
           path: packages/${{ matrix.package }}
           if-no-files-found: error
 
@@ -128,7 +127,7 @@ jobs:
           ]
 
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Node.js ${{ vars.NODE_VERSION }} for NPM registry
@@ -139,15 +138,14 @@ jobs:
           scope: ${{ vars.NPM_ORG }}
           always-auth: true
 
-      - name: Download build artifacts
+      - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}-${{ matrix.package }}
-          path: packages/${{ matrix.package }}
+          name: ${{ matrix.package }}-build
 
       - name: Get package version
         id: get_version
-        run: echo "VERSION=$(jq -r .version < packages/${{ matrix.package }}/package.json)" >> $GITHUB_OUTPUT
+        run: echo "VERSION=$(jq -r .version < packages/${{ matrix.package }}/package.json)" >> $GITHUB_ENV
 
       - name: Determine tag
         id: determine_tag
