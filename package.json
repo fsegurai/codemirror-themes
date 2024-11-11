@@ -42,7 +42,7 @@
     "trailingComma": "none"
   },
   "dependencies": {
-    "@codemirror/lang-markdown": "^6.3.0",
+    "@codemirror/lang-markdown": "^6.3.1",
     "@codemirror/language": "^6.10.3",
     "@codemirror/language-data": "^6.5.1",
     "@codemirror/legacy-modes": "^6.4.1",
