@@ -144,10 +144,6 @@ jobs:
           name: ${{ matrix.package }}-build
           path: packages/${{ matrix.package }}
 
-      - name: Confirm artifact path
-        run: |
-          echo "Downloaded artifact path: packages/${{ matrix.package }}"
-
       - name: Get package version
         id: get_version
         run: echo "VERSION=$(jq -r .version < packages/${{ matrix.package }}/package.json)" >> $GITHUB_ENV
@@ -167,6 +163,11 @@ jobs:
           else
             echo "TAG=latest" >> $GITHUB_OUTPUT
           fi
+
+      - name: Confirm artifact path and list contents
+        run: |
+          echo "Downloaded artifact path: packages/${{ matrix.package }}"
+          ls -R packages/${{ matrix.package }}
 
       - name: Release to NPM registry 🚀
         env:
