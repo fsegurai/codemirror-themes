@@ -1,7 +1,7 @@
-import { EditorView } from '@codemirror/view'
-import { Extension } from '@codemirror/state'
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
-import { tags as t } from '@lezer/highlight'
+import { EditorView } from '@codemirror/view';
+import { Extension } from '@codemirror/state';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { tags as t } from '@lezer/highlight';
 
 // Android Studio theme colors
 const base00 = '#282b2e', // Background
@@ -16,34 +16,34 @@ const base00 = '#282b2e', // Background
   base09 = '#bbb529', // Meta, DocumentMeta
   base0A = '#6a8759', // String, PropertyName, AttributeValue
   base0B = '#ffc66d', // Heading, TypeName
-  base0C = '#a9b7c6' // AttributeName
+  base0C = '#a9b7c6'; // AttributeName
 
 // Define the editor theme styles for Android Studio.
 export const androidStudioTheme = EditorView.theme({
   '&': {
     color: base01,
-    backgroundColor: base00
+    backgroundColor: base00,
   },
   '.cm-content': {
-    caretColor: base04
+    caretColor: base04,
   },
   '&.cm-focused .cm-cursor': {
-    borderLeftColor: base04
+    borderLeftColor: base04,
   },
   '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-    backgroundColor: base02
+    backgroundColor: base02,
   },
   '.cm-activeLine': {
-    backgroundColor: base03
+    backgroundColor: base03,
   },
   '.cm-gutters': {
     backgroundColor: base00,
-    color: base01
+    color: base01,
   },
   '.cm-tooltip': {
-    backgroundColor: base01
-  }
-}, { dark: true })
+    backgroundColor: base01,
+  },
+}, { dark: true });
 
 // Define the highlighting style for code in the Android Studio theme.
 export const androidStudioHighlightStyle = HighlightStyle.define([
@@ -55,11 +55,11 @@ export const androidStudioHighlightStyle = HighlightStyle.define([
   { tag: [t.string, t.propertyName, t.attributeValue], color: base0A },
   { tag: [t.heading, t.typeName], color: base0B },
   { tag: [t.attributeName], color: base0C },
-  { tag: t.emphasis, fontStyle: 'italic' }
-])
+  { tag: t.emphasis, fontStyle: 'italic' },
+]);
 
 // Extension to enable the Android Studio theme (both the editor theme and the highlight style).
 export const androidStudio: Extension = [
   androidStudioTheme,
-  syntaxHighlighting(androidStudioHighlightStyle)
-]
+  syntaxHighlighting(androidStudioHighlightStyle),
+];

@@ -10,9 +10,8 @@ const base00 = '#0f0f0f',  // Background
   base03 = '#515151',  // Gutter background (same as selection for consistency)
   base04 = '#FFFFFF',  // Gutter foreground
   base05 = '#00FF00',  // Caret
-  base06 = '#1a1c1d80',  // Line highlight with some opacity for visibility
+  base06 = '#51515160',  // Line highlight with some opacity for visibility
   base07 = '#555',    // Dark background for panels
-
   base08 = 'darkgoldenrod', // Keyword
   base09 = '#77F',          // Atom
   base0A = '#7a7b7c',       // Comment
@@ -24,7 +23,7 @@ const base00 = '#0f0f0f',  // Background
   invalid = '#fc6d24';      // Invalid color, making it slightly more vibrant
 
 const darkBackground = base07,  // Use base07 for panel backgrounds
-  highlightBackground = base02 + '60',  // Adding opacity for highlight
+  highlightBackground = base06,  // Adding opacity for highlight
   tooltipBackground = base01,
   cursor = base05,
   selection = base02;
@@ -33,41 +32,41 @@ const darkBackground = base07,  // Use base07 for panel backgrounds
 export const abcdefTheme = EditorView.theme({
   '&': {
     color: base01,
-    backgroundColor: base00
+    backgroundColor: base00,
   },
   '.cm-content': {
-    caretColor: cursor
+    caretColor: cursor,
   },
   '.cm-cursor, .cm-dropCursor': {
-    borderLeftColor: cursor
+    borderLeftColor: cursor,
   },
   '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-    backgroundColor: selection
+    backgroundColor: selection,
   },
   '.cm-search.cm-panel.cm-textfield': {
     color: base04,
-    borderRadius: '3px'
+    borderRadius: '3px',
   },
   '.cm-panels': {
     backgroundColor: darkBackground,
-    color: base04
+    color: base04,
   },
   '.cm-panels.cm-panels-top': {
-    borderBottom: '2px solid black'
+    borderBottom: '2px solid black',
   },
   '.cm-panels.cm-panels-bottom': {
-    borderTop: '2px solid black'
+    borderTop: '2px solid black',
   },
   '.cm-activeLine': {
-    backgroundColor: highlightBackground
+    backgroundColor: highlightBackground,
   },
   '.cm-gutters': {
     backgroundColor: base03,
-    color: base04
+    color: base04,
   },
   '.cm-tooltip': {
-    backgroundColor: tooltipBackground
-  }
+    backgroundColor: tooltipBackground,
+  },
 }, { dark: true });
 
 // Define the highlighting style for code in the Abcdef theme.
@@ -87,11 +86,11 @@ export const abcdefHighlightStyle = HighlightStyle.define([
   { tag: t.attributeName, color: base0D },
   { tag: t.heading, color: base0E, fontWeight: 'bold' },
   { tag: t.link, color: base0F, fontWeight: 'bold' },
-  { tag: t.invalid, color: invalid, textDecoration: 'underline' }
+  { tag: t.invalid, color: invalid, textDecoration: 'underline' },
 ]);
 
 // Extension to enable the Abcdef theme (both the editor theme and the highlight style).
 export const abcdef: Extension = [
   abcdefTheme,
-  syntaxHighlighting(abcdefHighlightStyle)
+  syntaxHighlighting(abcdefHighlightStyle),
 ];

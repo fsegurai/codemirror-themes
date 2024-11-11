@@ -1,13 +1,13 @@
-import globals from 'globals'
-import eslint from '@eslint/js'
-import tseslint from 'typescript-eslint'
+import globals from 'globals';
+import eslint from '@eslint/js';
+import tseslint from 'typescript-eslint';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   {
     files: ['**/*.{js,mjs,cjs,ts}'],
     languageOptions: {
-      globals: globals.browser
+      globals: globals.browser,
     },
     rules: {
       '@typescript-eslint/ban-types': 'off',
@@ -19,8 +19,8 @@ export default [
         'error',
         {
           before: false,
-          after: true
-        }
+          after: true,
+        },
       ],
       'object-curly-spacing': ['error', 'always'],
       'object-shorthand': 'off',
@@ -31,12 +31,12 @@ export default [
         'error',
         {
           ignoreCase: true,
-          ignoreDeclarationSort: true
-        }
-      ]
-    }
+          ignoreDeclarationSort: true,
+        },
+      ],
+    },
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
-  ...tseslint.configs.stylistic
-]
+  ...tseslint.configs.stylistic,
+];

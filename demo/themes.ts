@@ -1,105 +1,105 @@
-import { abcdef } from '../packages/abcdef/src'
-import { abyss } from '../packages/abyss/src'
-import { androidStudio } from '../packages/android-studio/src'
-import { andromeda } from '../packages/andromeda'
-import { basicDark } from '../packages/basic-dark/src'
-import { basicLight } from '../packages/basic-light/src'
-import { forest } from '../packages/forest/src'
-import { githubDark } from '../packages/github-dark/src'
-import { githubLight } from '../packages/github-light/src'
-import { gruvboxDark } from '../packages/gruvbox-dark/src'
-import { gruvboxLight } from '../packages/gruvbox-light/src'
-import { materialDark } from '../packages/material-dark/src'
-import { materialLight } from '../packages/material-light/src'
-import { monokai } from '../packages/monokai/src'
-import { nord } from '../packages/nord/src'
-import { solarizedDark } from '../packages/solarized-dark'
-import { solarizedLight } from '../packages/solarized-light/src'
-import { tokyoNightStorm } from '../packages/tokyo-night-storm/src'
-import { tokyoNightDay } from '../packages/tokyo-night-day/src'
-import { volcano } from '../packages/volcano/src'
+import { abcdef } from '../packages/abcdef/src';
+import { abyss } from '../packages/abyss/src';
+import { androidStudio } from '../packages/android-studio/src';
+import { andromeda } from '../packages/andromeda';
+import { basicDark } from '../packages/basic-dark/src';
+import { basicLight } from '../packages/basic-light/src';
+import { forest } from '../packages/forest/src';
+import { githubDark } from '../packages/github-dark/src';
+import { githubLight } from '../packages/github-light/src';
+import { gruvboxDark } from '../packages/gruvbox-dark/src';
+import { gruvboxLight } from '../packages/gruvbox-light/src';
+import { materialDark } from '../packages/material-dark/src';
+import { materialLight } from '../packages/material-light/src';
+import { monokai } from '../packages/monokai/src';
+import { nord } from '../packages/nord/src';
+import { solarizedDark } from '../packages/solarized-dark';
+import { solarizedLight } from '../packages/solarized-light/src';
+import { tokyoNightStorm } from '../packages/tokyo-night-storm/src';
+import { tokyoNightDay } from '../packages/tokyo-night-day/src';
+import { volcano } from '../packages/volcano/src';
 
 const themes = [
   {
     name: 'abcdef',
-    extension: abcdef
+    extension: abcdef,
   },
   {
     name: 'abyss',
-    extension: abyss
+    extension: abyss,
   },
   {
     name: 'android-studio',
-    extension: androidStudio
+    extension: androidStudio,
   },
   {
     name: 'andromeda',
-    extension: andromeda
+    extension: andromeda,
   },
   {
     name: 'basic-dark',
-    extension: basicDark
+    extension: basicDark,
   },
   {
     name: 'basic-light',
-    extension: basicLight
+    extension: basicLight,
   },
   {
     name: 'forest',
-    extension: forest
+    extension: forest,
   },
   {
     name: 'github-dark',
-    extension: githubDark
+    extension: githubDark,
   },
   {
     name: 'github-light',
-    extension: githubLight
+    extension: githubLight,
   },
   {
     name: 'gruvbox-dark',
-    extension: gruvboxDark
+    extension: gruvboxDark,
   },
   {
     name: 'gruvbox-light',
-    extension: gruvboxLight
+    extension: gruvboxLight,
   },
   {
     name: 'material-dark',
-    extension: materialDark
+    extension: materialDark,
   },
   {
     name: 'material-light',
-    extension: materialLight
+    extension: materialLight,
   },
   {
     name: 'monokai',
-    extension: monokai
+    extension: monokai,
   },
   {
     name: 'nord',
-    extension: nord
+    extension: nord,
   },
   {
     name: 'solarized-dark',
-    extension: solarizedDark
+    extension: solarizedDark,
   },
   {
     name: 'solarized-light',
-    extension: solarizedLight
+    extension: solarizedLight,
   },
   {
     name: 'tokyo-night-storm',
-    extension: tokyoNightStorm
+    extension: tokyoNightStorm,
   },
   {
     name: 'tokyo-night-day',
-    extension: tokyoNightDay
+    extension: tokyoNightDay,
   },
   {
     name: 'volcano',
-    extension: volcano
-  }
-]
+    extension: volcano,
+  },
+];
 
-export default themes
+export default themes;

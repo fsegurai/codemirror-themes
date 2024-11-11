@@ -1,7 +1,7 @@
-import { EditorView } from '@codemirror/view'
-import { Extension } from '@codemirror/state'
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
-import { tags as t } from '@lezer/highlight'
+import { EditorView } from '@codemirror/view';
+import { Extension } from '@codemirror/state';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { tags as t } from '@lezer/highlight';
 
 // Forest theme color definitions
 const base00 = '#1b2b34',  // Background - dark blue-green forest shade
@@ -15,54 +15,54 @@ const base00 = '#1b2b34',  // Background - dark blue-green forest shade
   base08 = '#ec5f67',  // String, RegExp - autumn berry red
   base09 = '#ab7967',  // Constant, Number - earthy tone, wet autumn leaves
   base0A = '#f99157',  // Class, Heading - soft fox orange
-  invalid = '#f2777a' // Invalid - faded red warning
+  invalid = '#f2777a'; // Invalid - faded red warning
 
 const darkBackground = '#2b303b',  // Dropdown background - deep shade found under thick leaves
   highlightBackground = '#3e3d3257', // Active line and Matching bracket - moss on a rock
   tooltipBackground = base01,        // Tooltip using foreground color
   cursor = base04,                   // Caret color
   selection = '#398450c2',                // Selection color
-  selectionMatch = '#5d3535'
+  selectionMatch = '#5d3535';
 
 // Define the editor theme styles for Forest.
 export const forestTheme = EditorView.theme({
   '&': {
     color: base01,
-    backgroundColor: base00
+    backgroundColor: base00,
   },
   '.cm-content': {
-    caretColor: cursor
+    caretColor: cursor,
   },
   '.cm-cursor, .cm-dropCursor': {
-    borderLeftColor: cursor
+    borderLeftColor: cursor,
   },
   '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
     backgroundColor: selection,
-    color: '#FFFFFF'
+    color: '#FFFFFF',
   },
   '.cm-panels': {
     backgroundColor: darkBackground,
-    color: base01
+    color: base01,
   },
   '.cm-panels.cm-panels-top': {
-    borderBottom: '2px solid black'
+    borderBottom: '2px solid black',
   },
   '.cm-panels.cm-panels-bottom': {
-    borderTop: '2px solid black'
+    borderTop: '2px solid black',
   },
   '.cm-activeLine': {
-    backgroundColor: highlightBackground
+    backgroundColor: highlightBackground,
   },
   '.cm-gutters': {
     backgroundColor: darkBackground,
-    color: base03
+    color: base03,
   },
   '.cm-activeLineGutter': {
     backgroundColor: selection,
-    color: '#FFFFFF'
+    color: '#FFFFFF',
   },
   '.cm-tooltip': {
-    backgroundColor: tooltipBackground
+    backgroundColor: tooltipBackground,
   },
   '.cm-selectionMatch': {
     backgroundColor: selectionMatch,
@@ -70,25 +70,25 @@ export const forestTheme = EditorView.theme({
   '.cm-searchMatch': {
     backgroundColor: base02,  // Use the selection color for search matches
     color: base01,            // Foreground color for text
-    outline: `1px solid ${base03}`  // Outline using comment color
+    outline: `1px solid ${base03}`,  // Outline using comment color
   },
   '.cm-searchMatch.cm-searchMatch-selected': {
     backgroundColor: base05,  // Use the keyword color for the selected search match
-    color: base00             // Background color for high visibility
+    color: base00,             // Background color for high visibility
   },
   '.cm-searchMatch.cm-searchMatch-selected .ͼ5k': {
-    color: base00
+    color: base00,
   },
   '.cm-searchMatch .cm-selectionMatch': {
-    color: base01
+    color: base01,
   },
   '.cm-searchMatch .cm-selectionMatch .ͼ5k': {
-    color: base01
+    color: base01,
   },
   '.cm-searchMatch .ͼ5k': {
-    color: base01
-  }
-}, { dark: true })
+    color: base01,
+  },
+}, { dark: true });
 
 // Define the highlighting style for code in the Forest theme.
 export const forestHighlightStyle = HighlightStyle.define([
@@ -112,11 +112,11 @@ export const forestHighlightStyle = HighlightStyle.define([
   { tag: t.heading, fontWeight: 'bold', color: base0A },
   { tag: [t.atom, t.bool, t.special(t.variableName)], color: base06 },
   { tag: t.invalid, color: invalid },
-  { tag: t.strikethrough, textDecoration: 'line-through' }
-])
+  { tag: t.strikethrough, textDecoration: 'line-through' },
+]);
 
 // Extension to enable the Forest theme (both the editor theme and the highlight style).
 export const forest: Extension = [
   forestTheme,
-  syntaxHighlighting(forestHighlightStyle)
-]
+  syntaxHighlighting(forestHighlightStyle),
+];

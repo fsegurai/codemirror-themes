@@ -1,7 +1,7 @@
-import { EditorView } from '@codemirror/view'
-import { Extension } from '@codemirror/state'
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
-import { tags as t } from '@lezer/highlight'
+import { EditorView } from '@codemirror/view';
+import { Extension } from '@codemirror/state';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { tags as t } from '@lezer/highlight';
 
 // GitHub Dark theme color definitions
 const base00 = '#0d1117',  // Background
@@ -17,59 +17,59 @@ const base00 = '#0d1117',  // Background
   base0A = '#ffdcd7',  // Deleted text color
   base0B = '#ffeef0',  // Deleted background color
   base0C = '#ffab70',  // Atom, Bool, Special VariableName
-  invalid = '#f97583' // Invalid color
+  invalid = '#f97583'; // Invalid color
 
 const highlightBackground = '#36334280', // Line highlight with some opacity
   tooltipBackground = base01,        // Tooltips using foreground color
   cursor = base04,                    // Caret color
-  selection = base02                 // Selection color
+  selection = base02;                 // Selection color
 
 // Define the editor theme styles for GitHub Dark.
 export const githubDarkTheme = EditorView.theme({
   '&': {
     color: base01,
-    backgroundColor: base00
+    backgroundColor: base00,
   },
   '.cm-content': {
-    caretColor: cursor
+    caretColor: cursor,
   },
   '.cm-cursor, .cm-dropCursor': {
-    borderLeftColor: cursor
+    borderLeftColor: cursor,
   },
   '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-    backgroundColor: selection
+    backgroundColor: selection,
   },
   '.cm-searchMatch': {
     backgroundColor: base02,  // Use the selection color for search matches
     color: base01,            // Ensure the text color contrasts with the background
-    outline: `1px solid ${base04}`  // Highlight with a subtle outline
+    outline: `1px solid ${base04}`,  // Highlight with a subtle outline
   },
   '.cm-searchMatch.cm-searchMatch-selected': {
     backgroundColor: base08,  // Use a distinct color for the selected search match
     color: base00,            // Invert color for high visibility
-    outline: `1px solid ${base04}`
+    outline: `1px solid ${base04}`,
   },
   '.cm-panels': {
     backgroundColor: base00,  // Use the main background color for consistency
-    color: base01
+    color: base01,
   },
   '.cm-panels.cm-panels-top': {
-    borderBottom: '2px solid black'
+    borderBottom: '2px solid black',
   },
   '.cm-panels.cm-panels-bottom': {
-    borderTop: '2px solid black'
+    borderTop: '2px solid black',
   },
   '.cm-activeLine': {
-    backgroundColor: highlightBackground
+    backgroundColor: highlightBackground,
   },
   '.cm-gutters': {
     backgroundColor: base00,  // Gutter background using the main background
-    color: base03             // Use comment color for gutter foreground
+    color: base03,             // Use comment color for gutter foreground
   },
   '.cm-tooltip': {
-    backgroundColor: tooltipBackground
-  }
-}, { dark: true })
+    backgroundColor: tooltipBackground,
+  },
+}, { dark: true });
 
 // Define the highlighting style for code in the GitHub Dark theme.
 export const githubDarkHighlightStyle = HighlightStyle.define([
@@ -86,11 +86,11 @@ export const githubDarkHighlightStyle = HighlightStyle.define([
   { tag: [t.atom, t.bool, t.special(t.variableName)], color: base0C },
   { tag: t.link, textDecoration: 'underline' },
   { tag: t.strikethrough, textDecoration: 'line-through' },
-  { tag: t.invalid, color: invalid }
-])
+  { tag: t.invalid, color: invalid },
+]);
 
 // Extension to enable the GitHub Dark theme (both the editor theme and the highlight style).
 export const githubDark: Extension = [
   githubDarkTheme,
-  syntaxHighlighting(githubDarkHighlightStyle)
-]
+  syntaxHighlighting(githubDarkHighlightStyle),
+];
