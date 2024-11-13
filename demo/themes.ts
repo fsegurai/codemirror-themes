@@ -13,11 +13,14 @@ import { materialDark } from '../packages/material-dark/src';
 import { materialLight } from '../packages/material-light/src';
 import { monokai } from '../packages/monokai/src';
 import { nord } from '../packages/nord/src';
+import { palenight } from '../packages/palenight/src';
 import { solarizedDark } from '../packages/solarized-dark';
 import { solarizedLight } from '../packages/solarized-light/src';
 import { tokyoNightStorm } from '../packages/tokyo-night-storm/src';
 import { tokyoNightDay } from '../packages/tokyo-night-day/src';
 import { volcano } from '../packages/volcano/src';
+import { vscodeDark } from '../packages/vscode-dark/src';
+import { vscodeLight } from '../packages/vscode-light/src';
 
 const themes = [
   {
@@ -81,6 +84,10 @@ const themes = [
     extension: nord,
   },
   {
+    name: 'palenight',
+    extension: palenight,
+  },
+  {
     name: 'solarized-dark',
     extension: solarizedDark,
   },
@@ -99,6 +106,14 @@ const themes = [
   {
     name: 'volcano',
     extension: volcano,
+  },
+  {
+    name: 'vscode-dark',
+    extension: vscodeDark,
+  },
+  {
+    name: 'vscode-light',
+    extension: vscodeLight,
   },
 ];
 

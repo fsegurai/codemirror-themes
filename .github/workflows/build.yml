@@ -35,6 +35,8 @@ jobs:
             tokyo-night-day,
             tokyo-night-storm,
             volcano,
+            vscode-dark,
+            vscode-light,
             bundle
           ]
 

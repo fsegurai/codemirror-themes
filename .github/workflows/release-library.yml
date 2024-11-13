@@ -55,6 +55,8 @@ jobs:
             tokyo-night-day,
             tokyo-night-storm,
             volcano,
+            vscode-dark,
+            vscode-light,
             bundle # This is a special package that bundles all themes together and is published as a separate package
           ]
 
