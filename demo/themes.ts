@@ -1,7 +1,7 @@
 import { abcdef } from '../packages/abcdef/src';
 import { abyss } from '../packages/abyss/src';
 import { androidStudio } from '../packages/android-studio/src';
-import { andromeda } from '../packages/andromeda';
+import { andromeda } from '../packages/andromeda/src';
 import { basicDark } from '../packages/basic-dark/src';
 import { basicLight } from '../packages/basic-light/src';
 import { forest } from '../packages/forest/src';
@@ -14,13 +14,13 @@ import { materialLight } from '../packages/material-light/src';
 import { monokai } from '../packages/monokai/src';
 import { nord } from '../packages/nord/src';
 import { palenight } from '../packages/palenight/src';
-import { solarizedDark } from '../packages/solarized-dark';
+import { solarizedDark } from '../packages/solarized-dark/src';
 import { solarizedLight } from '../packages/solarized-light/src';
-import { tokyoNightStorm } from '../packages/tokyo-night-storm/src';
 import { tokyoNightDay } from '../packages/tokyo-night-day/src';
+import { tokyoNightStorm } from '../packages/tokyo-night-storm/src';
 import { volcano } from '../packages/volcano/src';
-import { vscodeDark } from '../packages/vscode-dark/src';
-import { vscodeLight } from '../packages/vscode-light/src';
+import { vsCodeDark } from '../packages/vscode-dark/src';
+import { vsCodeLight } from '../packages/vscode-light/src';
 
 const themes = [
   {
@@ -109,11 +109,11 @@ const themes = [
   },
   {
     name: 'vscode-dark',
-    extension: vscodeDark,
+    extension: vsCodeDark,
   },
   {
     name: 'vscode-light',
-    extension: vscodeLight,
+    extension: vsCodeLight,
   },
 ];
 

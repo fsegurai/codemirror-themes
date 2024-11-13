@@ -19,5 +19,5 @@ export { solarizedLight } from '@fsegurai/codemirror-theme-solarized-light';
 export { tokyoNightDay } from '@fsegurai/codemirror-theme-tokyo-night-day';
 export { tokyoNightStorm } from '@fsegurai/codemirror-theme-tokyo-night-storm';
 export { volcano } from '@fsegurai/codemirror-theme-volcano';
-export { vscodeDark } from '@fsegurai/codemirror-theme-vscode-dark';
-export { vscodeLight } from '@fsegurai/codemirror-theme-vscode-light';
+export { vsCodeDark } from '@fsegurai/codemirror-theme-vscode-dark';
+export { vsCodeLight } from '@fsegurai/codemirror-theme-vscode-light';

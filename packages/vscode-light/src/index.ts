@@ -27,7 +27,7 @@ const background = '#ffffff',
   invalidColor = '#e45649';
 
 // Define the editor theme styles for VSCode Light
-export const vscodeLightTheme = EditorView.theme(
+export const vsCodeLightTheme = EditorView.theme(
   {
     '&': {
       color: foreground,
@@ -64,7 +64,7 @@ export const vscodeLightTheme = EditorView.theme(
 );
 
 // Define the highlighting style for code in the VSCode Light theme
-export const vscodeLightHighlightStyle = HighlightStyle.define([
+export const vsCodeLightHighlightStyle = HighlightStyle.define([
   {
     tag: [
       t.keyword,
@@ -132,7 +132,7 @@ export const vscodeLightHighlightStyle = HighlightStyle.define([
 ]);
 
 // Extension to enable the VSCode Light theme (both the editor theme and the highlight style)
-export const vscodeLight: Extension = [
-  vscodeLightTheme,
-  syntaxHighlighting(vscodeLightHighlightStyle),
+export const vsCodeLight: Extension = [
+  vsCodeLightTheme,
+  syntaxHighlighting(vsCodeLightHighlightStyle),
 ];
