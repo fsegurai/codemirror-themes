@@ -1,5 +1,5 @@
 name: Release Demo
-# Job will only run on push to the main branch after the test job and release library job have passed
+# Job will only run on push to the main branch after the release library job have passed
 
 on:
   workflow_run:
@@ -64,7 +64,8 @@ jobs:
   release:
     if: |
       github.ref == 'refs/heads/main' &&
-      github.event.repository.fork == false
+      github.event.repository.fork == false &&
+      github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 1
     environment:
