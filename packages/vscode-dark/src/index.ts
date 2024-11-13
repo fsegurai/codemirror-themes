@@ -26,7 +26,7 @@ const background = '#1e1e1e',
   invalidColor = '#ff0000';
 
 // Define the editor theme styles for VSCode Dark
-export const vscodeDarkTheme = EditorView.theme(
+export const vsCodeDarkTheme = EditorView.theme(
   {
     '&': {
       color: foreground,
@@ -63,7 +63,7 @@ export const vscodeDarkTheme = EditorView.theme(
 );
 
 // Define the highlighting style for code in the VSCode Dark theme
-export const vscodeDarkHighlightStyle = HighlightStyle.define([
+export const vsCodeDarkHighlightStyle = HighlightStyle.define([
   {
     tag: [
       t.keyword,
@@ -130,7 +130,7 @@ export const vscodeDarkHighlightStyle = HighlightStyle.define([
 ]);
 
 // Extension to enable the VSCode Dark theme (both the editor theme and the highlight style)
-export const vscodeDark: Extension = [
-  vscodeDarkTheme,
-  syntaxHighlighting(vscodeDarkHighlightStyle),
+export const vsCodeDark: Extension = [
+  vsCodeDarkTheme,
+  syntaxHighlighting(vsCodeDarkHighlightStyle),
 ];

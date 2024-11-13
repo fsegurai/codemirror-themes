@@ -85,11 +85,14 @@ Read the [CodeMirror documentation](https://codemirror.net/6/examples/styling/) 
 - [Material Dark](./packages/material-dark)
 - [Monokai](./packages/monokai)
 - [Nord](./packages/nord)
+- [Palenight](./packages/palenight)
 - [Solarized Light](./packages/solarized-light)
 - [Solarized Dark](./packages/solarized-dark)
 - [Tokyo Night Storm](./packages/tokyo-night-storm)
 - [Tokyo Night Day](./packages/tokyo-night-day)
 - [Volcano](./packages/volcano)
+- [VS Code Dark](./packages/vscode-dark)
+- [VS Code Light](./packages/vscode-light)
 
 For a full list, see the [`@fsegurai/codemirror-theme-bundle`](./packages/bundle) directory or the online [DEMO](https://fsegurai.github.io/codemirror-themes/).
 
