@@ -50,6 +50,7 @@ jobs:
             material-light,
             monokai,
             nord,
+            palenight,
             solarized-dark,
             solarized-light,
             tokyo-night-day,
@@ -57,7 +58,8 @@ jobs:
             volcano,
             vscode-dark,
             vscode-light,
-            bundle # This is a special package that bundles all themes together and is published as a separate package
+            # This is a special package that bundles all themes together and is published as a separate package at the end to avoid conflicts with individual themes
+            bundle
           ]
 
     steps:
