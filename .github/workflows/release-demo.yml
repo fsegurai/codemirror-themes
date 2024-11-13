@@ -1,5 +1,5 @@
 name: Release Demo
-# Job will only run on push to the main branch after the test job and release library job have passed
+# Job will only run on push to the main branch after the release library job have passed
 
 on:
   workflow_run:
