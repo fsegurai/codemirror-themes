@@ -7,8 +7,8 @@
       <img src="https://github.com/fsegurai/codemirror-themes/actions/workflows/release-library.yml/badge.svg"
           alt="Build Status">
   </a>
-  <a href="https://www.npmjs.org/package/@fsegurai/codemirror-theme-solarized-dark">
-      <img src="https://img.shields.io/npm/v/@fsegurai/codemirror-theme-solarized-dark.svg"
+  <a href="https://www.npmjs.org/package/@fsegurai/codemirror-theme-vscode-dark">
+      <img src="https://img.shields.io/npm/v/@fsegurai/codemirror-theme-vscode-dark.svg"
           alt="Latest Release">
   </a>
   <br>
@@ -24,12 +24,12 @@
 
 **A library of custom themes for CodeMirror 6.**
 
-`@fsegurai/codemirror-theme-solarized-dark` is a theme for CodeMirror 6 editor, making it visually engaging and adaptable to different coding styles and user preferences.
+`@fsegurai/codemirror-theme-vscode-dark` is a theme for CodeMirror 6 editor, making it visually engaging and adaptable to different coding styles and user preferences.
 
 ### Table of contents
 
 - [Installation](#installation)
-  - [@fsegurai/codemirror-theme-solarized-dark](#fseguraicodemirror-theme-solarized-dark)
+  - [@fsegurai/codemirror-theme-vscode-dark](#fseguraicodemirror-theme-vscode-dark)
   - [Using Theme](#using-theme)
   - [Available Themes](#available-themes)
   - [Demo Application](#demo-application)
@@ -37,12 +37,12 @@
 
 ## Installation
 
-### @fsegurai/codemirror-theme-solarized-dark
+### @fsegurai/codemirror-theme-vscode-dark
 
-To add `@fsegurai/codemirror-theme-solarized-dark` along with CodeMirror 6 to your `package.json` use the following commands.
+To add `@fsegurai/codemirror-theme-vscode-dark` along with CodeMirror 6 to your `package.json` use the following commands.
 
 ```bash
-npm install @fsegurai/codemirror-theme-solarized-dark codemirror@^6.0.0 --save
+npm install @fsegurai/codemirror-theme-vscode-dark codemirror@^6.0.0 --save
 ```
 
 ### Using Theme
@@ -52,14 +52,14 @@ Import the respective theme from the package and apply it to your CodeMirror ins
 ```javascript
 import { EditorView, basicSetup } from 'codemirror'
 import { markdown } from '@codemirror/lang-markdown'
-import { solarizedDark } from '@fsegurai/codemirror-theme-basic-solarized-dark'
+import { vsCodeDark } from '@fsegurai/codemirror-theme-basic-vscode-dark'
 
 let editor = new EditorView({
   doc: '# Hello World',
   extensions: [
     basicSetup,
     markdown(),
-    solarizedDark
+    vsCodeDark
   ],
   parent: document.body
 })
