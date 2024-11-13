@@ -64,7 +64,8 @@ jobs:
   release:
     if: |
       github.ref == 'refs/heads/main' &&
-      github.event.repository.fork == false
+      github.event.repository.fork == false &&
+      github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 1
     environment:

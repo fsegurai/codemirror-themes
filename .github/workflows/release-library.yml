@@ -109,6 +109,10 @@ jobs:
           fi
 
       - name: Release to NPM registry 🚀
+        if: |
+          github.ref == 'refs/heads/main' &&
+          github.event.repository.fork == false &&
+          github.actor != 'dependabot[bot]'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -124,6 +128,10 @@ jobs:
           always-auth: true
 
       - name: Release to GitHub NPM registry 🚀
+        if: |
+          github.ref == 'refs/heads/main' &&
+          github.event.repository.fork == false &&
+          github.actor != 'dependabot[bot]'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_GH_TOKEN }}
