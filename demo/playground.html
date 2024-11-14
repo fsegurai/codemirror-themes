@@ -14,14 +14,6 @@
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
     />
 
-    <!-- PureCSS -->
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/purecss@2.0.6/build/pure-min.css"
-      integrity="sha384-Uu6IeWbM+gzNVXJcM9XV3SohHtmWE+3VGi496jvgX1jyvDTXfdK+rfZc8C1Aehk5"
-      crossorigin="anonymous"
-    />
-
     <!-- Local Styles -->
     <link rel="stylesheet" href="./styles/themes.css" />
     <link rel="stylesheet" href="./styles/header.css" />
@@ -39,8 +31,6 @@
     <!-- Material Web Components -->
     <script type="module">
       import '@material/web/all.js'
-      import { styles as typescaleStyles } from '@material/web/typography/md-typescale-styles.js'
-      document.adoptedStyleSheets.push(typescaleStyles.styleSheet)
     </script>
 
     <!-- Local Scripts -->
@@ -49,19 +39,18 @@
   </head>
   <body>
     <header class="header">
-      <div class="home-menu pure-menu pure-menu-horizontal">
-        <h1 class="pure-menu-heading">@fsegurai/codemirror-themes</h1>
+      <div class="menu-horizontal">
+        <h1 class="menu-heading">@fsegurai/codemirror-themes</h1>
+
         <span class="divider-header"></span>
 
-        <ul class="pure-menu-list">
-          <li class="pure-menu-item pure-menu-selected">
-            <md-ripple for="themeToggle"></md-ripple>
+        <ul class="menu-list">
+          <li class="menu-item menu-selected">
             <md-icon-button id="themeToggle">
               <md-icon></md-icon>
             </md-icon-button>
           </li>
-          <li class="pure-menu-item pure-menu-selected">
-            <md-ripple for="github"></md-ripple>
+          <li class="menu-item menu-selected">
             <md-icon-button
               id="github"
               href="https://github.com/fsegurai/codemirror-themes"
@@ -101,10 +90,14 @@
           class="hidden"
           label="Theme"
           name="themes"
-        ></md-outlined-select>
+        >
+          <md-select-option id="defaultOptionValue" selected value="">
+            <div slot="headline">Select an option</div>
+          </md-select-option>
+        </md-outlined-select>
       </div>
 
-      <div id="codemirror"></div>
+      <div id="codemirror" class="codemirror"></div>
     </main>
   </body>
 </html>

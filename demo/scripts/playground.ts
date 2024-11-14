@@ -24,20 +24,26 @@ const editor = new EditorView({
 });
 
 const elList = document.querySelector('#theme-list');
+const defaultOption = document.querySelector('#defaultOptionValue')!;
+
 if (elList) {
   setTimeout(() => {
     for (let i = 0; i < themes.length; ++i) {
-      const elItem = document.createElement('md-select-option');
+      // Create new options for the remaining themes
+      const elItem =
+        i === 0 ? defaultOption : document.createElement('md-select-option');
       elItem.setAttribute('value', i.toString());
       const themeItem = document.createElement('div');
       themeItem.slot = 'headline';
       themeItem.textContent = themes[i].name;
-      elItem.appendChild(themeItem);
+      if (i === 0) {
+        // Update the default option
+        defaultOption.querySelector('div[slot="headline"]')!.textContent = themes[i].name;
+      } else {
+        elItem.appendChild(themeItem);
+      }
       elList.appendChild(elItem);
     }
-
-    // Select the first option by default
-    ;(elList as unknown as { value: string }).value = '0';
 
     elList.addEventListener('change', e => {
       const target = e.target as HTMLElement;
@@ -52,7 +58,7 @@ if (elList) {
     });
 
     elList.classList.remove('hidden');
-  }, 1000);
+  }, 500);
 }
 
 export default editor;

@@ -1,4 +1,4 @@
-.home-menu {
+.menu-horizontal {
   flex-direction: row;
   box-sizing: border-box;
   display: flex;
@@ -9,7 +9,7 @@
   white-space: nowrap;
   height: 64px;
 
-  & .pure-menu-heading {
+  & .menu-heading {
     color: white;
     font-weight: 500;
     font-size: 20px;
@@ -17,21 +17,39 @@
     text-transform: lowercase;
     line-height: 32px;
     margin: 0;
+    padding: 0.5em 1em;
+    display: inline-block;
+    vertical-align: middle;
   }
 
-  .divider-header {
+  & .divider-header {
     flex: 1 1 0%;
     box-sizing: border-box;
   }
 
-  & .pure-menu-selected {
-    color: white;
+  & .menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
 
-    md-icon {
+    & .menu-item {
+      display: inline-block;
+      vertical-align: middle;
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      position: relative;
+    }
+
+    & .menu-selected {
       color: white;
 
-      & .custom-icon {
-        color: #ffffff;
+      md-icon {
+        color: white;
+
+        & .custom-icon {
+          color: #ffffff;
+        }
       }
     }
   }
@@ -39,17 +57,14 @@
 
 .tab-link-container {
   margin: 0 auto;
-  overflow: auto;
+  overflow: hidden;
   display: flex;
   flex-grow: 1;
-  overflow: hidden;
   position: -webkit-sticky; /* For Safari */
   position: sticky;
   top: 0;
   z-index: 1000;
-  border-bottom-style: solid;
-  border-bottom-width: 0;
-  border-bottom-color: transparent;
+  border-bottom: 0 solid transparent;
 
   & .tab-link-content {
     display: flex;
@@ -63,10 +78,7 @@
       opacity: 0.6;
       font-size: 14px;
       font-weight: 500;
-      letter-spacing: normal;
       margin: 0 16px;
-      min-width: 0;
-      opacity: 0.6;
       padding: 0;
       text-decoration: none;
       transition: all 0.2s ease-out;
@@ -86,17 +98,15 @@
       &.active {
         opacity: 1;
 
-        & .tab-indicator {
-          & .underline {
-            border-color: #ffffff;
-            border-radius: 3px 3px 0 0;
-            border-top-width: 3px;
-            transition-duration: 0.5s;
-            align-self: flex-end;
-            box-sizing: border-box;
-            width: 100%;
-            border-top-style: solid;
-          }
+        & .tab-indicator .underline {
+          border-color: #ffffff;
+          border-radius: 3px 3px 0 0;
+          border-top-width: 3px;
+          transition-duration: 0.5s;
+          align-self: flex-end;
+          box-sizing: border-box;
+          width: 100%;
+          border-top-style: solid;
         }
       }
 
@@ -116,8 +126,7 @@
           color: #ffffff;
           display: inline-flex;
           align-items: center;
-          transition-delay: 100ms;
-          transition: 150ms color linear;
+          transition: 150ms color linear 100ms;
           line-height: 1;
           z-index: 2;
 
