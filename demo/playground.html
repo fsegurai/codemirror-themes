@@ -17,7 +17,7 @@
     <!-- Local Styles -->
     <link rel="stylesheet" href="./styles/themes.css" />
     <link rel="stylesheet" href="./styles/header.css" />
-    <link rel="stylesheet" href="./styles/index.css" />
+    <link rel="stylesheet" href="./styles/playground.css" />
 
     <!-- Import Map for @material/web -->
     <script type="importmap">
@@ -35,7 +35,7 @@
 
     <!-- Local Scripts -->
     <script type="module" defer src="./dist/header.js"></script>
-    <script type="module" defer src="./dist/index.js"></script>
+    <script type="module" defer src="./dist/playground.js"></script>
   </head>
   <body>
     <header class="header">
@@ -83,8 +83,21 @@
       </md-icon-button>
     </nav>
 
-    <main class="main-index">
-      <div id="markdown-body" class="markdown-body"></div>
+    <main class="main-playground">
+      <div id="theme-picker">
+        <md-outlined-select
+          id="theme-list"
+          class="hidden"
+          label="Theme"
+          name="themes"
+        >
+          <md-select-option id="defaultOptionValue" selected value="">
+            <div slot="headline">Select an option</div>
+          </md-select-option>
+        </md-outlined-select>
+      </div>
+
+      <div id="codemirror" class="codemirror"></div>
     </main>
   </body>
 </html>
