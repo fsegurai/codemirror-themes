@@ -6,8 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const routes: Route[] = [
-    { path: '/', label: 'Get Started', icon: 'play_arrow' },
-    { path: '/playground.html', label: 'Playground', icon: 'ar_stickers' },
+    { path: '', label: 'Get Started', icon: 'play_arrow' },
+    { path: 'playground.html', label: 'Playground', icon: 'ar_stickers' },
   ];
 
   // Function to render tabs
