@@ -5,7 +5,7 @@ import dev from 'rollup-plugin-dev';
 
 export default {
   input: [
-    './demo/scripts/get-started.ts',
+    './demo/scripts/index.ts',
     './demo/scripts/header.ts',
     './demo/scripts/playground.ts',
   ],
