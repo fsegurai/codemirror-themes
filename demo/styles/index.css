@@ -1,0 +1,86 @@
+.main-index {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+
+  /* Base Markdown Styles */
+  & .markdown-body {
+    line-height: 1.6;
+    padding: 20px;
+    max-width: 960px;
+    margin: 0 auto;
+
+    & h1,
+    & h2,
+    & h3,
+    & h4,
+    & h5,
+    & h6 {
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+      font-weight: 600;
+    }
+
+    & p {
+      margin: 0.5em 0;
+    }
+
+    & p > img[src*='codemirror-themes.png'] {
+      width: calc(100% / 3);
+    }
+
+    & a {
+      color: #0366d6;
+      text-decoration: none;
+    }
+
+    & a:hover {
+      text-decoration: underline;
+    }
+
+    & blockquote {
+      padding: 0.5em 1em;
+      margin: 0.8em 0;
+      border-left: 0.25em solid #dfe2e5;
+      color: #6a737d;
+      background-color: #f6f8fa;
+    }
+
+    & code {
+      padding: 0.2em 0.4em;
+      margin: 0;
+      font-size: 0.9rem;
+      background-color: rgba(27, 31, 35, 0.05);
+      border-radius: 3px;
+    }
+
+    & code[class^='language-'] {
+      background-color: transparent;
+    }
+
+    & pre {
+      padding: 1em;
+      overflow: auto;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      background-color: #f6f8fa;
+      border-radius: 3px;
+    }
+
+    & table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    & th,
+    & td {
+      padding: 0.6em 1em;
+      border: 1px solid #dfe2e5;
+    }
+
+    & th {
+      background-color: #f6f8fa;
+      font-weight: 600;
+    }
+  }
+}

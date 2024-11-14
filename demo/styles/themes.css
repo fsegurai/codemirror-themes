@@ -94,6 +94,33 @@ html {
           background-color: #02a7fa;
         }
       }
+
+      /* Markdown Content */
+      .markdown-body {
+        color: #d1d5da;
+        background-color: transparent;
+
+        & a {
+          color: #58a6ff;
+        }
+
+        & blockquote {
+          border-left-color: #444c56;
+          background-color: #2d333b;
+        }
+
+        & code {
+          background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        & pre {
+          background-color: #2d333b;
+        }
+
+        & th {
+          background-color: #2d333b;
+        }
+      }
     }
 
     &.light {
@@ -161,6 +188,33 @@ html {
 
         & .scroll-up-button {
           background-color: #0066cc;
+        }
+      }
+
+      /* Markdown Content */
+      .markdown-body {
+        color: #24292e;
+        background-color: transparent;
+
+        & a {
+          color: #0366d6;
+        }
+
+        & blockquote {
+          border-left-color: #dfe2e5;
+          background-color: #f6f8fa;
+        }
+
+        & code {
+          background-color: rgba(27, 31, 35, 0.05);
+        }
+
+        & pre {
+          background-color: #f6f8fa;
+        }
+
+        & th {
+          background-color: #f6f8fa;
         }
       }
     }
