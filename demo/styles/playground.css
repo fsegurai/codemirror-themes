@@ -1,0 +1,22 @@
+#theme-picker {
+  margin: 1em 0;
+  min-height: 3.5rem;
+
+  & #theme-list {
+    width: 100%;
+
+    & md-menu {
+      max-height: 25rem !important;
+    }
+
+    &.hidden {
+      display: none;
+    }
+  }
+}
+
+.main-playground {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+}

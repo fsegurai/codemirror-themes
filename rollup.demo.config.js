@@ -1,16 +1,20 @@
-import typescript from 'rollup-plugin-typescript2'
-import commonjs from '@rollup/plugin-commonjs'
-import resolve from '@rollup/plugin-node-resolve'
-import dev from 'rollup-plugin-dev'
+import typescript from 'rollup-plugin-typescript2';
+import commonjs from '@rollup/plugin-commonjs';
+import resolve from '@rollup/plugin-node-resolve';
+import dev from 'rollup-plugin-dev';
 
 export default {
-  input: './demo/index.ts',
+  input: [
+    './demo/scripts/get-started.ts',
+    './demo/scripts/header.ts',
+    './demo/scripts/playground.ts',
+  ],
   output: [
     {
       format: 'es',
       dir: './demo/dist',
-      externalLiveBindings: false
-    }
+      externalLiveBindings: false,
+    },
   ],
   external: [],
   plugins: [
@@ -21,15 +25,15 @@ export default {
           lib: ['es5', 'es6'],
           sourceMap: true,
           target: 'es6',
-          strict: false
-        }
-      }
+          strict: false,
+        },
+      },
     }),
     resolve(),
     commonjs(),
     dev({
       dirs: ['demo'],
-      port: 8000
-    })
-  ]
-}
+      port: 8000,
+    }),
+  ],
+};
