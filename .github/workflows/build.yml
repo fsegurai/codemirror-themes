@@ -9,7 +9,7 @@ env:
 jobs:
   build_library:
     runs-on: ubuntu-latest
-    timeout-minutes: 1
+    timeout-minutes: 2
     environment: FSI_DEP_NodeJs
     strategy:
       matrix:
