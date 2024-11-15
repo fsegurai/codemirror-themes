@@ -65,7 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
       tabLinkContainer.appendChild(link);
 
       // Check if the current URL matches the link's href
-      if (window.location.pathname === route.path) {
+      if (
+        window.location.href ===
+        new URL(route.path, window.location.origin).href
+      ) {
         link.classList.toggle('active');
       }
     });
