@@ -51,7 +51,7 @@
       margin: 0;
       font-size: 0.9rem;
       background-color: rgba(27, 31, 35, 0.05);
-      border-radius: 3px;
+      border-radius: 4px;
     }
 
     & code[class^='language-'] {
@@ -63,8 +63,29 @@
       overflow: auto;
       font-size: 0.9rem;
       line-height: 1.45;
-      background-color: #f6f8fa;
-      border-radius: 3px;
+      background-color: #1e1e1e;
+      border-radius: 4px;
+      position: relative;
+
+      & .copy-btn {
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        background-color: #ffffff12;
+        border: none;
+        border-radius: 4px;
+        color: #fff;
+        cursor: pointer;
+        font-size: 11px;
+        padding: 4px 8px;
+        min-width: 50px;
+        width: auto;
+        transition: all 0.25s ease-out;
+
+        &:hover {
+          background-color: #ffffff24;
+        }
+      }
     }
 
     & table {

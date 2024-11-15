@@ -33,6 +33,7 @@
   - [Using a Specific Theme](#using-a-specific-theme)
   - [Available Themes](#available-themes)
   - [Demo Application](#demo-application)
+  - [Local Development](#local-development)
 - [License](#license)
 
 ## Installation
@@ -94,11 +95,13 @@ Read the [CodeMirror documentation](https://codemirror.net/6/examples/styling/) 
 - [VS Code Dark](https://github.com/fsegurai/codemirror-themes/tree/main/packages/vscode-dark)
 - [VS Code Light](https://github.com/fsegurai/codemirror-themes/tree/main/packages/vscode-light)
 
-For a full list, see the [`@fsegurai/codemirror-theme-bundle`](https://github.com/fsegurai/codemirror-themes/tree/main/packages/bundle) directory or the online [DEMO](https://fsegurai.github.io/codemirror-themes/).
+For a full list, see the [`@fsegurai/codemirror-theme-bundle`](https://github.com/fsegurai/codemirror-themes/tree/main/packages/bundle) directory or the online demo.
 
 ### Demo Application
 
-To see all themes in action, check out the demo: [https://fsegurai.github.io/codemirror-themes](https://fsegurai.github.io/codemirror-themes).
+To see all themes in action, check out the [DEMO](https://fsegurai.github.io/codemirror-themes).
+
+### Local Development
 
 To set up the demo locally:
 
