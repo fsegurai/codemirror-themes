@@ -50,6 +50,9 @@ jobs:
         run: npm ci
 
       - name: Build project
+        env:
+          NODE_ENV: ${{ secrets.NODE_ENV }}
+          HOST_URL: ${{ secrets.HOST_URL }}
         run: |
           npm run build:demo
           npm run postBuild:demo

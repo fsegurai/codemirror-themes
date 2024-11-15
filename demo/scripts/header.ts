@@ -1,3 +1,8 @@
+import ENV_REFERENCE from './const/const-env-reference';
+
+const isProdEnv = ENV_REFERENCE.CMT_NODE_ENV === 'production';
+const hostUrl = ENV_REFERENCE.CMT_HOST_URL_ENV;
+
 document.addEventListener('DOMContentLoaded', () => {
   interface Route {
     path: string
@@ -5,9 +10,22 @@ document.addEventListener('DOMContentLoaded', () => {
     icon: string
   }
 
+  if (!hostUrl) console.warn('CMT_HOST_URL_ENV is not defined');
+
   const routes: Route[] = [
-    { path: '/', label: 'Get Started', icon: 'play_arrow' },
-    { path: '/playground.html', label: 'Playground', icon: 'ar_stickers' },
+    {
+      path: isProdEnv && hostUrl ? `${hostUrl}/` : '/',
+      label: 'Get Started',
+      icon: 'play_arrow',
+    },
+    {
+      path:
+        isProdEnv && hostUrl
+          ? `${hostUrl}/playground.html`
+          : '/playground.html',
+      label: 'Playground',
+      icon: 'ar_stickers',
+    },
   ];
 
   // Function to render tabs
