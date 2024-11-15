@@ -98,6 +98,9 @@ jobs:
         run: npm ci # package-lock.json is present
 
       - name: Build demo
+        env:
+          NODE_ENV: ${{ secrets.NODE_ENV }}
+          HOST_URL: ${{ secrets.HOST_URL }}
         run: |
           npm run build:demo
           npm run postBuild:demo
