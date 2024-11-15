@@ -51,7 +51,7 @@
       margin: 0;
       font-size: 0.9rem;
       background-color: rgba(27, 31, 35, 0.05);
-      border-radius: 3px;
+      border-radius: 8px;
     }
 
     & code[class^='language-'] {
@@ -63,8 +63,8 @@
       overflow: auto;
       font-size: 0.9rem;
       line-height: 1.45;
-      background-color: #f6f8fa;
-      border-radius: 3px;
+      background-color: #1e1e1e;
+      border-radius: 8px;
     }
 
     & table {
