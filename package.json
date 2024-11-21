@@ -24,8 +24,8 @@
   "scripts": {
     "clean:demo": "rimraf --glob ./demo/dist && rimraf --glob ./demo/README.md && rimraf --glob ./demo/LICENSE",
     "clean:packages": "rimraf --glob ./packages/*/dist",
-    "start": "rollup -w -c rollup.demo.config.js",
-    "build:demo": "rollup -c rollup.demo.config.js",
+    "start": "rollup -w -c rollup.config.js",
+    "build:demo": "rollup -c rollup.config.js",
     "postBuild:demo": "cpy ./README.md ./demo && cpy ./LICENSE ./demo",
     "build:packages": "npm run prepare --workspaces",
     "lint": "npm run lint:demo && npm run lint:packages",
