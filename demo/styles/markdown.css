@@ -27,6 +27,12 @@
 
     & p > img[src*='codemirror-themes.png'] {
       width: calc(100% / 3);
+      background: linear-gradient(
+        to right,
+        #da687d 0%,
+        rgba(255, 255, 255, 0) 100%
+      );
+      border-radius: 50%;
     }
 
     & a {
