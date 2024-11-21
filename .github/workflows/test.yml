@@ -2,19 +2,6 @@ name: Test Lib-Demo
 # Job will only run on push and pull requests to the main branch
 
 on:
-  push:
-    branches: ['main']
-    paths-ignore:
-      - '.github/**'
-      - 'docs/**'
-      - 'assets/**'
-      - 'demo/public/**'
-      - '*.yml'
-      - '*.json'
-      - '*.config'
-      - '*.md'
-      - '!package.json'
-      - '!github/workflows/**'
   pull_request:
     branches: ['main']
     paths-ignore:
