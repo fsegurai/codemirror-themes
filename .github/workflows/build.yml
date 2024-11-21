@@ -66,13 +66,6 @@ jobs:
           cd packages/${{ matrix.package }}
           npm run prepare
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.LIB_ARTIFACT_NAME }}-${{ matrix.package }}
-          path: packages/${{ matrix.package }}/dist
-          if-no-files-found: error
-
   build_demo:
     runs-on: ubuntu-latest
     timeout-minutes: 1

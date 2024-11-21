@@ -10,6 +10,9 @@
   <a href="https://github.com/fsegurai/codemirror-themes/releases/latest">
       <img src="https://img.shields.io/github/v/release/fsegurai/codemirror-themes"
           alt="Latest Release">
+  <a href="https://github.com/fsegurai/codemirror-themes/actions/workflows/test.yml">
+      <img src="https://github.com/fsegurai/codemirror-themes/actions/workflows/test.yml/badge.svg?branch=main"
+          alt="Test Status">
   </a>
   <br>
   <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/fsegurai/codemirror-themes">
@@ -95,7 +98,7 @@ Read the [CodeMirror documentation](https://codemirror.net/6/examples/styling/) 
 - [VS Code Dark](https://github.com/fsegurai/codemirror-themes/tree/main/packages/vscode-dark)
 - [VS Code Light](https://github.com/fsegurai/codemirror-themes/tree/main/packages/vscode-light)
 
-For a full list, see the [`@fsegurai/codemirror-theme-bundle`](https://github.com/fsegurai/codemirror-themes/tree/main/packages/bundle) directory or the online demo.
+For a full list, see the [<code>@fsegurai/codemirror-theme-bundle</code>](https://github.com/fsegurai/codemirror-themes/tree/main/packages/bundle) directory or the online demo.
 
 ### Demo Application
 
