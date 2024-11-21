@@ -94,8 +94,6 @@ Read the [CodeMirror documentation](https://codemirror.net/6/examples/styling/) 
 - [VS Code Dark](./packages/vscode-dark)
 - [VS Code Light](./packages/vscode-light)
 
-For a full list, see the [`@fsegurai/codemirror-theme-bundle`](./packages/bundle) directory or the online [DEMO](https://fsegurai.github.io/codemirror-themes/).
-
 ### Demo Application
 
 To see all themes in action, check out the demo: [https://fsegurai.github.io/codemirror-themes](https://fsegurai.github.io/codemirror-themes).
