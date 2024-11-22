@@ -2,14 +2,46 @@ import globals from 'globals';
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
-/** @type {import('eslint').Linter.Config[]} */
 export default [
   {
-    files: ['**/*.{js,mjs,cjs,ts}'],
+    ignores: ['**/demo/dist', '**/*.min.js', '**/packages/*/dist'],
+  },
+  {
     languageOptions: {
       globals: globals.browser,
     },
     rules: {
+      quotes: ['error', 'single'],
+      semi: ['error', 'always'],
+      indent: [
+        'error',
+        2,
+        {
+          SwitchCase: 1,
+          VariableDeclarator: {
+            var: 2,
+          },
+          outerIIFEBody: 0,
+        },
+      ],
+      'operator-linebreak': [
+        'error',
+        'before',
+        {
+          overrides: {
+            '=': 'after',
+          },
+        },
+      ],
+      'space-before-function-paren': ['error', 'never'],
+      'no-cond-assign': 'off',
+      'no-useless-escape': 'off',
+      'one-var': 'off',
+      'no-control-regex': 'off',
+      'no-prototype-builtins': 'off',
+      'no-extra-semi': 'error',
+      'prefer-const': 'error',
+      'no-var': 'error',
       '@typescript-eslint/ban-types': 'off',
       '@typescript-eslint/dot-notation': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
@@ -24,8 +56,6 @@ export default [
       ],
       'object-curly-spacing': ['error', 'always'],
       'object-shorthand': 'off',
-      quotes: ['error', 'single'],
-      semi: ['error', 'always'],
       'semi-spacing': 'error',
       'sort-imports': [
         'error',

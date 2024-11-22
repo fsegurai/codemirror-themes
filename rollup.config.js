@@ -18,7 +18,7 @@ export default {
   ],
   output: [
     {
-      format: 'es',
+      format: 'esm',
       dir: OUTPUT_DIR,
       externalLiveBindings: false,
     },

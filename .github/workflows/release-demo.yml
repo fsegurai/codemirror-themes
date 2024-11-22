@@ -85,13 +85,13 @@ jobs:
           name: ${{ env.ARTIFACT_NAME }}
           path: ${{ vars.DEMO_PATH }}
 
-      - name: Deploy to gh-pages branch
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ${{ vars.DEMO_PATH }}
-          publish_branch: gh-pages
-          force_orphan: true
+      # - name: Deploy to gh-pages branch
+      #   uses: peaceiris/actions-gh-pages@v4
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     publish_dir: ${{ vars.DEMO_PATH }}
+      #     publish_branch: gh-pages
+      #     force_orphan: true
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

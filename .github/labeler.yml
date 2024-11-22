@@ -1,11 +1,17 @@
 infra:
   - changed-files:
       - any-glob-to-any-file: [
+        '!.github/workflows/**',
         '.github/**',
         'angular.json',
         'package*.json',
         'tsconfig*.json',
         'eslint*.json',
+        '.editorconfig',
+        'babel.config.js',
+        'jest.config.js',
+        'release.config.js',
+        'rollup.config.js',
       ]
 
 dependencies:
