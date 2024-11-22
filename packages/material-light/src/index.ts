@@ -31,7 +31,8 @@ const invalid = base_red,
   cursor = base04;
 
 // Theme configuration adjusted for better contrast and color consistency
-export const materialLightTheme = EditorView.theme({
+export const materialLightTheme = EditorView.theme(
+  {
     '&': {
       color: base02,
       backgroundColor: background,
@@ -60,9 +61,10 @@ export const materialLightTheme = EditorView.theme({
       color: base02,
     },
     '.cm-selectionMatch': { backgroundColor: match },
-    '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-      backgroundColor: selection, // Updated selection color
-    },
+    '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
+      {
+        backgroundColor: selection, // Updated selection color
+      },
     '.cm-gutters': {
       backgroundColor: background,
       borderRight: `1px solid ${base04}`,
@@ -78,7 +80,8 @@ export const materialLightTheme = EditorView.theme({
         color: base03,
       },
     },
-  }, { dark: false },
+  },
+  { dark: false },
 );
 
 /// The highlighting style for code in the Material Dark theme.
