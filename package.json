@@ -1,12 +1,16 @@
 {
   "name": "@fsegurai/codemirror-themes",
-  "version": "6.1.4",
-  "description": "Theme packages for the CodeMirror code editor",
-  "homepage": "https://github.com/fsegurai/codemirror-themes",
+  "version": "6.1.5",
+  "description": "Theme packages for the Codemirror code editor",
+  "type": "module",
   "license": "MIT",
   "author": {
     "name": "Fabián Segura",
     "url": "https://www.fsegurai.com/"
+  },
+  "homepage": "https://github.com/fsegurai/codemirror-themes",
+  "bugs": {
+    "url": "https://github.com/fsegurai/codemirror-themes/issues"
   },
   "repository": {
     "type": "git",
@@ -15,12 +19,14 @@
   "keywords": [
     "editor",
     "code",
-    "codemirror"
+    "codemirror",
+    "theme",
+    "syntax",
+    "highlight"
   ],
   "workspaces": [
     "packages/*"
   ],
-  "type": "module",
   "scripts": {
     "clean:demo": "rimraf --glob ./demo/dist && rimraf --glob ./demo/README.md && rimraf --glob ./demo/LICENSE",
     "clean:packages": "rimraf --glob ./packages/*/dist",
