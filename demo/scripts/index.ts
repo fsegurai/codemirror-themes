@@ -46,39 +46,50 @@ marked.use(
   },
 );
 
-document.addEventListener('DOMContentLoaded', () => {
-  const elMD = document.querySelector('.markdown-body');
-  const readmeURL =
-    'https://raw.githubusercontent.com/fsegurai/codemirror-themes/refs/heads/main/README.md';
+const mdBody = document.querySelector('.markdown-body');
+const readmeURL =
+  'https://raw.githubusercontent.com/fsegurai/codemirror-themes/refs/heads/main/README.md';
 
-  if (elMD) {
+const mdRender = (md: string) => {
+  if (mdBody) {
+    // Render the markdown into the mdBody element
+    mdBody.innerHTML = marked.parse(md) as string;
+
+    // Target every pre element and then, insert the copy button
+    insertCopyElement();
+  }
+};
+
+const insertCopyElement = () => {
+  document.querySelectorAll('pre').forEach(pre => {
+    const button = document.createElement('button');
+    button.className = 'copy-btn';
+    button.textContent = 'Copy';
+    button.setAttribute('data-clipboard-text', pre.textContent || '');
+
+    button.addEventListener('click', () => {
+      button.textContent = 'Copied!';
+      setTimeout(() => {
+        button.textContent = 'Copy';
+      }, 2000);
+    });
+
+    pre.appendChild(button);
+  });
+
+  // Initialize ClipboardJS
+  new ClipboardJS('.copy-btn');
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (mdBody) {
     fetch(readmeURL)
       .then(response => response.text())
       .then(text => {
-        elMD.innerHTML = marked.parse(text) as string;
-
-        // Target every pre element and then, insert the copy button
-        document.querySelectorAll('pre').forEach(pre => {
-          const button = document.createElement('button');
-          button.className = 'copy-btn';
-          button.textContent = 'Copy';
-          button.setAttribute('data-clipboard-text', pre.textContent || '');
-
-          button.addEventListener('click', () => {
-            button.textContent = 'Copied!';
-            setTimeout(() => {
-              button.textContent = 'Copy';
-            }, 2000);
-          });
-
-          pre.appendChild(button);
-        });
-
-        // Initialize ClipboardJS
-        new ClipboardJS('.copy-btn');
+        mdRender(text);
       })
       .catch(error => {
-        elMD.innerHTML = `
+        mdBody.innerHTML = `
           <p>Failed to load README.md</p>
           
           <p>${error}</p>
