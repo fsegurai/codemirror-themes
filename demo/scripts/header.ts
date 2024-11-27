@@ -2,6 +2,7 @@ import ENV_REFERENCE from './const/const-env-reference';
 
 const isProdEnv = ENV_REFERENCE.CMT_NODE_ENV === 'production';
 const hostUrl = ENV_REFERENCE.CMT_HOST_URL_ENV;
+const lsTheme = 'codemirror-theme:theme';
 
 document.addEventListener('DOMContentLoaded', () => {
   interface Route {
@@ -90,10 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Store in local storage
       const isDarkMode = document.body.classList.contains('dark');
-      localStorage.setItem(
-        'codemirror-theme:theme',
-        isDarkMode ? 'dark' : 'light',
-      );
+      localStorage.setItem(lsTheme, isDarkMode ? 'dark' : 'light');
 
       // Update the theme icon
       updateThemeIcon(isDarkMode);
@@ -101,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Get the theme from local storage
-  const currentTheme = localStorage.getItem('codemirror-theme:theme');
+  const currentTheme = localStorage.getItem(lsTheme);
   if (currentTheme) {
     document.body.classList.add(currentTheme);
     document.body.classList.remove(currentTheme === 'dark' ? 'light' : 'dark');
