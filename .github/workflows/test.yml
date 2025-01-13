@@ -62,18 +62,15 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip -d ./workspace
 
-      - name: list files
-        run: |
-          ls -la ./workspace
-
       - name: Set up Bun - Version ${{ vars.BUN_VERSION }}
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ vars.BUN_VERSION }}
 
       - name: Test Lint (Library)
-        working-directory: ./workspace
-        run: bun run lint:packages
+        run: |
+          cd ./workspace
+          bun run lint:packages
 
   test_demo:
     runs-on: ubuntu-latest
