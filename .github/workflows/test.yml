@@ -23,7 +23,7 @@ on:
     types: [completed]
 
 jobs:
-  build_project:
+  test_library:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     environment: FSI_DEP_NodeJs
@@ -39,34 +39,6 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Zip artifact for te
-        run: zip release.zip ./* -r
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: node-app
-          path: release.zip
-
-  test_library:
-    runs-on: ubuntu-latest
-    needs: build_project
-    timeout-minutes: 2
-    environment: FSI_DEP_NodeJs
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: node-app
-
-      - name: Unzip artifact for deployment
-        run: unzip release.zip -d ./workspace
-
-      - name: Set up Bun - Version ${{ vars.BUN_VERSION }}
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ vars.BUN_VERSION }}
-
       - name: Test Lint (Library)
         run: |
           cd ./workspace
@@ -74,22 +46,19 @@ jobs:
 
   test_demo:
     runs-on: ubuntu-latest
-    needs: build_project
     timeout-minutes: 2
     environment: FSI_DEP_NodeJs
     steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: node-app
-
-      - name: Unzip artifact for deployment
-        run: unzip release.zip -d ./workspace
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up Bun - Version ${{ vars.BUN_VERSION }}
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ vars.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: bun install
 
       - name: Test Lint (Demo)
         working-directory: ./workspace
