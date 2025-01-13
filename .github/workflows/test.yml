@@ -63,7 +63,8 @@ jobs:
         run: unzip release.zip -d ./workspace
 
       - name: list files
-        run: ls -la
+        run: |
+          ls -la ./workspace
 
       - name: Set up Bun - Version ${{ vars.BUN_VERSION }}
         uses: oven-sh/setup-bun@v2
