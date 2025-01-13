@@ -59,5 +59,4 @@ jobs:
         run: bun install
 
       - name: Test Lint (Demo)
-        working-directory: ./workspace
         run: bun run lint:demo
