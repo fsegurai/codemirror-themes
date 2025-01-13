@@ -40,9 +40,7 @@ jobs:
         run: bun install
 
       - name: Test Lint (Library)
-        run: |
-          cd ./workspace
-          bun run lint:packages
+        run: bun run lint:packages
 
   test_demo:
     runs-on: ubuntu-latest
@@ -62,4 +60,4 @@ jobs:
 
       - name: Test Lint (Demo)
         working-directory: ./workspace
-        run: npm run lint:demo
+        run: bun run lint:demo
