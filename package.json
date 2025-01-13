@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-themes",
-  "version": "6.1.7",
+  "version": "6.2.0",
   "description": "Theme packages for the Codemirror code editor",
   "type": "module",
   "license": "MIT",
@@ -33,8 +33,8 @@
     "start": "rollup -w -c rollup.config.js",
     "build:demo": "rollup -c rollup.config.js",
     "postBuild:demo": "cpy ./README.md ./demo && cpy ./LICENSE ./demo",
-    "build:packages": "npm run prepare --workspaces",
-    "lint": "npm run lint:demo && npm run lint:packages",
+    "build:packages": "bun --filter '*' prepare",
+    "lint": "bun run lint:demo && bun run lint:packages",
     "lint:demo": "eslint ./demo",
     "lint:packages": "eslint ./packages/*/src/**"
   },
