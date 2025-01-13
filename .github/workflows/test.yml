@@ -23,7 +23,7 @@ on:
     types: [completed]
 
 jobs:
-  test:
+  test_library:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     environment: FSI_DEP_NodeJs
@@ -31,16 +31,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Bun - Version ${{ vars.BUN_VERSION }}
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: ${{ vars.NODE_VERSION }}
+          bun-version: ${{ vars.BUN_VERSION }}
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install
 
       - name: Test Lint (Library)
-        run: npm run lint:packages
+        run: bun run lint:packages
+
+  test_demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    environment: FSI_DEP_NodeJs
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Bun - Version ${{ vars.BUN_VERSION }}
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ vars.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: bun install
 
       - name: Test Lint (Demo)
-        run: npm run lint:demo
+        run: bun run lint:demo
