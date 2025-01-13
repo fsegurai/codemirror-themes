@@ -62,6 +62,9 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip -d ./workspace
 
+      - name: list files
+        run: ls -la
+
       - name: Set up Bun - Version ${{ vars.BUN_VERSION }}
         uses: oven-sh/setup-bun@v2
         with:
