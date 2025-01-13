@@ -60,7 +60,7 @@ jobs:
           name: node-app
 
       - name: Unzip artifact for deployment
-        run: unzip release.zip
+        run: unzip release.zip -d ./workspace
 
       - name: Set up Bun - Version ${{ vars.BUN_VERSION }}
         uses: oven-sh/setup-bun@v2
@@ -68,6 +68,7 @@ jobs:
           bun-version: ${{ vars.BUN_VERSION }}
 
       - name: Test Lint (Library)
+        working-directory: ./workspace
         run: bun run lint:packages
 
   test_demo:
@@ -82,7 +83,7 @@ jobs:
           name: node-app
 
       - name: Unzip artifact for deployment
-        run: unzip release.zip
+        run: unzip release.zip -d ./workspace
 
       - name: Set up Bun - Version ${{ vars.BUN_VERSION }}
         uses: oven-sh/setup-bun@v2
@@ -90,4 +91,5 @@ jobs:
           bun-version: ${{ vars.BUN_VERSION }}
 
       - name: Test Lint (Demo)
+        working-directory: ./workspace
         run: npm run lint:demo
