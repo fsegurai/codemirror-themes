@@ -117,7 +117,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd packages/${{ matrix.package }}
-          npx semantic-release --tag ${{ steps.determine_tag.outputs.TAG }} --access public || echo "Package already published in NPM, skipping..."
+          npm publish --tag ${{ steps.determine_tag.outputs.TAG }} --access public || echo "Package already published in NPM, skipping..."
 
       - name: Set up Node.js for GitHub registry
         uses: actions/setup-node@v4
@@ -137,4 +137,4 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_GH_TOKEN }}
         run: |
           cd packages/${{ matrix.package }}
-          npx semantic-release --tag ${{ steps.determine_tag.outputs.TAG }} || echo "Package already published in GitHub NPM, skipping..."
+          npm publish --tag ${{ steps.determine_tag.outputs.TAG }} && npx semantic-release || echo "Package already published in GitHub NPM, skipping..."
