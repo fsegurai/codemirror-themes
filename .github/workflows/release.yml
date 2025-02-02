@@ -1,0 +1,68 @@
+name: Publish Release
+
+on:
+  workflow_run:
+    workflows: [ "Release Library" ]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs: { }
+
+jobs:
+  create_release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    environment: FSI_DEP_NodeJs
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js - Version ${{ vars.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate release notes
+        id: generate_release_notes
+        run: |
+          DATE=$(date +'%d/%m/%Y')
+          RELEASE_NOTES=$(npx semantic-release --dry-run | grep -oP "(?<=Release note for version).*" | head -n 1)
+          if [[ -z "$RELEASE_NOTES" ]]; then
+            echo "No release notes generated."
+            RELEASE_NOTES="No release notes available."
+          fi
+          echo "RELEASE_NOTES=($DATE)\n---\n$RELEASE_NOTES" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Get version from package.json
+        id: get_version
+        run: echo "VERSION=$(jq -r .version < package.json)" >> $GITHUB_ENV
+        env:
+          VERSION: ${{ steps.get_version.outputs.VERSION }}
+
+      - name: Determine if pre-release
+        id: determine_prerelease
+        run: |
+          VERSION=${{ steps.get_version.outputs.VERSION }}
+          if [[ "$VERSION" == *"-beta"* ]] || [[ "$VERSION" == *"-alpha"* ]] || [[ "$VERSION" == *"-rc"* ]] || [[ "$VERSION" == *"-next"* ]]; then
+            echo "PRERELEASE=true" >> $GITHUB_ENV
+          else
+            echo "PRERELEASE=false" >> $GITHUB_ENV
+          fi
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: comnoco/create-release-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.VERSION }}
+          release_name: ${{ env.VERSION }}
+          body: ${{ steps.generate_release_notes.outputs.RELEASE_NOTES }}
+          draft: false
+          prerelease: ${{ steps.determine_prerelease.outputs.PRERELEASE }}

@@ -1,0 +1,30 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+variables:
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
+
+trigger:
+  - main
+
+pool:
+  vmImage: $(vmImageName)
+
+resources:
+  repositories:
+    - repository: common
+      type: git
+      name: $(SOURCE-TEMPLATE-REPO)
+      ref: main
+
+stages:
+  - stage: GetSources
+    jobs:
+      - job: GetGitHubSources
+        steps:
+          - template: /steps/ado/copy-branch.yml@common
+            parameters:
+              source_repo_url: $(SOURCE-REPO-URL)
+              source_repo_pat: $(SOURCE-REPO-PAT)
+              destination_repo_url: $(DESTINATION-REPO-URL)
+              destination_repo_pat: $(DESTINATION-REPO-PAT)
