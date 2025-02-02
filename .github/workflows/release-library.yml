@@ -23,10 +23,11 @@ env:
   ARTIFACT_NAME: 'build-lib-artifact'
 
 jobs:
-  build:
+  release:
     if: |
       github.ref == 'refs/heads/main' &&
-      github.event.repository.fork == false
+      github.event.repository.fork == false &&
+      github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 2
     environment: FSI_DEP_NodeJs
@@ -109,10 +110,6 @@ jobs:
           fi
 
       - name: Release to NPM registry 🚀
-        if: |
-          github.ref == 'refs/heads/main' &&
-          github.event.repository.fork == false &&
-          github.actor != 'dependabot[bot]'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -128,13 +125,9 @@ jobs:
           always-auth: true
 
       - name: Release to GitHub NPM registry 🚀
-        if: |
-          github.ref == 'refs/heads/main' &&
-          github.event.repository.fork == false &&
-          github.actor != 'dependabot[bot]'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_GH_TOKEN }}
         run: |
           cd packages/${{ matrix.package }}
-          npm publish --tag ${{ steps.determine_tag.outputs.TAG }} && npx semantic-release || echo "Package already published in GitHub NPM, skipping..."
+          npm publish --tag ${{ steps.determine_tag.outputs.TAG }} || echo "Package already published in GitHub NPM, skipping..."
