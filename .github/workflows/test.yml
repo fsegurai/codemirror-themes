@@ -17,10 +17,6 @@ on:
       - '!github/workflows/**'
   workflow_dispatch:
     inputs: {}
-  workflow_call:
-  workflow_run:
-    workflows: ['Build PR']
-    types: [completed]
 
 jobs:
   test_library:
