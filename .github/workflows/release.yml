@@ -29,19 +29,23 @@ jobs:
         id: generate_release_notes
         run: |
           # Run semantic-release in dry-run mode and capture the release notes
-          RELEASE_NOTES=$(npx semantic-release | grep -oP "(?<=Release note for version ).*")
+          if ! RELEASE_NOTES=$(npx semantic-release --dry-run); then
+            echo "Error running semantic-release"
+            RELEASE_NOTES="No release notes available."
+          fi
 
-          # Check if release notes were captured, if not, set default value
+          # Check and format the release notes
+          echo "Full output of semantic-release: $RELEASE_NOTES"
+          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | grep -oP "(?<=Release note for version ).*")
+
+          # If release notes are not found, set default value
           if [[ -z "$RELEASE_NOTES" ]]; then
             echo "No release notes generated."
             RELEASE_NOTES="No release notes available."
           fi
 
-          # Format the release notes with the current date and provide it as an output
+          # Format the release notes with the current date
           echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_OUTPUT
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Get version from package.json
         id: get_version
