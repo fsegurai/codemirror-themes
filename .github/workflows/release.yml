@@ -29,7 +29,7 @@ jobs:
         id: generate_release_notes
         run: |
           # Run semantic-release in dry-run mode and capture the release notes
-          RELEASE_NOTES=$(npx semantic-release --dry-run | grep -oP "(?<=Release note for version ).*")
+          RELEASE_NOTES=$(npx semantic-release | grep -oP "(?<=Release note for version ).*")
 
           # Check if release notes were captured, if not, set default value
           if [[ -z "$RELEASE_NOTES" ]]; then
