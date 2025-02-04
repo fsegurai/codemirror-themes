@@ -54,16 +54,11 @@
     "@codemirror/legacy-modes": "^6.4.2",
     "@lezer/markdown": "^1.4.0",
     "@material/web": "^2.2.0",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/release-notes-generator": "^14.0.3",
     "clipboard": "^2.0.11",
     "codemirror": "^6.0.1",
     "marked": "^15.0.6",
     "marked-highlight": "^2.2.1",
-    "prismjs": "^1.29.0",
-    "semantic-release": "^24.2.1"
+    "prismjs": "^1.29.0"
   },
   "devDependencies": {
     "@codemirror/buildhelper": "^1.0.2",
@@ -72,6 +67,10 @@
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-replace": "^6.0.2",
     "@rollup/plugin-typescript": "^12.1.2",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/release-notes-generator": "^14.0.3",
     "@types/prismjs": "^1.26.5",
     "cpy-cli": "^5.0.0",
     "dotenv": "^16.4.7",
@@ -81,6 +80,7 @@
     "rimraf": "^6.0.1",
     "rollup": "^4.34.1",
     "rollup-plugin-dev": "^2.0.5",
+    "semantic-release": "^24.2.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.23.0"
