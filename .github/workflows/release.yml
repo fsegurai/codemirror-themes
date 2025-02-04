@@ -46,6 +46,9 @@ jobs:
 
           # Format the release notes with the current date
           echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Get version from package.json
         id: get_version
