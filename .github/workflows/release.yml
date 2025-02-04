@@ -25,18 +25,38 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Generate release notes
-        id: generate_release_notes
-        run: |
-          # Run semantic-release in dry-run mode and capture the release notes
-          RELEASE_NOTES=$(npx semantic-release | grep -oP "(?<=Release note for version ).*")
+      #      - name: Generate release notes
+      #        id: generate_release_notes
+      #        run: |
+      #          # Run semantic-release in dry-run mode and capture the release notes
+      #          RELEASE_NOTES=$(npx semantic-release | grep -oP "(?<=Release note for version ).*")
+      #
+      #          # Check if release notes were captured, if not, set default value
+      #          if [[ -z "$RELEASE_NOTES" ]]; then
+      #            echo "No release notes generated."
+      #            RELEASE_NOTES="No release notes available."
+      #          fi
+      #
+      #          # Format the release notes with the current date and provide it as an output
+      #          echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_OUTPUT
+      #        env:
+      #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Generate changelog
+        id: generate_changelog
+        run: |
+          # Update the changelog using @semantic-release/changelog
+          npx -c "node -e 'require(\"@semantic-release/changelog\")({\"content\": \"# Changelog\n\"})'"
+          # Now capture the last 20 lines of the changelog
+          RELEASE_NOTES=$(tail -n 100 CHANGELOG.md)
+          
           # Check if release notes were captured, if not, set default value
           if [[ -z "$RELEASE_NOTES" ]]; then
             echo "No release notes generated."
             RELEASE_NOTES="No release notes available."
           fi
-
+          
           # Format the release notes with the current date and provide it as an output
           echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_OUTPUT
         env:
