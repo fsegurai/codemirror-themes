@@ -28,16 +28,22 @@ jobs:
       - name: Generate release notes
         id: generate_release_notes
         run: |
-          # Run semantic-release in dry-run mode and capture the release notes
-          RELEASE_NOTES=$(npx semantic-release | grep -oP "(?<=Release note for version ).*")
+          # Run semantic-release and capture the output
+          RELEASE_NOTES=$(npx semantic-release --dry-run)
 
-          # Check if release notes were captured, if not, set default value
+          # Check and format the release notes
+          echo "Full output of semantic-release: $RELEASE_NOTES"
+          
+          # Extract release notes from output, if available
+          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | grep -oP "(?<=Release note for version ).*")
+
+          # If no release notes were found, set a default message
           if [[ -z "$RELEASE_NOTES" ]]; then
             echo "No release notes generated."
             RELEASE_NOTES="No release notes available."
           fi
 
-          # Format the release notes with the current date and provide it as an output
+          # Pass the release notes to the GitHub Actions output
           echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
