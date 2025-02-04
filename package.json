@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-themes",
-  "version": "6.2.0",
+  "version": "6.3.0",
   "description": "Theme packages for the Codemirror code editor",
   "type": "module",
   "license": "MIT",
@@ -79,10 +79,10 @@
     "globals": "^15.14.0",
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
-    "rollup": "^4.34.0",
+    "rollup": "^4.34.1",
     "rollup-plugin-dev": "^2.0.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.22.0"
+    "typescript-eslint": "^8.23.0"
   }
 }
