@@ -21,13 +21,13 @@
     <img alt="GitHub License" src="https://img.shields.io/github/license/fsegurai/codemirror-themes">
   </a>
   <br>
-  <img alt="Stars" src="https://img.shields.io/github/stars/fsegurai/codemirror-themes?style=square&labelColor=343b41"/> 
+  <img alt="Stars" src="https://img.shields.io/github/stars/fsegurai/codemirror-themes?style=square&labelColor=343b41"/>
   <img alt="Forks" src="https://img.shields.io/github/forks/fsegurai/codemirror-themes?style=square&labelColor=343b41"/>
 </p>
 
 **A library of custom themes for CodeMirror 6.**
 
-`@fsegurai/codemirror-theme-bundle` is a collection of themes to enhance CodeMirror 6 editor, making it visually engaging and adaptable to different coding styles and user preferences. 
+`@fsegurai/codemirror-theme-bundle` is a collection of themes to enhance CodeMirror 6 editor, making it visually engaging and adaptable to different coding styles and user preferences.
 
 ### Table of contents
 
