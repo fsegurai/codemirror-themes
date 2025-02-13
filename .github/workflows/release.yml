@@ -63,7 +63,7 @@ jobs:
           tag_name: v${{ env.VERSION }}
           release_name: ${{ env.VERSION }}
           body: |
-            ${{ env.RELEASE_DATE }}
+            (${{ env.RELEASE_DATE }})
             ---
           draft: false
           prerelease: ${{ steps.determine_prerelease.outputs.PRERELEASE }}
