@@ -22,7 +22,7 @@ stages:
     jobs:
       - job: GetGitHubSources
         steps:
-          - template: /steps/ado/copy-branch.yml@common
+          - template: $(TEMPLATE-REFERENCE)@common
             parameters:
               source_repo_url: $(SOURCE-REPO-URL)
               source_repo_pat: $(SOURCE-REPO-PAT)
