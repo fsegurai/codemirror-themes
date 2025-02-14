@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-themes",
-  "version": "6.3.1",
+  "version": "6.3.2",
   "description": "Theme packages for the Codemirror code editor",
   "type": "module",
   "license": "MIT",
@@ -51,18 +51,18 @@
     "@codemirror/lang-markdown": "^6.3.2",
     "@codemirror/language": "^6.10.8",
     "@codemirror/language-data": "^6.5.1",
-    "@codemirror/legacy-modes": "^6.4.2",
-    "@lezer/markdown": "^1.4.0",
+    "@codemirror/legacy-modes": "^6.4.3",
+    "@lezer/markdown": "^1.4.1",
     "@material/web": "^2.2.0",
     "clipboard": "^2.0.11",
     "codemirror": "^6.0.1",
-    "marked": "^15.0.6",
+    "marked": "^15.0.7",
     "marked-highlight": "^2.2.1",
     "prismjs": "^1.29.0"
   },
   "devDependencies": {
     "@codemirror/buildhelper": "^1.0.2",
-    "@eslint/js": "^9.19.0",
+    "@eslint/js": "^9.20.0",
     "@rollup/plugin-commonjs": "^28.0.2",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-replace": "^6.0.2",
@@ -74,15 +74,15 @@
     "@types/prismjs": "^1.26.5",
     "cpy-cli": "^5.0.0",
     "dotenv": "^16.4.7",
-    "eslint": "^9.19.0",
-    "globals": "^15.14.0",
-    "prettier": "^3.4.2",
+    "eslint": "^9.20.1",
+    "globals": "^15.15.0",
+    "prettier": "^3.5.0",
     "rimraf": "^6.0.1",
-    "rollup": "^4.34.1",
+    "rollup": "^4.34.6",
     "rollup-plugin-dev": "^2.0.5",
-    "semantic-release": "^24.2.1",
+    "semantic-release": "^24.2.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.23.0"
+    "typescript-eslint": "^8.24.0"
   }
 }
