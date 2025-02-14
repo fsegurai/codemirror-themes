@@ -1,18 +1,7 @@
 name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
 
 variables:
-  # Agent VM image name
-  vmImageName: 'ubuntu-latest'
-
-parameters:
-  - name: source_template_repo
-    type: string
-    default: ''
-    displayName: 'Reference to the template repo'
-  - name: template_reference
-    type: string
-    default: ''
-    displayName: 'Reference of the template to be executed'
+  vmImageName: 'ubuntu-latest'  # Agent VM image name
 
 trigger:
   - main
@@ -24,7 +13,7 @@ resources:
   repositories:
     - repository: common
       type: git
-      name: ${{ parameters.source_template_repo }}
+      name: Templates/CommonScripts
       ref: main
 
 stages:
@@ -32,7 +21,7 @@ stages:
     jobs:
       - job: GetGitHubSources
         steps:
-          - template: ${{ parameters.template_reference }}@common
+          - template: /ado/steps/utils/copy-branch.yml@common
             parameters:
               source_repo_url: $(SOURCE-REPO-URL)
               source_repo_pat: $(SOURCE-REPO-PAT)
