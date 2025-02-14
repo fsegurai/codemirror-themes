@@ -4,6 +4,16 @@ variables:
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
 
+parameters:
+  - name: source_template_repo
+    type: string
+    default: ''
+    displayName: 'Reference to the template repo'
+  - name: template_reference
+    type: string
+    default: ''
+    displayName: 'Reference of the template to be executed'
+
 trigger:
   - main
 
@@ -14,7 +24,7 @@ resources:
   repositories:
     - repository: common
       type: git
-      name: $(SOURCE-TEMPLATE-REPO)
+      name: ${{ parameters.source_template_repo }}
       ref: main
 
 stages:
@@ -22,7 +32,7 @@ stages:
     jobs:
       - job: GetGitHubSources
         steps:
-          - template: $(TEMPLATE-REFERENCE)@common
+          - template: ${{ parameters.template_reference }}@common
             parameters:
               source_repo_url: $(SOURCE-REPO-URL)
               source_repo_pat: $(SOURCE-REPO-PAT)
