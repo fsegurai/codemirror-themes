@@ -28,26 +28,13 @@ jobs:
       - name: Generate release notes
         id: generate_release_notes
         run: |
-          # Run semantic-release and capture the output
-          RELEASE_NOTES=$(npx semantic-release --dry-run)
+          # Get current date
+          DATE=$(date +"%Y-%m-%d")
 
-          # Check and format the release notes
-          echo "Full output of semantic-release: $RELEASE_NOTES"
-          
-          # Extract release notes from output, if available
-          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | grep -oP "(?<=Release note for version ).*")
-
-          # If no release notes were found, set a default message
-          if [[ -z "$RELEASE_NOTES" ]]; then
-            echo "No release notes generated."
-            RELEASE_NOTES="No release notes available."
-          fi
-
-          # Pass the release notes to the GitHub Actions output
-          echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_OUTPUT
+          # Pass the date to the GitHub Actions output
+          echo "RELEASE_DATE=$DATE" >> $GITHUB_ENV
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          RELEASE_DATE: ${{ steps.generate_release_notes.outputs.RELEASE_DATE }}
 
       - name: Get version from package.json
         id: get_version
@@ -66,6 +53,8 @@ jobs:
           fi
 
       - name: Create GitHub Release
+        if: |
+          steps.get_version.outputs.VERSION != null
         id: create_release
         uses: comnoco/create-release-action@v2
         env:
@@ -73,7 +62,9 @@ jobs:
         with:
           tag_name: v${{ env.VERSION }}
           release_name: ${{ env.VERSION }}
-          body: ${{ steps.generate_release_notes.outputs.RELEASE_NOTES }}
+          body: |
+            (${{ env.RELEASE_DATE }})
+            ---
           draft: false
           prerelease: ${{ steps.determine_prerelease.outputs.PRERELEASE }}
 
