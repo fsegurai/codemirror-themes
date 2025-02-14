@@ -53,8 +53,6 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        if: |
-          steps.get_version.outputs.VERSION != null
         id: create_release
         uses: comnoco/create-release-action@v2
         env:
