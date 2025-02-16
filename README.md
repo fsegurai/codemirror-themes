@@ -106,6 +106,8 @@ To see all themes in action, check out the [DEMO](https://fsegurai.github.io/cod
 
 ### Local Development
 
+	I highly recommend using "bun" to manage the project dependencies.
+
 To set up the demo locally:
 
 ```bash
