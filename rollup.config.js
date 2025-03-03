@@ -42,6 +42,7 @@ export default {
     }),
     dev({
       dirs: ['demo'],
+      host: 'localhost',
       port: 8000,
     }),
   ],
