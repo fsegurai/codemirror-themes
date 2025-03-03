@@ -3,8 +3,7 @@ name: Publish Release
 on:
   workflow_run:
     workflows: [ "Release Library" ]
-    types:
-      - completed
+    types: [ completed ]
   workflow_dispatch:
     inputs: { }
 

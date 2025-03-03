@@ -12,6 +12,7 @@ on:
       - '*.json'
       - '*.config'
       - '!packages/**'
+      - "!github/workflows/**"
   workflow_dispatch:
     inputs: {}
 
