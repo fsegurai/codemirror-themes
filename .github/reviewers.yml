@@ -1,6 +1,6 @@
 infra:
   - fsegurai
-  
+
 dependencies:
   - fsegurai
 
@@ -23,7 +23,7 @@ tests-library:
   - fsegurai
 
 tests-demo:
-    - fsegurai
+  - fsegurai
 
 documentation:
   - fsegurai
