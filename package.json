@@ -33,7 +33,7 @@
     "start": "rollup -w -c rollup.config.js",
     "start:doppler": "doppler run bun run start",
     "build:demo": "rollup -c rollup.config.js",
-    "postBuild:demo": "cpy ./README.md ./demo && cpy ./LICENSE ./demo",
+    "build_post:demo": "cpy ./README.md ./demo && cpy ./LICENSE ./demo",
     "build_doppler:demo": "doppler run bun run build:demo && bun run build_post:demo",
     "build:packages": "bun --filter '*' prepare",
     "lint": "bun run lint:demo && bun run lint:packages",
