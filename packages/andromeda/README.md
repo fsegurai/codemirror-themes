@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/fsegurai/codemirror-themes">
-      <img src="https://img.shields.io/azure-devops/build/fsegurai/Libraries%2520NodeJs/15/main?label=Build%20Status&"
+      <img src="https://img.shields.io/azure-devops/build/fsegurai/Libraries%2520NodeJs/16/main?label=Build%20Status&"
           alt="Test Status">
   </a>
   <a href="https://www.npmjs.org/package/@fsegurai/codemirror-theme-andromeda">
