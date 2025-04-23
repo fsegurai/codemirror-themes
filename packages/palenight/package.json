@@ -18,21 +18,18 @@
   "keywords": [
     "editor",
     "code",
-    "codemirror"
+    "codemirror",
+    "theme",
+    "themes",
+    "syntax",
+    "highlight",
+    "palenight"
   ],
   "author": {
     "name": "Fabián Segura",
     "url": "https://www.fsegurai.com/"
   },
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/fsegurai/codemirror-themes.git"
-  },
-  "bugs": {
-    "url": "https://github.com/fsegurai/codemirror-themes/issues"
-  },
-  "homepage": "https://github.com/fsegurai/codemirror-themes#readme",
   "peerDependencies": {
     "@lezer/highlight": "^1.0.0",
     "@codemirror/language": "^6.0.0",

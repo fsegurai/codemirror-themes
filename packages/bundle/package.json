@@ -18,21 +18,18 @@
   "keywords": [
     "editor",
     "code",
-    "codemirror"
+    "codemirror",
+    "theme",
+    "themes",
+    "syntax",
+    "highlight",
+    "bundle"
   ],
   "author": {
     "name": "Fabián Segura",
     "url": "https://www.fsegurai.com/"
   },
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/fsegurai/codemirror-themes.git"
-  },
-  "bugs": {
-    "url": "https://github.com/fsegurai/codemirror-themes/issues"
-  },
-  "homepage": "https://github.com/fsegurai/codemirror-themes#readme",
   "dependencies": {
     "@fsegurai/codemirror-theme-abcdef": "^6.x",
     "@fsegurai/codemirror-theme-abyss": "^6.x",
