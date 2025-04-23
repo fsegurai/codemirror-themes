@@ -3,17 +3,13 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/fsegurai/codemirror-themes/actions/workflows/release-library.yml">
-      <img src="https://github.com/fsegurai/codemirror-themes/actions/workflows/release-library.yml/badge.svg"
-          alt="Build Status">
+  <a href="https://github.com/fsegurai/codemirror-themes">
+      <img src="https://img.shields.io/azure-devops/build/fsegurai/Libraries%2520NodeJs/15/main?label=Build%20Status&"
+          alt="Test Status">
   </a>
   <a href="https://github.com/fsegurai/codemirror-themes/releases/latest">
       <img src="https://img.shields.io/github/v/release/fsegurai/codemirror-themes"
           alt="Latest Release">
-  <a href="https://github.com/fsegurai/codemirror-themes/actions/workflows/test.yml">
-      <img src="https://github.com/fsegurai/codemirror-themes/actions/workflows/test.yml/badge.svg?branch=main"
-          alt="Test Status">
-  </a>
   <br>
   <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/fsegurai/codemirror-themes">
   <img alt="Dependency status for repo" src="https://img.shields.io/librariesio/github/fsegurai/codemirror-themes">
