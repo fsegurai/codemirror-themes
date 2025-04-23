@@ -18,7 +18,14 @@
   "keywords": [
     "editor",
     "code",
-    "codemirror"
+    "codemirror",
+    "theme",
+    "themes",
+    "syntax",
+    "highlight",
+    "material",
+    "light",
+    "material-light"
   ],
   "author": {
     "name": "Fabián Segura",
@@ -26,20 +33,13 @@
   },
   "license": "MIT",
   "repository": {
-    "type": "git",
-    "url": "git+https://github.com/fsegurai/codemirror-themes.git"
-  },
-  "bugs": {
-    "url": "https://github.com/fsegurai/codemirror-themes/issues"
-  },
-  "homepage": "https://github.com/fsegurai/codemirror-themes#readme",
-  "peerDependencies": {
-    "@lezer/highlight": "^1.0.0",
-    "@codemirror/language": "^6.0.0",
-    "@codemirror/state": "^6.0.0",
-    "@codemirror/view": "^6.0.0"
-  },
-  "devDependencies": {
-    "@codemirror/buildhelper": "^1.0.2"
+    "peerDependencies": {
+      "@lezer/highlight": "^1.0.0",
+      "@codemirror/language": "^6.0.0",
+      "@codemirror/state": "^6.0.0",
+      "@codemirror/view": "^6.0.0"
+    },
+    "devDependencies": {
+      "@codemirror/buildhelper": "^1.0.2"
+    }
   }
-}
