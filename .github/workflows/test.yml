@@ -2,10 +2,17 @@ name: Test Lib-Demo
 # Job will only run on push and pull requests to the main branch
 
 on:
-  workflow_call:
-  workflow_run:
-    workflows: ['Build PR']
-    types: [completed]
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - '**'
+      - '.github/workflows/*.yml'
+      - '!.github/**'
+      - '!*.yml'
+      - '!*.config'
+      - '!*.md'
+  workflow_dispatch:
+    inputs: { }
 
 jobs:
   test_library:
