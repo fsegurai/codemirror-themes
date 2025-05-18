@@ -1,20 +1,12 @@
 {
   "name": "@fsegurai/codemirror-themes",
-  "version": "6.1.4.0",
+  "version": "6.24.0",
   "description": "Theme packages for the Codemirror code editor",
   "type": "module",
   "license": "MIT",
   "author": {
     "name": "Fabián Segura",
     "url": "https://www.fsegurai.com/"
-  },
-  "homepage": "https://github.com/fsegurai/codemirror-themes",
-  "bugs": {
-    "url": "https://github.com/fsegurai/codemirror-themes/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/fsegurai/codemirror-themes.git"
   },
   "keywords": [
     "editor",
