@@ -20,7 +20,8 @@
     "useDefineForClassFields": false,
     "lib": ["ES2022", "dom"],
     "paths": {
-      "cm-theme": ["packages/*"]
+      "@cmt/*": ["./packages/*"],
+      "@utils": ["./packages/.helper/utils.ts"],
     }
   },
   "angularCompilerOptions": {
