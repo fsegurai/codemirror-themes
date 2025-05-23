@@ -292,7 +292,7 @@ export const andromedaTheme = EditorView.theme(
 );
 
 /**
- * Enhanced syntax highlighting for Andromeda theme
+ * Enhanced syntax highlighting for the Andromeda theme
  */
 export const andromedaHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
