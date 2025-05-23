@@ -332,8 +332,8 @@ export const abcdefHighlightStyle = HighlightStyle.define([
 
   // Markdown and text formatting
   { tag: t.heading, color: base0E, fontWeight: 'bold' },
-  { tag: [t.emphasis], fontStyle: 'italic' },
   { tag: [t.strong], fontWeight: 'bold' },
+  { tag: [t.emphasis], fontStyle: 'italic' },
 
   // Links and URLs
   { tag: t.link, color: '#ffcc44', fontWeight: '500' },

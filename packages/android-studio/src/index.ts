@@ -283,7 +283,7 @@ export const androidStudioTheme = EditorView.theme(
 );
 
 /**
- * Enhanced syntax highlighting for Android Studio theme
+ * Enhanced syntax highlighting for the Android Studio theme
  */
 export const androidStudioHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
@@ -339,8 +339,8 @@ export const androidStudioHighlightStyle = HighlightStyle.define([
 
   // Markdown and text formatting
   { tag: [t.heading], fontWeight: 'bold', color: base0B },
-  { tag: [t.emphasis], fontStyle: 'italic' },
   { tag: [t.strong], fontWeight: 'bold' },
+  { tag: [t.emphasis], fontStyle: 'italic' },
 
   // Links and URLs
   { tag: [t.link], color: base10, fontWeight: '500' },

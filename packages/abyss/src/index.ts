@@ -335,8 +335,8 @@ export const abyssHighlightStyle = HighlightStyle.define([
 
   // Markdown and text formatting
   { tag: [t.heading], fontWeight: 'bold', color: base0E },
-  { tag: [t.emphasis], fontStyle: 'italic' },
   { tag: [t.strong], fontWeight: 'bold' },
+  { tag: [t.emphasis], fontStyle: 'italic' },
 
   // Links and URLs
   { tag: [t.link], color: base10, fontWeight: '500' },
