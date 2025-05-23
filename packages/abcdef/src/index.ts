@@ -7,6 +7,11 @@ import {
   generalContent,
   generalCursor,
   generalGutter,
+  generalLine,
+  generalMatching,
+  generalPanel,
+  generalPlaceholder,
+  generalScroller,
   generalSearchField,
   generalTooltip,
 } from '@utils';
@@ -35,10 +40,13 @@ const base00 = '#0a0e14', // Background (slightly deeper for better contrast)
   tooltipBackground = '#0f1521', // Darker tooltip for better contrast
   cursor = base05,
   selection = base02,
+  selectionForeground = '#ffffff', // Selection text color
   activeBracketBg = '#3a4a5f60', // Active bracket background
   activeBracketBorder = '#abcdef'; // Active bracket border (signature color);
 
-// Define the editor theme styles for improved Abcdef.
+/**
+ * Enhanced editor theme styles for Abcdef
+ */
 export const abcdefTheme = EditorView.theme(
   {
     // Base editor styles
@@ -73,11 +81,19 @@ export const abcdefTheme = EditorView.theme(
     '.cm-searchMatch': {
       backgroundColor: `${base0F}40`,
       outline: `1px solid ${base0F}`,
-      borderRadius: '2px',
+
+      '& span': {
+        color: selectionForeground,
+      },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
       backgroundColor: '#38465b63',
       outline: `3px solid ${base0F}`,
+      padding: generalSearchField.padding,
+
+      '& span': {
+        color: selectionForeground,
+      },
     },
     '.cm-search.cm-panel.cm-textfield': {
       color: base04,
@@ -99,9 +115,9 @@ export const abcdefTheme = EditorView.theme(
     '.cm-panel button': {
       backgroundColor: base02,
       color: base01,
-      border: 'none',
-      borderRadius: '4px',
-      padding: '2px 10px',
+      border: generalPanel.border,
+      borderRadius: generalPanel.borderRadius,
+      padding: generalPanel.padding,
     },
     '.cm-panel button:hover': {
       backgroundColor: '#4a5a6f',
@@ -110,7 +126,7 @@ export const abcdefTheme = EditorView.theme(
     // Line highlighting
     '.cm-activeLine': {
       backgroundColor: highlightBackground,
-      borderRadius: '2px',
+      borderRadius: generalLine.borderRadius,
     },
 
     // Gutters
@@ -123,7 +139,7 @@ export const abcdefTheme = EditorView.theme(
     '.cm-activeLineGutter': {
       backgroundColor: highlightBackground,
       color: '#ffffff',
-      fontWeight: '500',
+      fontWeight: generalGutter.fontWeight,
     },
     '.cm-lineNumbers': {
       fontSize: generalGutter.fontSize,
@@ -150,16 +166,16 @@ export const abcdefTheme = EditorView.theme(
     '.cm-tooltip-autocomplete': {
       '& > ul > li': {
         padding: generalTooltip.padding,
-        lineHeight: '1.3',
+        lineHeight: generalTooltip.lineHeight,
       },
       '& > ul > li[aria-selected]': {
         backgroundColor: '#3a4a5f',
         color: '#e0edff',
-        borderRadius: '3px',
+        borderRadius: generalTooltip.borderRadiusSelected,
       },
       '& > ul > li > span.cm-completionIcon': {
         color: base0D,
-        paddingRight: '8px',
+        paddingRight: generalTooltip.paddingRight,
       },
       '& > ul > li > span.cm-completionDetail': {
         color: base0A,
@@ -198,12 +214,19 @@ export const abcdefTheme = EditorView.theme(
     '.cm-matchingBracket': {
       backgroundColor: activeBracketBg,
       outline: `1px solid ${activeBracketBorder}`,
-      borderRadius: '2px',
+      borderRadius: generalMatching.borderRadius,
     },
     '.cm-nonmatchingBracket': {
       backgroundColor: '#3a4a5f40',
       outline: '1px solid #abcdef',
-      borderRadius: '2px',
+      borderRadius: generalMatching.borderRadius,
+    },
+
+    // Selection matches
+    '.cm-selectionMatch': {
+      backgroundColor: '#3a4a5f40',
+      outline: '1px solid #abcdef',
+      borderRadius: generalMatching.borderRadius,
     },
 
     // Fold placeholder
@@ -212,16 +235,9 @@ export const abcdefTheme = EditorView.theme(
       color: '#abcdef',
       fontStyle: 'italic',
       border: `1px dotted ${activeBracketBorder}`,
-      borderRadius: '4px',
-      padding: '0 5px',
-      margin: '0 2px',
-    },
-
-    // Selection matches
-    '.cm-selectionMatch': {
-      backgroundColor: '#3a4a5f40',
-      outline: '1px solid #abcdef',
-      borderRadius: '2px',
+      borderRadius: generalPlaceholder.borderRadius,
+      padding: generalPlaceholder.padding,
+      margin: generalPlaceholder.margin,
     },
 
     // Focus outline
@@ -232,15 +248,15 @@ export const abcdefTheme = EditorView.theme(
 
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
-      width: '12px',
-      height: '12px',
+      width: generalScroller.width,
+      height: generalScroller.height,
     },
     '& .cm-scroller::-webkit-scrollbar-track': {
       background: base07,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
       backgroundColor: `${base02}AA`,
-      borderRadius: '6px',
+      borderRadius: generalScroller.borderRadius,
       border: `3px solid ${base07}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
@@ -275,6 +291,12 @@ export const abcdefHighlightStyle = HighlightStyle.define([
   { tag: t.className, color: base0D, fontStyle: 'italic' },
   { tag: t.namespace, color: '#78a0d3', opacity: 0.8 },
 
+  // Operators and punctuation - clearer blues
+  { tag: [t.operator, t.operatorKeyword], color: '#ff9cac' },
+  { tag: [t.bracket], color: '#d0d6e0' },
+  { tag: [t.brace], color: '#d0d6e0' },
+  { tag: [t.punctuation], color: '#d0d6e0' },
+
   // Functions and parameters
   { tag: t.function(t.variableName), color: base0C },
   { tag: t.definition(t.variableName), color: base0C },
@@ -286,7 +308,7 @@ export const abcdefHighlightStyle = HighlightStyle.define([
   { tag: t.modifier, color: '#ffad5c', fontStyle: 'italic' },
   { tag: t.self, color: base0B },
   { tag: [t.color, t.constant(t.name), t.standard(t.name)], color: base0B },
-  { tag: t.atom, color: base09 },
+  { tag: [t.atom, t.bool, t.special(t.variableName)], color: base0B },
 
   // Strings and regex
   { tag: [t.processingInstruction, t.inserted], color: '#7aecb3' },
@@ -294,19 +316,19 @@ export const abcdefHighlightStyle = HighlightStyle.define([
 
   // Punctuation and structure
   { tag: t.definition(t.typeName), color: base0E, fontWeight: 'bold' },
-  { tag: [t.operator, t.operatorKeyword], color: '#ff9cac' /* Light pink */ },
-  { tag: t.bracket, color: '#d0d6e0' /* Light gray */ },
-  { tag: [t.brace], color: '#d0d6e0' /* Light gray */ },
-  { tag: t.punctuation, color: '#d0d6e0' /* Light gray */ },
+  { tag: [t.operator, t.operatorKeyword], color: '#ff9cac' },
+  { tag: t.bracket, color: '#d0d6e0' },
+  { tag: [t.brace], color: '#d0d6e0' },
+  { tag: t.punctuation, color: '#d0d6e0' },
 
   // Comments and documentation
-  { tag: t.meta, color: '#78a0d3' /* Softer blue */ },
+  { tag: t.meta, color: '#78a0d3' },
   { tag: t.comment, fontStyle: 'italic', color: base0A },
   { tag: t.docComment, fontStyle: 'italic', color: base0A },
 
   // HTML/XML elements
   { tag: t.tagName, color: base0F },
-  { tag: t.attributeName, color: '#ffad5c' /* Light orange */ },
+  { tag: t.attributeName, color: '#ffad5c' },
 
   // Markdown and text formatting
   { tag: t.heading, color: base0E, fontWeight: 'bold' },
