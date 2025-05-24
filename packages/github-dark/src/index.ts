@@ -35,12 +35,12 @@ const base06 = '#d2a8ff';  // ClassName, PropertyName - GitHub purple
 const base07 = '#79c0ff';  // VariableName, Number - GitHub blue
 const base08 = '#ff7b72';  // Keyword, TypeName - GitHub red
 const base09 = '#a5d6ff';  // String, Meta, Regexp - lighter blue
-const base0A = '#ffdcd7';  // Deleted text color
-const base0B = '#ffeef0';  // Deleted background color
+const base0A = '#2c333a';  // Panel button hover
+const base0B = '#3c444d';  // Deleted background color
 const base0C = '#ffab70';  // Atom, Bool - GitHub orange
 
 // Background variants
-const base0D = '#161b22';  // Gutter background (slightly darker than editor)
+const base0D = '#161b22';  // Gutter background (slightly darker than the editor)
 const base0E = '#30363d';  // Panel and tooltip border color
 const base0F = '#21262d';  // Active line gutter background
 
@@ -142,7 +142,7 @@ export const githubDarkTheme = EditorView.theme(
       padding: generalPanel.padding,
     },
     '.cm-panel button:hover': {
-      backgroundColor: '#2c333a',
+      backgroundColor: base0A,
     },
 
     // Line highlighting
@@ -198,7 +198,7 @@ export const githubDarkTheme = EditorView.theme(
       },
       '& > ul > li[aria-selected]': {
         backgroundColor: selection,
-        color: '#ffffff',
+        color: base04,
         borderRadius: generalTooltip.borderRadiusSelected,
       },
       '& > ul > li > span.cm-completionIcon': {
@@ -282,18 +282,18 @@ export const githubDarkTheme = EditorView.theme(
       background: base0D,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
-      backgroundColor: '#30363d',
+      backgroundColor: base0E,
       borderRadius: generalScroller.borderRadius,
       border: `3px solid ${base0D}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-      backgroundColor: '#3c444d',
+      backgroundColor: base0B,
     },
 
     // Ghost text
     '.cm-ghostText': {
       opacity: '0.5',
-      color: '#8b949e',
+      color: base03,
     },
   },
   { dark: true },
@@ -360,7 +360,7 @@ export const githubDarkHighlightStyle = HighlightStyle.define([
   { tag: [t.emphasis], fontStyle: 'italic', color: base09 },
 
   // Links and URLs
-  { tag: [t.link], color: base06, fontWeight: '500', textDecoration: 'underline', textUnderlinePosition: 'under' },
+  { tag: [t.link], color: visitedLinkColor, fontWeight: '500', textDecoration: 'underline', textUnderlinePosition: 'under' },
   {
     tag: [t.url],
     color: linkColor,
