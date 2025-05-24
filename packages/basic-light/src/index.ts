@@ -300,7 +300,7 @@ export const basicLightTheme = EditorView.theme(
 );
 
 /**
- * Enhanced syntax highlighting for Basic Light theme
+ * Enhanced syntax highlighting for the Basic Light theme
  */
 export const basicLightHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
