@@ -71,7 +71,7 @@ export const nordTheme = EditorView.theme(
       color: base04,
       backgroundColor: background,
       fontSize: generalContent.fontSize,
-      fontFamily: 'Fira Code, Menlo, monospace',
+      fontFamily: generalContent.fontFamily,
     },
 
     // Content and cursor
