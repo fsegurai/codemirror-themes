@@ -89,8 +89,7 @@ export const gruvboxLightTheme = EditorView.theme(
       color: fg0,
       backgroundColor: background,
       fontSize: generalContent.fontSize,
-      fontFamily:
-        'SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
+      fontFamily: generalContent.fontFamily,
     },
 
     // Content and cursor
