@@ -26,7 +26,7 @@ import {
 const base00 = '#657b83'; // Body text/default text color
 const base01 = '#586e75'; // Optional emphasized content
 const base02 = '#073642'; // Background highlights
-const base03 = '#002b36'; // Comments, invisibles, line highlighting
+const base03 = '#002b36'; // Comments, invisible, line highlighting
 const base04 = '#dfd9c8'; // Dark background tint
 const base05 = '#93a1a1'; // Default foreground/UI text color
 const base06 = '#cceeff7a'; // Light background tint (for selection)
@@ -300,7 +300,7 @@ export const solarizedLightTheme = EditorView.theme(
 );
 
 /**
- * Enhanced syntax highlighting for Solarized Light theme
+ * Enhanced syntax highlighting for the Solarized Light theme
  */
 export const solarizedLightHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
