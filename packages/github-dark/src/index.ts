@@ -102,6 +102,7 @@ export const githubDarkTheme = EditorView.theme(
       backgroundColor: '#3a587a',
       outline: `1px solid ${base07}`,
       color: base01,
+      borderRadius: generalSearchField.borderRadius,
 
       '& span': {
         color: base01,

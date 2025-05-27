@@ -95,6 +95,7 @@ export const andromedaTheme = EditorView.theme(
       backgroundColor: '#db45a230',
       outline: `1px solid ${base05}30`,
       color: base01,
+      borderRadius: generalSearchField.borderRadius,
 
       '& span': {
         color: base01,

@@ -26,7 +26,7 @@ import {
 const base00 = '#292D3E'; // Background - deep indigo
 const base01 = '#A6ACCD'; // Foreground - lavender blue
 const base02 = '#444267'; // Selection background - muted indigo
-const base03 = '#676E95'; // Comments, invisibles - steel blue
+const base03 = '#676E95'; // Comments, invisible - steel blue
 const base04 = '#BFC7D5'; // Cursor - lighter lavender
 
 // Accent colors
@@ -98,6 +98,7 @@ export const palenightTheme = EditorView.theme(
       backgroundColor: '#444267CC',
       outline: `1px solid ${base06}`,
       color: base01,
+      borderRadius: generalSearchField.borderRadius,
 
       '& span': {
         color: base01,

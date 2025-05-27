@@ -94,6 +94,7 @@ export const monokaiTheme = EditorView.theme(
       backgroundColor: '#49483E99',
       outline: `1px solid ${base08}`,
       color: base01,
+      borderRadius: generalSearchField.borderRadius,
 
       '& span': {
         color: base01,

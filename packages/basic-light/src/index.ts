@@ -102,6 +102,7 @@ export const basicLightTheme = EditorView.theme(
       backgroundColor: '#63b3ed40',
       outline: `1px solid ${base09}`,
       color: base00,
+      borderRadius: generalSearchField.borderRadius,
 
       '& span': {
         color: base00,

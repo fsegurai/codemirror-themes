@@ -68,8 +68,7 @@ export const vsCodeLightTheme = EditorView.theme(
       color: base05,
       backgroundColor: background,
       fontSize: generalContent.fontSize,
-      fontFamily:
-        'Menlo, Monaco, Consolas, "Andale Mono", "Ubuntu Mono", "Courier New", monospace',
+      fontFamily: generalContent.fontFamily,
     },
 
     // Content and cursor

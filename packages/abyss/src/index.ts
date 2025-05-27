@@ -83,6 +83,7 @@ export const abyssTheme = EditorView.theme(
     '.cm-searchMatch': {
       backgroundColor: '#155ab380',
       outline: `1px solid ${base08}`,
+      borderRadius: generalSearchField.borderRadius,
 
       '& span': {
         color: base06,

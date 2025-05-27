@@ -98,6 +98,7 @@ export const forestTheme = EditorView.theme(
       backgroundColor: '#4d653b80',
       outline: `1px solid ${base0A}90`,
       color: base01,
+      borderRadius: generalSearchField.borderRadius,
 
       '& span': {
         color: base01,
