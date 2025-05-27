@@ -3,133 +3,411 @@ import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 
-// VSCode Dark theme color definitions
-const background = '#1e1e1e',
-  foreground = '#9cdcfe',
-  caret = '#c6c6c6',
-  selection = '#6199ff2f',
-  selectionMatch = '#72a1ff59',
-  lineHighlight = '#ffffff0f',
-  gutterBackground = '#1e1e1e',
-  gutterForeground = '#838383',
-  gutterActiveForeground = '#ffffff',
-  keywordColor = '#569cd6',
-  controlKeywordColor = '#c586c0',
-  variableColor = '#9cdcfe',
-  classTypeColor = '#4ec9b0',
-  functionColor = '#dcdcaa',
-  numberColor = '#b5cea8',
-  operatorColor = '#d4d4d4',
-  regexpColor = '#d16969',
-  stringColor = '#ce9178',
-  commentColor = '#6a9955',
-  invalidColor = '#ff0000';
+import {
+  generalContent,
+  generalCursor,
+  generalGutter,
+  generalLine,
+  generalMatching,
+  generalPanel,
+  generalPlaceholder,
+  generalScroller,
+  generalSearchField,
+  generalTooltip,
+} from '@utils';
 
-// Define the editor theme styles for VSCode Dark
+/**
+ * Enhanced VSCode Dark theme color definitions
+ * --------------------------------------------
+ * Colors organized by function with visual color blocks
+ */
+
+// Base colors
+const base00 = '#1e1e1e'; // Background
+const base01 = '#252526'; // Lighter background (popups, statuslines)
+const base02 = '#2d2d30'; // Selection background
+const base03 = '#838383'; // Comments, invisibles
+const base04 = '#c6c6c6'; // Cursor color
+const base05 = '#d4d4d4'; // Default foreground
+const base06 = '#e9e9e9'; // Light foreground
+const base07 = '#1c1c1c'; // Dark background (gutter)
+
+// Accent colors
+const base_blue = '#569cd6'; // Keywords, storage
+const base_purple = '#c586c0'; // Control keywords, operators
+const base_lightblue = '#9cdcfe'; // Variables, parameters
+const base_cyan = '#4ec9b0'; // Classes, types
+const base_yellow = '#dcdcaa'; // Functions, attributes
+const base_green = '#b5cea8'; // Numbers, constants
+const base_orange = '#ce9178'; // Strings
+const base_red = '#f44747'; // Errors, invalid
+const base_darkOrange = '#d7ba7d'; // Modified elements
+const base_lime = '#6a9955'; // Comments
+
+// UI specific colors
+const invalid = base_red;
+const highlightBackground = '#FFFFFF08'; // Line highlight with transparency
+const background = base00;
+const tooltipBackground = base01;
+const selection = '#264F7899'; // Selection background with transparency
+const selectionMatch = '#72a1ff59'; // Selection match background with transparency
+const cursor = base04; // Cursor color
+const activeBracketBg = '#ffffff15'; // Active bracket background with transparency
+const activeBracketBorder = base_blue; // Active bracket border
+const diagnosticWarning = base_darkOrange; // Warning color
+const linkColor = '#3794ff'; // Link color
+const visitedLinkColor = '#c586c0'; // Visited link color
+
+/**
+ * Enhanced editor theme styles for VSCode Dark
+ */
 export const vsCodeDarkTheme = EditorView.theme(
   {
+    // Base editor styles
     '&': {
-      color: foreground,
+      color: base05,
       backgroundColor: background,
-      fontFamily:
-        'Menlo, Monaco, Consolas, "Andale Mono", "Ubuntu Mono", "Courier New", monospace',
+      fontSize: generalContent.fontSize,
+      fontFamily: generalContent.fontFamily,
     },
+
+    // Content and cursor
     '.cm-content': {
-      caretColor: caret,
+      caretColor: cursor,
+      lineHeight: generalContent.lineHeight,
     },
     '.cm-cursor, .cm-dropCursor': {
-      borderLeftColor: caret,
+      borderLeftColor: cursor,
+      borderLeftWidth: generalCursor.borderLeftWidth,
     },
+    '.cm-fat-cursor': {
+      backgroundColor: `${cursor}99`,
+      color: background,
+    },
+
+    // Selection
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
       {
         backgroundColor: selection,
       },
+
+    // Make sure selection appears above active line
+    '.cm-selectionLayer': {
+      zIndex: 100,
+    },
+
+    // Search functionality
     '.cm-searchMatch': {
-      backgroundColor: selectionMatch,
-      outline: `1px solid ${lineHighlight}`,
+      backgroundColor: '#72a1ff40',
+      outline: `1px solid ${base_blue}90`,
+      color: base06,
+      borderRadius: generalSearchField.borderRadius,
     },
+    '.cm-searchMatch.cm-searchMatch-selected': {
+      backgroundColor: '#3794ff90',
+      color: base06,
+      padding: generalSearchField.padding,
+
+      '& span': {
+        color: base06,
+      },
+    },
+    '.cm-search.cm-panel.cm-textfield': {
+      color: base05,
+      borderRadius: generalSearchField.borderRadius,
+      padding: generalSearchField.padding,
+    },
+
+    // Panels
+    '.cm-panels': {
+      backgroundColor: base01,
+      color: base05,
+      borderRadius: '3px',
+      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.45)',
+    },
+    '.cm-panels.cm-panels-top': {
+      borderBottom: `1px solid ${base02}`,
+    },
+    '.cm-panels.cm-panels-bottom': {
+      borderTop: `1px solid ${base02}`,
+    },
+    '.cm-panel button': {
+      backgroundColor: base02,
+      color: base05,
+      border: `1px solid ${base02}`,
+      borderRadius: generalPanel.borderRadius,
+      padding: generalPanel.padding,
+    },
+    '.cm-panel button:hover': {
+      backgroundColor: '#3a3a3a',
+      border: `1px solid ${base03}80`,
+    },
+
+    // Line highlighting
     '.cm-activeLine': {
-      backgroundColor: lineHighlight,
+      backgroundColor: highlightBackground,
+      borderRadius: generalLine.borderRadius,
+      zIndex: 1,
     },
+
+    // Gutters
     '.cm-gutters': {
-      backgroundColor: gutterBackground,
-      color: gutterForeground,
+      backgroundColor: background,
+      color: base03,
+      border: 'none',
+      borderRight: `1px solid ${base02}`,
+      paddingRight: generalGutter.paddingRight,
     },
     '.cm-activeLineGutter': {
-      color: gutterActiveForeground,
+      backgroundColor: highlightBackground,
+      color: base06,
+      fontWeight: generalGutter.fontWeight,
+    },
+    '.cm-lineNumbers': {
+      fontSize: generalGutter.fontSize,
+    },
+    '.cm-foldGutter': {
+      fontSize: generalGutter.fontSize,
+    },
+    '.cm-foldGutter .cm-gutterElement': {
+      color: base03,
+      cursor: 'pointer',
+    },
+    '.cm-foldGutter .cm-gutterElement:hover': {
+      color: base06,
+    },
+
+    // Tooltips and autocomplete
+    '.cm-tooltip': {
+      backgroundColor: tooltipBackground,
+      border: `1px solid ${base02}`,
+      borderRadius: generalTooltip.borderRadius,
+      padding: generalTooltip.padding,
+      boxShadow: '0 3px 8px rgba(0, 0, 0, 0.3)',
+    },
+    '.cm-tooltip-autocomplete': {
+      '& > ul': {
+        backgroundColor: tooltipBackground,
+        border: 'none',
+        maxHeight: '300px',
+      },
+      '& > ul > li': {
+        padding: generalTooltip.padding,
+        lineHeight: generalTooltip.lineHeight,
+      },
+      '& > ul > li[aria-selected]': {
+        backgroundColor: '#04395e',
+        color: base06,
+        borderRadius: generalTooltip.borderRadiusSelected,
+      },
+      '& > ul > li > span.cm-completionIcon': {
+        color: base03,
+        paddingRight: generalTooltip.paddingRight,
+      },
+      '& > ul > li > span.cm-completionDetail': {
+        color: base03,
+        fontStyle: 'italic',
+      },
+    },
+    '.cm-tooltip .cm-tooltip-arrow:before': {
+      borderTopColor: 'transparent',
+      borderBottomColor: 'transparent',
+    },
+    '.cm-tooltip .cm-tooltip-arrow:after': {
+      borderTopColor: tooltipBackground,
+      borderBottomColor: tooltipBackground,
+    },
+
+    // Diagnostics styling
+    '.cm-diagnostic': {
+      '&-error': {
+        borderLeft: `3px solid ${invalid}`,
+      },
+      '&-warning': {
+        borderLeft: `3px solid ${diagnosticWarning}`,
+      },
+      '&-info': {
+        borderLeft: `3px solid ${linkColor}`,
+      },
+    },
+    '.cm-lintPoint-error': {
+      borderBottom: `2px wavy ${invalid}`,
+    },
+    '.cm-lintPoint-warning': {
+      borderBottom: `2px wavy ${diagnosticWarning}`,
+    },
+
+    // Matching brackets
+    '.cm-matchingBracket': {
+      backgroundColor: activeBracketBg,
+      outline: `1px solid ${activeBracketBorder}80`,
+      borderRadius: generalMatching.borderRadius,
+    },
+    '.cm-nonmatchingBracket': {
+      backgroundColor: `${base_red}40`,
+      outline: `1px solid ${invalid}`,
+      borderRadius: generalMatching.borderRadius,
+    },
+
+    // Selection matches
+    '.cm-selectionMatch': {
+      backgroundColor: selectionMatch,
+      outline: `1px solid ${base02}70`,
+      borderRadius: generalMatching.borderRadius,
+    },
+
+    // Fold placeholder
+    '.cm-foldPlaceholder': {
+      backgroundColor: tooltipBackground,
+      color: base03,
+      border: `1px dotted ${base03}70`,
+      borderRadius: generalPlaceholder.borderRadius,
+      padding: generalPlaceholder.padding,
+      margin: generalPlaceholder.margin,
+    },
+
+    // Focus outline
+    '&.cm-focused': {
+      outline: 'none',
+      boxShadow: `0 0 0 1px ${base02}`,
+    },
+
+    // Scrollbars
+    '& .cm-scroller::-webkit-scrollbar': {
+      width: generalScroller.width,
+      height: generalScroller.height,
+    },
+    '& .cm-scroller::-webkit-scrollbar-track': {
+      background: background,
+    },
+    '& .cm-scroller::-webkit-scrollbar-thumb': {
+      backgroundColor: '#424242',
+      borderRadius: generalScroller.borderRadius,
+      border: `3px solid ${background}`,
+    },
+    '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
+      backgroundColor: '#525252',
+    },
+
+    // Ghost text
+    '.cm-ghostText': {
+      opacity: '0.5',
+      color: base03,
     },
   },
   { dark: true },
 );
 
-// Define the highlighting style for code in the VSCode Dark theme
+/**
+ * Enhanced syntax highlighting for VSCode Dark theme
+ */
 export const vsCodeDarkHighlightStyle = HighlightStyle.define([
+  // Keywords and control flow
+  { tag: t.keyword, color: base_blue, fontWeight: 'bold' },
+  { tag: t.controlKeyword, color: base_purple, fontWeight: 'bold' },
+  { tag: t.moduleKeyword, color: base_blue, fontWeight: 'bold' },
+
+  // Names and variables
+  { tag: [t.name, t.deleted, t.character, t.macroName], color: base05 },
+  { tag: [t.variableName], color: base_lightblue },
+  { tag: [t.propertyName], color: base_lightblue, fontStyle: 'normal' },
+
+  // Classes and types
+  { tag: [t.typeName], color: base_cyan },
+  { tag: [t.className], color: base_cyan, fontStyle: 'normal' },
+  { tag: [t.namespace], color: base05, fontStyle: 'normal' },
+
+  // Operators and punctuation
+  { tag: [t.operator, t.operatorKeyword], color: base05 },
+  { tag: [t.bracket], color: base05 },
+  { tag: [t.brace], color: base05 },
+  { tag: [t.punctuation], color: base05 },
+
+  // Functions and parameters
+  { tag: [t.function(t.variableName)], color: base_yellow },
+  { tag: [t.labelName], color: base_yellow, fontStyle: 'normal' },
+  { tag: [t.definition(t.function(t.variableName))], color: base_yellow },
+  { tag: [t.definition(t.variableName)], color: base_lightblue },
+
+  // Constants and literals
+  { tag: t.number, color: base_green },
+  { tag: t.changed, color: base_darkOrange },
+  { tag: t.annotation, color: base_darkOrange, fontStyle: 'italic' },
+  { tag: t.modifier, color: base_blue, fontStyle: 'normal' },
+  { tag: t.self, color: base_blue },
   {
-    tag: [
-      t.keyword,
-      t.operatorKeyword,
-      t.modifier,
-      t.color,
-      t.constant(t.name),
-      t.standard(t.name),
-      t.standard(t.tagName),
-      t.special(t.brace),
-      t.atom,
-      t.bool,
-      t.special(t.variableName),
-    ],
-    color: keywordColor,
+    tag: [t.color, t.constant(t.name), t.standard(t.name)],
+    color: base_lightblue,
   },
-  { tag: [t.controlKeyword, t.moduleKeyword], color: controlKeywordColor },
+  { tag: [t.atom, t.bool, t.special(t.variableName)], color: base_blue },
+
+  // Strings and regex
+  { tag: [t.processingInstruction, t.inserted], color: base_orange },
+  { tag: [t.special(t.string), t.regexp], color: '#d16969' },
+  { tag: t.string, color: base_orange },
+
+  // Punctuation and structure
+  { tag: t.definition(t.typeName), color: base_cyan, fontWeight: 'bold' },
+  { tag: [t.definition(t.name), t.separator], color: base05 },
+
+  // Comments and documentation
+  { tag: t.meta, color: base03 },
+  { tag: t.comment, fontStyle: 'italic', color: base_lime },
+  { tag: t.docComment, fontStyle: 'italic', color: base_lime },
+
+  // HTML/XML elements
+  { tag: [t.tagName], color: base_blue },
+  { tag: [t.attributeName], color: base_lightblue },
+
+  // Markdown and text formatting
+  { tag: [t.heading], fontWeight: 'bold', color: base_blue },
+  { tag: t.heading1, color: base_blue, fontWeight: 'bold' },
+  { tag: t.heading2, color: base_blue },
+  { tag: t.heading3, color: base_blue },
+  { tag: t.heading4, color: base_blue },
+  { tag: t.heading5, color: base_blue },
+  { tag: t.heading6, color: base_blue },
+  { tag: [t.strong], fontWeight: 'bold', color: base_blue },
+  { tag: [t.emphasis], fontStyle: 'italic', color: base_cyan },
+
+  // Links and URLs
   {
-    tag: [
-      t.name,
-      t.deleted,
-      t.character,
-      t.macroName,
-      t.propertyName,
-      t.variableName,
-      t.labelName,
-      t.definition(t.name),
-    ],
-    color: variableColor,
+    tag: [t.link],
+    color: visitedLinkColor,
+    textDecoration: 'underline',
+    textUnderlinePosition: 'under',
   },
   {
-    tag: [
-      t.typeName,
-      t.className,
-      t.tagName,
-      t.number,
-      t.changed,
-      t.annotation,
-      t.self,
-      t.namespace,
-    ],
-    color: classTypeColor,
+    tag: [t.url],
+    color: linkColor,
+    textDecoration: 'underline',
+    textUnderlineOffset: '2px',
   },
+
+  // Special states
   {
-    tag: [t.function(t.variableName), t.function(t.propertyName)],
-    color: functionColor,
+    tag: [t.invalid],
+    color: base05,
+    textDecoration: 'underline wavy',
+    borderBottom: `1px wavy ${invalid}`,
   },
-  { tag: [t.number], color: numberColor },
-  {
-    tag: [t.operator, t.punctuation, t.separator, t.url, t.escape, t.regexp],
-    color: operatorColor,
-  },
-  { tag: [t.regexp], color: regexpColor },
-  {
-    tag: [t.special(t.string), t.processingInstruction, t.string, t.inserted],
-    color: stringColor,
-  },
-  { tag: [t.meta, t.comment], color: commentColor },
-  { tag: t.invalid, color: invalidColor },
-  { tag: t.strong, fontWeight: 'bold' },
-  { tag: t.emphasis, fontStyle: 'italic' },
-  { tag: t.strikethrough, textDecoration: 'line-through' },
-  { tag: t.link, color: commentColor, textDecoration: 'underline' },
+  { tag: [t.strikethrough], color: invalid, textDecoration: 'line-through' },
+
+  // Enhanced syntax highlighting
+  { tag: t.constant(t.name), color: base_lightblue },
+  { tag: t.deleted, color: invalid },
+  { tag: t.squareBracket, color: base05 },
+  { tag: t.angleBracket, color: base05 },
+
+  // Additional specific styles
+  { tag: t.monospace, color: base05 },
+  { tag: [t.contentSeparator], color: base05 },
+  { tag: t.quote, color: base_lime },
 ]);
 
-// Extension to enable the VSCode Dark theme (both the editor theme and the highlight style)
+/**
+ * Combined VSCode Dark theme extension
+ */
 export const vsCodeDark: Extension = [
   vsCodeDarkTheme,
   syntaxHighlighting(vsCodeDarkHighlightStyle),
