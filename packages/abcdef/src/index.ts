@@ -81,6 +81,7 @@ export const abcdefTheme = EditorView.theme(
     '.cm-searchMatch': {
       backgroundColor: `${base0F}40`,
       outline: `1px solid ${base0F}`,
+      borderRadius: generalSearchField.borderRadius,
 
       '& span': {
         color: selectionForeground,

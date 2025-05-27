@@ -55,9 +55,6 @@ const bg4 = dark4;
 const gray = gray_245;
 const fg0 = light0;
 const fg1 = light1;
-const fg2 = light2;
-const fg3 = light3;
-const fg4 = light4;
 const red = bright_red;
 const green = bright_green;
 const yellow = bright_yellow;
@@ -124,6 +121,7 @@ export const gruvboxDarkTheme = EditorView.theme(
       backgroundColor: '#b57614cc',
       outline: `1px solid ${yellow}`,
       color: fg0,
+      borderRadius: generalSearchField.borderRadius,
 
       '& span': {
         color: fg0,

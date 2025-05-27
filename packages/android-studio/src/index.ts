@@ -91,6 +91,7 @@ export const androidStudioTheme = EditorView.theme(
     '.cm-searchMatch': {
       backgroundColor: '#32593d',
       outline: '1px solid #ffffff',
+      borderRadius: generalSearchField.borderRadius,
 
       '& span': {
         color: selectionForeground,

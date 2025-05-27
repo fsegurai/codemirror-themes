@@ -104,6 +104,7 @@ export const nordTheme = EditorView.theme(
       backgroundColor: '#5e81ac80',
       outline: `1px solid ${base07}`,
       color: base04,
+      borderRadius: generalSearchField.borderRadius,
 
       '& span': {
         color: base04,
