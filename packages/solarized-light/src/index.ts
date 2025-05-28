@@ -56,7 +56,7 @@ const activeBracketBg = '#93a1a140'; // Active bracket background with opacity
 const activeBracketBorder = base_blue; // Active bracket border - blue
 const diagnosticWarning = base_yellow; // Warning color - yellow
 const linkColor = base_blue; // Link color - blue
-const visitedLinkColor = base_violet; // Visited link color - violet
+// const visitedLinkColor = base_violet; // Visited link color - violet
 
 /**
  * Enhanced editor theme styles for Solarized Light

@@ -42,7 +42,7 @@ const base_cyan = '#00acc1'; // Cyan 600 (better contrast for light theme)
 const base_indigo = '#3949ab'; // Indigo 600 (better contrast for light theme)
 const base_purple = '#8e24aa'; // Purple 600 (better contrast for light theme)
 const base_green = '#43a047'; // Green 600 (better contrast for light theme)
-const base_lightgreen = '#7cb342'; // Light Green 600 (better contrast)
+// const base_lightgreen = '#7cb342'; // Light Green 600 (better contrast)
 const base_teal = '#00897b'; // Teal 600 (better contrast for light theme)
 const base_blue = '#1e88e5'; // Blue 600 (better contrast for light theme)
 
