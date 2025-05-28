@@ -1,4 +1,4 @@
-import { javascript } from './javascript-DGrAs70C.js';
+import { javascript } from './javascript-C-Rve0Gm.js';
 
 var ATTRS_NEST = {
   '{': '}',

@@ -315,6 +315,6 @@ function mkVBScript(parserConf) {
     };
 }
 const vbScript = mkVBScript({});
-const vbScriptASP = mkVBScript({isASP: true});
+mkVBScript({isASP: true});
 
-export { vbScript, vbScriptASP };
+export { vbScript };

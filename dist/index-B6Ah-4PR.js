@@ -1,4 +1,4 @@
-import { a as LRParser, s as styleTags, t as tags, L as LRLanguage, b as LanguageSupport, i as indentNodeProp, f as foldNodeProp, c as continuedIndent, h as delimitedIndent, j as flatIndent, k as foldInside } from './playground-BOoelkPn.js';
+import { b as LRParser, s as styleTags, t as tags, a as LRLanguage, L as LanguageSupport, i as indentNodeProp, f as foldNodeProp, c as continuedIndent, h as delimitedIndent, j as flatIndent, k as foldInside } from './playground-BBT-mz_Q.js';
 
 const javaHighlighting = styleTags({
   null: tags.null,

@@ -97,6 +97,6 @@ function mkZ80(ez80) {
   };
 }
 const z80 = mkZ80(false);
-const ez80 = mkZ80(true);
+mkZ80(true);
 
-export { ez80, z80 };
+export { z80 };

@@ -338,6 +338,6 @@ function mkGas(arch) {
   };
 }
 const gas = mkGas("x86");
-const gasArm = mkGas("arm");
+mkGas("arm");
 
-export { gas, gasArm };
+export { gas };

@@ -410,7 +410,7 @@ var tlvIdentMatch = /^([~!@#\$%\^&\*-\+=\?\/\\\|'"<>]+)([\d\w_]*)/;  // Matches 
 var tlvLineIndentationMatch = /^[! ] */;
 var tlvCommentMatch = /^\/[\/\*]/;
 
-const tlv = mkVerilog({
+mkVerilog({
   hooks: {
     electricInput: false,
 
@@ -562,4 +562,4 @@ const tlv = mkVerilog({
   }
 });
 
-export { tlv, verilog };
+export { verilog };

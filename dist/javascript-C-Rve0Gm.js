@@ -915,8 +915,8 @@ function mkJavaScript(parserConfig) {
   };
 }
 const javascript = mkJavaScript({name: "javascript"});
-const json = mkJavaScript({name: "json", json: true});
+mkJavaScript({name: "json", json: true});
 const jsonld = mkJavaScript({name: "json", jsonld: true});
-const typescript = mkJavaScript({name: "typescript", typescript: true});
+mkJavaScript({name: "typescript", typescript: true});
 
-export { javascript, json, jsonld, typescript };
+export { javascript, jsonld };

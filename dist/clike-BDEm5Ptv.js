@@ -388,7 +388,7 @@ function tokenRawString(stream, state) {
   return "string";
 }
 
-const c = clike({
+clike({
   name: "c",
   keywords: words(cKeywords),
   types: cTypes,
@@ -403,7 +403,7 @@ const c = clike({
   }
 });
 
-const cpp = clike({
+clike({
   name: "cpp",
   keywords: words(cKeywords + " " + cppKeywords),
   types: cTypes,
@@ -442,7 +442,7 @@ const cpp = clike({
   namespaceSeparator: "::"
 });
 
-const java = clike({
+clike({
   name: "java",
   keywords: words("abstract assert break case catch class const continue default " +
                   "do else enum extends final finally for goto if implements import " +
@@ -682,7 +682,7 @@ const kotlin = clike({
   }
 });
 
-const shader = clike({
+clike({
   name: "shader",
   keywords: words("sampler1D sampler2D sampler3D samplerCube " +
                   "sampler1DShadow sampler2DShadow " +
@@ -740,7 +740,7 @@ const shader = clike({
   hooks: {"#": cppHook}
 });
 
-const nesC = clike({
+clike({
   name: "nesc",
   keywords: words(cKeywords + " as atomic async call command component components configuration event generic " +
                   "implementation includes interface module new norace nx_struct nx_union post provides " +
@@ -844,7 +844,7 @@ function tokenCeylonString(type) {
   }
 }
 
-const ceylon = clike({
+clike({
   name: "ceylon",
   keywords: words("abstracts alias assembly assert assign break case catch class continue dynamic else" +
                   " exists extends finally for function given if import in interface is let module new" +
@@ -1016,4 +1016,4 @@ const dart = clike({
   }
 });
 
-export { c, ceylon, clike, cpp, csharp, dart, java, kotlin, nesC, objectiveC, objectiveCpp, scala, shader, squirrel };
+export { clike, csharp, dart, kotlin, objectiveC, objectiveCpp, scala, squirrel };

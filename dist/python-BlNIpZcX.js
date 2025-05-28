@@ -378,7 +378,7 @@ function mkPython(parserConf) {
 }
 var words = function(str) { return str.split(" "); };
 
-const python = mkPython({});
+mkPython({});
 
 const cython = mkPython({
   extra_keywords: words("by cdef cimport cpdef ctypedef enum except "+
@@ -386,4 +386,4 @@ const cython = mkPython({
                         "readonly struct union DEF IF ELIF ELSE")
 });
 
-export { cython, mkPython, python };
+export { cython, mkPython };

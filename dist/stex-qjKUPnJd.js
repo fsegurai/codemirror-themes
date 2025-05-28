@@ -241,6 +241,6 @@ function mkStex(mathMode) {
   };
 }
 const stex = mkStex(false);
-const stexMath = mkStex(true);
+mkStex(true);
 
-export { stex, stexMath };
+export { stex };

@@ -706,9 +706,6 @@ var allWords = documentTypes_.concat(mediaTypes_).concat(mediaFeatures_).concat(
     .concat(propertyKeywords_).concat(nonStandardPropertyKeywords_).concat(colorKeywords_)
     .concat(valueKeywords_);
 
-const keywords = {properties: propertyKeywords_, colors: colorKeywords_,
-                         fonts: fontProperties_, values: valueKeywords_, all: allWords};
-
 const defaults = {
   documentTypes: documentTypes,
   mediaTypes: mediaTypes,
@@ -729,7 +726,7 @@ const defaults = {
   }
 };
 
-const css = mkCSS({name: "css"});
+mkCSS({name: "css"});
 
 function tokenCComment(stream, state) {
   var maybeEnd = false, ch;
@@ -743,7 +740,7 @@ function tokenCComment(stream, state) {
   return ["comment", "comment"];
 }
 
-const sCSS = mkCSS({
+mkCSS({
   name: "scss",
   mediaTypes: mediaTypes,
   mediaFeatures: mediaFeatures,
@@ -785,7 +782,7 @@ const sCSS = mkCSS({
   }
 });
 
-const less = mkCSS({
+mkCSS({
   name: "less",
   mediaTypes: mediaTypes,
   mediaFeatures: mediaFeatures,
@@ -844,4 +841,4 @@ const gss = mkCSS({
   }
 });
 
-export { css, gss, keywords, less, mkCSS, sCSS };
+export { gss, mkCSS };
