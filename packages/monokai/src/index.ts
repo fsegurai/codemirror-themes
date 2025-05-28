@@ -25,7 +25,7 @@ import {
 // Base colors
 const base00 = '#272822'; // Background
 const base01 = '#f8f8f2'; // Foreground
-const base02 = '#4a4a76'; // Selection
+// const base02 = '#4a4a76'; // Selection
 const base03 = '#88846f'; // Comments, invisibles
 const base04 = '#f8f8f0'; // Cursor
 

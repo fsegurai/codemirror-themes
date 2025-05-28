@@ -30,7 +30,7 @@ const base03 = '#4c566a'; // Comments, invisibles
 
 // Snow Storm
 const base04 = '#d8dee9'; // Foreground - light blue-grey
-const base05 = '#e5e9f0'; // Light foreground
+// const base05 = '#e5e9f0'; // Light foreground
 const base06 = '#eceff4'; // Light background
 
 // Frost

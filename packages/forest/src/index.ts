@@ -25,7 +25,7 @@ import {
 // Core natural elements
 const base00 = '#1a2a33'; // Background - deeper forest shade for better contrast
 const base01 = '#d0d8e0'; // Foreground - clearer moonlight for better readability
-const base02 = '#2d3c44'; // Selection - dark forest floor, more defined
+// const base02 = '#2d3c44'; // Selection - dark forest floor, more defined
 const base03 = '#607d8b'; // Comments - silvery bark gray, more legible
 
 // Flora elements (accent colors)
@@ -40,7 +40,7 @@ const base0B = '#9ccc65'; // Properties - fresh moss
 const base0C = '#4dd0e1'; // Special chars - forest stream
 const base0D = '#7986cb'; // Tags - morning mist
 const base0E = '#ba68c8'; // Operators - purple wildflowers
-const base0F = '#f57f17'; // Metadata - autumn leaves
+// const base0F = '#f57f17'; // Metadata - autumn leaves
 
 // UI-specific colors
 const invalid = '#ff5252';           // Error highlight - warning red berry

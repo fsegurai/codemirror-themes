@@ -152,7 +152,7 @@ export const vsCodeDarkTheme = EditorView.theme(
 
     // Gutters
     '.cm-gutters': {
-      backgroundColor: background,
+      backgroundColor: base07,
       color: base03,
       border: 'none',
       borderRight: `1px solid ${base02}`,

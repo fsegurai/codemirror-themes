@@ -33,9 +33,6 @@ const gray_245 = '#928374'; // Comments, invisibles, line highlighting
 // Light/foreground shades
 const light0 = '#fbf1c7'; // Light foreground (preferred)
 const light1 = '#ebdbb2'; // Light foreground (alternative)
-const light2 = '#d5c4a1'; // Light foreground (alternative)
-const light3 = '#bdae93'; // Light foreground (alternative)
-const light4 = '#a89984'; // Foreground (status bars)
 
 // Accent colors
 const bright_red = '#fb4934'; // Keywords, storage, operator

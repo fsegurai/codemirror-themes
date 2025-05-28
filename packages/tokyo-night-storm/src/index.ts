@@ -24,10 +24,10 @@ import {
 
 // Base colors
 const base00 = '#24283b'; // Background
-const base01 = '#7982a9'; // Foreground
+// const base01 = '#7982a9'; // Foreground
 const base02 = '#414868'; // Selection background
 const base03 = '#565f89'; // Comments, invisibles
-const base04 = '#989fc4'; // Dark foreground (status)
+// const base04 = '#989fc4'; // Dark foreground (status)
 const base05 = '#c0caf5'; // Default foreground (bright blue)
 const base06 = '#282e44'; // Dark background for panels
 const base07 = '#1f2335'; // Darker background (gutter)
@@ -40,7 +40,6 @@ const base_green = '#9ece6a'; // Strings, success
 const base_cyan = '#2ac3de'; // Types, parameter
 const base_blue = '#7aa2f7'; // Functions, properties
 const base_purple = '#bb9af7'; // Keywords, operators
-const base_magenta = '#bb9af7'; // Special characters
 
 // UI specific colors
 const invalid = '#f7768e';
