@@ -1,20 +1,12 @@
 {
   "name": "@fsegurai/codemirror-themes",
-  "version": "6.1.4.0",
+  "version": "6.24.0-beta",
   "description": "Theme packages for the Codemirror code editor",
   "type": "module",
   "license": "MIT",
   "author": {
     "name": "Fabián Segura",
     "url": "https://www.fsegurai.com/"
-  },
-  "homepage": "https://github.com/fsegurai/codemirror-themes",
-  "bugs": {
-    "url": "https://github.com/fsegurai/codemirror-themes/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/fsegurai/codemirror-themes.git"
   },
   "keywords": [
     "editor",
@@ -31,12 +23,14 @@
   "scripts": {
     "clean:demo": "rimraf --glob ./demo/dist && rimraf --glob ./demo/README.md && rimraf --glob ./demo/LICENSE",
     "clean:packages": "rimraf --glob ./packages/*/dist",
+    "clean:all": "bun run clean:demo && bun run clean:packages",
     "start": "rollup -w -c rollup.config.js",
     "start:doppler": "doppler run bun run start",
     "build:demo": "rollup -c rollup.config.js",
     "build_post:demo": "cpy ./README.md ./demo && cpy ./LICENSE ./demo",
     "build_doppler:demo": "doppler run bun run build:demo && bun run build_post:demo",
     "build:packages": "bun --filter '*' prepare",
+    "build:all": "bun run build:demo && bun run build:packages",
     "lint": "bun run lint:demo && bun run lint:packages",
     "lint:demo": "eslint ./demo",
     "lint:packages": "eslint ./packages/*/src/**"
@@ -55,17 +49,18 @@
     "@codemirror/language": "^6.11.0",
     "@codemirror/language-data": "^6.5.1",
     "@codemirror/legacy-modes": "^6.5.1",
-    "@lezer/markdown": "^1.4.2",
+    "@lezer/markdown": "^1.4.3",
     "@material/web": "^2.3.0",
     "clipboard": "^2.0.11",
     "codemirror": "^6.0.1",
-    "marked": "^15.0.9",
+    "marked": "^15.0.12",
     "marked-highlight": "^2.2.1",
     "prismjs": "^1.30.0"
   },
   "devDependencies": {
     "@codemirror/buildhelper": "^1.0.2",
-    "@eslint/js": "^9.25.1",
+    "@eslint/js": "^9.27.0",
+    "@rollup/plugin-alias": "^5.1.1",
     "@rollup/plugin-commonjs": "^28.0.3",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-replace": "^6.0.2",
@@ -77,15 +72,15 @@
     "@types/prismjs": "^1.26.5",
     "cpy-cli": "^5.0.0",
     "dotenv": "^16.5.0",
-    "eslint": "^9.25.1",
-    "globals": "^16.0.0",
+    "eslint": "^9.27.0",
+    "globals": "^16.2.0",
     "prettier": "^3.5.3",
     "rimraf": "^6.0.1",
-    "rollup": "^4.40.0",
+    "rollup": "^4.41.1",
     "rollup-plugin-dev": "^2.0.5",
-    "semantic-release": "^24.2.3",
+    "semantic-release": "^24.2.5",
     "ts-node": "^10.9.2",
     "typescript": "5.8.3",
-    "typescript-eslint": "^8.31.0"
+    "typescript-eslint": "^8.33.0"
   }
 }
