@@ -1,7 +1,7 @@
 {
   "name": "@fsegurai/codemirror-theme-andromeda",
   "description": "Andromeda theme for the CodeMirror code editor",
-  "version": "6.2.0-beta",
+  "version": "6.2.0-beta.1",
   "type": "module",
   "main": "dist/index.cjs",
   "exports": {
