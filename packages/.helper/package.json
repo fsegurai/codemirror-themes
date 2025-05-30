@@ -1,6 +1,6 @@
 {
-  "name": "@fsegurai/codemirror-theme-gruvbox-dark",
-  "description": "Gruvbox Dark theme for the CodeMirror code editor",
+  "name": "@fsegurai/codemirror-theme-utils",
+  "description": "Utility functions for CodeMirror themes",
   "version": "6.2.0-beta.2",
   "type": "module",
   "main": "dist/index.cjs",
@@ -23,9 +23,7 @@
     "themes",
     "syntax",
     "highlight",
-    "gruvbox",
-    "dark",
-    "gruvbox-dark"
+    "utils"
   ],
   "author": {
     "name": "Fabián Segura",
@@ -36,8 +34,7 @@
     "@lezer/highlight": "^1.0.0",
     "@codemirror/language": "^6.0.0",
     "@codemirror/state": "^6.0.0",
-    "@codemirror/view": "^6.0.0",
-    "@fsegurai/codemirror-theme-utils": "^6.2.0-beta.2"
+    "@codemirror/view": "^6.0.0"
   },
   "devDependencies": {
     "@codemirror/buildhelper": "^1.0.2"

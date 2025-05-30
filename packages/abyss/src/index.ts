@@ -14,7 +14,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '../../.helper/utils';
+} from '@fsegurai/codemirror-theme-utils';
 
 // Base colors - Ocean depths
 const base00 = '#000c18', // - Background (deep ocean blue)
