@@ -14,7 +14,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@utils';
+} from '../../.helper/utils';
 
 // Enhanced Abcdef theme colors with improved contrast and harmony
 const base00 = '#0a0e14', // Background (slightly deeper for better contrast)
