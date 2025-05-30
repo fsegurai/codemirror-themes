@@ -7,8 +7,8 @@
       <img src="https://img.shields.io/azure-devops/build/fsegurai/Libraries%2520NodeJs/16/main?label=Build%20Status&"
           alt="Test Status">
   </a>
-  <a href="https://www.npmjs.org/package/@fsegurai/codemirror-theme-abcdef">
-      <img src="https://img.shields.io/npm/v/@fsegurai/codemirror-theme-abcdef.svg"
+  <a href="https://www.npmjs.org/package/@fsegurai/codemirror-theme-utils">
+      <img src="https://img.shields.io/npm/v/@fsegurai/codemirror-theme-utils.svg"
           alt="Latest Release">
   </a>
   <br>
@@ -22,53 +22,145 @@
   <img alt="Forks" src="https://img.shields.io/github/forks/fsegurai/codemirror-themes?style=square&labelColor=343b41"/>
 </p>
 
-**A library of custom themes for CodeMirror 6.**
+**Utility constants for CodeMirror 6 themes.**
 
-`@fsegurai/codemirror-theme-abcdef` is a theme for CodeMirror 6 editor, making it visually engaging and adaptable to
-different coding styles and user preferences.
+`@fsegurai/codemirror-theme-utils` provides consistent styling constants and utilities for creating CodeMirror 6 themes. This package is primarily used internally by the theme packages in this monorepo to ensure consistent styling across all themes.
 
 ### Table of contents
 
 - [Installation](#installation)
-	- [@fsegurai/codemirror-theme-abcdef](#fseguraicodemirror-theme-abcdef)
-	- [Using Theme](#using-theme)
-	- [Available Themes](#available-themes)
-	- [Demo Application](#demo-application)
+  - [@fsegurai/codemirror-theme-utils](#fseguraicodemirror-theme-utils)
+  - [Usage](#usage)
+  - [Available Constants](#available-constants)
+  - [Available Themes](#available-themes)
+  - [Demo Application](#demo-application)
 - [License](#license)
 
 ## Installation
 
-### @fsegurai/codemirror-theme-abcdef
+### @fsegurai/codemirror-theme-utils
 
-To add `@fsegurai/codemirror-theme-abcdef` along with CodeMirror 6 to your `package.json` use the following commands.
+To add `@fsegurai/codemirror-theme-utils` along with CodeMirror 6 to your `package.json` use the following commands.
 
 ```bash
-npm install @fsegurai/codemirror-theme-abcdef codemirror@^6.0.0 --save
+npm install @fsegurai/codemirror-theme-utils codemirror@^6.0.0 --save
 ```
 
-### Using Theme
+### Usage
 
-Import the respective theme from the package and apply it to your CodeMirror instance as shown below.
+Import the utility constants from the package and use them in your custom themes:
 
 ```javascript
-import { EditorView, basicSetup } from 'codemirror'
-import { markdown } from '@codemirror/lang-markdown'
-import { abcdef } from '@fsegurai/codemirror-theme-basic-abcdef'
+import { EditorView } from '@codemirror/view'
+import { 
+  generalContent,
+  generalCursor,
+  generalGutter,
+  generalPanel,
+  generalLine,
+  generalMatching,
+  generalPlaceholder,
+  generalScroller,
+  generalSearchField,
+  generalTooltip
+} from '@fsegurai/codemirror-theme-utils'
+
+// Example usage of utility constants in a theme
+const myCustomTheme = EditorView.theme({
+  // Use consistent content styling
+  '.cm-content': {
+    ...generalContent,
+    backgroundColor: '#1e1e1e',
+    color: '#d4d4d4'
+  },
+  
+  // Use consistent cursor styling
+  '.cm-cursor': {
+    ...generalCursor,
+    borderLeftColor: '#aeafad'
+  },
+  
+  // Use consistent gutter styling
+  '.cm-gutter': {
+    ...generalGutter,
+    backgroundColor: '#2d2d30',
+    color: '#858585'
+  },
+  
+  // Use consistent panel styling
+  '.cm-panels': {
+    ...generalPanel,
+    backgroundColor: '#2d2d30'
+  },
+  
+  // Use consistent line styling
+  '.cm-activeLine': {
+    ...generalLine,
+    backgroundColor: '#2a2d2e'
+  },
+  
+  // Use consistent matching bracket styling
+  '.cm-matchingBracket': {
+    ...generalMatching,
+    backgroundColor: '#3a3a3a'
+  },
+  
+  // Use consistent placeholder styling
+  '.cm-placeholder': {
+    ...generalPlaceholder,
+    color: '#6a6a6a'
+  },
+  
+  // Use consistent scroller styling
+  '.cm-scroller::-webkit-scrollbar': {
+    ...generalScroller
+  },
+  
+  // Use consistent search field styling
+  '.cm-search input': {
+    ...generalSearchField,
+    backgroundColor: '#3c3c3c'
+  },
+  
+  // Use consistent tooltip styling
+  '.cm-tooltip': {
+    ...generalTooltip,
+    backgroundColor: '#1e1e1e'
+  }
+})
 
 let editor = new EditorView({
-	doc: '# Hello World',
-	extensions: [
-		basicSetup,
-		markdown(),
-		abcdef
-	],
-	parent: document.body
+  doc: '# Hello World',
+  extensions: [
+    myCustomTheme,
+    // ... other extensions
+  ],
+  parent: document.body
 })
 ```
+
+### Available Constants
+
+This package exports the following utility constants:
+
+| Constant | Description | Properties |
+|----------|-------------|------------|
+| `generalContent` | Base content styling | `fontSize`, `fontFamily`, `lineHeight` |
+| `generalCursor` | Cursor styling | `borderLeftWidth` |
+| `generalGutter` | Gutter styling | `border`, `paddingRight`, `fontSize`, `fontWeight` |
+| `generalPanel` | Panel styling | `border`, `borderRadius`, `padding` |
+| `generalLine` | Line styling | `borderRadius` |
+| `generalMatching` | Matching bracket styling | `borderRadius` |
+| `generalPlaceholder` | Placeholder styling | `borderRadius`, `padding`, `margin` |
+| `generalScroller` | Scrollbar styling | `width`, `height`, `borderRadius` |
+| `generalSearchField` | Search field styling | `borderRadius`, `padding` |
+| `generalTooltip` | Tooltip styling | `borderRadius`, `borderRadiusSelected`, `lineHeight`, `padding`, `paddingRight` |
 
 Read the [CodeMirror documentation](https://codemirror.net/6/examples/styling/) for more details about themes.
 
 ### Available Themes
+
+This package provides utilities for the following theme packages:
 
 | Theme             | Package                                                                                                                    | Version                                                                           |
 |-------------------|----------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
@@ -99,8 +191,7 @@ Read the [CodeMirror documentation](https://codemirror.net/6/examples/styling/) 
 
 ### Demo Application
 
-To see all themes in action, check out the
-demo: [https://fsegurai.github.io/codemirror-themes](https://fsegurai.github.io/codemirror-themes).
+To see all themes in action, check out the demo: [https://fsegurai.github.io/codemirror-themes](https://fsegurai.github.io/codemirror-themes).
 
 To set up the demo locally:
 
