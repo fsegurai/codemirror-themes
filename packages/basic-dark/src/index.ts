@@ -14,7 +14,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@utils';
+} from '../../.helper/utils';
 
 /**
  * Enhanced Basic Dark theme color palette
