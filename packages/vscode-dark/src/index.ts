@@ -14,7 +14,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@utils';
+} from '../../.helper/utils';
 
 /**
  * Enhanced VSCode Dark theme color definitions
