@@ -14,7 +14,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '../../.helper/utils';
+} from '@fsegurai/codemirror-theme-utils';
 
 // Enhanced Abcdef theme colors with improved contrast and harmony
 const base00 = '#0a0e14', // Background (slightly deeper for better contrast)

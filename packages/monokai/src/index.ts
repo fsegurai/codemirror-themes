@@ -14,7 +14,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '../../.helper/utils';
+} from '@fsegurai/codemirror-theme-utils';
 
 /**
  * Enhanced Monokai theme color definitions
