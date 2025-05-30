@@ -1,7 +1,7 @@
 {
   "name": "@fsegurai/codemirror-theme-abyss",
   "description": "Abyss theme for the CodeMirror code editor",
-  "version": "6.2.0-beta.3",
+  "version": "6.2.0-beta.4",
   "type": "module",
   "main": "dist/index.cjs",
   "exports": {
@@ -34,7 +34,8 @@
     "@lezer/highlight": "^1.0.0",
     "@codemirror/language": "^6.0.0",
     "@codemirror/state": "^6.0.0",
-    "@codemirror/view": "^6.0.0"
+    "@codemirror/view": "^6.0.0",
+    "@fsegurai/codemirror-theme-utils": "6.2.0-beta.3"
   },
   "devDependencies": {
     "@codemirror/buildhelper": "^1.0.2"
