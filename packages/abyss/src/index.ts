@@ -14,7 +14,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@utils';
+} from '../../.helper/utils';
 
 // Base colors - Ocean depths
 const base00 = '#000c18', // - Background (deep ocean blue)
