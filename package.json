@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-themes",
-  "version": "6.24.0-beta.3",
+  "version": "6.24.0-beta.4",
   "description": "Theme packages for the Codemirror code editor",
   "type": "module",
   "license": "MIT",
@@ -49,7 +49,6 @@
     "@codemirror/language": "^6.11.0",
     "@codemirror/language-data": "^6.5.1",
     "@codemirror/legacy-modes": "^6.5.1",
-    "@fsegurai/codemirror-theme-utils": "6.2.0-beta.2",
     "@lezer/markdown": "^1.4.3",
     "@material/web": "^2.3.0",
     "clipboard": "^2.0.11",
