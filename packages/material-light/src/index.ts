@@ -27,25 +27,25 @@ import {
 
 // Base colors
 const base00 = '#ffffff', // Background - pure white for clean look
-base01 = '#f5f5f5', // Lighter background (popups, statuslines)
-base02 = '#212121', // Main text - nearly black for contrast
-base03 = '#757575', // Comments, invisibles - gray 600
-base04 = '#9e9e9e', // Cursor and line numbers - gray 500
-base05 = '#424242', // Default foreground - gray 800
-base06 = '#eeeeee', // Light borders or divisions - gray 200
-base07 = '#fafafa', // Light background (gutter) - gray 50
-// Accent colors - using standard Material Design palette
-base08 = '#f44336', // Red 500
-base09 = '#ff3e00', // Deep Orange 500
-base0A = '#FF00E9FF', // Pink 500
-base0B = '#ffc107', // Amber 500 (better than yellow for light theme)
-base0C = '#ff9800', // Orange 500
-base0D = '#00acc1', // Cyan 600 (better contrast for light theme)
-base0E = '#3949ab',// Indigo 600 (better contrast for light theme)
-base0F = '#8e24aa', // Purple 600 (better contrast for light theme)
-base10 = '#43a047', // Green 600 (better contrast for light theme)
-base11 = '#00897b', // Teal 600 (better contrast for light theme)
-base12 = '#1e88e5'; // Blue 600 (better contrast for light theme)
+  base01 = '#f5f5f5', // Lighter background (popups, statuslines)
+  base02 = '#212121', // Main text - nearly black for contrast
+  base03 = '#757575', // Comments, invisibles - gray 600
+  base04 = '#9e9e9e', // Cursor and line numbers - gray 500
+  base05 = '#424242', // Default foreground - gray 800
+  base06 = '#eeeeee', // Light borders or divisions - gray 200
+  base07 = '#fafafa', // Light background (gutter) - gray 50
+  // Accent colors - using standard Material Design palette
+  base08 = '#f44336', // Red 500
+  base09 = '#ff3e00', // Deep Orange 500
+  base0A = '#FF00E9FF', // Pink 500
+  base0B = '#ffc107', // Amber 500 (better than yellow for light theme)
+  base0C = '#ff9800', // Orange 500
+  base0D = '#00acc1', // Cyan 600 (better contrast for light theme)
+  base0E = '#3949ab', // Indigo 600 (better contrast for light theme)
+  base0F = '#8e24aa', // Purple 600 (better contrast for light theme)
+  base10 = '#43a047', // Green 600 (better contrast for light theme)
+  base11 = '#00897b', // Teal 600 (better contrast for light theme)
+  base12 = '#1e88e5'; // Blue 600 (better contrast for light theme)
 
 // UI specific colors
 const invalid = base08,
