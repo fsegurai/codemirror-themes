@@ -4,8 +4,10 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 
 import {
+  applyMergeRevertStyles,
   generalContent,
   generalCursor,
+  generalDiff,
   generalGutter,
   generalLine,
   generalMatching,
@@ -14,7 +16,8 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@fsegurai/codemirror-theme-utils';
+  IMergeRevertStyles,
+} from './utils';
 
 // Enhanced Abcdef theme colors with improved contrast and harmony
 const base00 = '#0a0e14', // Background (slightly deeper for better contrast)
@@ -42,12 +45,17 @@ const base00 = '#0a0e14', // Background (slightly deeper for better contrast)
   selection = base02,
   selectionForeground = '#ffffff', // Selection text color
   activeBracketBg = '#3a4a5f60', // Active bracket background
-  activeBracketBorder = '#abcdef'; // Active bracket border (signature color);
+  activeBracketBorder = '#abcdef', // Active bracket border (signature color);
+  // Diff/merge specific colors
+  addedBackground = '#1d391d4d', // Dark green for insertions
+  removedBackground = '#391d1d08', // Dark red for deletions
+  addedText = '#7aecb3', // Bright mint green for added text
+  removedText = '#ff8a80'; // Soft red for removed text
 
 /**
  * Enhanced editor theme styles for Abcdef
  */
-export const abcdefTheme = EditorView.theme(
+const abcdefTheme = EditorView.theme(
   {
     // Base editor styles
     '&': {
@@ -154,6 +162,47 @@ export const abcdefTheme = EditorView.theme(
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
       color: base0D,
+    },
+
+    // Diff/Merge View Styles
+    // Inserted/Added Content
+    '.cm-insertedLine': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: addedBackground,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: `${addedBackground} !important`,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${addedText}40`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+      background: 'transparent !important',
+    },
+
+    // Deleted/Removed Content
+    '.cm-deletedLine': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: removedBackground,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: `${removedBackground} !important`,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${removedText}40`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+      background: 'transparent !important',
     },
 
     // Tooltips and autocomplete
@@ -276,7 +325,7 @@ export const abcdefTheme = EditorView.theme(
 /**
  * Enhanced syntax highlighting for Abcdef theme
  */
-export const abcdefHighlightStyle = HighlightStyle.define([
+const abcdefHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
   { tag: t.keyword, color: base08, fontWeight: 'bold' },
   { tag: t.controlKeyword, color: base08, fontWeight: 'bold' },
@@ -357,8 +406,22 @@ export const abcdefHighlightStyle = HighlightStyle.define([
   { tag: t.string, color: '#7aecb3' /* New mint green for strings */ },
 ]);
 
-// Extension to enable the improved Abcdef theme
-export const abcdef: Extension = [
+/**
+ * Combined Abcdef theme extension
+ */
+const abcdef: Extension = [
   abcdefTheme,
   syntaxHighlighting(abcdefHighlightStyle),
 ];
+
+/**
+ * Abcdef merge revert styles configuration
+ */
+const abcdefMergeStyles: IMergeRevertStyles = {
+  backgroundColor: base03, // Using theme-specific color variables
+  borderColor: base02,
+  buttonColor: selectionForeground,
+  buttonHoverColor: base02,
+};
+
+export { abcdef, abcdefMergeStyles, applyMergeRevertStyles };

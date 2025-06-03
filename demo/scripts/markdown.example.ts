@@ -1,3 +1,9 @@
+const diffMdSample = `one
+two
+three
+four
+five`;
+
 const mdSample = `This is an example note.
 You can write docs in [GitHub-flavored Markdown](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet).
 
@@ -162,4 +168,4 @@ This line is only separated by a single newline, so it's a separate line in the 
 
 `;
 
-export default mdSample;
+export { diffMdSample, mdSample };

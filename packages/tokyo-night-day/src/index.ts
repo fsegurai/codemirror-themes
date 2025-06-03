@@ -4,8 +4,10 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 
 import {
+  applyMergeRevertStyles,
   generalContent,
   generalCursor,
+  generalDiff,
   generalGutter,
   generalLine,
   generalMatching,
@@ -14,7 +16,8 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@fsegurai/codemirror-theme-utils';
+  IMergeRevertStyles,
+} from './utils';
 
 /**
  * Enhanced Tokyo Night Day theme color definitions
@@ -23,44 +26,49 @@ import {
  */
 
 // Base colors
-const base00 = '#e1e2e7'; // Background
-const base01 = '#3760bf'; // Primary foreground
-const base02 = '#99a7df'; // Selection background
-const base03 = '#848cb5'; // Comments, invisibles
-const base04 = '#8c91a8'; // Dark foreground (status)
-const base05 = '#3760bf'; // Default foreground
-const base06 = '#e9e9ec'; // Light background
-const base07 = '#d5d6db'; // Light background (gutter)
-
-// Accent colors
-const base_red = '#f52a65'; // Errors, invalid
-const base_orange = '#b15c00'; // Numbers, constants
-const base_yellow = '#8c6c3e'; // Classes, attributes
-const base_green = '#587539'; // Strings, success
-const base_cyan = '#007197'; // Functions, keywords
-const base_blue = '#2e7de9'; // Variables, parameters
-const base_purple = '#7847bd'; // Operators, tags
-const base_magenta = '#9854f1'; // Special characters
+const base00 = '#e1e2e7', // Background
+  base01 = '#3760bf', // Primary foreground
+  base02 = '#99a7df', // Selection background
+  base03 = '#848cb5', // Comments, invisibles
+  base04 = '#8c91a8', // Dark foreground (status)
+  base05 = '#3760bf', // Default foreground
+  base06 = '#e9e9ec', // Light background
+  base07 = '#d5d6db', // Light background (gutter)
+  // Accent colors
+  base_red = '#f52a65', // Errors, invalid
+  base_orange = '#b15c00', // Numbers, constants
+  base_yellow = '#8c6c3e', // Classes, attributes
+  base_green = '#587539', // Strings, success
+  base_cyan = '#007197', // Functions, keywords
+  base_blue = '#2e7de9', // Variables, parameters
+  base_purple = '#7847bd', // Operators, tags
+  base_magenta = '#9854f1'; // Special characters
 
 // UI specific colors
-const invalid = base_red;
-const darkBackground = base07;
-const highlightBackground = '#5F5FAF5A'; // Line highlight with improved transparency
-const background = base00;
-const tooltipBackground = base06;
-const selection = '#99a7df40'; // Selection background with transparency
-const selectionMatch = '#99a7df60'; // Selection match with transparency
-const cursor = base01; // Cursor color
-const activeBracketBg = '#0e639c20'; // Active bracket background with transparency
-const activeBracketBorder = base_cyan; // Active bracket border
-const diagnosticWarning = base_orange; // Warning color
-const linkColor = base_cyan; // Link color
-const visitedLinkColor = base_purple; // Visited link color
+const invalid = base_red,
+  darkBackground = base07,
+  highlightBackground = '#5F5FAF5A', // Line highlight with improved transparency
+  background = base00,
+  tooltipBackground = base06,
+  selection = '#99a7df40', // Selection background with transparency
+  selectionMatch = '#99a7df60', // Selection match with transparency
+  cursor = base01, // Cursor color
+  activeBracketBg = '#0e639c20', // Active bracket background with transparency
+  activeBracketBorder = base_cyan, // Active bracket border
+  diagnosticWarning = base_orange, // Warning color
+  linkColor = base_cyan, // Link color
+  visitedLinkColor = base_purple; // Visited link color
+
+// Diff/merge specific colors
+const addedBackground = '#58753920', // Green with transparency for insertions
+  removedBackground = '#f52a6520', // Red with transparency for deletions
+  addedText = '#587539',         // Tokyo Night Day green for added text
+  removedText = '#f52a65';       // Tokyo Night Day red for removed text
 
 /**
  * Enhanced editor theme styles for Tokyo Night Day
  */
-export const tokyoNightDayTheme = EditorView.theme(
+const tokyoNightDayTheme = EditorView.theme(
   {
     // Base editor styles
     '&': {
@@ -174,6 +182,47 @@ export const tokyoNightDayTheme = EditorView.theme(
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
       color: base01,
+    },
+
+    // Diff/Merge View Styles
+    // Inserted/Added Content
+    '.cm-insertedLine': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: addedBackground,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: `${addedBackground} !important`,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${addedText}40`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+      background: 'transparent !important',
+    },
+
+    // Deleted/Removed Content
+    '.cm-deletedLine': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: removedBackground,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: `${removedBackground} !important`,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${removedText}40`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+      background: 'transparent !important',
     },
 
     // Tooltips and autocomplete
@@ -300,7 +349,7 @@ export const tokyoNightDayTheme = EditorView.theme(
 /**
  * Enhanced syntax highlighting for Tokyo Night Day theme
  */
-export const tokyoNightDayHighlightStyle = HighlightStyle.define([
+const tokyoNightDayHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
   { tag: t.keyword, color: base_cyan, fontWeight: 'bold' },
   { tag: t.controlKeyword, color: base_cyan, fontWeight: 'bold' },
@@ -408,7 +457,19 @@ export const tokyoNightDayHighlightStyle = HighlightStyle.define([
 /**
  * Combined Tokyo Night Day theme extension
  */
-export const tokyoNightDay: Extension = [
+const tokyoNightDay: Extension = [
   tokyoNightDayTheme,
   syntaxHighlighting(tokyoNightDayHighlightStyle),
 ];
+
+/**
+ * Tokyo Night Day merge revert styles configuration
+ */
+const tokyoNightDayMergeStyles: IMergeRevertStyles = {
+  backgroundColor: base07,
+  borderColor: base03,
+  buttonColor: base01,
+  buttonHoverColor: selectionMatch,
+};
+
+export { tokyoNightDay, tokyoNightDayMergeStyles, applyMergeRevertStyles };
