@@ -4,8 +4,10 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 
 import {
+  applyMergeRevertStyles,
   generalContent,
   generalCursor,
+  generalDiff,
   generalGutter,
   generalLine,
   generalMatching,
@@ -14,7 +16,8 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@fsegurai/codemirror-theme-utils';
+  IMergeRevertStyles,
+} from './utils';
 
 /**
  * Enhanced Gruvbox Light theme color definitions
@@ -23,70 +26,55 @@ import {
  */
 
 // Gruvbox base colors
-const dark0 = '#3c3836'; // Main foreground (text)
-const dark1 = '#504945'; // Secondary foreground
-const dark2 = '#665c54'; // Tertiary foreground
-const dark3 = '#7c6f64'; // Quaternary foreground
-const gray_244 = '#928374'; // Comments, invisibles, line highlighting
-
-// Light/background shades
-const light0 = '#fbf1c7'; // Main background
-const light1 = '#ebdbb2'; // Secondary background
-const light2 = '#d5c4a1'; // Tertiary background (not defined above)
-const light3 = '#bdae93'; // Quaternary background
-const light4 = '#a89984'; // Quinary background (not defined above)
-
-// Accent colors
-const faded_red = '#9d0006'; // Keywords, storage, operator
-const faded_green = '#79740e'; // Strings, tag attributes
-const faded_yellow = '#b57614'; // Functions, tag names
-const faded_blue = '#076678'; // Variables
-const faded_purple = '#8f3f71'; // Numbers, special constants
-const faded_aqua = '#427b58'; // Types
-const faded_orange = '#af3a03'; // Cursor, constants
-
-// Simplified naming
-const bg0 = light0;
-const bg1 = light1;
-const bg2 = light2;
-const bg3 = light3;
-const bg4 = light4;
-const gray = gray_244;
-const fg0 = dark0;
-const fg1 = dark1;
-const fg2 = dark2;
-const fg3 = dark3;
-const red = faded_red;
-const green = faded_green;
-const yellow = faded_yellow;
-const blue = faded_blue;
-const purple = faded_purple;
-const aqua = faded_aqua;
-const orange = faded_orange;
+const base00 = '#3c3836', // Main foreground (text)
+  base01 = '#504945', // Secondary foreground
+  base02 = '#665c54', // Tertiary foreground
+  base03 = '#7c6f64', // Quaternary foreground
+  base04 = '#928374', // Comments, invisibles, line highlighting
+  // Light/background shades
+  base05 = '#fbf1c7', // Main background
+  base06 = '#ebdbb2', // Secondary background
+  base07 = '#d5c4a1', // Tertiary background (not defined above)
+  base08 = '#bdae93', // Quaternary background
+  base09 = '#a89984', // Quinary background (not defined above)
+  // Accent colors
+  base0A = '#9d0006', // Keywords, storage, operator
+  base0B = '#79740e', // Strings, tag attributes
+  base0C = '#b57614', // Functions, tag names
+  base0D = '#076678', // Variables
+  base0E = '#8f3f71', // Numbers, special constants
+  base0F = '#427b58', // Types
+  base10 = '#af3a03'; // Cursor, constants
 
 // UI specific colors
-const invalid = red;
-const darkBackground = bg1;
-const highlightBackground = '#ffc42e25'; // Line highlight with transparency
-const background = bg0;
-const tooltipBackground = bg1;
-const selection = darkBackground;
-const selectionMatch = '#ffc42e40'; // Selection match background
-const cursor = orange; // Cursor color
-const activeBracketBg = '#d5c4a180'; // Active bracket background
-const activeBracketBorder = orange; // Active bracket border
-const diagnosticWarning = yellow; // Warning color
-const linkColor = blue; // Link color
-const visitedLinkColor = purple; // Visited link color
+const invalid = base0A,
+darkBackground = base06,
+highlightBackground = '#ffc42e25', // Line highlight with transparency
+background = base05,
+tooltipBackground = base06,
+selection = darkBackground,
+selectionMatch = '#ffc42e40', // Selection match background
+cursor = base10, // Cursor color
+activeBracketBg = '#d5c4a180', // Active bracket background
+activeBracketBorder = base10, // Active bracket border
+diagnosticWarning = base0C, // Warning color
+linkColor = base0D, // Link color
+visitedLinkColor = base0E; // Visited link color
+
+// Diff/merge specific colors
+const addedBackground = '#d8e5bc80', // Light base0B with transparency for insertions
+  removedBackground = '#f7cfcf80', // Light base0A with transparency for deletions
+  addedText = '#79740e',         // Gruvbox base0B for added text
+  removedText = '#9d0006';       // Gruvbox base0A for removed text
 
 /**
  * Enhanced editor theme styles for Gruvbox Light
  */
-export const gruvboxLightTheme = EditorView.theme(
+const gruvboxLightTheme = EditorView.theme(
   {
     // Base editor styles
     '&': {
-      color: fg0,
+      color: base00,
       backgroundColor: background,
       fontSize: generalContent.fontSize,
       fontFamily: generalContent.fontFamily,
@@ -103,14 +91,14 @@ export const gruvboxLightTheme = EditorView.theme(
     },
     '.cm-fat-cursor': {
       backgroundColor: `${cursor}99`,
-      color: bg0,
+      color: base05,
     },
 
     // Selection
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
       {
         backgroundColor: selection,
-        color: fg0,
+        color: base00,
       },
 
     // Make sure selection appears above active line
@@ -121,50 +109,50 @@ export const gruvboxLightTheme = EditorView.theme(
     // Search functionality
     '.cm-searchMatch': {
       backgroundColor: '#ffc42e80',
-      outline: `1px solid ${orange}`,
-      color: fg0,
+      outline: `1px solid ${base10}`,
+      color: base00,
       borderRadius: generalSearchField.borderRadius,
 
       '& span': {
-        color: fg0,
+        color: base00,
       },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-      backgroundColor: orange,
-      color: bg0,
+      backgroundColor: base10,
+      color: base05,
       padding: generalSearchField.padding,
 
       '& span': {
-        color: bg0,
+        color: base05,
       },
     },
     '.cm-search.cm-panel.cm-textfield': {
-      color: fg0,
+      color: base00,
       borderRadius: generalSearchField.borderRadius,
       padding: generalSearchField.padding,
     },
 
     // Panels
     '.cm-panels': {
-      backgroundColor: bg1,
-      color: fg1,
+      backgroundColor: base06,
+      color: base01,
       borderRadius: '0 0 4px 4px',
     },
     '.cm-panels.cm-panels-top': {
-      borderBottom: `1px solid ${bg3}`,
+      borderBottom: `1px solid ${base08}`,
     },
     '.cm-panels.cm-panels-bottom': {
-      borderTop: `1px solid ${bg3}`,
+      borderTop: `1px solid ${base08}`,
     },
     '.cm-panel button': {
-      backgroundColor: bg0,
-      color: fg0,
+      backgroundColor: base05,
+      color: base00,
       border: generalPanel.border,
       borderRadius: generalPanel.borderRadius,
       padding: generalPanel.padding,
     },
     '.cm-panel button:hover': {
-      backgroundColor: light2,
+      backgroundColor: base07,
     },
 
     // Line highlighting
@@ -176,15 +164,15 @@ export const gruvboxLightTheme = EditorView.theme(
 
     // Gutters
     '.cm-gutters': {
-      backgroundColor: bg1,
-      color: fg3,
+      backgroundColor: base06,
+      color: base03,
       border: generalGutter.border,
-      borderRight: `1px solid ${bg3}`,
+      borderRight: `1px solid ${base08}`,
       paddingRight: generalGutter.paddingRight,
     },
     '.cm-activeLineGutter': {
-      backgroundColor: bg2,
-      color: fg0,
+      backgroundColor: base07,
+      color: base00,
       fontWeight: generalGutter.fontWeight,
     },
     '.cm-lineNumbers': {
@@ -194,17 +182,58 @@ export const gruvboxLightTheme = EditorView.theme(
       fontSize: generalGutter.fontSize,
     },
     '.cm-foldGutter .cm-gutterElement': {
-      color: fg3,
+      color: base03,
       cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-      color: fg0,
+      color: base00,
     },
 
+    // Diff/Merge View Styles
+    // Inserted/Added Content
+    '.cm-insertedLine': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: addedBackground,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: `${addedBackground} !important`,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${addedText}40`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+      background: 'transparent !important',
+    },
+
+    // Deleted/Removed Content
+    '.cm-deletedLine': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: removedBackground,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: `${removedBackground} !important`,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${removedText}40`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+      background: 'transparent !important',
+    },
+    
     // Tooltips and autocomplete
     '.cm-tooltip': {
       backgroundColor: tooltipBackground,
-      border: `1px solid ${bg3}`,
+      border: `1px solid ${base08}`,
       borderRadius: generalTooltip.borderRadius,
       padding: generalTooltip.padding,
       boxShadow: '0 1px 5px rgba(0, 0, 0, 0.1)',
@@ -219,19 +248,19 @@ export const gruvboxLightTheme = EditorView.theme(
         lineHeight: generalTooltip.lineHeight,
       },
       '& > ul > li[aria-selected]': {
-        backgroundColor: orange + '30',
-        color: fg0,
+        backgroundColor: base10 + '30',
+        color: base00,
         borderRadius: generalTooltip.borderRadiusSelected,
       },
       '& > ul > li:hover': {
-        backgroundColor: orange + '15',
+        backgroundColor: base10 + '15',
       },
       '& > ul > li > span.cm-completionIcon': {
-        color: fg3,
+        color: base03,
         paddingRight: generalTooltip.paddingRight,
       },
       '& > ul > li > span.cm-completionDetail': {
-        color: fg3,
+        color: base03,
         fontStyle: 'italic',
       },
     },
@@ -278,15 +307,15 @@ export const gruvboxLightTheme = EditorView.theme(
     // Selection matches
     '.cm-selectionMatch': {
       backgroundColor: selectionMatch,
-      outline: `1px solid ${bg3}`,
+      outline: `1px solid ${base08}`,
       borderRadius: generalMatching.borderRadius,
     },
 
     // Fold placeholder
     '.cm-foldPlaceholder': {
       backgroundColor: 'transparent',
-      color: fg2,
-      border: `1px dotted ${bg3}`,
+      color: base02,
+      border: `1px dotted ${base08}`,
       borderRadius: generalPlaceholder.borderRadius,
       padding: generalPlaceholder.padding,
       margin: generalPlaceholder.margin,
@@ -295,7 +324,7 @@ export const gruvboxLightTheme = EditorView.theme(
     // Focus outline
     '&.cm-focused': {
       outline: 'none',
-      boxShadow: `0 0 0 2px ${bg0}, 0 0 0 3px ${orange}40`,
+      boxShadow: `0 0 0 2px ${base05}, 0 0 0 3px ${base10}40`,
     },
 
     // Scrollbars
@@ -304,21 +333,21 @@ export const gruvboxLightTheme = EditorView.theme(
       height: generalScroller.height,
     },
     '& .cm-scroller::-webkit-scrollbar-track': {
-      background: bg0,
+      background: base05,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
-      backgroundColor: bg3,
+      backgroundColor: base08,
       borderRadius: generalScroller.borderRadius,
-      border: `3px solid ${bg0}`,
+      border: `3px solid ${base05}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-      backgroundColor: bg4,
+      backgroundColor: base09,
     },
 
     // Ghost text
     '.cm-ghostText': {
       opacity: '0.5',
-      color: gray,
+      color: base04,
     },
   },
   { dark: false },
@@ -327,62 +356,62 @@ export const gruvboxLightTheme = EditorView.theme(
 /**
  * Enhanced syntax highlighting for Gruvbox Light theme
  */
-export const gruvboxLightHighlightStyle = HighlightStyle.define([
+const gruvboxLightHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
-  { tag: t.keyword, color: red, fontWeight: 'bold' },
-  { tag: t.controlKeyword, color: red, fontWeight: 'bold' },
-  { tag: t.moduleKeyword, color: red, fontWeight: 'bold' },
+  { tag: t.keyword, color: base0A, fontWeight: 'bold' },
+  { tag: t.controlKeyword, color: base0A, fontWeight: 'bold' },
+  { tag: t.moduleKeyword, color: base0A, fontWeight: 'bold' },
 
   // Names and variables
-  { tag: [t.name, t.deleted, t.character, t.macroName], color: blue },
-  { tag: [t.variableName], color: blue },
-  { tag: [t.propertyName], color: aqua, fontStyle: 'normal' },
+  { tag: [t.name, t.deleted, t.character, t.macroName], color: base0D },
+  { tag: [t.variableName], color: base0D },
+  { tag: [t.propertyName], color: base0F, fontStyle: 'normal' },
 
   // Classes and types
-  { tag: [t.typeName], color: aqua },
-  { tag: [t.className], color: yellow, fontStyle: 'italic' },
-  { tag: [t.namespace], color: blue, fontStyle: 'italic' },
+  { tag: [t.typeName], color: base0F },
+  { tag: [t.className], color: base0C, fontStyle: 'italic' },
+  { tag: [t.namespace], color: base0D, fontStyle: 'italic' },
 
   // Operators and punctuation
-  { tag: [t.operator, t.operatorKeyword], color: fg0 },
-  { tag: [t.bracket], color: gray },
-  { tag: [t.brace], color: gray },
-  { tag: [t.punctuation], color: gray },
+  { tag: [t.operator, t.operatorKeyword], color: base00 },
+  { tag: [t.bracket], color: base04 },
+  { tag: [t.brace], color: base04 },
+  { tag: [t.punctuation], color: base04 },
 
   // Functions and parameters
-  { tag: [t.function(t.variableName), t.labelName], color: yellow },
-  { tag: [t.definition(t.variableName)], color: blue },
+  { tag: [t.function(t.variableName), t.labelName], color: base0C },
+  { tag: [t.definition(t.variableName)], color: base0D },
 
   // Constants and literals
-  { tag: t.number, color: purple },
-  { tag: t.changed, color: purple },
+  { tag: t.number, color: base0E },
+  { tag: t.changed, color: base0E },
   { tag: t.annotation, color: invalid, fontStyle: 'italic' },
-  { tag: t.modifier, color: purple, fontStyle: 'italic' },
-  { tag: t.self, color: purple },
-  { tag: [t.color, t.constant(t.name), t.standard(t.name)], color: orange },
-  { tag: [t.atom, t.bool, t.special(t.variableName)], color: orange },
+  { tag: t.modifier, color: base0E, fontStyle: 'italic' },
+  { tag: t.self, color: base0E },
+  { tag: [t.color, t.constant(t.name), t.standard(t.name)], color: base10 },
+  { tag: [t.atom, t.bool, t.special(t.variableName)], color: base10 },
 
   // Strings and regex
-  { tag: [t.processingInstruction, t.inserted], color: green },
-  { tag: [t.special(t.string), t.regexp], color: green },
-  { tag: t.string, color: green },
+  { tag: [t.processingInstruction, t.inserted], color: base0B },
+  { tag: [t.special(t.string), t.regexp], color: base0B },
+  { tag: t.string, color: base0B },
 
   // Punctuation and structure
-  { tag: t.definition(t.typeName), color: aqua, fontWeight: 'bold' },
+  { tag: t.definition(t.typeName), color: base0F, fontWeight: 'bold' },
 
   // Comments and documentation
-  { tag: t.meta, color: gray },
-  { tag: t.comment, fontStyle: 'italic', color: gray },
-  { tag: t.docComment, fontStyle: 'italic', color: gray },
+  { tag: t.meta, color: base04 },
+  { tag: t.comment, fontStyle: 'italic', color: base04 },
+  { tag: t.docComment, fontStyle: 'italic', color: base04 },
 
   // HTML/XML elements
-  { tag: [t.tagName], color: red },
-  { tag: [t.attributeName], color: yellow },
+  { tag: [t.tagName], color: base0A },
+  { tag: [t.attributeName], color: base0C },
 
   // Markdown and text formatting
-  { tag: [t.heading], fontWeight: 'bold', color: yellow },
-  { tag: [t.strong], fontWeight: 'bold', color: yellow },
-  { tag: [t.emphasis], fontStyle: 'italic', color: green },
+  { tag: [t.heading], fontWeight: 'bold', color: base0C },
+  { tag: [t.strong], fontWeight: 'bold', color: base0C },
+  { tag: [t.emphasis], fontStyle: 'italic', color: base0B },
 
   // Links and URLs
   {
@@ -402,28 +431,40 @@ export const gruvboxLightHighlightStyle = HighlightStyle.define([
   // Special states
   {
     tag: [t.invalid],
-    color: fg0,
+    color: base00,
     textDecoration: 'underline wavy',
     borderBottom: `1px wavy ${invalid}`,
   },
   { tag: [t.strikethrough], color: invalid, textDecoration: 'line-through' },
 
   // Enhanced syntax highlighting
-  { tag: t.constant(t.name), color: orange },
+  { tag: t.constant(t.name), color: base10 },
   { tag: t.deleted, color: invalid },
-  { tag: t.squareBracket, color: gray },
-  { tag: t.angleBracket, color: gray },
+  { tag: t.squareBracket, color: base04 },
+  { tag: t.angleBracket, color: base04 },
 
   // Additional specific styles
-  { tag: t.monospace, color: fg0 },
-  { tag: [t.contentSeparator], color: blue },
-  { tag: t.quote, color: gray },
+  { tag: t.monospace, color: base00 },
+  { tag: [t.contentSeparator], color: base0D },
+  { tag: t.quote, color: base04 },
 ]);
 
 /**
  * Combined Gruvbox Light theme extension
  */
-export const gruvboxLight: Extension = [
+const gruvboxLight: Extension = [
   gruvboxLightTheme,
   syntaxHighlighting(gruvboxLightHighlightStyle),
 ];
+
+/**
+ * Gruvbox Light merge revert styles configuration
+ */
+const gruvboxLightMergeStyles: IMergeRevertStyles = {
+  backgroundColor: tooltipBackground,
+  borderColor: base08,
+  buttonColor: base00,
+  buttonHoverColor: base07,
+};
+
+export { gruvboxLight, gruvboxLightMergeStyles, applyMergeRevertStyles };

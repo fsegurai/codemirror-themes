@@ -4,8 +4,10 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 
 import {
+  applyMergeRevertStyles,
   generalContent,
   generalCursor,
+  generalDiff,
   generalGutter,
   generalLine,
   generalMatching,
@@ -14,7 +16,8 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@fsegurai/codemirror-theme-utils';
+  IMergeRevertStyles,
+} from './utils';
 
 /**
  * Enhanced color palette for Basic Light theme
@@ -23,45 +26,48 @@ import {
  */
 
 // Text colors (dark shades)
-const base00 = '#1c2434'; //  deep navy - primary text (darker for better contrast)
-const base01 = '#2d3748'; //  dark slate - secondary text, cursor
-const base02 = '#4a5568'; //  medium slate - gutter text
-const base03 = '#718096'; //  steel blue - comments, panel text
-
+const base00 = '#1c2434', //  deep navy - primary text (darker for better contrast)
+base01 = '#2d3748', //  dark slate - secondary text, cursor
+base02 = '#4a5568', //  medium slate - gutter text
+base03 = '#718096', //  steel blue - comments, panel text
 // Background shades
-const base04 = '#edf2f750'; // very light blue w/transparency - active line gutter
-const base05 = '#f7fafc'; // off-white - tooltip background
-const base06 = '#f0f4f8'; // snow-white - gutter background
-
+base04 = '#edf2f750', // very light blue w/transparency - active line gutter
+base05 = '#f7fafc', // off-white - tooltip background
+base06 = '#f0f4f8', // snow-white - gutter background
 // Primary accent colors (cool tones)
-const base07 = '#0c7792'; //  teal - links, braces (more saturated)
-const base08 = '#0369a1'; //  azure blue - numbers, constants (deeper)
-const base09 = '#2b6cb0'; //  royal blue - variables, parameters
-const base0A = '#1a365d'; //  deep navy - keywords, headings
-
+base07 = '#0c7792', //  teal - links, braces (more saturated)
+base08 = '#0369a1', //  azure blue - numbers, constants (deeper)
+base09 = '#2b6cb0', //  royal blue - variables, parameters
+base0A = '#1a365d', //  deep navy - keywords, headings
 // Secondary accent colors (warm and complementary)
-const base0B = '#c53030'; //  red - square brackets (more vibrant)
-const base0C = '#dd6b20'; //  orange - strings (warmer, more vibrant)
-const base0D = '#d69e2e'; //  amber - class names (more saturated)
-const base0E = '#2f855a'; //  green - operators (deeper, richer)
-const base0F = '#805ad5'; //  purple - tag names (more vibrant)
+base0B = '#c53030', //  red - square brackets (more vibrant)
+base0C = '#dd6b20', //  orange - strings (warmer, more vibrant)
+base0D = '#d69e2e', //  amber - class names (more saturated)
+base0E = '#2f855a', //  green - operators (deeper, richer)
+base0F = '#805ad5'; //  purple - tag names (more vibrant)
 
 // UI-specific colors
-const invalid = '#e53e3e'; //  bright red - errors (more visible)
-const darkBackground = base06; // panel background
-const highlightBackground = '#ebf4ff40'; // active line highlight (subtle blue)
-const background = '#ffffff'; // editor background
-const tooltipBackground = base05; // tooltip background
-const selection = '#90cdf480'; // selection background (clearer blue)
-const selectionMatch = '#63b3ed40'; // selection match highlight
-const cursor = base01; //  cursor color
-const activeBracketBg = '#0c779220';
-const activeBracketBorder = base09;
+const invalid = '#e53e3e', //  bright red - errors (more visible)
+darkBackground = base06, // panel background
+highlightBackground = '#ebf4ff40', // active line highlight (subtle blue)
+background = '#ffffff', // editor background
+tooltipBackground = base05, // tooltip background
+selection = '#90cdf480', // selection background (clearer blue)
+selectionMatch = '#63b3ed40', // selection match highlight
+cursor = base01, //  cursor color
+activeBracketBg = '#0c779220', // active bracket background (transparent teal)
+activeBracketBorder = base09;
+
+// Diff/merge specific colors
+const addedBackground = '#e6ffec60', // Light green with transparency for insertions
+  removedBackground = '#ffebe9a0', // Light red with transparency for deletions
+  addedText = '#24783b',          // Dark green for added text
+  removedText = '#cf222e';        // Dark red for removed text
 
 /**
  * Enhanced editor theme styles for Basic Light
  */
-export const basicLightTheme = EditorView.theme(
+const basicLightTheme = EditorView.theme(
   {
     // Base editor styles
     '&': {
@@ -178,6 +184,47 @@ export const basicLightTheme = EditorView.theme(
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
       color: base00,
+    },
+
+    // Diff/Merge View Styles
+// Inserted/Added Content
+    '.cm-insertedLine': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: addedBackground,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: `${addedBackground} !important`,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${addedText}30`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+      background: 'transparent !important',
+    },
+
+// Deleted/Removed Content
+    '.cm-deletedLine': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: removedBackground,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: `${removedBackground} !important`,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${removedText}30`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+      background: 'transparent !important',
     },
 
     // Tooltips and autocomplete
@@ -303,7 +350,7 @@ export const basicLightTheme = EditorView.theme(
 /**
  * Enhanced syntax highlighting for the Basic Light theme
  */
-export const basicLightHighlightStyle = HighlightStyle.define([
+const basicLightHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
   { tag: t.keyword, color: base0A, fontWeight: 'bold' },
   { tag: t.controlKeyword, color: base0A, fontWeight: 'bold' },
@@ -407,7 +454,19 @@ export const basicLightHighlightStyle = HighlightStyle.define([
 /**
  * Combined Basic Light theme extension
  */
-export const basicLight: Extension = [
+const basicLight: Extension = [
   basicLightTheme,
   syntaxHighlighting(basicLightHighlightStyle),
 ];
+
+/**
+ * Basic Light merge revert styles configuration
+ */
+const basicLightMergeStyles: IMergeRevertStyles = {
+  backgroundColor: darkBackground,
+  borderColor: '#e2e8f0',
+  buttonColor: base02,
+  buttonHoverColor: '#e2e8f0',
+};
+
+export { basicLight, basicLightMergeStyles, applyMergeRevertStyles };

@@ -4,8 +4,10 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 
 import {
+  applyMergeRevertStyles,
   generalContent,
   generalCursor,
+  generalDiff,
   generalGutter,
   generalLine,
   generalMatching,
@@ -14,7 +16,8 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@fsegurai/codemirror-theme-utils';
+  IMergeRevertStyles,
+} from './utils';
 
 /**
  * Enhanced Palenight theme color definitions
@@ -23,42 +26,47 @@ import {
  */
 
 // Base colors
-const base00 = '#292D3E'; // Background - deep indigo
-const base01 = '#A6ACCD'; // Foreground - lavender blue
-const base02 = '#444267'; // Selection background - muted indigo
-const base03 = '#676E95'; // Comments, invisible - steel blue
-const base04 = '#BFC7D5'; // Cursor - lighter lavender
-
-// Accent colors
-const base05 = '#C3E88D'; // Strings - light green
-const base06 = '#82AAFF'; // Keywords, Functions - sky blue
-const base07 = '#C792EA'; // Classes, Types - purple
-const base08 = '#F78C6C'; // Numbers, Constants - orange
-const base09 = '#FFCB6B'; // Classes, Attributes - yellow
-const base0A = '#89DDFF'; // Punctuation, Operators - light blue
-const base0B = '#FF5370'; // Tags, Errors - red
-const base0C = '#BB80B3'; // Special elements - mauve
-const base0D = '#80CBC4'; // Properties - seafoam
+const base00 = '#292D3E', // Background - deep indigo
+  base01 = '#A6ACCD', // Foreground - lavender blue
+  base02 = '#444267', // Selection background - muted indigo
+  base03 = '#676E95', // Comments, invisible - steel blue
+  base04 = '#BFC7D5', // Cursor - lighter lavender
+  // Accent colors
+  base05 = '#C3E88D', // Strings - light green
+  base06 = '#82AAFF', // Keywords, Functions - sky blue
+  base07 = '#C792EA', // Classes, Types - purple
+  base08 = '#F78C6C', // Numbers, Constants - orange
+  base09 = '#FFCB6B', // Classes, Attributes - yellow
+  base0A = '#89DDFF', // Punctuation, Operators - light blue
+  base0B = '#FF5370', // Tags, Errors - red
+  base0C = '#BB80B3', // Special elements - mauve
+  base0D = '#80CBC4'; // Properties - seafoam
 
 // UI specific colors
-const invalid = '#FF5370'; // Error color - red
-const darkBackground = '#202331'; // Darker background for panels and gutter
-const highlightBackground = '#2e324817'; // Active line background
-const background = base00; // Main editor background
-const tooltipBackground = '#343A50'; // Tooltip background
-const selection = base02; // Selection background
-const selectionMatch = '#444267AA'; // Selection match with opacity
-const cursor = base04; // Cursor color
-const activeBracketBg = '#2E3248'; // Active bracket background
-const activeBracketBorder = base06; // Active bracket border - sky blue
-const diagnosticWarning = base09; // Warning color - yellow
-const linkColor = base06; // Link color - sky blue
-const visitedLinkColor = base07; // Visited link color - purple
+const invalid = '#FF5370', // Error color - red
+  darkBackground = '#202331', // Darker background for panels and gutter
+  highlightBackground = '#2e324817', // Active line background
+  background = base00, // Main editor background
+  tooltipBackground = '#343A50', // Tooltip background
+  selection = base02, // Selection background
+  selectionMatch = '#444267AA', // Selection match with opacity
+  cursor = base04, // Cursor color
+  activeBracketBg = '#2E3248', // Active bracket background
+  activeBracketBorder = base06, // Active bracket border - sky blue
+  diagnosticWarning = base09, // Warning color - yellow
+  linkColor = base06, // Link color - sky blue
+  visitedLinkColor = base07; // Visited link color - purple
+
+// Diff/merge specific colors
+const addedBackground = '#2c3c2e80', // Dark green with transparency for insertions
+  removedBackground = '#3e2e3180', // Dark red with transparency for deletions
+  addedText = '#C3E88D',         // Palenight green for added text
+  removedText = '#FF5370';       // Palenight red for removed text
 
 /**
  * Enhanced editor theme styles for Palenight
  */
-export const palenightTheme = EditorView.theme(
+const palenightTheme = EditorView.theme(
   {
     // Base editor styles
     '&': {
@@ -174,6 +182,47 @@ export const palenightTheme = EditorView.theme(
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
       color: base01,
+    },
+
+    // Diff/Merge View Styles
+    // Inserted/Added Content
+    '.cm-insertedLine': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: addedBackground,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: `${addedBackground} !important`,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${addedText}40`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+      background: 'transparent !important',
+    },
+
+    // Deleted/Removed Content
+    '.cm-deletedLine': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: removedBackground,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: `${removedBackground} !important`,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${removedText}40`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+      background: 'transparent !important',
     },
 
     // Tooltips and autocomplete
@@ -299,7 +348,7 @@ export const palenightTheme = EditorView.theme(
 /**
  * Enhanced syntax highlighting for Palenight theme
  */
-export const palenightHighlightStyle = HighlightStyle.define([
+const palenightHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
   { tag: t.keyword, color: base06, fontWeight: 'bold' },
   { tag: t.controlKeyword, color: base06, fontWeight: 'bold' },
@@ -397,7 +446,19 @@ export const palenightHighlightStyle = HighlightStyle.define([
 /**
  * Combined Palenight theme extension
  */
-export const palenight: Extension = [
+const palenight: Extension = [
   palenightTheme,
   syntaxHighlighting(palenightHighlightStyle),
 ];
+
+/**
+ * Palenight merge revert styles configuration
+ */
+const palenightMergeStyles: IMergeRevertStyles = {
+  backgroundColor: darkBackground,
+  borderColor: '#3A4058',
+  buttonColor: base01,
+  buttonHoverColor: '#3A4058',
+};
+
+export { palenight, palenightMergeStyles, applyMergeRevertStyles };

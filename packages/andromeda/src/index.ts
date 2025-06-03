@@ -4,8 +4,10 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 
 import {
+  applyMergeRevertStyles,
   generalContent,
   generalCursor,
+  generalDiff,
   generalGutter,
   generalLine,
   generalMatching,
@@ -14,7 +16,8 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@fsegurai/codemirror-theme-utils';
+  IMergeRevertStyles,
+} from './utils';
 
 /**
  * Enhanced Andromeda theme color palette
@@ -40,7 +43,6 @@ const base00 = '#1b1e26',  // Background (slightly darker for better contrast)
   base0E = '#6ae4b9',   // New color for special elements
   base0F = '#3c94ff',   // New color for attributes and links
   invalid = '#ff3162',  // Invalid (more visible red)
-
   // UI-specific colors
   darkBackground = '#242830',
   selectionBackground = base02,
@@ -49,12 +51,17 @@ const base00 = '#1b1e26',  // Background (slightly darker for better contrast)
   tooltipBackground = '#1f232d', // Darker tooltip for better contrast
   cursor = base04,
   activeBracketBg = '#db45a230',
-  activeBracketBorder = base05;
+  activeBracketBorder = base05,
+  // Diff/merge specific colors
+  addedBackground = '#0f3a2440', // Dark green with transparency for insertions
+  removedBackground = '#78112230', // Dark red with transparency for deletions
+  addedText = base08, // Using string color for added text for consistency
+  removedText = '#ff5d7a'; // Bright red for removed text
 
 /**
  * Enhanced editor theme styles for Andromeda
  */
-export const andromedaTheme = EditorView.theme(
+const andromedaTheme = EditorView.theme(
   {
     // Base editor styles
     '&': {
@@ -170,6 +177,47 @@ export const andromedaTheme = EditorView.theme(
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
       color: base01,
+    },
+
+    // Diff/Merge View Styles
+    // Inserted/Added Content
+    '.cm-insertedLine': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: addedBackground,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: `${addedBackground} !important`,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${addedText}40`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+      background: 'transparent !important',
+    },
+
+    // Deleted/Removed Content
+    '.cm-deletedLine': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: removedBackground,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: `${removedBackground} !important`,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${removedText}40`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+      background: 'transparent !important',
     },
 
     // Tooltips and autocomplete
@@ -295,7 +343,7 @@ export const andromedaTheme = EditorView.theme(
 /**
  * Enhanced syntax highlighting for the Andromeda theme
  */
-export const andromedaHighlightStyle = HighlightStyle.define([
+const andromedaHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
   { tag: t.keyword, color: base05, fontWeight: 'bold' },
   { tag: t.controlKeyword, color: base05, fontWeight: 'bold' },
@@ -375,7 +423,19 @@ export const andromedaHighlightStyle = HighlightStyle.define([
 /**
  * Combined Andromeda theme extension
  */
-export const andromeda: Extension = [
+const andromeda: Extension = [
   andromedaTheme,
   syntaxHighlighting(andromedaHighlightStyle),
 ];
+
+/**
+ * Andromeda merge revert styles configuration
+ */
+const andromedaMergeStyles: IMergeRevertStyles = {
+  backgroundColor: darkBackground,
+  borderColor: '#3a3e4c',
+  buttonColor: base06,
+  buttonHoverColor: '#343946',
+};
+
+export { andromeda, andromedaMergeStyles, applyMergeRevertStyles };
