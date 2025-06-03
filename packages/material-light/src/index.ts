@@ -4,8 +4,10 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 
 import {
+  applyMergeRevertStyles,
   generalContent,
   generalCursor,
+  generalDiff,
   generalGutter,
   generalLine,
   generalMatching,
@@ -14,7 +16,8 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@fsegurai/codemirror-theme-utils';
+  IMergeRevertStyles,
+} from './utils';
 
 /**
  * Enhanced Material Light theme color definitions
@@ -23,48 +26,52 @@ import {
  */
 
 // Base colors
-const base00 = '#ffffff'; // Background - pure white for clean look
-const base01 = '#f5f5f5'; // Lighter background (popups, statuslines)
-const base02 = '#212121'; // Main text - nearly black for contrast
-const base03 = '#757575'; // Comments, invisibles - gray 600
-const base04 = '#9e9e9e'; // Cursor and line numbers - gray 500
-const base05 = '#424242'; // Default foreground - gray 800
-const base06 = '#eeeeee'; // Light borders or divisions - gray 200
-const base07 = '#fafafa'; // Light background (gutter) - gray 50
-
-// Accent colors - using standard Material Design palette
-const base_red = '#f44336'; // Red 500
-const base_deeporange = '#ff3e00'; // Deep Orange 500
-const base_pink = '#FF00E9FF'; // Pink 500
-const base_yellow = '#ffc107'; // Amber 500 (better than yellow for light theme)
-const base_orange = '#ff9800'; // Orange 500
-const base_cyan = '#00acc1'; // Cyan 600 (better contrast for light theme)
-const base_indigo = '#3949ab'; // Indigo 600 (better contrast for light theme)
-const base_purple = '#8e24aa'; // Purple 600 (better contrast for light theme)
-const base_green = '#43a047'; // Green 600 (better contrast for light theme)
-// const base_lightgreen = '#7cb342'; // Light Green 600 (better contrast)
-const base_teal = '#00897b'; // Teal 600 (better contrast for light theme)
-const base_blue = '#1e88e5'; // Blue 600 (better contrast for light theme)
+const base00 = '#ffffff', // Background - pure white for clean look
+  base01 = '#f5f5f5', // Lighter background (popups, statuslines)
+  base02 = '#212121', // Main text - nearly black for contrast
+  base03 = '#757575', // Comments, invisibles - gray 600
+  base04 = '#9e9e9e', // Cursor and line numbers - gray 500
+  base05 = '#424242', // Default foreground - gray 800
+  base06 = '#eeeeee', // Light borders or divisions - gray 200
+  base07 = '#fafafa', // Light background (gutter) - gray 50
+  // Accent colors - using standard Material Design palette
+  base08 = '#f44336', // Red 500
+  base09 = '#ff3e00', // Deep Orange 500
+  base0A = '#FF00E9FF', // Pink 500
+  base0B = '#ffc107', // Amber 500 (better than yellow for light theme)
+  base0C = '#ff9800', // Orange 500
+  base0D = '#00acc1', // Cyan 600 (better contrast for light theme)
+  base0E = '#3949ab', // Indigo 600 (better contrast for light theme)
+  base0F = '#8e24aa', // Purple 600 (better contrast for light theme)
+  base10 = '#43a047', // Green 600 (better contrast for light theme)
+  base11 = '#00897b', // Teal 600 (better contrast for light theme)
+  base12 = '#1e88e5'; // Blue 600 (better contrast for light theme)
 
 // UI specific colors
-const invalid = base_red;
-const highlightBackground = '#00000008'; // Line highlight
-const background = base00;
-const tooltipBackground = base01;
-const selection = '#DDEEFF'; // Selection background
-const selectionMatch = '#90a4ae26'; // Selection match background
-const cursor = base04; // Cursor color
-const activeBracketBg = '#DDEEFF80'; // Active bracket background
-const activeBracketBorder = base_cyan; // Active bracket border
-const diagnosticWarning = base_orange; // Warning color
-const linkColor = base_cyan; // Link color
-const visitedLinkColor = base_purple; // Visited link color
-const hoverHighlight = '#ECEFF180'; // Hover highlight
+const invalid = base08,
+  highlightBackground = '#00000008', // Line highlight
+  background = base00,
+  tooltipBackground = base01,
+  selection = '#DDEEFF', // Selection background
+  selectionMatch = '#90a4ae26', // Selection match background
+  cursor = base04, // Cursor color
+  activeBracketBg = '#DDEEFF80', // Active bracket background
+  activeBracketBorder = base0D, // Active bracket border
+  diagnosticWarning = base0C, // Warning color
+  linkColor = base0D, // Link color
+  visitedLinkColor = base0F, // Visited link color
+  hoverHighlight = '#ECEFF180'; // Hover highlight
+
+// Diff/merge specific colors
+const addedBackground = '#e6ffed80', // Light green with transparency for insertions
+  removedBackground = '#ffebe980', // Light red with transparency for deletions
+  addedText = '#28a745',         // Bright green for added text
+  removedText = '#d73a49';       // Bright red for removed text
 
 /**
  * Enhanced editor theme styles for Material Light
  */
-export const materialLightTheme = EditorView.theme(
+const materialLightTheme = EditorView.theme(
   {
     // Base editor styles
     '&': {
@@ -102,7 +109,7 @@ export const materialLightTheme = EditorView.theme(
     // Search functionality
     '.cm-searchMatch': {
       backgroundColor: '#FFA72680',
-      outline: `1px solid ${base_yellow}`,
+      outline: `1px solid ${base0B}`,
       color: base02,
       borderRadius: generalSearchField.borderRadius,
 
@@ -111,7 +118,7 @@ export const materialLightTheme = EditorView.theme(
       },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-      backgroundColor: base_cyan,
+      backgroundColor: base0D,
       color: background,
       padding: generalSearchField.padding,
 
@@ -184,6 +191,47 @@ export const materialLightTheme = EditorView.theme(
       color: base02,
     },
 
+    // Diff/Merge View Styles
+    // Inserted/Added Content
+    '.cm-insertedLine': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: addedBackground,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: `${addedBackground} !important`,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${addedText}30`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+      background: 'transparent !important',
+    },
+
+    // Deleted/Removed Content
+    '.cm-deletedLine': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: removedBackground,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: `${removedBackground} !important`,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${removedText}30`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+      background: 'transparent !important',
+    },
+    
     // Tooltips and autocomplete
     '.cm-tooltip': {
       backgroundColor: tooltipBackground,
@@ -278,7 +326,7 @@ export const materialLightTheme = EditorView.theme(
     // Focus outline
     '&.cm-focused': {
       outline: 'none',
-      boxShadow: `0 0 0 2px ${background}, 0 0 0 3px ${base_cyan}40`,
+      boxShadow: `0 0 0 2px ${background}, 0 0 0 3px ${base0D}40`,
     },
 
     // Scrollbars
@@ -310,54 +358,54 @@ export const materialLightTheme = EditorView.theme(
 /**
  * Enhanced syntax highlighting for Material Light theme
  */
-export const materialLightHighlightStyle = HighlightStyle.define([
+const materialLightHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
-  { tag: t.keyword, color: base_cyan, fontWeight: 'bold' },
-  { tag: t.controlKeyword, color: base_cyan, fontWeight: 'bold' },
-  { tag: t.moduleKeyword, color: base_cyan, fontWeight: 'bold' },
+  { tag: t.keyword, color: base0D, fontWeight: 'bold' },
+  { tag: t.controlKeyword, color: base0D, fontWeight: 'bold' },
+  { tag: t.moduleKeyword, color: base0D, fontWeight: 'bold' },
 
   // Names and variables
   { tag: [t.name, t.deleted, t.character, t.macroName], color: base05 },
   { tag: [t.variableName], color: base05 },
-  { tag: [t.propertyName], color: base_teal, fontStyle: 'normal' },
+  { tag: [t.propertyName], color: base11, fontStyle: 'normal' },
 
   // Classes and types
-  { tag: [t.typeName], color: base_orange },
-  { tag: [t.className], color: base_orange, fontStyle: 'italic' },
-  { tag: [t.namespace], color: base_indigo, fontStyle: 'italic' },
+  { tag: [t.typeName], color: base0C },
+  { tag: [t.className], color: base0C, fontStyle: 'italic' },
+  { tag: [t.namespace], color: base0E, fontStyle: 'italic' },
 
   // Operators and punctuation
-  { tag: [t.operator, t.operatorKeyword], color: base_indigo },
-  { tag: [t.bracket], color: base_purple },
-  { tag: [t.brace], color: base_purple },
+  { tag: [t.operator, t.operatorKeyword], color: base0E },
+  { tag: [t.bracket], color: base0F },
+  { tag: [t.brace], color: base0F },
   { tag: [t.punctuation], color: base03 },
 
   // Functions and parameters
-  { tag: [t.function(t.variableName)], color: base_deeporange },
-  { tag: [t.labelName], color: base_blue, fontStyle: 'italic' },
-  { tag: [t.definition(t.function(t.variableName))], color: base_deeporange },
-  { tag: [t.definition(t.variableName)], color: base_pink },
+  { tag: [t.function(t.variableName)], color: base09 },
+  { tag: [t.labelName], color: base12, fontStyle: 'italic' },
+  { tag: [t.definition(t.function(t.variableName))], color: base09 },
+  { tag: [t.definition(t.variableName)], color: base0A },
 
   // Constants and literals
-  { tag: t.number, color: base_orange },
-  { tag: t.changed, color: base_orange },
+  { tag: t.number, color: base0C },
+  { tag: t.changed, color: base0C },
   { tag: t.annotation, color: invalid, fontStyle: 'italic' },
-  { tag: t.modifier, color: base_orange, fontStyle: 'italic' },
-  { tag: t.self, color: base_orange },
+  { tag: t.modifier, color: base0C, fontStyle: 'italic' },
+  { tag: t.self, color: base0C },
   {
     tag: [t.color, t.constant(t.name), t.standard(t.name)],
-    color: base_orange,
+    color: base0C,
   },
-  { tag: [t.atom, t.bool], color: base_purple },
+  { tag: [t.atom, t.bool], color: base0F },
 
   // Strings and regex
-  { tag: [t.processingInstruction, t.inserted], color: base_green },
-  { tag: t.string, color: base_green },
-  { tag: [t.special(t.string), t.regexp], color: base_pink },
+  { tag: [t.processingInstruction, t.inserted], color: base10 },
+  { tag: t.string, color: base10 },
+  { tag: [t.special(t.string), t.regexp], color: base0A },
 
   // Punctuation and structure
-  { tag: t.definition(t.typeName), color: base_pink, fontWeight: 'bold' },
-  { tag: [t.definition(t.name), t.separator], color: base_pink },
+  { tag: t.definition(t.typeName), color: base0A, fontWeight: 'bold' },
+  { tag: [t.definition(t.name), t.separator], color: base0A },
 
   // Comments and documentation
   { tag: t.meta, color: base03 },
@@ -365,19 +413,19 @@ export const materialLightHighlightStyle = HighlightStyle.define([
   { tag: t.docComment, fontStyle: 'italic', color: base03 },
 
   // HTML/XML elements
-  { tag: [t.tagName], color: base_deeporange },
+  { tag: [t.tagName], color: base09 },
   { tag: [t.attributeName], color: base05 },
 
   // Markdown and text formatting
-  { tag: [t.heading], fontWeight: 'bold', color: base_teal },
-  { tag: t.heading1, color: base_blue },
-  { tag: t.heading2, color: base_orange },
-  { tag: t.heading3, color: base_cyan },
-  { tag: t.heading4, color: base_indigo },
-  { tag: t.heading5, color: base_purple },
-  { tag: t.heading6, color: base_green },
-  { tag: [t.strong], fontWeight: 'bold', color: base_indigo },
-  { tag: [t.emphasis], fontStyle: 'italic', color: base_orange },
+  { tag: [t.heading], fontWeight: 'bold', color: base11 },
+  { tag: t.heading1, color: base12 },
+  { tag: t.heading2, color: base0C },
+  { tag: t.heading3, color: base0D },
+  { tag: t.heading4, color: base0E },
+  { tag: t.heading5, color: base0F },
+  { tag: t.heading6, color: base10 },
+  { tag: [t.strong], fontWeight: 'bold', color: base0E },
+  { tag: [t.emphasis], fontStyle: 'italic', color: base0C },
 
   // Links and URLs
   {
@@ -399,26 +447,38 @@ export const materialLightHighlightStyle = HighlightStyle.define([
     tag: [t.invalid],
     color: base02,
     textDecoration: 'underline wavy',
-    borderBottom: `1px dotted ${base_red}`,
+    borderBottom: `1px dotted ${base08}`,
   },
   { tag: [t.strikethrough], color: invalid, textDecoration: 'line-through' },
 
   // Enhanced syntax highlighting
-  { tag: t.constant(t.name), color: base_deeporange },
+  { tag: t.constant(t.name), color: base09 },
   { tag: t.deleted, color: invalid },
-  { tag: t.squareBracket, color: base_red },
+  { tag: t.squareBracket, color: base08 },
   { tag: t.angleBracket, color: base02 },
 
   // Additional specific styles
   { tag: t.monospace, color: base02 },
-  { tag: [t.contentSeparator], color: base_cyan },
-  { tag: t.quote, color: base_green },
+  { tag: [t.contentSeparator], color: base0D },
+  { tag: t.quote, color: base10 },
 ]);
 
 /**
  * Combined Material Light theme extension
  */
-export const materialLight: Extension = [
+const materialLight: Extension = [
   materialLightTheme,
   syntaxHighlighting(materialLightHighlightStyle),
 ];
+
+/**
+ * Material Light merge revert styles configuration
+ */
+const materialLightMergeStyles: IMergeRevertStyles = {
+  backgroundColor: tooltipBackground,
+  borderColor: base04,
+  buttonColor: base02,
+  buttonHoverColor: '#CFD8DC',
+};
+
+export { materialLight, materialLightMergeStyles, applyMergeRevertStyles };

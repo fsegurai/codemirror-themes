@@ -4,8 +4,10 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 
 import {
+  applyMergeRevertStyles,
   generalContent,
   generalCursor,
+  generalDiff,
   generalGutter,
   generalLine,
   generalMatching,
@@ -14,7 +16,8 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@fsegurai/codemirror-theme-utils';
+  IMergeRevertStyles,
+} from './utils';
 
 /**
  * Enhanced Android Studio theme color palette
@@ -52,12 +55,17 @@ const base00 = '#282b2e', // Background (authentic IntelliJ IDEA dark theme)
   tooltipBackground = base03, // Tooltip background
   activeBracketBg = '#3b514d',
   activeBracketBorder = '#43705c',
-  darkBackground = '#313335';
+  darkBackground = '#313335',
+  // Diff/merge specific colors
+  addedBackground = '#294436', // Dark green for insertions, matching IntelliJ
+  removedBackground = '#484a4a', // Dark gray/red for deletions
+  addedText = '#6a8759', // Matching the string color for added text
+  removedText = '#cc7832'; // Using the keyword orange for removed text
 
 /**
  * Enhanced editor theme styles for Android Studio
  */
-export const androidStudioTheme = EditorView.theme(
+const androidStudioTheme = EditorView.theme(
   {
     // Base editor styles
     '&': {
@@ -165,6 +173,47 @@ export const androidStudioTheme = EditorView.theme(
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
       color: base01,
+    },
+
+    // Diff/Merge View Styles
+    // Inserted/Added Content
+    '.cm-insertedLine': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: addedBackground,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: `${addedBackground} !important`,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${addedText}40`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+      background: 'transparent !important',
+    },
+
+    // Deleted/Removed Content
+    '.cm-deletedLine': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: removedBackground,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: `${removedBackground} !important`,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${removedText}40`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+      background: 'transparent !important',
     },
 
     // Tooltips and autocomplete
@@ -286,7 +335,7 @@ export const androidStudioTheme = EditorView.theme(
 /**
  * Enhanced syntax highlighting for the Android Studio theme
  */
-export const androidStudioHighlightStyle = HighlightStyle.define([
+const androidStudioHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
   { tag: t.keyword, color: base05, fontWeight: 'bold' },
   { tag: t.controlKeyword, color: base05, fontWeight: 'bold' },
@@ -365,7 +414,19 @@ export const androidStudioHighlightStyle = HighlightStyle.define([
 /**
  * Combined Android Studio theme extension
  */
-export const androidStudio: Extension = [
+const androidStudio: Extension = [
   androidStudioTheme,
   syntaxHighlighting(androidStudioHighlightStyle),
 ];
+
+/**
+ * Android Studio merge revert styles configuration
+ */
+const androidStudioMergeStyles: IMergeRevertStyles = {
+  backgroundColor: darkBackground,
+  borderColor: '#5b5b5b',
+  buttonColor: base01,
+  buttonHoverColor: '#414141',
+};
+
+export { androidStudio, androidStudioMergeStyles, applyMergeRevertStyles };
