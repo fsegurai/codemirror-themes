@@ -1,120 +1,169 @@
-import { abcdef } from '../../packages/abcdef/src';
-import { abyss } from '../../packages/abyss/src';
-import { androidStudio } from '../../packages/android-studio/src';
-import { andromeda } from '../../packages/andromeda/src';
-import { basicDark } from '../../packages/basic-dark/src';
-import { basicLight } from '../../packages/basic-light/src';
-import { forest } from '../../packages/forest/src';
-import { githubDark } from '../../packages/github-dark/src';
-import { githubLight } from '../../packages/github-light/src';
-import { gruvboxDark } from '../../packages/gruvbox-dark/src';
-import { gruvboxLight } from '../../packages/gruvbox-light/src';
-import { materialDark } from '../../packages/material-dark/src';
-import { materialLight } from '../../packages/material-light/src';
-import { monokai } from '../../packages/monokai/src';
-import { nord } from '../../packages/nord/src';
-import { palenight } from '../../packages/palenight/src';
-import { solarizedDark } from '../../packages/solarized-dark/src';
-import { solarizedLight } from '../../packages/solarized-light/src';
-import { tokyoNightDay } from '../../packages/tokyo-night-day/src';
-import { tokyoNightStorm } from '../../packages/tokyo-night-storm/src';
-import { volcano } from '../../packages/volcano/src';
-import { vsCodeDark } from '../../packages/vscode-dark/src';
-import { vsCodeLight } from '../../packages/vscode-light/src';
+import {
+  abcdef,
+  abcdefMergeStyles,
+  abyss,
+  abyssMergeStyles,
+  androidStudio,
+  androidStudioMergeStyles,
+  andromeda,
+  andromedaMergeStyles,
+  applyMergeRevertStyles,
+  basicDark,
+  basicDarkMergeStyles,
+  basicLight,
+  basicLightMergeStyles,
+  forest,
+  forestMergeStyles,
+  githubDark,
+  githubDarkMergeStyles,
+  githubLight,
+  githubLightMergeStyles,
+  gruvboxDark,
+  gruvboxDarkMergeStyles,
+  gruvboxLight,
+  gruvboxLightMergeStyles,
+  materialDark,
+  materialDarkMergeStyles,
+  materialLight,
+  materialLightMergeStyles,
+  monokai,
+  monokaiMergeStyles,
+  nord,
+  nordMergeStyles,
+  palenight,
+  palenightMergeStyles,
+  solarizedDark,
+  solarizedDarkMergeStyles,
+  solarizedLight,
+  solarizedLightMergeStyles,
+  tokyoNightDay,
+  tokyoNightDayMergeStyles,
+  tokyoNightStorm,
+  tokyoNightStormMergeStyles,
+  volcano,
+  volcanoMergeStyles,
+  vsCodeDark,
+  vsCodeDarkMergeStyles,
+  vsCodeLight,
+  vsCodeLightMergeStyles,
+} from '../../packages/bundle/src';
 
 const themes = [
   {
     name: 'abcdef',
     extension: abcdef,
+    mergeStyles: abcdefMergeStyles,
   },
   {
     name: 'abyss',
     extension: abyss,
+    mergeStyles: abyssMergeStyles,
   },
   {
     name: 'android-studio',
     extension: androidStudio,
+    mergeStyles: androidStudioMergeStyles,
   },
   {
     name: 'andromeda',
     extension: andromeda,
+    mergeStyles: andromedaMergeStyles,
   },
   {
     name: 'basic-dark',
     extension: basicDark,
+    mergeStyles: basicDarkMergeStyles,
   },
   {
     name: 'basic-light',
     extension: basicLight,
+    mergeStyles: basicLightMergeStyles,
   },
   {
     name: 'forest',
     extension: forest,
+    mergeStyles: forestMergeStyles,
   },
   {
     name: 'github-dark',
     extension: githubDark,
+    mergeStyles: githubDarkMergeStyles,
   },
   {
     name: 'github-light',
     extension: githubLight,
+    mergeStyles: githubLightMergeStyles,
   },
   {
     name: 'gruvbox-dark',
     extension: gruvboxDark,
+    mergeStyles: gruvboxDarkMergeStyles,
   },
   {
     name: 'gruvbox-light',
     extension: gruvboxLight,
+    mergeStyles: gruvboxLightMergeStyles,
   },
   {
     name: 'material-dark',
     extension: materialDark,
+    mergeStyles: materialDarkMergeStyles,
   },
   {
     name: 'material-light',
     extension: materialLight,
+    mergeStyles: materialLightMergeStyles,
   },
   {
     name: 'monokai',
     extension: monokai,
+    mergeStyles: monokaiMergeStyles,
   },
   {
     name: 'nord',
     extension: nord,
+    mergeStyles: nordMergeStyles,
   },
   {
     name: 'palenight',
     extension: palenight,
+    mergeStyles: palenightMergeStyles,
   },
   {
     name: 'solarized-dark',
     extension: solarizedDark,
+    mergeStyles: solarizedDarkMergeStyles,
   },
   {
     name: 'solarized-light',
     extension: solarizedLight,
+    mergeStyles: solarizedLightMergeStyles,
   },
   {
     name: 'tokyo-night-storm',
     extension: tokyoNightStorm,
+    mergeStyles: tokyoNightStormMergeStyles,
   },
   {
     name: 'tokyo-night-day',
     extension: tokyoNightDay,
+    mergeStyles: tokyoNightDayMergeStyles,
   },
   {
     name: 'volcano',
     extension: volcano,
+    mergeStyles: volcanoMergeStyles,
   },
   {
     name: 'vscode-dark',
     extension: vsCodeDark,
+    mergeStyles: vsCodeDarkMergeStyles,
   },
   {
     name: 'vscode-light',
     extension: vsCodeLight,
+    mergeStyles: vsCodeLightMergeStyles,
   },
 ];
 
-export default themes;
+export { applyMergeRevertStyles, themes };
