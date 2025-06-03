@@ -48,18 +48,18 @@ const base00 = '#3c3836', // Main foreground (text)
 
 // UI specific colors
 const invalid = base0A,
-darkBackground = base06,
-highlightBackground = '#ffc42e25', // Line highlight with transparency
-background = base05,
-tooltipBackground = base06,
-selection = darkBackground,
-selectionMatch = '#ffc42e40', // Selection match background
-cursor = base10, // Cursor color
-activeBracketBg = '#d5c4a180', // Active bracket background
-activeBracketBorder = base10, // Active bracket border
-diagnosticWarning = base0C, // Warning color
-linkColor = base0D, // Link color
-visitedLinkColor = base0E; // Visited link color
+  darkBackground = base06,
+  highlightBackground = '#ffc42e25', // Line highlight with transparency
+  background = base05,
+  tooltipBackground = base06,
+  selection = darkBackground,
+  selectionMatch = '#ffc42e40', // Selection match background
+  cursor = base10, // Cursor color
+  activeBracketBg = '#d5c4a180', // Active bracket background
+  activeBracketBorder = base10, // Active bracket border
+  diagnosticWarning = base0C, // Warning color
+  linkColor = base0D, // Link color
+  visitedLinkColor = base0E; // Visited link color
 
 // Diff/merge specific colors
 const addedBackground = '#d8e5bc80', // Light base0B with transparency for insertions

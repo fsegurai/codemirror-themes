@@ -27,36 +27,36 @@ import {
 
 // Text colors (dark shades)
 const base00 = '#1c2434', //  deep navy - primary text (darker for better contrast)
-base01 = '#2d3748', //  dark slate - secondary text, cursor
-base02 = '#4a5568', //  medium slate - gutter text
-base03 = '#718096', //  steel blue - comments, panel text
-// Background shades
-base04 = '#edf2f750', // very light blue w/transparency - active line gutter
-base05 = '#f7fafc', // off-white - tooltip background
-base06 = '#f0f4f8', // snow-white - gutter background
-// Primary accent colors (cool tones)
-base07 = '#0c7792', //  teal - links, braces (more saturated)
-base08 = '#0369a1', //  azure blue - numbers, constants (deeper)
-base09 = '#2b6cb0', //  royal blue - variables, parameters
-base0A = '#1a365d', //  deep navy - keywords, headings
-// Secondary accent colors (warm and complementary)
-base0B = '#c53030', //  red - square brackets (more vibrant)
-base0C = '#dd6b20', //  orange - strings (warmer, more vibrant)
-base0D = '#d69e2e', //  amber - class names (more saturated)
-base0E = '#2f855a', //  green - operators (deeper, richer)
-base0F = '#805ad5'; //  purple - tag names (more vibrant)
+  base01 = '#2d3748', //  dark slate - secondary text, cursor
+  base02 = '#4a5568', //  medium slate - gutter text
+  base03 = '#718096', //  steel blue - comments, panel text
+  // Background shades
+  base04 = '#edf2f750', // very light blue w/transparency - active line gutter
+  base05 = '#f7fafc', // off-white - tooltip background
+  base06 = '#f0f4f8', // snow-white - gutter background
+  // Primary accent colors (cool tones)
+  base07 = '#0c7792', //  teal - links, braces (more saturated)
+  base08 = '#0369a1', //  azure blue - numbers, constants (deeper)
+  base09 = '#2b6cb0', //  royal blue - variables, parameters
+  base0A = '#1a365d', //  deep navy - keywords, headings
+  // Secondary accent colors (warm and complementary)
+  base0B = '#c53030', //  red - square brackets (more vibrant)
+  base0C = '#dd6b20', //  orange - strings (warmer, more vibrant)
+  base0D = '#d69e2e', //  amber - class names (more saturated)
+  base0E = '#2f855a', //  green - operators (deeper, richer)
+  base0F = '#805ad5'; //  purple - tag names (more vibrant)
 
 // UI-specific colors
 const invalid = '#e53e3e', //  bright red - errors (more visible)
-darkBackground = base06, // panel background
-highlightBackground = '#ebf4ff40', // active line highlight (subtle blue)
-background = '#ffffff', // editor background
-tooltipBackground = base05, // tooltip background
-selection = '#90cdf480', // selection background (clearer blue)
-selectionMatch = '#63b3ed40', // selection match highlight
-cursor = base01, //  cursor color
-activeBracketBg = '#0c779220', // active bracket background (transparent teal)
-activeBracketBorder = base09;
+  darkBackground = base06, // panel background
+  highlightBackground = '#ebf4ff40', // active line highlight (subtle blue)
+  background = '#ffffff', // editor background
+  tooltipBackground = base05, // tooltip background
+  selection = '#90cdf480', // selection background (clearer blue)
+  selectionMatch = '#63b3ed40', // selection match highlight
+  cursor = base01, //  cursor color
+  activeBracketBg = '#0c779220', // active bracket background (transparent teal)
+  activeBracketBorder = base09;
 
 // Diff/merge specific colors
 const addedBackground = '#e6ffec60', // Light green with transparency for insertions
@@ -187,7 +187,7 @@ const basicLightTheme = EditorView.theme(
     },
 
     // Diff/Merge View Styles
-// Inserted/Added Content
+    // Inserted/Added Content
     '.cm-insertedLine': {
       textDecoration: generalDiff.insertedTextDecoration,
       backgroundColor: addedBackground,
@@ -207,7 +207,7 @@ const basicLightTheme = EditorView.theme(
       background: 'transparent !important',
     },
 
-// Deleted/Removed Content
+    // Deleted/Removed Content
     '.cm-deletedLine': {
       textDecoration: generalDiff.deletedTextDecoration,
       backgroundColor: removedBackground,

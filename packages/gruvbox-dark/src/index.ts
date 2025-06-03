@@ -27,37 +27,37 @@ import {
 
 // Gruvbox base colors
 const base00 = '#282828', // Background
-base01 = '#3c3836', // Lighter background (popups, statuslines)
-base02 = '#504945', // Selection background
-base03 = '#665c54', // Comments, invisibles, line highlighting
-base04 = '#7c6f64', // Dark foreground (status bars)
-base05 = '#928374', // Comments, invisibles, line highlighting
-// Light/foreground shades
-base06 = '#fbf1c7', // Light foreground (preferbase08)
-base07 = '#ebdbb2', // Light foreground (alternative)
-// Accent colors
-base08 = '#fb4934', // Keywords, storage, operator
-base09 = '#b8bb26', // Strings, tag attributes
-base0A = '#fabd2f', // Functions, tag names
-base0B = '#83a598', // Variables
-base0C = '#d3869b', // Numbers, special constants
-base0D = '#8ec07c', // Types
-base0E = '#fe8019'; // Cursor, constants
+  base01 = '#3c3836', // Lighter background (popups, statuslines)
+  base02 = '#504945', // Selection background
+  base03 = '#665c54', // Comments, invisibles, line highlighting
+  base04 = '#7c6f64', // Dark foreground (status bars)
+  base05 = '#928374', // Comments, invisibles, line highlighting
+  // Light/foreground shades
+  base06 = '#fbf1c7', // Light foreground (preferbase08)
+  base07 = '#ebdbb2', // Light foreground (alternative)
+  // Accent colors
+  base08 = '#fb4934', // Keywords, storage, operator
+  base09 = '#b8bb26', // Strings, tag attributes
+  base0A = '#fabd2f', // Functions, tag names
+  base0B = '#83a598', // Variables
+  base0C = '#d3869b', // Numbers, special constants
+  base0D = '#8ec07c', // Types
+  base0E = '#fe8019'; // Cursor, constants
 
 // UI specific colors
 const invalid = base08,
-darkBackground = base01,
-highlightBackground = '#3c383660', // Line highlight with transparency
-background = base00,
-tooltipBackground = base01,
-selection = base02,
-selectionMatch = '#665c5480', // Selection match background
-cursor = base0E, // Cursor color
-activeBracketBg = '#504945cc', // Active bracket background
-activeBracketBorder = base0A, // Active bracket border
-diagnosticWarning = base0A, // Warning color
-linkColor = base0B, // Link color
-visitedLinkColor = base0C; // Visited link color
+  darkBackground = base01,
+  highlightBackground = '#3c383660', // Line highlight with transparency
+  background = base00,
+  tooltipBackground = base01,
+  selection = base02,
+  selectionMatch = '#665c5480', // Selection match background
+  cursor = base0E, // Cursor color
+  activeBracketBg = '#504945cc', // Active bracket background
+  activeBracketBorder = base0A, // Active bracket border
+  diagnosticWarning = base0A, // Warning color
+  linkColor = base0B, // Link color
+  visitedLinkColor = base0C; // Visited link color
 
 // Diff/merge specific colors
 const addedBackground = '#32361a80', // Dark base09 with transparency for insertions

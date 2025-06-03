@@ -27,36 +27,36 @@ import {
 
 // Core UI colors
 const base00 = '#0d1117',  // Background (GitHub dark mode background)
-base01 = '#c9d1d9',  // Foreground (main text color)
-base02 = '#264F78',  // Selection - brighter blue for better visibility
-base03 = '#8b949e',  // Comment and Bracket color
-base04 = '#ffffff',  // Caret color (pure white for better visibility,
-// Syntax highlighting colors
-base05 = '#7ee787',  // TagName, Name, Quote - signature GitHub green
-base06 = '#d2a8ff',  // ClassName, PropertyName - GitHub purple
-base07 = '#79c0ff',  // VariableName, Number - GitHub blue
-base08 = '#ff7b72',  // Keyword, TypeName - GitHub red
-base09 = '#a5d6ff',  // String, Meta, Regexp - lighter blue
-base0A = '#2c333a',  // Panel button hover
-base0B = '#3c444d',  // Deleted background color
-base0C = '#ffab70',  // Atom, Bool - GitHub orange
-// Background variants
-base0D = '#161b22',  // Gutter background (slightly darker than the editor)
-base0E = '#30363d',  // Panel and tooltip border color
-base0F = '#21262d';  // Active line gutter background
+  base01 = '#c9d1d9',  // Foreground (main text color)
+  base02 = '#264F78',  // Selection - brighter blue for better visibility
+  base03 = '#8b949e',  // Comment and Bracket color
+  base04 = '#ffffff',  // Caret color (pure white for better visibility,
+  // Syntax highlighting colors
+  base05 = '#7ee787',  // TagName, Name, Quote - signature GitHub green
+  base06 = '#d2a8ff',  // ClassName, PropertyName - GitHub purple
+  base07 = '#79c0ff',  // VariableName, Number - GitHub blue
+  base08 = '#ff7b72',  // Keyword, TypeName - GitHub red
+  base09 = '#a5d6ff',  // String, Meta, Regexp - lighter blue
+  base0A = '#2c333a',  // Panel button hover
+  base0B = '#3c444d',  // Deleted background color
+  base0C = '#ffab70',  // Atom, Bool - GitHub orange
+  // Background variants
+  base0D = '#161b22',  // Gutter background (slightly darker than the editor)
+  base0E = '#30363d',  // Panel and tooltip border color
+  base0F = '#21262d';  // Active line gutter background
 
 // UI-specific colors
 const invalid = '#f97583',        // Invalid color - error red
-highlightBackground = '#2d333b1a', // Line highlight (GitHub selection color)
-tooltipBackground = '#21262d',   // Tooltip background
-cursor = base04,                 // Caret color
-selection = base02,              // Selection color
-activeBracketBg = '#3a587a75',   // Active bracket background
-activeBracketBorder = '#4d90fe', // Active bracket border
-diagnosticWarning = '#d29922',   // Warning color
-selectionMatch = '#3a587a55',    // Selection match background
-linkColor = '#58a6ff',      // Bright blue for links (GitHub link color)
-visitedLinkColor = '#bc8cff'; // Light purple for visited links
+  highlightBackground = '#2d333b1a', // Line highlight (GitHub selection color)
+  tooltipBackground = '#21262d',   // Tooltip background
+  cursor = base04,                 // Caret color
+  selection = base02,              // Selection color
+  activeBracketBg = '#3a587a75',   // Active bracket background
+  activeBracketBorder = '#4d90fe', // Active bracket border
+  diagnosticWarning = '#d29922',   // Warning color
+  selectionMatch = '#3a587a55',    // Selection match background
+  linkColor = '#58a6ff',      // Bright blue for links (GitHub link color)
+  visitedLinkColor = '#bc8cff'; // Light purple for visited links
 
 // Diff/merge specific colors
 const addedBackground = '#2ea04350', // GitHub green with transparency
