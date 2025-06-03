@@ -4,8 +4,10 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 
 import {
+  applyMergeRevertStyles,
   generalContent,
   generalCursor,
+  generalDiff,
   generalGutter,
   generalLine,
   generalMatching,
@@ -14,7 +16,8 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@fsegurai/codemirror-theme-utils';
+  IMergeRevertStyles,
+} from './utils';
 
 /**
  * Enhanced Forest theme color palette
@@ -54,10 +57,16 @@ const lineNumbers = '#607d8b90';     // Line numbers - faded tree bark
 const activeBracketBg = '#2c5a3a80'; // Active bracket - forest green
 const activeBracketBorder = base0A;  // Active bracket border - golden sunlight
 
+// Diff/merge specific colors
+const addedBackground = '#28513a80', // Forest green with transparency for insertions
+  removedBackground = '#763c3c70', // Deep red with transparency for deletions
+  addedText = '#9ccc65', // Moss green for added text
+  removedText = '#ef5350'; // Berry red for removed text
+
 /**
  * Enhanced editor theme styles for Forest
  */
-export const forestTheme = EditorView.theme(
+const forestTheme = EditorView.theme(
   {
     // Base editor styles
     '&': {
@@ -174,6 +183,47 @@ export const forestTheme = EditorView.theme(
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
       color: base01,
+    },
+
+    // Diff/Merge View Styles
+    // Inserted/Added Content
+    '.cm-insertedLine': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: addedBackground,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: `${addedBackground} !important`,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${addedText}40`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+      background: 'transparent !important',
+    },
+
+    // Deleted/Removed Content
+    '.cm-deletedLine': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: removedBackground,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: `${removedBackground} !important`,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${removedText}40`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+      background: 'transparent !important',
     },
 
     // Tooltips and autocomplete
@@ -299,7 +349,7 @@ export const forestTheme = EditorView.theme(
 /**
  * Enhanced syntax highlighting for Forest theme
  */
-export const forestHighlightStyle = HighlightStyle.define([
+const forestHighlightStyle = HighlightStyle.define([
   // Keywords and language constructs
   { tag: t.keyword, color: base05, fontWeight: 'bold' },
   { tag: t.controlKeyword, color: base05, fontWeight: 'bold' },
@@ -388,7 +438,19 @@ export const forestHighlightStyle = HighlightStyle.define([
 /**
  * Combined Forest theme extension
  */
-export const forest: Extension = [
+const forest: Extension = [
   forestTheme,
   syntaxHighlighting(forestHighlightStyle),
 ];
+
+/**
+ * Forest merge revert styles configuration
+ */
+const forestMergeStyles: IMergeRevertStyles = {
+  backgroundColor: darkBackground,
+  borderColor: '#3e5059',
+  buttonColor: base01,
+  buttonHoverColor: '#2d3d47',
+};
+
+export { forest, forestMergeStyles, applyMergeRevertStyles };

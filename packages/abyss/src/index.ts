@@ -4,8 +4,10 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 
 import {
+  applyMergeRevertStyles,
   generalContent,
   generalCursor,
+  generalDiff,
   generalGutter,
   generalLine,
   generalMatching,
@@ -14,7 +16,8 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@fsegurai/codemirror-theme-utils';
+  IMergeRevertStyles,
+} from './utils';
 
 // Base colors - Ocean depths
 const base00 = '#000c18', // - Background (deep ocean blue)
@@ -43,13 +46,17 @@ const base00 = '#000c18', // - Background (deep ocean blue)
   cursor = base04,
   selection = base02,
   activeBracketBg = '#0a5999b0',
-  activeBracketBorder = base0F;
-
+  activeBracketBorder = base0F,
+  // Diff/merge specific colors
+  addedBackground = '#0e4e1d50', // Dark green with transparency for insertions
+  removedBackground = '#78112240', // Dark red with transparency for deletions
+  addedText = '#4ce660', // Bright green for added text (matching string color)
+  removedText = '#ff6b7d'; // Bright red for removed text
 
 /**
  * Enhanced editor theme styles for Abyss
  */
-export const abyssTheme = EditorView.theme(
+const abyssTheme = EditorView.theme(
   {
     // Base editor styles
     '&': {
@@ -156,6 +163,47 @@ export const abyssTheme = EditorView.theme(
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
       color: base01,
+    },
+
+    // Diff/Merge View Styles
+    // Inserted/Added Content
+    '.cm-insertedLine': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: addedBackground,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: `${addedBackground} !important`,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${addedText}40`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+      background: 'transparent !important',
+    },
+
+    // Deleted/Removed Content
+    '.cm-deletedLine': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: removedBackground,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: `${removedBackground} !important`,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${removedText}40`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+      background: 'transparent !important',
     },
 
     // Tooltips and autocomplete
@@ -278,7 +326,7 @@ export const abyssTheme = EditorView.theme(
 /**
  * Enhanced syntax highlighting for the Abyss theme
  */
-export const abyssHighlightStyle = HighlightStyle.define([
+const abyssHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
   { tag: t.keyword, color: base07, fontWeight: 'bold' },
   { tag: t.controlKeyword, color:base0F, fontWeight: 'bold' },
@@ -363,7 +411,19 @@ export const abyssHighlightStyle = HighlightStyle.define([
 /**
  * Combined Abyss theme extension
  */
-export const abyss: Extension = [
+const abyss: Extension = [
   abyssTheme,
   syntaxHighlighting(abyssHighlightStyle),
 ];
+
+/**
+ * Abyss merge revert styles configuration
+ */
+const abyssMergeStyles: IMergeRevertStyles = {
+  backgroundColor: darkBackground, 
+  borderColor: '#084671',
+  buttonColor: base01,
+  buttonHoverColor: '#0a3555',
+};
+
+export { abyss, abyssMergeStyles, applyMergeRevertStyles };

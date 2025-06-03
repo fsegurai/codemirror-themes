@@ -4,8 +4,10 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 
 import {
+  applyMergeRevertStyles,
   generalContent,
   generalCursor,
+  generalDiff,
   generalGutter,
   generalLine,
   generalMatching,
@@ -14,7 +16,8 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@fsegurai/codemirror-theme-utils';
+  IMergeRevertStyles,
+} from './utils';
 
 /**
  * Enhanced Volcano theme color definitions
@@ -23,44 +26,49 @@ import {
  */
 
 // Base colors
-const base00 = '#390000'; // Background
-const base01 = '#F8F8F8'; // Foreground
-const base02 = '#750000'; // Selection background
-const base03 = '#e7c0c0'; // Comments, invisibles
-const base04 = '#970000'; // Cursor
-const base05 = '#f12727'; // Default foreground
-const base06 = '#580000'; // Dark background for panels
-const base07 = '#4a0000'; // Darker background (gutter)
-
-// Accent colors
-const base_red = '#ec0d1e'; // Errors, invalid
-const base_orange = '#aa5507'; // Numbers, constants
-const base_yellow = '#fec758'; // Classes, attributes
-const base_green = '#9df39f'; // Success
-const base_cyan = '#7df3f7'; // Functions, parameters
-const base_blue = '#7dcaf7'; // Variables
-const base_purple = '#c27df7'; // Keywords, operators
-const base_magenta = '#f77dca'; // Special characters
+const base00 = '#390000', // Background
+  base01 = '#F8F8F8', // Foreground
+  base02 = '#750000', // Selection background
+  base03 = '#e7c0c0', // Comments, invisibles
+  base04 = '#970000', // Cursor
+  base05 = '#f12727', // Default foreground
+  base06 = '#580000', // Dark background for panels
+  base07 = '#4a0000', // Darker background (gutter)
+  // Accent colors
+  base08 = '#ec0d1e', // Errors, invalid
+  base09 = '#aa5507', // Numbers, constants
+  base0A = '#fec758', // Classes, attributes
+  base0B = '#9df39f', // Success
+  base0C = '#7df3f7', // Functions, parameters
+  base0D = '#7dcaf7', // Variables
+  base0E = '#c27df7', // Keywords, operators
+  base0F = '#f77dca'; // Special characters
 
 // UI specific colors
-const invalid = '#ffffff';
-const darkBackground = base06;
-const highlightBackground = '#ff000035'; // Line highlight with transparency
-const background = base00;
-const tooltipBackground = '#680000';
-const selection = '#75000080'; // Selection background with transparency
-const selectionMatch = '#7500009a'; // Selection match with transparency
-const cursor = base04; // Cursor color
-const activeBracketBg = '#ff550040'; // Active bracket background with transparency
-const activeBracketBorder = base_red; // Active bracket border
-const diagnosticWarning = base_orange; // Warning color
-const linkColor = base_cyan; // Link color
-const visitedLinkColor = base_purple; // Visited link color
+const invalid = '#ffffff',
+  darkBackground = base06,
+  highlightBackground = '#ff000035', // Line highlight with transparency
+  background = base00,
+  tooltipBackground = '#680000',
+  selection = '#75000080', // Selection background with transparency
+  selectionMatch = '#7500009a', // Selection match with transparency
+  cursor = base04, // Cursor color
+  activeBracketBg = '#ff550040', // Active bracket background with transparency
+  activeBracketBorder = base08, // Active bracket border
+  diagnosticWarning = base09, // Warning color
+  linkColor = base0C, // Link color
+  visitedLinkColor = base0E; // Visited link color
+
+// Diff/merge specific colors
+const addedBackground = '#2a4a0080', // Dark green with transparency for insertions
+  removedBackground = '#750000a0', // Dark red with transparency for deletions
+  addedText = '#9df39f',         // Volcano green for added text
+  removedText = '#ec0d1e';       // Volcano red for removed text
 
 /**
  * Enhanced editor theme styles for Volcano
  */
-export const volcanoTheme = EditorView.theme(
+const volcanoTheme = EditorView.theme(
   {
     // Base editor styles
     '&': {
@@ -98,12 +106,12 @@ export const volcanoTheme = EditorView.theme(
     // Search functionality
     '.cm-searchMatch': {
       backgroundColor: '#75000080',
-      outline: `1px solid ${base_red}`,
+      outline: `1px solid ${base08}`,
       color: base01,
       borderRadius: generalSearchField.borderRadius,
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-      backgroundColor: base_red,
+      backgroundColor: base08,
       color: background,
       padding: generalSearchField.padding,
 
@@ -175,10 +183,51 @@ export const volcanoTheme = EditorView.theme(
       color: base01,
     },
 
+    // Diff/Merge View Styles
+    // Inserted/Added Content
+    '.cm-insertedLine': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: addedBackground,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: `${addedBackground} !important`,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${addedText}40`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+      background: 'transparent !important',
+    },
+
+    // Deleted/Removed Content
+    '.cm-deletedLine': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: removedBackground,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: `${removedBackground} !important`,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${removedText}40`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+      background: 'transparent !important',
+    },
+
     // Tooltips and autocomplete
     '.cm-tooltip': {
       backgroundColor: tooltipBackground,
-      border: `1px solid ${base_red}60`,
+      border: `1px solid ${base08}60`,
       borderRadius: generalTooltip.borderRadius,
       padding: generalTooltip.padding,
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
@@ -219,7 +268,7 @@ export const volcanoTheme = EditorView.theme(
     // Diagnostics styling
     '.cm-diagnostic': {
       '&-error': {
-        borderLeft: `3px solid ${base_red}`,
+        borderLeft: `3px solid ${base08}`,
       },
       '&-warning': {
         borderLeft: `3px solid ${diagnosticWarning}`,
@@ -229,7 +278,7 @@ export const volcanoTheme = EditorView.theme(
       },
     },
     '.cm-lintPoint-error': {
-      borderBottom: `2px wavy ${base_red}`,
+      borderBottom: `2px wavy ${base08}`,
     },
     '.cm-lintPoint-warning': {
       borderBottom: `2px wavy ${diagnosticWarning}`,
@@ -242,7 +291,7 @@ export const volcanoTheme = EditorView.theme(
       borderRadius: generalMatching.borderRadius,
     },
     '.cm-nonmatchingBracket': {
-      backgroundColor: `${base_red}40`,
+      backgroundColor: `${base08}40`,
       outline: `1px solid ${invalid}`,
       borderRadius: generalMatching.borderRadius,
     },
@@ -267,7 +316,7 @@ export const volcanoTheme = EditorView.theme(
     // Focus outline
     '&.cm-focused': {
       outline: 'none',
-      boxShadow: `0 0 0 2px ${background}, 0 0 0 3px ${base_red}70`,
+      boxShadow: `0 0 0 2px ${background}, 0 0 0 3px ${base08}70`,
     },
 
     // Scrollbars
@@ -284,7 +333,7 @@ export const volcanoTheme = EditorView.theme(
       border: `3px solid ${base07}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-      backgroundColor: base_red,
+      backgroundColor: base08,
     },
 
     // Ghost text
@@ -299,7 +348,7 @@ export const volcanoTheme = EditorView.theme(
 /**
  * Enhanced syntax highlighting for Volcano theme
  */
-export const volcanoHighlightStyle = HighlightStyle.define([
+const volcanoHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
   { tag: t.keyword, color: base05, fontWeight: 'bold' },
   { tag: t.controlKeyword, color: base05, fontWeight: 'bold' },
@@ -307,45 +356,45 @@ export const volcanoHighlightStyle = HighlightStyle.define([
 
   // Names and variables
   { tag: [t.name, t.deleted, t.character, t.macroName], color: base01 },
-  { tag: [t.variableName], color: base_yellow },
-  { tag: [t.propertyName], color: base_cyan, fontStyle: 'normal' },
+  { tag: [t.variableName], color: base0A },
+  { tag: [t.propertyName], color: base0C, fontStyle: 'normal' },
 
   // Classes and types
-  { tag: [t.typeName], color: base_green },
-  { tag: [t.className], color: base_yellow, fontStyle: 'italic' },
-  { tag: [t.namespace], color: base_blue, fontStyle: 'italic' },
+  { tag: [t.typeName], color: base0B },
+  { tag: [t.className], color: base0A, fontStyle: 'italic' },
+  { tag: [t.namespace], color: base0D, fontStyle: 'italic' },
 
   // Operators and punctuation
-  { tag: [t.operator, t.operatorKeyword], color: base_purple },
+  { tag: [t.operator, t.operatorKeyword], color: base0E },
   { tag: [t.bracket], color: base03 },
   { tag: [t.brace], color: base03 },
   { tag: [t.punctuation], color: base03 },
 
   // Functions and parameters
-  { tag: [t.function(t.variableName)], color: base_cyan },
-  { tag: [t.labelName], color: base_cyan, fontStyle: 'italic' },
-  { tag: [t.definition(t.function(t.variableName))], color: base_cyan },
-  { tag: [t.definition(t.variableName)], color: base_yellow },
+  { tag: [t.function(t.variableName)], color: base0C },
+  { tag: [t.labelName], color: base0C, fontStyle: 'italic' },
+  { tag: [t.definition(t.function(t.variableName))], color: base0C },
+  { tag: [t.definition(t.variableName)], color: base0A },
 
   // Constants and literals
-  { tag: t.number, color: base_orange },
-  { tag: t.changed, color: base_orange },
+  { tag: t.number, color: base09 },
+  { tag: t.changed, color: base09 },
   { tag: t.annotation, color: invalid, fontStyle: 'italic' },
-  { tag: t.modifier, color: base_orange, fontStyle: 'italic' },
-  { tag: t.self, color: base_orange },
+  { tag: t.modifier, color: base09, fontStyle: 'italic' },
+  { tag: t.self, color: base09 },
   {
     tag: [t.color, t.constant(t.name), t.standard(t.name)],
-    color: base_orange,
+    color: base09,
   },
-  { tag: [t.atom, t.bool, t.special(t.variableName)], color: base_orange },
+  { tag: [t.atom, t.bool, t.special(t.variableName)], color: base09 },
 
   // Strings and regex
-  { tag: [t.processingInstruction, t.inserted], color: base_green },
-  { tag: [t.special(t.string), t.regexp], color: base_magenta },
-  { tag: t.string, color: base_yellow },
+  { tag: [t.processingInstruction, t.inserted], color: base0B },
+  { tag: [t.special(t.string), t.regexp], color: base0F },
+  { tag: t.string, color: base0A },
 
   // Punctuation and structure
-  { tag: t.definition(t.typeName), color: base_green, fontWeight: 'bold' },
+  { tag: t.definition(t.typeName), color: base0B, fontWeight: 'bold' },
   { tag: [t.definition(t.name), t.separator], color: base01 },
 
   // Comments and documentation
@@ -354,19 +403,19 @@ export const volcanoHighlightStyle = HighlightStyle.define([
   { tag: t.docComment, fontStyle: 'italic', color: base03 },
 
   // HTML/XML elements
-  { tag: [t.tagName], color: base_red },
-  { tag: [t.attributeName], color: base_yellow },
+  { tag: [t.tagName], color: base08 },
+  { tag: [t.attributeName], color: base0A },
 
   // Markdown and text formatting
-  { tag: [t.heading], fontWeight: 'bold', color: base_orange },
-  { tag: t.heading1, color: base_red, fontWeight: 'bold' },
-  { tag: t.heading2, color: base_orange },
-  { tag: t.heading3, color: base_yellow },
-  { tag: t.heading4, color: base_green },
-  { tag: t.heading5, color: base_cyan },
-  { tag: t.heading6, color: base_blue },
+  { tag: [t.heading], fontWeight: 'bold', color: base09 },
+  { tag: t.heading1, color: base08, fontWeight: 'bold' },
+  { tag: t.heading2, color: base09 },
+  { tag: t.heading3, color: base0A },
+  { tag: t.heading4, color: base0B },
+  { tag: t.heading5, color: base0C },
+  { tag: t.heading6, color: base0D },
   { tag: [t.strong], fontWeight: 'bold', color: base01 },
-  { tag: [t.emphasis], fontStyle: 'italic', color: base_yellow },
+  { tag: [t.emphasis], fontStyle: 'italic', color: base0A },
 
   // Links and URLs
   {
@@ -393,21 +442,33 @@ export const volcanoHighlightStyle = HighlightStyle.define([
   { tag: [t.strikethrough], color: invalid, textDecoration: 'line-through' },
 
   // Enhanced syntax highlighting
-  { tag: t.constant(t.name), color: base_orange },
-  { tag: t.deleted, color: base_red },
+  { tag: t.constant(t.name), color: base09 },
+  { tag: t.deleted, color: base08 },
   { tag: t.squareBracket, color: base03 },
   { tag: t.angleBracket, color: base03 },
 
   // Additional specific styles
   { tag: t.monospace, color: base01 },
-  { tag: [t.contentSeparator], color: base_blue },
+  { tag: [t.contentSeparator], color: base0D },
   { tag: t.quote, color: base03 },
 ]);
 
 /**
  * Combined Volcano theme extension
  */
-export const volcano: Extension = [
+const volcano: Extension = [
   volcanoTheme,
   syntaxHighlighting(volcanoHighlightStyle),
 ];
+
+/**
+ * Volcano merge revert styles configuration
+ */
+const volcanoMergeStyles: IMergeRevertStyles = {
+  backgroundColor: tooltipBackground,
+  borderColor: base07,
+  buttonColor: base01,
+  buttonHoverColor: base08,
+};
+
+export { volcano, volcanoMergeStyles, applyMergeRevertStyles };

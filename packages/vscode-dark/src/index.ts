@@ -4,8 +4,10 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 
 import {
+  applyMergeRevertStyles,
   generalContent,
   generalCursor,
+  generalDiff,
   generalGutter,
   generalLine,
   generalMatching,
@@ -14,7 +16,8 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@fsegurai/codemirror-theme-utils';
+  IMergeRevertStyles,
+} from './utils';
 
 /**
  * Enhanced VSCode Dark theme color definitions
@@ -23,45 +26,50 @@ import {
  */
 
 // Base colors
-const base00 = '#1e1e1e'; // Background
-const base01 = '#252526'; // Lighter background (popups, statuslines)
-const base02 = '#2d2d30'; // Selection background
-const base03 = '#838383'; // Comments, invisibles
-const base04 = '#c6c6c6'; // Cursor color
-const base05 = '#d4d4d4'; // Default foreground
-const base06 = '#e9e9e9'; // Light foreground
-const base07 = '#1c1c1c'; // Dark background (gutter)
-
-// Accent colors
-const base_blue = '#569cd6'; // Keywords, storage
-const base_purple = '#c586c0'; // Control keywords, operators
-const base_lightblue = '#9cdcfe'; // Variables, parameters
-const base_cyan = '#4ec9b0'; // Classes, types
-const base_yellow = '#dcdcaa'; // Functions, attributes
-const base_green = '#b5cea8'; // Numbers, constants
-const base_orange = '#ce9178'; // Strings
-const base_red = '#f44747'; // Errors, invalid
-const base_darkOrange = '#d7ba7d'; // Modified elements
-const base_lime = '#6a9955'; // Comments
+const base00 = '#1e1e1e', // Background
+  base01 = '#252526', // Lighter background (popups, statuslines)
+  base02 = '#2d2d30', // Selection background
+  base03 = '#838383', // Comments, invisibles
+  base04 = '#c6c6c6', // Cursor color
+  base05 = '#d4d4d4', // Default foreground
+  base06 = '#e9e9e9', // Light foreground
+  base07 = '#1c1c1c', // Dark background (gutter)
+  // Accent colors
+  base08 = '#569cd6', // Keywords, storage
+  base09 = '#c586c0', // Control keywords, operators
+  base0A = '#9cdcfe', // Variables, parameters
+  base0B = '#4ec9b0', // Classes, types
+  base0C = '#dcdcaa', // Functions, attributes
+  base0D = '#b5cea8', // Numbers, constants
+  base0E = '#ce9178', // Strings
+  base0F = '#f44747', // Errors, invalid
+  base10 = '#d7ba7d', // Modified elements
+  base11 = '#6a9955'; // Comments
 
 // UI specific colors
-const invalid = base_red;
-const highlightBackground = '#FFFFFF08'; // Line highlight with transparency
-const background = base00;
-const tooltipBackground = base01;
-const selection = '#264F7899'; // Selection background with transparency
-const selectionMatch = '#72a1ff59'; // Selection match background with transparency
-const cursor = base04; // Cursor color
-const activeBracketBg = '#ffffff15'; // Active bracket background with transparency
-const activeBracketBorder = base_blue; // Active bracket border
-const diagnosticWarning = base_darkOrange; // Warning color
-const linkColor = '#3794ff'; // Link color
-const visitedLinkColor = '#c586c0'; // Visited link color
+const invalid = base0F,
+  highlightBackground = '#FFFFFF08', // Line highlight with transparency
+  background = base00,
+  tooltipBackground = base01,
+  selection = '#264F7899', // Selection background with transparency
+  selectionMatch = '#72a1ff59', // Selection match background with transparency
+  cursor = base04, // Cursor color
+  activeBracketBg = '#ffffff15', // Active bracket background with transparency
+  activeBracketBorder = base08, // Active bracket border
+  diagnosticWarning = base10, // Warning color
+  linkColor = '#3794ff', // Link color
+  visitedLinkColor = '#c586c0'; // Visited link color
+
+// Diff/merge specific colors
+const addedBackground = '#1e3f1e80', // Dark green with transparency for insertions
+  removedBackground = '#4b1c1c80', // Dark red with transparency for deletions
+  addedText = '#6cc26f',         // VS Code green for added text
+  removedText = '#f14c4c';       // VS Code red for removed text
 
 /**
  * Enhanced editor theme styles for VSCode Dark
  */
-export const vsCodeDarkTheme = EditorView.theme(
+const vsCodeDarkTheme = EditorView.theme(
   {
     // Base editor styles
     '&': {
@@ -99,7 +107,7 @@ export const vsCodeDarkTheme = EditorView.theme(
     // Search functionality
     '.cm-searchMatch': {
       backgroundColor: '#72a1ff40',
-      outline: `1px solid ${base_blue}90`,
+      outline: `1px solid ${base08}90`,
       color: base06,
       borderRadius: generalSearchField.borderRadius,
     },
@@ -177,6 +185,47 @@ export const vsCodeDarkTheme = EditorView.theme(
       color: base06,
     },
 
+    // Diff/Merge View Styles
+    // Inserted/Added Content
+    '.cm-insertedLine': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: addedBackground,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: `${addedBackground} !important`,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${addedText}40`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+      background: 'transparent !important',
+    },
+
+    // Deleted/Removed Content
+    '.cm-deletedLine': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: removedBackground,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: `${removedBackground} !important`,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${removedText}40`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+      background: 'transparent !important',
+    },
+
     // Tooltips and autocomplete
     '.cm-tooltip': {
       backgroundColor: tooltipBackground,
@@ -244,7 +293,7 @@ export const vsCodeDarkTheme = EditorView.theme(
       borderRadius: generalMatching.borderRadius,
     },
     '.cm-nonmatchingBracket': {
-      backgroundColor: `${base_red}40`,
+      backgroundColor: `${base0F}40`,
       outline: `1px solid ${invalid}`,
       borderRadius: generalMatching.borderRadius,
     },
@@ -301,20 +350,20 @@ export const vsCodeDarkTheme = EditorView.theme(
 /**
  * Enhanced syntax highlighting for VSCode Dark theme
  */
-export const vsCodeDarkHighlightStyle = HighlightStyle.define([
+const vsCodeDarkHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
-  { tag: t.keyword, color: base_blue, fontWeight: 'bold' },
-  { tag: t.controlKeyword, color: base_purple, fontWeight: 'bold' },
-  { tag: t.moduleKeyword, color: base_blue, fontWeight: 'bold' },
+  { tag: t.keyword, color: base08, fontWeight: 'bold' },
+  { tag: t.controlKeyword, color: base09, fontWeight: 'bold' },
+  { tag: t.moduleKeyword, color: base08, fontWeight: 'bold' },
 
   // Names and variables
   { tag: [t.name, t.deleted, t.character, t.macroName], color: base05 },
-  { tag: [t.variableName], color: base_lightblue },
-  { tag: [t.propertyName], color: base_lightblue, fontStyle: 'normal' },
+  { tag: [t.variableName], color: base0A },
+  { tag: [t.propertyName], color: base0A, fontStyle: 'normal' },
 
   // Classes and types
-  { tag: [t.typeName], color: base_cyan },
-  { tag: [t.className], color: base_cyan, fontStyle: 'normal' },
+  { tag: [t.typeName], color: base0B },
+  { tag: [t.className], color: base0B, fontStyle: 'normal' },
   { tag: [t.namespace], color: base05, fontStyle: 'normal' },
 
   // Operators and punctuation
@@ -324,51 +373,51 @@ export const vsCodeDarkHighlightStyle = HighlightStyle.define([
   { tag: [t.punctuation], color: base05 },
 
   // Functions and parameters
-  { tag: [t.function(t.variableName)], color: base_yellow },
-  { tag: [t.labelName], color: base_yellow, fontStyle: 'normal' },
-  { tag: [t.definition(t.function(t.variableName))], color: base_yellow },
-  { tag: [t.definition(t.variableName)], color: base_lightblue },
+  { tag: [t.function(t.variableName)], color: base0C },
+  { tag: [t.labelName], color: base0C, fontStyle: 'normal' },
+  { tag: [t.definition(t.function(t.variableName))], color: base0C },
+  { tag: [t.definition(t.variableName)], color: base0A },
 
   // Constants and literals
-  { tag: t.number, color: base_green },
-  { tag: t.changed, color: base_darkOrange },
-  { tag: t.annotation, color: base_darkOrange, fontStyle: 'italic' },
-  { tag: t.modifier, color: base_blue, fontStyle: 'normal' },
-  { tag: t.self, color: base_blue },
+  { tag: t.number, color: base0D },
+  { tag: t.changed, color: base10 },
+  { tag: t.annotation, color: base10, fontStyle: 'italic' },
+  { tag: t.modifier, color: base08, fontStyle: 'normal' },
+  { tag: t.self, color: base08 },
   {
     tag: [t.color, t.constant(t.name), t.standard(t.name)],
-    color: base_lightblue,
+    color: base0A,
   },
-  { tag: [t.atom, t.bool, t.special(t.variableName)], color: base_blue },
+  { tag: [t.atom, t.bool, t.special(t.variableName)], color: base08 },
 
   // Strings and regex
-  { tag: [t.processingInstruction, t.inserted], color: base_orange },
+  { tag: [t.processingInstruction, t.inserted], color: base0E },
   { tag: [t.special(t.string), t.regexp], color: '#d16969' },
-  { tag: t.string, color: base_orange },
+  { tag: t.string, color: base0E },
 
   // Punctuation and structure
-  { tag: t.definition(t.typeName), color: base_cyan, fontWeight: 'bold' },
+  { tag: t.definition(t.typeName), color: base0B, fontWeight: 'bold' },
   { tag: [t.definition(t.name), t.separator], color: base05 },
 
   // Comments and documentation
   { tag: t.meta, color: base03 },
-  { tag: t.comment, fontStyle: 'italic', color: base_lime },
-  { tag: t.docComment, fontStyle: 'italic', color: base_lime },
+  { tag: t.comment, fontStyle: 'italic', color: base11 },
+  { tag: t.docComment, fontStyle: 'italic', color: base11 },
 
   // HTML/XML elements
-  { tag: [t.tagName], color: base_blue },
-  { tag: [t.attributeName], color: base_lightblue },
+  { tag: [t.tagName], color: base08 },
+  { tag: [t.attributeName], color: base0A },
 
   // Markdown and text formatting
-  { tag: [t.heading], fontWeight: 'bold', color: base_blue },
-  { tag: t.heading1, color: base_blue, fontWeight: 'bold' },
-  { tag: t.heading2, color: base_blue },
-  { tag: t.heading3, color: base_blue },
-  { tag: t.heading4, color: base_blue },
-  { tag: t.heading5, color: base_blue },
-  { tag: t.heading6, color: base_blue },
-  { tag: [t.strong], fontWeight: 'bold', color: base_blue },
-  { tag: [t.emphasis], fontStyle: 'italic', color: base_cyan },
+  { tag: [t.heading], fontWeight: 'bold', color: base08 },
+  { tag: t.heading1, color: base08, fontWeight: 'bold' },
+  { tag: t.heading2, color: base08 },
+  { tag: t.heading3, color: base08 },
+  { tag: t.heading4, color: base08 },
+  { tag: t.heading5, color: base08 },
+  { tag: t.heading6, color: base08 },
+  { tag: [t.strong], fontWeight: 'bold', color: base08 },
+  { tag: [t.emphasis], fontStyle: 'italic', color: base0B },
 
   // Links and URLs
   {
@@ -394,7 +443,7 @@ export const vsCodeDarkHighlightStyle = HighlightStyle.define([
   { tag: [t.strikethrough], color: invalid, textDecoration: 'line-through' },
 
   // Enhanced syntax highlighting
-  { tag: t.constant(t.name), color: base_lightblue },
+  { tag: t.constant(t.name), color: base0A },
   { tag: t.deleted, color: invalid },
   { tag: t.squareBracket, color: base05 },
   { tag: t.angleBracket, color: base05 },
@@ -402,13 +451,25 @@ export const vsCodeDarkHighlightStyle = HighlightStyle.define([
   // Additional specific styles
   { tag: t.monospace, color: base05 },
   { tag: [t.contentSeparator], color: base05 },
-  { tag: t.quote, color: base_lime },
+  { tag: t.quote, color: base11 },
 ]);
 
 /**
  * Combined VSCode Dark theme extension
  */
-export const vsCodeDark: Extension = [
+const vsCodeDark: Extension = [
   vsCodeDarkTheme,
   syntaxHighlighting(vsCodeDarkHighlightStyle),
 ];
+
+/**
+ * VS Code Dark merge revert styles configuration
+ */
+const vsCodeDarkMergeStyles: IMergeRevertStyles = {
+  backgroundColor: tooltipBackground,
+  borderColor: base02,
+  buttonColor: base05,
+  buttonHoverColor: '#3a3a3a',
+};
+
+export { vsCodeDark, vsCodeDarkMergeStyles, applyMergeRevertStyles };

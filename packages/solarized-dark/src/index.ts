@@ -4,8 +4,10 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 
 import {
+  applyMergeRevertStyles,
   generalContent,
   generalCursor,
+  generalDiff,
   generalGutter,
   generalLine,
   generalMatching,
@@ -14,7 +16,8 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@fsegurai/codemirror-theme-utils';
+  IMergeRevertStyles,
+} from './utils';
 
 /**
  * Enhanced Solarized Dark theme color definitions
@@ -23,44 +26,48 @@ import {
  */
 
 // Base colors from Solarized palette
-const base00 = '#002b36'; // Background - dark blue
-const base01 = '#073642'; // Lighter background (popups, statuslines)
-const base02 = '#586e75'; // Selection background
-const base03 = '#657b83'; // Comments, invisibles
-const base04 = '#839496'; // Body text
-const base05 = '#93a1a1'; // Default foreground
-const base06 = '#eee8d5'; // Light foreground
-const base07 = '#fdf6e3'; // Light background
-
-// Accent colors from Solarized palette
-const base_red = '#dc322f'; // Red
-const base_orange = '#cb4b16'; // Orange
-const base_yellow = '#b58900'; // Yellow
-const base_green = '#859900'; // Green
-const base_cyan = '#2aa198'; // Cyan
-const base_blue = '#268bd2'; // Blue
-const base_violet = '#6c71c4'; // Violet
-const base_magenta = '#d33682'; // Magenta
+const base00 = '#002b36', // Background - dark blue
+  base01 = '#073642', // Lighter background (popups, statuslines)
+  base02 = '#586e75', // Selection background
+  base03 = '#657b83', // Comments, invisibles
+  base04 = '#839496', // Body text
+  base05 = '#93a1a1', // Default foreground
+  base06 = '#eee8d5', // Light foreground
+  base07 = '#fdf6e3', // Light background
+  // Accent colors from Solarized palette
+  base08 = '#dc322f', // Red
+  base09 = '#cb4b16', // Orange
+  base0A = '#b58900', // Yellow
+  base0B = '#859900', // Green
+  base0C = '#2aa198', // Cyan
+  base0D = '#268bd2', // Blue
+  base0E = '#6c71c4', // Violet
+  base0F = '#d33682'; // Magenta
 
 // UI specific colors
-const invalid = '#d30102'; // Bright red for errors
-const darkBackground = '#00252f'; // Darker background for panels
-const highlightBackground = '#99eeff0f'; // Active line highlight
-const background = base00; // Main editor background
-const tooltipBackground = base01; // Tooltip background
-const selection = '#02B8FF3F'; // Selection background with opacity
-const selectionMatch = '#586e7580'; // Selection match with opacity
-const cursor = base04; // Cursor color
-const activeBracketBg = '#586e7540'; // Active bracket background with opacity
-const activeBracketBorder = base_blue; // Active bracket border - blue
-const diagnosticWarning = base_yellow; // Warning color - yellow
-const linkColor = base_blue; // Link color - blue
-// const visitedLinkColor = base_violet; // Visited link color - violet
+const invalid = '#d30102', // Bright red for errors
+  darkBackground = '#00252f', // Darker background for panels
+  highlightBackground = '#99eeff0f', // Active line highlight
+  background = base00, // Main editor background
+  tooltipBackground = base01, // Tooltip background
+  selection = '#02B8FF3F', // Selection background with opacity
+  selectionMatch = '#586e7580', // Selection match with opacity
+  cursor = base04, // Cursor color
+  activeBracketBg = '#586e7540', // Active bracket background with opacity
+  activeBracketBorder = base0D, // Active bracket border - blue
+  diagnosticWarning = base0A, // Warning color - yellow
+  linkColor = base0D; // Link color - blue
+
+// Diff/merge specific colors
+const addedBackground = '#2aa19820', // Solarized cyan with transparency for insertions
+  removedBackground = '#dc322f20', // Solarized red with transparency for deletions
+  addedText = '#859900',         // Solarized green for added text
+  removedText = '#dc322f';       // Solarized red for removed text
 
 /**
  * Enhanced editor theme styles for Solarized Dark
  */
-export const solarizedDarkTheme = EditorView.theme(
+const solarizedDarkTheme = EditorView.theme(
   {
     // Base editor styles
     '&': {
@@ -98,7 +105,7 @@ export const solarizedDarkTheme = EditorView.theme(
     // Search functionality
     '.cm-searchMatch': {
       backgroundColor: '#586e7599',
-      outline: `1px solid ${base_blue}`,
+      outline: `1px solid ${base0D}`,
       color: base06,
       borderRadius: generalSearchField.borderRadius,
 
@@ -107,7 +114,7 @@ export const solarizedDarkTheme = EditorView.theme(
       },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-      backgroundColor: base_blue,
+      backgroundColor: base0D,
       color: base07,
       padding: generalSearchField.padding,
 
@@ -178,6 +185,47 @@ export const solarizedDarkTheme = EditorView.theme(
       color: base04,
     },
 
+    // Diff/Merge View Styles
+    // Inserted/Added Content
+    '.cm-insertedLine': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: addedBackground,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: `${addedBackground} !important`,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${addedText}40`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+      background: 'transparent !important',
+    },
+
+    // Deleted/Removed Content
+    '.cm-deletedLine': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: removedBackground,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: `${removedBackground} !important`,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${removedText}40`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+      background: 'transparent !important',
+    },
+
     // Tooltips and autocomplete
     '.cm-tooltip': {
       backgroundColor: tooltipBackground,
@@ -221,7 +269,7 @@ export const solarizedDarkTheme = EditorView.theme(
     // Diagnostics styling
     '.cm-diagnostic': {
       '&-error': {
-        borderLeft: `3px solid ${base_red}`,
+        borderLeft: `3px solid ${base08}`,
       },
       '&-warning': {
         borderLeft: `3px solid ${diagnosticWarning}`,
@@ -231,7 +279,7 @@ export const solarizedDarkTheme = EditorView.theme(
       },
     },
     '.cm-lintPoint-error': {
-      borderBottom: `2px wavy ${base_red}`,
+      borderBottom: `2px wavy ${base08}`,
     },
     '.cm-lintPoint-warning': {
       borderBottom: `2px wavy ${diagnosticWarning}`,
@@ -244,7 +292,7 @@ export const solarizedDarkTheme = EditorView.theme(
       borderRadius: generalMatching.borderRadius,
     },
     '.cm-nonmatchingBracket': {
-      backgroundColor: `${base_red}40`,
+      backgroundColor: `${base08}40`,
       outline: `1px solid ${invalid}`,
       borderRadius: generalMatching.borderRadius,
     },
@@ -269,7 +317,7 @@ export const solarizedDarkTheme = EditorView.theme(
     // Focus outline
     '&.cm-focused': {
       outline: 'none',
-      boxShadow: `0 0 0 2px ${background}, 0 0 0 3px ${base_blue}40`,
+      boxShadow: `0 0 0 2px ${background}, 0 0 0 3px ${base0D}40`,
     },
 
     // Scrollbars
@@ -301,66 +349,66 @@ export const solarizedDarkTheme = EditorView.theme(
 /**
  * Enhanced syntax highlighting for Solarized Dark theme
  */
-export const solarizedDarkHighlightStyle = HighlightStyle.define([
+const solarizedDarkHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
-  { tag: t.keyword, color: base_green, fontWeight: 'bold' },
-  { tag: t.controlKeyword, color: base_green, fontWeight: 'bold' },
-  { tag: t.moduleKeyword, color: base_green, fontWeight: 'bold' },
+  { tag: t.keyword, color: base0B, fontWeight: 'bold' },
+  { tag: t.controlKeyword, color: base0B, fontWeight: 'bold' },
+  { tag: t.moduleKeyword, color: base0B, fontWeight: 'bold' },
 
   // Names and variables
-  { tag: [t.name, t.deleted, t.character, t.macroName], color: base_cyan },
+  { tag: [t.name, t.deleted, t.character, t.macroName], color: base0C },
   { tag: [t.variableName], color: base05 },
-  { tag: [t.propertyName], color: base_cyan, fontStyle: 'normal' },
+  { tag: [t.propertyName], color: base0C, fontStyle: 'normal' },
 
   // Classes and types
-  { tag: [t.typeName], color: base_orange },
-  { tag: [t.className], color: base_orange, fontStyle: 'italic' },
-  { tag: [t.namespace], color: base_magenta, fontStyle: 'italic' },
+  { tag: [t.typeName], color: base09 },
+  { tag: [t.className], color: base09, fontStyle: 'italic' },
+  { tag: [t.namespace], color: base0F, fontStyle: 'italic' },
 
   // Operators and punctuation
-  { tag: [t.operator, t.operatorKeyword], color: base_violet },
-  { tag: [t.bracket], color: base_magenta },
-  { tag: [t.brace], color: base_magenta },
+  { tag: [t.operator, t.operatorKeyword], color: base0E },
+  { tag: [t.bracket], color: base0F },
+  { tag: [t.brace], color: base0F },
   { tag: [t.punctuation], color: base04 },
 
   // Functions and parameters
-  { tag: [t.function(t.variableName)], color: base_blue },
-  { tag: [t.labelName], color: base_magenta },
-  { tag: [t.definition(t.function(t.variableName))], color: base_blue },
-  { tag: [t.definition(t.variableName)], color: base_cyan },
+  { tag: [t.function(t.variableName)], color: base0D },
+  { tag: [t.labelName], color: base0F },
+  { tag: [t.definition(t.function(t.variableName))], color: base0D },
+  { tag: [t.definition(t.variableName)], color: base0C },
 
   // Constants and literals
-  { tag: t.number, color: base_magenta },
-  { tag: t.changed, color: base_magenta },
+  { tag: t.number, color: base0F },
+  { tag: t.changed, color: base0F },
   { tag: t.annotation, color: invalid, fontStyle: 'italic' },
-  { tag: t.modifier, color: base_magenta, fontStyle: 'italic' },
-  { tag: t.self, color: base_magenta },
+  { tag: t.modifier, color: base0F, fontStyle: 'italic' },
+  { tag: t.self, color: base0F },
   {
     tag: [t.color, t.constant(t.name), t.standard(t.name)],
-    color: base_yellow,
+    color: base0A,
   },
-  { tag: [t.atom, t.bool, t.special(t.variableName)], color: base_magenta },
+  { tag: [t.atom, t.bool, t.special(t.variableName)], color: base0F },
 
   // Strings and regex
-  { tag: [t.processingInstruction, t.inserted], color: base_green },
+  { tag: [t.processingInstruction, t.inserted], color: base0B },
   { tag: [t.special(t.string), t.regexp], color: invalid },
-  { tag: t.string, color: base_yellow },
+  { tag: t.string, color: base0A },
 
   // Punctuation and structure
-  { tag: t.definition(t.typeName), color: base_orange, fontWeight: 'bold' },
-  { tag: [t.definition(t.name), t.separator], color: base_cyan },
+  { tag: t.definition(t.typeName), color: base09, fontWeight: 'bold' },
+  { tag: [t.definition(t.name), t.separator], color: base0C },
 
   // Comments and documentation
-  { tag: t.meta, color: base_red },
+  { tag: t.meta, color: base08 },
   { tag: t.comment, fontStyle: 'italic', color: base02 },
   { tag: t.docComment, fontStyle: 'italic', color: base02 },
 
   // HTML/XML elements
-  { tag: [t.tagName], color: base_blue },
+  { tag: [t.tagName], color: base0D },
   { tag: [t.attributeName], color: base05 },
 
   // Markdown and text formatting
-  { tag: [t.heading], fontWeight: 'bold', color: base_yellow },
+  { tag: [t.heading], fontWeight: 'bold', color: base0A },
   { tag: t.heading1, color: base07 },
   { tag: t.heading2, color: base06 },
   { tag: t.heading3, color: base06 },
@@ -368,19 +416,19 @@ export const solarizedDarkHighlightStyle = HighlightStyle.define([
   { tag: t.heading5, color: base06 },
   { tag: t.heading6, color: base06 },
   { tag: [t.strong], fontWeight: 'bold', color: base06 },
-  { tag: [t.emphasis], fontStyle: 'italic', color: base_green },
+  { tag: [t.emphasis], fontStyle: 'italic', color: base0B },
 
   // Links and URLs
   {
     tag: [t.link],
-    color: base_cyan,
+    color: base0C,
     fontWeight: '500',
     textDecoration: 'underline',
     textUnderlinePosition: 'under',
   },
   {
     tag: [t.url],
-    color: base_yellow,
+    color: base0A,
     textDecoration: 'underline',
     textUnderlineOffset: '2px',
   },
@@ -390,26 +438,38 @@ export const solarizedDarkHighlightStyle = HighlightStyle.define([
     tag: [t.invalid],
     color: base02,
     textDecoration: 'underline wavy',
-    borderBottom: `1px dotted ${base_red}`,
+    borderBottom: `1px dotted ${base08}`,
   },
   { tag: [t.strikethrough], color: invalid, textDecoration: 'line-through' },
 
   // Enhanced syntax highlighting
-  { tag: t.constant(t.name), color: base_yellow },
-  { tag: t.deleted, color: base_red },
-  { tag: t.squareBracket, color: base_red },
+  { tag: t.constant(t.name), color: base0A },
+  { tag: t.deleted, color: base08 },
+  { tag: t.squareBracket, color: base08 },
   { tag: t.angleBracket, color: base02 },
 
   // Additional specific styles
   { tag: t.monospace, color: base05 },
-  { tag: [t.contentSeparator], color: base_yellow },
-  { tag: t.quote, color: base_green },
+  { tag: [t.contentSeparator], color: base0A },
+  { tag: t.quote, color: base0B },
 ]);
 
 /**
  * Combined Solarized Dark theme extension
  */
-export const solarizedDark: Extension = [
+const solarizedDark: Extension = [
   solarizedDarkTheme,
   syntaxHighlighting(solarizedDarkHighlightStyle),
 ];
+
+/**
+ * Solarized Dark merge revert styles configuration
+ */
+const solarizedDarkMergeStyles: IMergeRevertStyles = {
+  backgroundColor: darkBackground,
+  borderColor: base02,
+  buttonColor: base05,
+  buttonHoverColor: base01,
+};
+
+export { solarizedDark, solarizedDarkMergeStyles, applyMergeRevertStyles };

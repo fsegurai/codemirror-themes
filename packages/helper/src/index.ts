@@ -1,3 +1,4 @@
+// Helper module for styling options
 export const generalContent = {
   fontSize: '14px',
   fontFamily: 'JetBrains Mono, Consolas, monospace',
@@ -53,3 +54,13 @@ export const generalTooltip = {
   padding: '4px 8px',
   paddingRight: '8px',
 };
+
+//---------------------------------------
+
+// Interface for merge revert styling options
+export interface MergeRevertStyles {
+  backgroundColor: string;
+  borderColor: string;
+  buttonColor: string;
+  buttonHoverColor: string;
+}

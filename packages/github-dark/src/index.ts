@@ -4,8 +4,10 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 
 import {
+  applyMergeRevertStyles,
   generalContent,
   generalCursor,
+  generalDiff,
   generalGutter,
   generalLine,
   generalMatching,
@@ -14,7 +16,8 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-} from '@fsegurai/codemirror-theme-utils';
+  IMergeRevertStyles,
+} from './utils';
 
 /**
  * Enhanced GitHub Dark theme color definitions
@@ -23,46 +26,48 @@ import {
  */
 
 // Core UI colors
-const base00 = '#0d1117';  // Background (GitHub dark mode background)
-const base01 = '#c9d1d9';  // Foreground (main text color)
-const base02 = '#264F78';  // Selection - brighter blue for better visibility
-const base03 = '#8b949e';  // Comment and Bracket color
-const base04 = '#ffffff';  // Caret color (pure white for better visibility)
-
+const base00 = '#0d1117',  // Background (GitHub dark mode background)
+base01 = '#c9d1d9',  // Foreground (main text color)
+base02 = '#264F78',  // Selection - brighter blue for better visibility
+base03 = '#8b949e',  // Comment and Bracket color
+base04 = '#ffffff',  // Caret color (pure white for better visibility,
 // Syntax highlighting colors
-const base05 = '#7ee787';  // TagName, Name, Quote - signature GitHub green
-const base06 = '#d2a8ff';  // ClassName, PropertyName - GitHub purple
-const base07 = '#79c0ff';  // VariableName, Number - GitHub blue
-const base08 = '#ff7b72';  // Keyword, TypeName - GitHub red
-const base09 = '#a5d6ff';  // String, Meta, Regexp - lighter blue
-const base0A = '#2c333a';  // Panel button hover
-const base0B = '#3c444d';  // Deleted background color
-const base0C = '#ffab70';  // Atom, Bool - GitHub orange
-
+base05 = '#7ee787',  // TagName, Name, Quote - signature GitHub green
+base06 = '#d2a8ff',  // ClassName, PropertyName - GitHub purple
+base07 = '#79c0ff',  // VariableName, Number - GitHub blue
+base08 = '#ff7b72',  // Keyword, TypeName - GitHub red
+base09 = '#a5d6ff',  // String, Meta, Regexp - lighter blue
+base0A = '#2c333a',  // Panel button hover
+base0B = '#3c444d',  // Deleted background color
+base0C = '#ffab70',  // Atom, Bool - GitHub orange
 // Background variants
-const base0D = '#161b22';  // Gutter background (slightly darker than the editor)
-const base0E = '#30363d';  // Panel and tooltip border color
-const base0F = '#21262d';  // Active line gutter background
+base0D = '#161b22',  // Gutter background (slightly darker than the editor)
+base0E = '#30363d',  // Panel and tooltip border color
+base0F = '#21262d';  // Active line gutter background
 
-// Link colors
-const linkColor = '#58a6ff';      // Bright blue for links (GitHub link color)
-const visitedLinkColor = '#bc8cff'; // Light purple for visited links
+// UI-specific colors
+const invalid = '#f97583',        // Invalid color - error red
+highlightBackground = '#2d333b1a', // Line highlight (GitHub selection color)
+tooltipBackground = '#21262d',   // Tooltip background
+cursor = base04,                 // Caret color
+selection = base02,              // Selection color
+activeBracketBg = '#3a587a75',   // Active bracket background
+activeBracketBorder = '#4d90fe', // Active bracket border
+diagnosticWarning = '#d29922',   // Warning color
+selectionMatch = '#3a587a55',    // Selection match background
+linkColor = '#58a6ff',      // Bright blue for links (GitHub link color)
+visitedLinkColor = '#bc8cff'; // Light purple for visited links
 
-// Special states
-const invalid = '#f97583';        // Invalid color - error red
-const highlightBackground = '#2d333b1a'; // Line highlight (GitHub selection color)
-const tooltipBackground = '#21262d';   // Tooltip background
-const cursor = base04;                 // Caret color
-const selection = base02;              // Selection color
-const activeBracketBg = '#3a587a75';   // Active bracket background
-const activeBracketBorder = '#4d90fe'; // Active bracket border
-const diagnosticWarning = '#d29922';   // Warning color
-const selectionMatch = '#3a587a55';    // Selection match background
+// Diff/merge specific colors
+const addedBackground = '#2ea04350', // GitHub green with transparency
+  removedBackground = '#f8514940', // GitHub red with transparency
+  addedText = '#7ee787',         // GitHub green for added text
+  removedText = '#ff7b72';       // GitHub red for removed text
 
 /**
  * Enhanced editor theme styles for GitHub Dark
  */
-export const githubDarkTheme = EditorView.theme(
+const githubDarkTheme = EditorView.theme(
   {
     // Base editor styles
     '&': {
@@ -178,6 +183,47 @@ export const githubDarkTheme = EditorView.theme(
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
       color: base01,
+    },
+
+    // Diff/Merge View Styles
+    // Inserted/Added Content
+    '.cm-insertedLine': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: addedBackground,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+      textDecoration: generalDiff.insertedTextDecoration,
+      backgroundColor: `${addedBackground} !important`,
+      color: addedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${addedText}40`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+      background: 'transparent !important',
+    },
+
+    // Deleted/Removed Content
+    '.cm-deletedLine': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: removedBackground,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+      textDecoration: generalDiff.deletedTextDecoration,
+      backgroundColor: `${removedBackground} !important`,
+      color: removedText,
+      padding: generalDiff.insertedLinePadding,
+      borderRadius: generalDiff.borderRadious,
+      border: `1px solid ${removedText}40`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+      background: 'transparent !important',
     },
 
     // Tooltips and autocomplete
@@ -303,7 +349,7 @@ export const githubDarkTheme = EditorView.theme(
 /**
  * Enhanced syntax highlighting for GitHub Dark theme
  */
-export const githubDarkHighlightStyle = HighlightStyle.define([
+const githubDarkHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
   { tag: t.keyword, color: base08, fontWeight: 'bold' },
   { tag: t.controlKeyword, color: base08, fontWeight: 'bold' },
@@ -388,7 +434,19 @@ export const githubDarkHighlightStyle = HighlightStyle.define([
 /**
  * Combined GitHub Dark theme extension
  */
-export const githubDark: Extension = [
+const githubDark: Extension = [
   githubDarkTheme,
   syntaxHighlighting(githubDarkHighlightStyle),
 ];
+
+/**
+ * GitHub Dark merge revert styles configuration
+ */
+const githubDarkMergeStyles: IMergeRevertStyles = {
+  backgroundColor: tooltipBackground,
+  borderColor: base0E,
+  buttonColor: base01,
+  buttonHoverColor: base0A,
+};
+
+export { githubDark, githubDarkMergeStyles, applyMergeRevertStyles };
