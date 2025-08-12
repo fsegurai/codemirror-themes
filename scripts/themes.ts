@@ -12,6 +12,8 @@ import {
   basicDarkMergeStyles,
   basicLight,
   basicLightMergeStyles,
+  cobalt2,
+  cobalt2MergeStyles,
   forest,
   forestMergeStyles,
   githubDark,
@@ -78,6 +80,11 @@ const themes = [
     name: 'basic-light',
     extension: basicLight,
     mergeStyles: basicLightMergeStyles,
+  },
+  {
+    name: 'cobalt2',
+    extension: cobalt2,
+    mergeStyles: cobalt2MergeStyles,
   },
   {
     name: 'forest',
