@@ -27,6 +27,7 @@ No changes have been made yet.
 ### 🛠 Changes
 
 - Enhanced helper utilities for easier theme development and testing.
+- Removed unused methods from rollup configuration.
 - Refactored demo playground for better usability and maintainability.
 - Updated all package `README.md` files to include the new theme.
 
