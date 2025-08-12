@@ -1,7 +1,7 @@
 {
   "name": "@fsegurai/codemirror-theme-bundle",
   "description": "Bundle themes for the CodeMirror editor",
-  "version": "6.2.1",
+  "version": "6.2.2",
   "type": "module",
   "main": "dist/index.cjs",
   "exports": {
@@ -39,7 +39,7 @@
     "@fsegurai/codemirror-theme-andromeda": "^6.2.2",
     "@fsegurai/codemirror-theme-basic-dark": "^6.2.2",
     "@fsegurai/codemirror-theme-basic-light": "^6.2.2",
-    "@fsegurai/codemirror-theme-cobalt2": "^6.0.1",
+    "@fsegurai/codemirror-theme-cobalt2": "^6.0.2",
     "@fsegurai/codemirror-theme-forest": "^6.2.2",
     "@fsegurai/codemirror-theme-github-dark": "^6.2.2",
     "@fsegurai/codemirror-theme-github-light": "^6.2.2",
