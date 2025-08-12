@@ -1,7 +1,7 @@
 {
   "name": "@fsegurai/codemirror-theme-tokyo-night-storm",
   "description": "Tokyo Night Storm theme for the CodeMirror editor",
-  "version": "6.2.1",
+  "version": "6.2.2",
   "type": "module",
   "main": "dist/index.cjs",
   "exports": {
