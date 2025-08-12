@@ -1,7 +1,7 @@
 {
   "name": "@fsegurai/codemirror-theme-github-light",
-  "description": "GitHub Light theme for the CodeMirror code editor",
-  "version": "6.2.0",
+  "description": "GitHub Light theme for the CodeMirror editor",
+  "version": "6.2.1",
   "type": "module",
   "main": "dist/index.cjs",
   "exports": {

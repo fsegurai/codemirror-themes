@@ -4,6 +4,7 @@ export { androidStudio, androidStudioMergeStyles } from '@fsegurai/codemirror-th
 export { andromeda, andromedaMergeStyles } from '@fsegurai/codemirror-theme-andromeda';
 export { basicDark, basicDarkMergeStyles } from '@fsegurai/codemirror-theme-basic-dark';
 export { basicLight, basicLightMergeStyles } from '@fsegurai/codemirror-theme-basic-light';
+export { cobalt2, cobalt2MergeStyles } from '@fsegurai/codemirror-theme-cobalt2';
 export { forest, forestMergeStyles } from '@fsegurai/codemirror-theme-forest';
 export { githubDark, githubDarkMergeStyles } from '@fsegurai/codemirror-theme-github-dark';
 export { githubLight, githubLightMergeStyles } from '@fsegurai/codemirror-theme-github-light';
