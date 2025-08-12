@@ -7749,8 +7749,7 @@ function domPosAtCoords(parent, x, y) {
                 closestRect = rect;
                 closestX = dx;
                 closestY = dy;
-                let side = dy ? (y < rect.top ? -1 : 1) : dx ? (x < rect.left ? -1 : 1) : 0;
-                closestOverlap = !side || (side > 0 ? i < rects.length - 1 : i > 0);
+                closestOverlap = !dx ? true : x < rect.left ? i > 0 : i < rects.length - 1;
             }
             if (dx == 0) {
                 if (y > rect.bottom && (!aboveRect || aboveRect.bottom < rect.bottom)) {
@@ -7926,13 +7925,24 @@ function posAtCoordsImprecise(view, contentRect, block, x, y) {
 // line before. This is used to detect such a result so that it can be
 // ignored (issue #401).
 function isSuspiciousSafariCaretResult(node, offset, x) {
-    let len;
+    let len, scan = node;
     if (node.nodeType != 3 || offset != (len = node.nodeValue.length))
         return false;
-    for (let next = node.nextSibling; next; next = next.nextSibling)
-        if (next.nodeType != 1 || next.nodeName != "BR")
+    for (;;) { // Check that there is no content after this node
+        let next = scan.nextSibling;
+        if (next) {
+            if (next.nodeName == "BR")
+                break;
             return false;
-    return textRange(node, len - 1, len).getBoundingClientRect().left > x;
+        }
+        else {
+            let parent = scan.parentNode;
+            if (!parent || parent.nodeName == "DIV")
+                break;
+            scan = parent;
+        }
+    }
+    return textRange(node, len - 1, len).getBoundingClientRect().right > x;
 }
 // Chrome will move positions between lines to the start of the next line
 function isSuspiciousChromeCaretResult(node, offset, x) {
@@ -9355,7 +9365,7 @@ class HeightOracle {
     heightForLine(length) {
         if (!this.lineWrapping)
             return this.lineHeight;
-        let lines = 1 + Math.max(0, Math.ceil((length - this.lineLength) / (this.lineLength - 5)));
+        let lines = 1 + Math.max(0, Math.ceil((length - this.lineLength) / Math.max(1, this.lineLength - 5)));
         return lines * this.lineHeight;
     }
     setDoc(doc) { this.doc = doc; return this; }
@@ -10325,7 +10335,7 @@ class ViewState {
                 refresh = true;
             if (refresh || oracle.lineWrapping && Math.abs(contentWidth - this.contentDOMWidth) > oracle.charWidth) {
                 let { lineHeight, charWidth, textHeight } = view.docView.measureTextSize();
-                refresh = lineHeight > 0 && oracle.refresh(whiteSpace, lineHeight, charWidth, textHeight, contentWidth / charWidth, lineHeights);
+                refresh = lineHeight > 0 && oracle.refresh(whiteSpace, lineHeight, charWidth, textHeight, Math.max(5, contentWidth / charWidth), lineHeights);
                 if (refresh) {
                     view.docView.minWidth = 0;
                     result |= 16 /* UpdateFlag.Geometry */;
@@ -10850,13 +10860,16 @@ const baseTheme$1$3 = /*@__PURE__*/buildTheme("." + baseThemeID, {
         display: "flex",
         height: "100%",
         boxSizing: "border-box",
-        insetInlineStart: 0,
-        zIndex: 200
+        zIndex: 200,
     },
+    ".cm-gutters-before": { insetInlineStart: 0 },
+    ".cm-gutters-after": { insetInlineEnd: 0 },
     "&light .cm-gutters": {
         backgroundColor: "#f5f5f5",
         color: "#6c6c6c",
-        borderRight: "1px solid #ddd"
+        border: "0px solid #ddd",
+        "&.cm-gutters-before": { borderRightWidth: "1px" },
+        "&.cm-gutters-after": { borderLeftWidth: "1px" },
     },
     "&dark .cm-gutters": {
         backgroundColor: "#333338",
@@ -11047,7 +11060,7 @@ class DOMObserver {
             else
                 this.flush();
         });
-        if (window.EditContext && view.constructor.EDIT_CONTEXT !== false &&
+        if (window.EditContext && browser.android && view.constructor.EDIT_CONTEXT !== false &&
             // Chrome <126 doesn't support inverted selections in edit context (#1392)
             !(browser.chrome && browser.chrome_version < 126)) {
             this.editContext = new EditContextManager(view);
@@ -13058,6 +13071,8 @@ function runHandlers(map, event, view, scope) {
         else if (isChar && (event.altKey || event.metaKey || event.ctrlKey) &&
             // Ctrl-Alt may be used for AltGr on Windows
             !(browser.windows && event.ctrlKey && event.altKey) &&
+            // Alt-combinations on macOS tend to be typed characters
+            !(browser.mac && event.altKey && !event.ctrlKey) &&
             (baseName = base[event.keyCode]) && baseName != name) {
             if (runFor(scopeObj[prefix + modifiers(baseName, event, true)])) {
                 handled = true;
@@ -14883,7 +14898,8 @@ const defaults$1 = {
     lineMarkerChange: null,
     initialSpacer: null,
     updateSpacer: null,
-    domEventHandlers: {}
+    domEventHandlers: {},
+    side: "before"
 };
 const activeGutters = /*@__PURE__*/Facet.define();
 /**
@@ -14915,15 +14931,20 @@ function gutters(config) {
 const gutterView = /*@__PURE__*/ViewPlugin.fromClass(class {
     constructor(view) {
         this.view = view;
+        this.domAfter = null;
         this.prevViewport = view.viewport;
         this.dom = document.createElement("div");
-        this.dom.className = "cm-gutters";
+        this.dom.className = "cm-gutters cm-gutters-before";
         this.dom.setAttribute("aria-hidden", "true");
         this.dom.style.minHeight = (this.view.contentHeight / this.view.scaleY) + "px";
         this.gutters = view.state.facet(activeGutters).map(conf => new SingleGutterView(view, conf));
-        for (let gutter of this.gutters)
-            this.dom.appendChild(gutter.dom);
         this.fixed = !view.state.facet(unfixGutters);
+        for (let gutter of this.gutters) {
+            if (gutter.config.side == "after")
+                this.getDOMAfter().appendChild(gutter.dom);
+            else
+                this.dom.appendChild(gutter.dom);
+        }
         if (this.fixed) {
             // FIXME IE11 fallback, which doesn't support position: sticky,
             // by using position: relative + event handlers that realign the
@@ -14932,6 +14953,17 @@ const gutterView = /*@__PURE__*/ViewPlugin.fromClass(class {
         }
         this.syncGutters(false);
         view.scrollDOM.insertBefore(this.dom, view.contentDOM);
+    }
+    getDOMAfter() {
+        if (!this.domAfter) {
+            this.domAfter = document.createElement("div");
+            this.domAfter.className = "cm-gutters cm-gutters-after";
+            this.domAfter.setAttribute("aria-hidden", "true");
+            this.domAfter.style.minHeight = (this.view.contentHeight / this.view.scaleY) + "px";
+            this.domAfter.style.position = this.fixed ? "sticky" : "";
+            this.view.scrollDOM.appendChild(this.domAfter);
+        }
+        return this.domAfter;
     }
     update(update) {
         if (this.updateGutters(update)) {
@@ -14943,18 +14975,26 @@ const gutterView = /*@__PURE__*/ViewPlugin.fromClass(class {
             this.syncGutters(vpOverlap < (vpB.to - vpB.from) * 0.8);
         }
         if (update.geometryChanged) {
-            this.dom.style.minHeight = (this.view.contentHeight / this.view.scaleY) + "px";
+            let min = (this.view.contentHeight / this.view.scaleY) + "px";
+            this.dom.style.minHeight = min;
+            if (this.domAfter)
+                this.domAfter.style.minHeight = min;
         }
         if (this.view.state.facet(unfixGutters) != !this.fixed) {
             this.fixed = !this.fixed;
             this.dom.style.position = this.fixed ? "sticky" : "";
+            if (this.domAfter)
+                this.domAfter.style.position = this.fixed ? "sticky" : "";
         }
         this.prevViewport = update.view.viewport;
     }
     syncGutters(detach) {
         let after = this.dom.nextSibling;
-        if (detach)
+        if (detach) {
             this.dom.remove();
+            if (this.domAfter)
+                this.domAfter.remove();
+        }
         let lineClasses = RangeSet.iter(this.view.state.facet(gutterLineClass), this.view.viewport.from);
         let classSet = [];
         let contexts = this.gutters.map(gutter => new UpdateContext(gutter, this.view.viewport, -this.view.documentPadding.top));
@@ -14988,8 +15028,11 @@ const gutterView = /*@__PURE__*/ViewPlugin.fromClass(class {
         }
         for (let cx of contexts)
             cx.finish();
-        if (detach)
+        if (detach) {
             this.view.scrollDOM.insertBefore(this.dom, after);
+            if (this.domAfter)
+                this.view.scrollDOM.appendChild(this.domAfter);
+        }
     }
     updateGutters(update) {
         let prev = update.startState.facet(activeGutters), cur = update.state.facet(activeGutters);
@@ -15018,8 +15061,12 @@ const gutterView = /*@__PURE__*/ViewPlugin.fromClass(class {
                 if (gutters.indexOf(g) < 0)
                     g.destroy();
             }
-            for (let g of gutters)
-                this.dom.appendChild(g.dom);
+            for (let g of gutters) {
+                if (g.config.side == "after")
+                    this.getDOMAfter().appendChild(g.dom);
+                else
+                    this.dom.appendChild(g.dom);
+            }
             this.gutters = gutters;
         }
         return change;
@@ -15028,15 +15075,18 @@ const gutterView = /*@__PURE__*/ViewPlugin.fromClass(class {
         for (let view of this.gutters)
             view.destroy();
         this.dom.remove();
+        if (this.domAfter)
+            this.domAfter.remove();
     }
 }, {
     provide: plugin => EditorView.scrollMargins.of(view => {
         let value = view.plugin(plugin);
         if (!value || value.gutters.length == 0 || !value.fixed)
             return null;
+        let before = value.dom.offsetWidth * view.scaleX, after = value.domAfter ? value.domAfter.offsetWidth * view.scaleX : 0;
         return view.textDirection == Direction.LTR
-            ? { left: value.dom.offsetWidth * view.scaleX }
-            : { right: value.dom.offsetWidth * view.scaleX };
+            ? { left: before, right: after }
+            : { right: before, left: after };
     })
 });
 function asArray(val) { return (Array.isArray(val) ? val : [val]); }
@@ -15278,7 +15328,8 @@ const lineNumberGutter = /*@__PURE__*/activeGutters.compute([lineNumberConfig], 
         let max = formatNumber(update.view, maxLineNumber(update.view.state.doc.lines));
         return max == spacer.number ? spacer : new NumberMarker(max);
     },
-    domEventHandlers: state.facet(lineNumberConfig).domEventHandlers
+    domEventHandlers: state.facet(lineNumberConfig).domEventHandlers,
+    side: "before"
 }));
 /**
 Create a line number gutter extension.
@@ -18361,12 +18412,12 @@ tagHighlighter([
     { tag: tags$1.punctuation, class: "tok-punctuation" }
 ]);
 
-var _a$6;
+var _a;
 /**
 Node prop stored in a parser's top syntax node to provide the
 facet that stores language-specific data for that language.
 */
-const languageDataProp$6 = /*@__PURE__*/new NodeProp();
+const languageDataProp = /*@__PURE__*/new NodeProp();
 /**
 Helper function to define a facet (to be added to the top syntax
 node(s) for a language via
@@ -18375,7 +18426,7 @@ used to associate language data with the language. You
 probably only need this when subclassing
 [`Language`](https://codemirror.net/6/docs/ref/#language.Language).
 */
-function defineLanguageFacet$4(baseData) {
+function defineLanguageFacet(baseData) {
     return Facet.define({
         combine: baseData ? values => values.concat(baseData) : undefined
     });
@@ -18384,7 +18435,7 @@ function defineLanguageFacet$4(baseData) {
 Syntax node prop used to register sublanguages. Should be added to
 the top level node type for the language.
 */
-const sublanguageProp$6 = /*@__PURE__*/new NodeProp();
+const sublanguageProp = /*@__PURE__*/new NodeProp();
 /**
 A language object manages parsing and per-language
 [metadata](https://codemirror.net/6/docs/ref/#state.EditorState.languageDataAt). Parse data is
@@ -18394,7 +18445,7 @@ subclass for [Lezer](https://lezer.codemirror.net/) LR parsers, or
 via the [`StreamLanguage`](https://codemirror.net/6/docs/ref/#language.StreamLanguage) subclass
 for stream parsers.
 */
-let Language$6 = class Language {
+class Language {
     /**
     Construct a language object. If you need to invoke this
     directly, first define a data facet with
@@ -18418,15 +18469,15 @@ let Language$6 = class Language {
         // without the EditorState package actually knowing about
         // languages and lezer trees.
         if (!EditorState.prototype.hasOwnProperty("tree"))
-            Object.defineProperty(EditorState.prototype, "tree", { get() { return syntaxTree$6(this); } });
+            Object.defineProperty(EditorState.prototype, "tree", { get() { return syntaxTree(this); } });
         this.parser = parser;
         this.extension = [
-            language$6.of(this),
+            language.of(this),
             EditorState.languageData.of((state, pos, side) => {
-                let top = topNodeAt$6(state, pos, side), data = top.type.prop(languageDataProp$6);
+                let top = topNodeAt(state, pos, side), data = top.type.prop(languageDataProp);
                 if (!data)
                     return [];
-                let base = state.facet(data), sub = top.type.prop(sublanguageProp$6);
+                let base = state.facet(data), sub = top.type.prop(sublanguageProp);
                 if (sub) {
                     let innerNode = top.resolve(pos - top.from, side);
                     for (let sublang of sub)
@@ -18443,7 +18494,7 @@ let Language$6 = class Language {
     Query whether this language is active at the given position.
     */
     isActiveAt(state, pos, side = -1) {
-        return topNodeAt$6(state, pos, side).type.prop(languageDataProp$6) == this.data;
+        return topNodeAt(state, pos, side).type.prop(languageDataProp) == this.data;
     }
     /**
     Find the document regions that were parsed using this language.
@@ -18451,20 +18502,20 @@ let Language$6 = class Language {
     in this language, when those exist.
     */
     findRegions(state) {
-        let lang = state.facet(language$6);
+        let lang = state.facet(language);
         if ((lang === null || lang === void 0 ? void 0 : lang.data) == this.data)
             return [{ from: 0, to: state.doc.length }];
         if (!lang || !lang.allowsNesting)
             return [];
         let result = [];
         let explore = (tree, from) => {
-            if (tree.prop(languageDataProp$6) == this.data) {
+            if (tree.prop(languageDataProp) == this.data) {
                 result.push({ from, to: from + tree.length });
                 return;
             }
             let mount = tree.prop(NodeProp.mounted);
             if (mount) {
-                if (mount.tree.prop(languageDataProp$6) == this.data) {
+                if (mount.tree.prop(languageDataProp) == this.data) {
                     if (mount.overlay)
                         for (let r of mount.overlay)
                             result.push({ from: r.from + from, to: r.to + from });
@@ -18485,7 +18536,7 @@ let Language$6 = class Language {
                     explore(ch, tree.positions[i] + from);
             }
         };
-        explore(syntaxTree$6(state), 0);
+        explore(syntaxTree(state), 0);
         return result;
     }
     /**
@@ -18493,13 +18544,13 @@ let Language$6 = class Language {
     default implementation returns true.
     */
     get allowsNesting() { return true; }
-};
+}
 /**
 @internal
 */
-Language$6.setState = /*@__PURE__*/StateEffect.define();
-function topNodeAt$6(state, pos, side) {
-    let topLang = state.facet(language$6), tree = syntaxTree$6(state).topNode;
+Language.setState = /*@__PURE__*/StateEffect.define();
+function topNodeAt(state, pos, side) {
+    let topLang = state.facet(language), tree = syntaxTree(state).topNode;
     if (!topLang || topLang.allowsNesting) {
         for (let node = tree; node; node = node.enter(pos, side, IterMode.ExcludeBuffers))
             if (node.type.isTop)
@@ -18508,13 +18559,41 @@ function topNodeAt$6(state, pos, side) {
     return tree;
 }
 /**
+A subclass of [`Language`](https://codemirror.net/6/docs/ref/#language.Language) for use with Lezer
+[LR parsers](https://lezer.codemirror.net/docs/ref#lr.LRParser)
+parsers.
+*/
+class LRLanguage extends Language {
+    constructor(data, parser, name) {
+        super(data, parser, [], name);
+        this.parser = parser;
+    }
+    /**
+    Define a language from a parser.
+    */
+    static define(spec) {
+        let data = defineLanguageFacet(spec.languageData);
+        return new LRLanguage(data, spec.parser.configure({
+            props: [languageDataProp.add(type => type.isTop ? data : undefined)]
+        }), spec.name);
+    }
+    /**
+    Create a new instance of this language with a reconfigured
+    version of its parser and optionally a new name.
+    */
+    configure(options, name) {
+        return new LRLanguage(this.data, this.parser.configure(options), name || this.name);
+    }
+    get allowsNesting() { return this.parser.hasWrappers(); }
+}
+/**
 Get the syntax tree for a state, which is the current (possibly
 incomplete) parse tree of the active
 [language](https://codemirror.net/6/docs/ref/#language.Language), or the empty tree if there is no
 language available.
 */
-function syntaxTree$6(state) {
-    let field = state.field(Language$6.state, false);
+function syntaxTree(state) {
+    let field = state.field(Language.state, false);
     return field ? field.tree : Tree.empty;
 }
 /**
@@ -18522,7 +18601,7 @@ Lezer-style
 [`Input`](https://lezer.codemirror.net/docs/ref#common.Input)
 object for a [`Text`](https://codemirror.net/6/docs/ref/#state.Text) object.
 */
-let DocInput$6 = class DocInput {
+class DocInput {
     /**
     Create an input object for the given document.
     */
@@ -18550,12 +18629,12 @@ let DocInput$6 = class DocInput {
         else
             return this.string.slice(from - stringStart, to - stringStart);
     }
-};
-let currentContext$6 = null;
+}
+let currentContext = null;
 /**
 A parse context provided to parsers working on the editor content.
 */
-let ParseContext$6 = class ParseContext {
+class ParseContext {
     constructor(parser, 
     /**
     The current editor state.
@@ -18613,7 +18692,7 @@ let ParseContext$6 = class ParseContext {
         return new ParseContext(parser, state, [], Tree.empty, 0, viewport, [], null);
     }
     startParse() {
-        return this.parser.startParse(new DocInput$6(this.state.doc), this.fragments);
+        return this.parser.startParse(new DocInput(this.state.doc), this.fragments);
     }
     /**
     @internal
@@ -18669,18 +18748,18 @@ let ParseContext$6 = class ParseContext {
         }
     }
     withContext(f) {
-        let prev = currentContext$6;
-        currentContext$6 = this;
+        let prev = currentContext;
+        currentContext = this;
         try {
             return f();
         }
         finally {
-            currentContext$6 = prev;
+            currentContext = prev;
         }
     }
     withoutTempSkipped(fragments) {
         for (let r; r = this.tempSkipped.pop();)
-            fragments = cutFragments$6(fragments, r.from, r.to);
+            fragments = cutFragments(fragments, r.from, r.to);
         return fragments;
     }
     /**
@@ -18718,7 +18797,7 @@ let ParseContext$6 = class ParseContext {
         for (let i = 0; i < this.skipped.length; i++) {
             let { from, to } = this.skipped[i];
             if (from < viewport.to && to > viewport.from) {
-                this.fragments = cutFragments$6(this.fragments, from, to);
+                this.fragments = cutFragments(this.fragments, from, to);
                 this.skipped.splice(i--, 1);
             }
         }
@@ -18760,7 +18839,7 @@ let ParseContext$6 = class ParseContext {
                 let parser = {
                     parsedPos: from,
                     advance() {
-                        let cx = currentContext$6;
+                        let cx = currentContext;
                         if (cx) {
                             for (let r of ranges)
                                 cx.tempSkipped.push(r);
@@ -18789,12 +18868,12 @@ let ParseContext$6 = class ParseContext {
     Get the context for the current parse, or `null` if no editor
     parse is in progress.
     */
-    static get() { return currentContext$6; }
-};
-function cutFragments$6(fragments, from, to) {
+    static get() { return currentContext; }
+}
+function cutFragments(fragments, from, to) {
     return TreeFragment.applyChanges(fragments, [{ fromA: from, toA: to, fromB: from, toB: to }]);
 }
-let LanguageState$6 = class LanguageState {
+class LanguageState {
     constructor(
     // A mutable parse state that is used to preserve work done during
     // the lifetime of a state when moving to the next state.
@@ -18817,37 +18896,37 @@ let LanguageState$6 = class LanguageState {
     }
     static init(state) {
         let vpTo = Math.min(3000 /* Work.InitViewport */, state.doc.length);
-        let parseState = ParseContext$6.create(state.facet(language$6).parser, state, { from: 0, to: vpTo });
+        let parseState = ParseContext.create(state.facet(language).parser, state, { from: 0, to: vpTo });
         if (!parseState.work(20 /* Work.Apply */, vpTo))
             parseState.takeTree();
         return new LanguageState(parseState);
     }
-};
-Language$6.state = /*@__PURE__*/StateField.define({
-    create: LanguageState$6.init,
+}
+Language.state = /*@__PURE__*/StateField.define({
+    create: LanguageState.init,
     update(value, tr) {
         for (let e of tr.effects)
-            if (e.is(Language$6.setState))
+            if (e.is(Language.setState))
                 return e.value;
-        if (tr.startState.facet(language$6) != tr.state.facet(language$6))
-            return LanguageState$6.init(tr.state);
+        if (tr.startState.facet(language) != tr.state.facet(language))
+            return LanguageState.init(tr.state);
         return value.apply(tr);
     }
 });
-let requestIdle$6 = (callback) => {
+let requestIdle = (callback) => {
     let timeout = setTimeout(() => callback(), 500 /* Work.MaxPause */);
     return () => clearTimeout(timeout);
 };
 if (typeof requestIdleCallback != "undefined")
-    requestIdle$6 = (callback) => {
+    requestIdle = (callback) => {
         let idle = -1, timeout = setTimeout(() => {
             idle = requestIdleCallback(callback, { timeout: 500 /* Work.MaxPause */ - 100 /* Work.MinPause */ });
         }, 100 /* Work.MinPause */);
         return () => idle < 0 ? clearTimeout(timeout) : cancelIdleCallback(idle);
     };
-const isInputPending$6 = typeof navigator != "undefined" && ((_a$6 = navigator.scheduling) === null || _a$6 === void 0 ? void 0 : _a$6.isInputPending)
+const isInputPending = typeof navigator != "undefined" && ((_a = navigator.scheduling) === null || _a === void 0 ? void 0 : _a.isInputPending)
     ? () => navigator.scheduling.isInputPending() : null;
-const parseWorker$6 = /*@__PURE__*/ViewPlugin.fromClass(class ParseWorker {
+const parseWorker = /*@__PURE__*/ViewPlugin.fromClass(class ParseWorker {
     constructor(view) {
         this.view = view;
         this.working = null;
@@ -18860,7 +18939,7 @@ const parseWorker$6 = /*@__PURE__*/ViewPlugin.fromClass(class ParseWorker {
         this.scheduleWork();
     }
     update(update) {
-        let cx = this.view.state.field(Language$6.state).context;
+        let cx = this.view.state.field(Language.state).context;
         if (cx.updateViewport(update.view.viewport) || this.view.viewport.to > cx.treeLen)
             this.scheduleWork();
         if (update.docChanged || update.selectionSet) {
@@ -18873,9 +18952,9 @@ const parseWorker$6 = /*@__PURE__*/ViewPlugin.fromClass(class ParseWorker {
     scheduleWork() {
         if (this.working)
             return;
-        let { state } = this.view, field = state.field(Language$6.state);
+        let { state } = this.view, field = state.field(Language.state);
         if (field.tree != field.context.tree || !field.context.isDone(state.doc.length))
-            this.working = requestIdle$6(this.work);
+            this.working = requestIdle(this.work);
     }
     work(deadline) {
         this.working = null;
@@ -18886,18 +18965,18 @@ const parseWorker$6 = /*@__PURE__*/ViewPlugin.fromClass(class ParseWorker {
         }
         if (this.chunkBudget <= 0)
             return; // No more budget
-        let { state, viewport: { to: vpTo } } = this.view, field = state.field(Language$6.state);
+        let { state, viewport: { to: vpTo } } = this.view, field = state.field(Language.state);
         if (field.tree == field.context.tree && field.context.isDone(vpTo + 100000 /* Work.MaxParseAhead */))
             return;
-        let endTime = Date.now() + Math.min(this.chunkBudget, 100 /* Work.Slice */, deadline && !isInputPending$6 ? Math.max(25 /* Work.MinSlice */, deadline.timeRemaining() - 5) : 1e9);
+        let endTime = Date.now() + Math.min(this.chunkBudget, 100 /* Work.Slice */, deadline && !isInputPending ? Math.max(25 /* Work.MinSlice */, deadline.timeRemaining() - 5) : 1e9);
         let viewportFirst = field.context.treeLen < vpTo && state.doc.length > vpTo + 1000;
         let done = field.context.work(() => {
-            return isInputPending$6 && isInputPending$6() || Date.now() > endTime;
+            return isInputPending && isInputPending() || Date.now() > endTime;
         }, vpTo + (viewportFirst ? 0 : 100000 /* Work.MaxParseAhead */));
         this.chunkBudget -= Date.now() - now;
         if (done || this.chunkBudget <= 0) {
             field.context.takeTree();
-            this.view.dispatch({ effects: Language$6.setState.of(new LanguageState$6(field.context)) });
+            this.view.dispatch({ effects: Language.setState.of(new LanguageState(field.context)) });
         }
         if (this.chunkBudget > 0 && !(done && !viewportFirst))
             this.scheduleWork();
@@ -18929,11 +19008,11 @@ by `Language` object's `extension` property (so you don't need to
 manually wrap your languages in this). Can be used to access the
 current language on a state.
 */
-const language$6 = /*@__PURE__*/Facet.define({
+const language = /*@__PURE__*/Facet.define({
     combine(languages) { return languages.length ? languages[0] : null; },
     enables: language => [
-        Language$6.state,
-        parseWorker$6,
+        Language.state,
+        parseWorker,
         EditorView.contentAttributes.compute([language], state => {
             let lang = state.facet(language);
             return lang && lang.name ? { "data-language": lang.name } : {};
@@ -18947,7 +19026,7 @@ encouraged to export a function that optionally takes a
 configuration object and returns a `LanguageSupport` instance, as
 the main way for client code to use the package.
 */
-let LanguageSupport$4 = class LanguageSupport {
+class LanguageSupport {
     /**
     Create a language support object.
     */
@@ -18967,14 +19046,14 @@ let LanguageSupport$4 = class LanguageSupport {
         this.support = support;
         this.extension = [language, support];
     }
-};
+}
 /**
 Language descriptions are used to store metadata about languages
 and to dynamically load them. Their main role is finding the
 appropriate language for a filename or dynamically loading nested
 parsers.
 */
-let LanguageDescription$1 = class LanguageDescription {
+class LanguageDescription {
     constructor(
     /**
     The name of this language.
@@ -19064,7 +19143,7 @@ let LanguageDescription$1 = class LanguageDescription {
                 }
         return null;
     }
-};
+}
 
 /**
 Facet that defines a way to provide a function that computes the
@@ -19075,13 +19154,13 @@ determined, and the line should inherit the indentation of the one
 above it. A return value of `undefined` defers to the next indent
 service.
 */
-const indentService$1 = /*@__PURE__*/Facet.define();
+const indentService = /*@__PURE__*/Facet.define();
 /**
 Facet for overriding the unit by which indentation happens. Should
 be a string consisting entirely of the same whitespace character.
 When not set, this defaults to 2 spaces.
 */
-const indentUnit$3 = /*@__PURE__*/Facet.define({
+const indentUnit = /*@__PURE__*/Facet.define({
     combine: values => {
         if (!values.length)
             return "  ";
@@ -19097,8 +19176,8 @@ Determined by the [`indentUnit`](https://codemirror.net/6/docs/ref/#language.ind
 facet, and [`tabSize`](https://codemirror.net/6/docs/ref/#state.EditorState^tabSize) when that
 contains tabs.
 */
-function getIndentUnit$2(state) {
-    let unit = state.facet(indentUnit$3);
+function getIndentUnit(state) {
+    let unit = state.facet(indentUnit);
     return unit.charCodeAt(0) == 9 ? state.tabSize * unit.length : unit.length;
 }
 /**
@@ -19107,8 +19186,8 @@ Will use tabs for as much of the columns as possible when the
 [`indentUnit`](https://codemirror.net/6/docs/ref/#language.indentUnit) facet contains
 tabs.
 */
-function indentString$1(state, cols) {
-    let result = "", ts = state.tabSize, ch = state.facet(indentUnit$3)[0];
+function indentString(state, cols) {
+    let result = "", ts = state.tabSize, ch = state.facet(indentUnit)[0];
     if (ch == "\t") {
         while (cols >= ts) {
             result += "\t";
@@ -19129,16 +19208,16 @@ prop](https://codemirror.net/6/docs/ref/#language.indentNodeProp) and use that i
 number when an indentation could be determined, and null
 otherwise.
 */
-function getIndentation$1(context, pos) {
+function getIndentation(context, pos) {
     if (context instanceof EditorState)
-        context = new IndentContext$1(context);
-    for (let service of context.state.facet(indentService$1)) {
+        context = new IndentContext(context);
+    for (let service of context.state.facet(indentService)) {
         let result = service(context, pos);
         if (result !== undefined)
             return result;
     }
-    let tree = syntaxTree$6(context.state);
-    return tree.length >= pos ? syntaxIndentation$1(context, tree, pos) : null;
+    let tree = syntaxTree(context.state);
+    return tree.length >= pos ? syntaxIndentation(context, tree, pos) : null;
 }
 /**
 Indentation contexts are used when calling [indentation
@@ -19146,7 +19225,7 @@ services](https://codemirror.net/6/docs/ref/#language.indentService). They provi
 useful in indentation logic, and can selectively override the
 indentation reported for some lines.
 */
-let IndentContext$1 = class IndentContext {
+class IndentContext {
     /**
     Create an indent context.
     */
@@ -19161,7 +19240,7 @@ let IndentContext$1 = class IndentContext {
     options = {}) {
         this.state = state;
         this.options = options;
-        this.unit = getIndentUnit$2(state);
+        this.unit = getIndentUnit(state);
     }
     /**
     Get a description of the line at the given position, taking
@@ -19233,7 +19312,7 @@ let IndentContext$1 = class IndentContext {
     get simulatedBreak() {
         return this.options.simulateBreak || null;
     }
-};
+}
 /**
 A syntax tree node prop used to associate indentation strategies
 with node types. Such a strategy is a function from an indentation
@@ -19241,9 +19320,9 @@ context to a column number (see also
 [`indentString`](https://codemirror.net/6/docs/ref/#language.indentString)) or null, where null
 indicates that no definitive indentation can be determined.
 */
-const indentNodeProp$5 = /*@__PURE__*/new NodeProp();
+const indentNodeProp = /*@__PURE__*/new NodeProp();
 // Compute the indentation for a given position from the syntax tree.
-function syntaxIndentation$1(cx, ast, pos) {
+function syntaxIndentation(cx, ast, pos) {
     let stack = ast.resolveStack(pos);
     let inner = ast.resolveInner(pos, -1).resolve(pos, 0).enterUnfinishedNodesBefore(pos);
     if (inner != stack.node) {
@@ -19254,36 +19333,36 @@ function syntaxIndentation$1(cx, ast, pos) {
         for (let i = add.length - 1; i >= 0; i--)
             stack = { node: add[i], next: stack };
     }
-    return indentFor$1(stack, cx, pos);
+    return indentFor(stack, cx, pos);
 }
-function indentFor$1(stack, cx, pos) {
+function indentFor(stack, cx, pos) {
     for (let cur = stack; cur; cur = cur.next) {
-        let strategy = indentStrategy$1(cur.node);
+        let strategy = indentStrategy(cur.node);
         if (strategy)
-            return strategy(TreeIndentContext$1.create(cx, pos, cur));
+            return strategy(TreeIndentContext.create(cx, pos, cur));
     }
     return 0;
 }
-function ignoreClosed$1(cx) {
+function ignoreClosed(cx) {
     return cx.pos == cx.options.simulateBreak && cx.options.simulateDoubleBreak;
 }
-function indentStrategy$1(tree) {
-    let strategy = tree.type.prop(indentNodeProp$5);
+function indentStrategy(tree) {
+    let strategy = tree.type.prop(indentNodeProp);
     if (strategy)
         return strategy;
     let first = tree.firstChild, close;
     if (first && (close = first.type.prop(NodeProp.closedBy))) {
         let last = tree.lastChild, closed = last && close.indexOf(last.name) > -1;
-        return cx => delimitedStrategy$2(cx, true, 1, undefined, closed && !ignoreClosed$1(cx) ? last.from : undefined);
+        return cx => delimitedStrategy(cx, true, 1, undefined, closed && !ignoreClosed(cx) ? last.from : undefined);
     }
-    return tree.parent == null ? topIndent$1 : null;
+    return tree.parent == null ? topIndent : null;
 }
-function topIndent$1() { return 0; }
+function topIndent() { return 0; }
 /**
 Objects of this type provide context information and helper
 methods to indentation functions registered on syntax nodes.
 */
-let TreeIndentContext$1 = class TreeIndentContext extends IndentContext$1 {
+class TreeIndentContext extends IndentContext {
     constructor(base, 
     /**
     The position at which indentation is being computed.
@@ -19337,7 +19416,7 @@ let TreeIndentContext$1 = class TreeIndentContext extends IndentContext$1 {
             let atBreak = node.resolve(line.from);
             while (atBreak.parent && atBreak.parent.from == atBreak.from)
                 atBreak = atBreak.parent;
-            if (isParent$1(atBreak, node))
+            if (isParent(atBreak, node))
                 break;
             line = this.state.doc.lineAt(atBreak.from);
         }
@@ -19348,10 +19427,10 @@ let TreeIndentContext$1 = class TreeIndentContext extends IndentContext$1 {
     and return the result of that.
     */
     continue() {
-        return indentFor$1(this.context.next, this.base, this.pos);
+        return indentFor(this.context.next, this.base, this.pos);
     }
-};
-function isParent$1(parent, of) {
+}
+function isParent(parent, of) {
     for (let cur = of; cur; cur = cur.parent)
         if (parent == cur)
             return true;
@@ -19360,7 +19439,7 @@ function isParent$1(parent, of) {
 // Check whether a delimited node is aligned (meaning there are
 // non-skipped nodes on the same line as the opening delimiter). And
 // if so, return the opening token.
-function bracketedAligned$2(context) {
+function bracketedAligned(context) {
     let tree = context.node;
     let openToken = tree.childAfter(tree.from), last = tree.lastChild;
     if (!openToken)
@@ -19381,13 +19460,46 @@ function bracketedAligned$2(context) {
         pos = next.to;
     }
 }
-function delimitedStrategy$2(context, align, units, closing, closedAt) {
+/**
+An indentation strategy for delimited (usually bracketed) nodes.
+Will, by default, indent one unit more than the parent's base
+indent unless the line starts with a closing token. When `align`
+is true and there are non-skipped nodes on the node's opening
+line, the content of the node will be aligned with the end of the
+opening node, like this:
+
+    foo(bar,
+        baz)
+*/
+function delimitedIndent({ closing, align = true, units = 1 }) {
+    return (context) => delimitedStrategy(context, align, units, closing);
+}
+function delimitedStrategy(context, align, units, closing, closedAt) {
     let after = context.textAfter, space = after.match(/^\s*/)[0].length;
     let closed = closing && after.slice(space, space + closing.length) == closing || closedAt == context.pos + space;
-    let aligned = bracketedAligned$2(context) ;
+    let aligned = align ? bracketedAligned(context) : null;
     if (aligned)
         return closed ? context.column(aligned.from) : context.column(aligned.to);
     return context.baseIndent + (closed ? 0 : context.unit * units);
+}
+/**
+An indentation strategy that aligns a node's content to its base
+indentation.
+*/
+const flatIndent = (context) => context.baseIndent;
+/**
+Creates an indentation strategy that, by default, indents
+continued lines one unit more than the node's base indentation.
+You can provide `except` to prevent indentation of lines that
+match a pattern (for example `/^else\b/` in `if`/`else`
+constructs), and you can change the amount of units used with the
+`units` option.
+*/
+function continuedIndent({ except, units = 1 } = {}) {
+    return (context) => {
+        let matchExcept = except && except.test(context.textAfter);
+        return context.baseIndent + (matchExcept ? 0 : units * context.unit);
+    };
 }
 const DontIndentBeyond = 200;
 /**
@@ -19422,11 +19534,11 @@ function indentOnInput() {
             if (line.from == last)
                 continue;
             last = line.from;
-            let indent = getIndentation$1(state, line.from);
+            let indent = getIndentation(state, line.from);
             if (indent == null)
                 continue;
             let cur = /^\s*/.exec(line.text)[0];
-            let norm = indentString$1(state, indent);
+            let norm = indentString(state, indent);
             if (cur != norm)
                 changes.push({ from: line.from, to: line.from + cur.length, insert: norm });
         }
@@ -19440,16 +19552,25 @@ the extent of a line, such a function should return a foldable
 range that starts on that line (but continues beyond it), if one
 can be found.
 */
-const foldService$1 = /*@__PURE__*/Facet.define();
+const foldService = /*@__PURE__*/Facet.define();
 /**
 This node prop is used to associate folding information with
 syntax node types. Given a syntax node, it should check whether
 that tree is foldable and return the range that can be collapsed
 when it is.
 */
-const foldNodeProp$4 = /*@__PURE__*/new NodeProp();
+const foldNodeProp = /*@__PURE__*/new NodeProp();
+/**
+[Fold](https://codemirror.net/6/docs/ref/#language.foldNodeProp) function that folds everything but
+the first and the last child of a syntax node. Useful for nodes
+that start and end with delimiters.
+*/
+function foldInside(node) {
+    let first = node.firstChild, last = node.lastChild;
+    return first && first.to < last.from ? { from: first.to, to: last.type.isError ? node.to : last.from } : null;
+}
 function syntaxFolding(state, start, end) {
-    let tree = syntaxTree$6(state);
+    let tree = syntaxTree(state);
     if (tree.length < end)
         return null;
     let stack = tree.resolveStack(end, 1);
@@ -19460,7 +19581,7 @@ function syntaxFolding(state, start, end) {
             continue;
         if (found && cur.from < start)
             break;
-        let prop = cur.type.prop(foldNodeProp$4);
+        let prop = cur.type.prop(foldNodeProp);
         if (prop && (cur.to < tree.length - 50 || tree.length == state.doc.length || !isUnfinished(cur))) {
             let value = prop(cur, state);
             if (value && value.from <= end && value.from >= start && value.to > end)
@@ -19482,7 +19603,7 @@ prop](https://codemirror.net/6/docs/ref/#language.foldNodeProp) of syntax nodes 
 of the line.
 */
 function foldable(state, lineStart, lineEnd) {
-    for (let service of state.facet(foldService$1)) {
+    for (let service of state.facet(foldService)) {
         let result = service(state, lineStart, lineEnd);
         if (result)
             return result;
@@ -19756,9 +19877,9 @@ function foldGutter(config = {}) {
         }
         update(update) {
             if (update.docChanged || update.viewportChanged ||
-                update.startState.facet(language$6) != update.state.facet(language$6) ||
+                update.startState.facet(language) != update.state.facet(language) ||
                 update.startState.field(foldState, false) != update.state.field(foldState, false) ||
-                syntaxTree$6(update.startState) != syntaxTree$6(update.state) ||
+                syntaxTree(update.startState) != syntaxTree(update.state) ||
                 fullConfig.foldingChanged(update))
                 this.markers = this.buildMarkers(update.view);
         }
@@ -19839,7 +19960,7 @@ class HighlightStyle {
         }
         const all = typeof options.all == "string" ? options.all : options.all ? def(options.all) : undefined;
         const scopeOpt = options.scope;
-        this.scope = scopeOpt instanceof Language$6 ? (type) => type.prop(languageDataProp$6) == scopeOpt.data
+        this.scope = scopeOpt instanceof Language ? (type) => type.prop(languageDataProp) == scopeOpt.data
             : scopeOpt ? (type) => type == scopeOpt : undefined;
         this.style = tagHighlighter(specs.map(style => ({
             tag: style.tag,
@@ -19924,12 +20045,12 @@ function highlightingFor(state, tags, scope) {
 class TreeHighlighter {
     constructor(view) {
         this.markCache = Object.create(null);
-        this.tree = syntaxTree$6(view.state);
+        this.tree = syntaxTree(view.state);
         this.decorations = this.buildDeco(view, getHighlighters(view.state));
         this.decoratedTo = view.viewport.to;
     }
     update(update) {
-        let tree = syntaxTree$6(update.state), highlighters = getHighlighters(update.state);
+        let tree = syntaxTree(update.state), highlighters = getHighlighters(update.state);
         let styleChange = highlighters != getHighlighters(update.startState);
         let { viewport } = update.view, decoratedToMapped = update.changes.mapPos(this.decoratedTo, 1);
         if (tree.length < viewport.to && !styleChange && tree.type == this.tree.type && decoratedToMapped >= viewport.to) {
@@ -20006,13 +20127,13 @@ const baseTheme$4 = /*@__PURE__*/EditorView.baseTheme({
     "&.cm-focused .cm-matchingBracket": { backgroundColor: "#328c8252" },
     "&.cm-focused .cm-nonmatchingBracket": { backgroundColor: "#bb555544" }
 });
-const DefaultScanDist$1 = 10000, DefaultBrackets$1 = "()[]{}";
+const DefaultScanDist = 10000, DefaultBrackets = "()[]{}";
 const bracketMatchingConfig = /*@__PURE__*/Facet.define({
     combine(configs) {
         return combineConfig(configs, {
             afterCursor: true,
-            brackets: DefaultBrackets$1,
-            maxScanDistance: DefaultScanDist$1,
+            brackets: DefaultBrackets,
+            maxScanDistance: DefaultScanDist,
             renderMatch: defaultRenderMatch
         });
     }
@@ -20036,11 +20157,11 @@ const bracketMatchingState = /*@__PURE__*/StateField.define({
         for (let range of tr.state.selection.ranges) {
             if (!range.empty)
                 continue;
-            let match = matchBrackets$1(tr.state, range.head, -1, config)
-                || (range.head > 0 && matchBrackets$1(tr.state, range.head - 1, 1, config))
+            let match = matchBrackets(tr.state, range.head, -1, config)
+                || (range.head > 0 && matchBrackets(tr.state, range.head - 1, 1, config))
                 || (config.afterCursor &&
-                    (matchBrackets$1(tr.state, range.head, 1, config) ||
-                        (range.head < tr.state.doc.length && matchBrackets$1(tr.state, range.head + 1, -1, config))));
+                    (matchBrackets(tr.state, range.head, 1, config) ||
+                        (range.head < tr.state.doc.length && matchBrackets(tr.state, range.head + 1, -1, config))));
             if (match)
                 decorations = decorations.concat(config.renderMatch(match, tr.state));
         }
@@ -20069,1069 +20190,7 @@ a node, a ‘handle’—the part of the node that is highlighted, and
 that the cursor must be on to activate highlighting in the first
 place.
 */
-const bracketMatchingHandle$2 = /*@__PURE__*/new NodeProp();
-function matchingNodes$1(node, dir, brackets) {
-    let byProp = node.prop(dir < 0 ? NodeProp.openedBy : NodeProp.closedBy);
-    if (byProp)
-        return byProp;
-    if (node.name.length == 1) {
-        let index = brackets.indexOf(node.name);
-        if (index > -1 && index % 2 == (dir < 0 ? 1 : 0))
-            return [brackets[index + dir]];
-    }
-    return null;
-}
-function findHandle$1(node) {
-    let hasHandle = node.type.prop(bracketMatchingHandle$2);
-    return hasHandle ? hasHandle(node.node) : node;
-}
-/**
-Find the matching bracket for the token at `pos`, scanning
-direction `dir`. Only the `brackets` and `maxScanDistance`
-properties are used from `config`, if given. Returns null if no
-bracket was found at `pos`, or a match result otherwise.
-*/
-function matchBrackets$1(state, pos, dir, config = {}) {
-    let maxScanDistance = config.maxScanDistance || DefaultScanDist$1, brackets = config.brackets || DefaultBrackets$1;
-    let tree = syntaxTree$6(state), node = tree.resolveInner(pos, dir);
-    for (let cur = node; cur; cur = cur.parent) {
-        let matches = matchingNodes$1(cur.type, dir, brackets);
-        if (matches && cur.from < cur.to) {
-            let handle = findHandle$1(cur);
-            if (handle && (dir > 0 ? pos >= handle.from && pos < handle.to : pos > handle.from && pos <= handle.to))
-                return matchMarkedBrackets$1(state, pos, dir, cur, handle, matches, brackets);
-        }
-    }
-    return matchPlainBrackets$1(state, pos, dir, tree, node.type, maxScanDistance, brackets);
-}
-function matchMarkedBrackets$1(_state, _pos, dir, token, handle, matching, brackets) {
-    let parent = token.parent, firstToken = { from: handle.from, to: handle.to };
-    let depth = 0, cursor = parent === null || parent === void 0 ? void 0 : parent.cursor();
-    if (cursor && (dir < 0 ? cursor.childBefore(token.from) : cursor.childAfter(token.to)))
-        do {
-            if (dir < 0 ? cursor.to <= token.from : cursor.from >= token.to) {
-                if (depth == 0 && matching.indexOf(cursor.type.name) > -1 && cursor.from < cursor.to) {
-                    let endHandle = findHandle$1(cursor);
-                    return { start: firstToken, end: endHandle ? { from: endHandle.from, to: endHandle.to } : undefined, matched: true };
-                }
-                else if (matchingNodes$1(cursor.type, dir, brackets)) {
-                    depth++;
-                }
-                else if (matchingNodes$1(cursor.type, -dir, brackets)) {
-                    if (depth == 0) {
-                        let endHandle = findHandle$1(cursor);
-                        return {
-                            start: firstToken,
-                            end: endHandle && endHandle.from < endHandle.to ? { from: endHandle.from, to: endHandle.to } : undefined,
-                            matched: false
-                        };
-                    }
-                    depth--;
-                }
-            }
-        } while (dir < 0 ? cursor.prevSibling() : cursor.nextSibling());
-    return { start: firstToken, matched: false };
-}
-function matchPlainBrackets$1(state, pos, dir, tree, tokenType, maxScanDistance, brackets) {
-    let startCh = dir < 0 ? state.sliceDoc(pos - 1, pos) : state.sliceDoc(pos, pos + 1);
-    let bracket = brackets.indexOf(startCh);
-    if (bracket < 0 || (bracket % 2 == 0) != (dir > 0))
-        return null;
-    let startToken = { from: dir < 0 ? pos - 1 : pos, to: dir > 0 ? pos + 1 : pos };
-    let iter = state.doc.iterRange(pos, dir > 0 ? state.doc.length : 0), depth = 0;
-    for (let distance = 0; !(iter.next()).done && distance <= maxScanDistance;) {
-        let text = iter.value;
-        if (dir < 0)
-            distance += text.length;
-        let basePos = pos + distance * dir;
-        for (let pos = dir > 0 ? 0 : text.length - 1, end = dir > 0 ? text.length : -1; pos != end; pos += dir) {
-            let found = brackets.indexOf(text[pos]);
-            if (found < 0 || tree.resolveInner(basePos + pos, 1).type != tokenType)
-                continue;
-            if ((found % 2 == 0) == (dir > 0)) {
-                depth++;
-            }
-            else if (depth == 1) { // Closing
-                return { start: startToken, end: { from: basePos + pos, to: basePos + pos + 1 }, matched: (found >> 1) == (bracket >> 1) };
-            }
-            else {
-                depth--;
-            }
-        }
-        if (dir > 0)
-            distance += text.length;
-    }
-    return iter.done ? { start: startToken, matched: false } : null;
-}
-const noTokens$6 = /*@__PURE__*/Object.create(null);
-const typeArray$6 = [NodeType.none];
-const warned$6 = [];
-// Cache of node types by name and tags
-const byTag$6 = /*@__PURE__*/Object.create(null);
-const defaultTable$6 = /*@__PURE__*/Object.create(null);
-for (let [legacyName, name] of [
-    ["variable", "variableName"],
-    ["variable-2", "variableName.special"],
-    ["string-2", "string.special"],
-    ["def", "variableName.definition"],
-    ["tag", "tagName"],
-    ["attribute", "attributeName"],
-    ["type", "typeName"],
-    ["builtin", "variableName.standard"],
-    ["qualifier", "modifier"],
-    ["error", "invalid"],
-    ["header", "heading"],
-    ["property", "propertyName"]
-])
-    defaultTable$6[legacyName] = /*@__PURE__*/createTokenType$6(noTokens$6, name);
-function warnForPart$6(part, msg) {
-    if (warned$6.indexOf(part) > -1)
-        return;
-    warned$6.push(part);
-    console.warn(msg);
-}
-function createTokenType$6(extra, tagStr) {
-    let tags$1$1 = [];
-    for (let name of tagStr.split(" ")) {
-        let found = [];
-        for (let part of name.split(".")) {
-            let value = (extra[part] || tags$1[part]);
-            if (!value) {
-                warnForPart$6(part, `Unknown highlighting tag ${part}`);
-            }
-            else if (typeof value == "function") {
-                if (!found.length)
-                    warnForPart$6(part, `Modifier ${part} used at start of tag`);
-                else
-                    found = found.map(value);
-            }
-            else {
-                if (found.length)
-                    warnForPart$6(part, `Tag ${part} used as modifier`);
-                else
-                    found = Array.isArray(value) ? value : [value];
-            }
-        }
-        for (let tag of found)
-            tags$1$1.push(tag);
-    }
-    if (!tags$1$1.length)
-        return 0;
-    let name = tagStr.replace(/ /g, "_"), key = name + " " + tags$1$1.map(t => t.id);
-    let known = byTag$6[key];
-    if (known)
-        return known.id;
-    let type = byTag$6[key] = NodeType.define({
-        id: typeArray$6.length,
-        name,
-        props: [styleTags({ [name]: tags$1$1 })]
-    });
-    typeArray$6.push(type);
-    return type.id;
-}
-({
-    rtl: /*@__PURE__*/Decoration.mark({ class: "cm-iso", inclusive: true, attributes: { dir: "rtl" }, bidiIsolate: Direction.RTL }),
-    ltr: /*@__PURE__*/Decoration.mark({ class: "cm-iso", inclusive: true, attributes: { dir: "ltr" }, bidiIsolate: Direction.LTR })});
-
-var _a$5;
-/**
-Node prop stored in a parser's top syntax node to provide the
-facet that stores language-specific data for that language.
-*/
-const languageDataProp$5 = /*@__PURE__*/new NodeProp();
-/**
-Syntax node prop used to register sublanguages. Should be added to
-the top level node type for the language.
-*/
-const sublanguageProp$5 = /*@__PURE__*/new NodeProp();
-/**
-A language object manages parsing and per-language
-[metadata](https://codemirror.net/6/docs/ref/#state.EditorState.languageDataAt). Parse data is
-managed as a [Lezer](https://lezer.codemirror.net) tree. The class
-can be used directly, via the [`LRLanguage`](https://codemirror.net/6/docs/ref/#language.LRLanguage)
-subclass for [Lezer](https://lezer.codemirror.net/) LR parsers, or
-via the [`StreamLanguage`](https://codemirror.net/6/docs/ref/#language.StreamLanguage) subclass
-for stream parsers.
-*/
-let Language$5 = class Language {
-    /**
-    Construct a language object. If you need to invoke this
-    directly, first define a data facet with
-    [`defineLanguageFacet`](https://codemirror.net/6/docs/ref/#language.defineLanguageFacet), and then
-    configure your parser to [attach](https://codemirror.net/6/docs/ref/#language.languageDataProp) it
-    to the language's outer syntax node.
-    */
-    constructor(
-    /**
-    The [language data](https://codemirror.net/6/docs/ref/#state.EditorState.languageDataAt) facet
-    used for this language.
-    */
-    data, parser, extraExtensions = [], 
-    /**
-    A language name.
-    */
-    name = "") {
-        this.data = data;
-        this.name = name;
-        // Kludge to define EditorState.tree as a debugging helper,
-        // without the EditorState package actually knowing about
-        // languages and lezer trees.
-        if (!EditorState.prototype.hasOwnProperty("tree"))
-            Object.defineProperty(EditorState.prototype, "tree", { get() { return syntaxTree$5(this); } });
-        this.parser = parser;
-        this.extension = [
-            language$5.of(this),
-            EditorState.languageData.of((state, pos, side) => {
-                let top = topNodeAt$5(state, pos, side), data = top.type.prop(languageDataProp$5);
-                if (!data)
-                    return [];
-                let base = state.facet(data), sub = top.type.prop(sublanguageProp$5);
-                if (sub) {
-                    let innerNode = top.resolve(pos - top.from, side);
-                    for (let sublang of sub)
-                        if (sublang.test(innerNode, state)) {
-                            let data = state.facet(sublang.facet);
-                            return sublang.type == "replace" ? data : data.concat(base);
-                        }
-                }
-                return base;
-            })
-        ].concat(extraExtensions);
-    }
-    /**
-    Query whether this language is active at the given position.
-    */
-    isActiveAt(state, pos, side = -1) {
-        return topNodeAt$5(state, pos, side).type.prop(languageDataProp$5) == this.data;
-    }
-    /**
-    Find the document regions that were parsed using this language.
-    The returned regions will _include_ any nested languages rooted
-    in this language, when those exist.
-    */
-    findRegions(state) {
-        let lang = state.facet(language$5);
-        if ((lang === null || lang === void 0 ? void 0 : lang.data) == this.data)
-            return [{ from: 0, to: state.doc.length }];
-        if (!lang || !lang.allowsNesting)
-            return [];
-        let result = [];
-        let explore = (tree, from) => {
-            if (tree.prop(languageDataProp$5) == this.data) {
-                result.push({ from, to: from + tree.length });
-                return;
-            }
-            let mount = tree.prop(NodeProp.mounted);
-            if (mount) {
-                if (mount.tree.prop(languageDataProp$5) == this.data) {
-                    if (mount.overlay)
-                        for (let r of mount.overlay)
-                            result.push({ from: r.from + from, to: r.to + from });
-                    else
-                        result.push({ from: from, to: from + tree.length });
-                    return;
-                }
-                else if (mount.overlay) {
-                    let size = result.length;
-                    explore(mount.tree, mount.overlay[0].from + from);
-                    if (result.length > size)
-                        return;
-                }
-            }
-            for (let i = 0; i < tree.children.length; i++) {
-                let ch = tree.children[i];
-                if (ch instanceof Tree)
-                    explore(ch, tree.positions[i] + from);
-            }
-        };
-        explore(syntaxTree$5(state), 0);
-        return result;
-    }
-    /**
-    Indicates whether this language allows nested languages. The
-    default implementation returns true.
-    */
-    get allowsNesting() { return true; }
-};
-/**
-@internal
-*/
-Language$5.setState = /*@__PURE__*/StateEffect.define();
-function topNodeAt$5(state, pos, side) {
-    let topLang = state.facet(language$5), tree = syntaxTree$5(state).topNode;
-    if (!topLang || topLang.allowsNesting) {
-        for (let node = tree; node; node = node.enter(pos, side, IterMode.ExcludeBuffers))
-            if (node.type.isTop)
-                tree = node;
-    }
-    return tree;
-}
-/**
-Get the syntax tree for a state, which is the current (possibly
-incomplete) parse tree of the active
-[language](https://codemirror.net/6/docs/ref/#language.Language), or the empty tree if there is no
-language available.
-*/
-function syntaxTree$5(state) {
-    let field = state.field(Language$5.state, false);
-    return field ? field.tree : Tree.empty;
-}
-/**
-Lezer-style
-[`Input`](https://lezer.codemirror.net/docs/ref#common.Input)
-object for a [`Text`](https://codemirror.net/6/docs/ref/#state.Text) object.
-*/
-let DocInput$5 = class DocInput {
-    /**
-    Create an input object for the given document.
-    */
-    constructor(doc) {
-        this.doc = doc;
-        this.cursorPos = 0;
-        this.string = "";
-        this.cursor = doc.iter();
-    }
-    get length() { return this.doc.length; }
-    syncTo(pos) {
-        this.string = this.cursor.next(pos - this.cursorPos).value;
-        this.cursorPos = pos + this.string.length;
-        return this.cursorPos - this.string.length;
-    }
-    chunk(pos) {
-        this.syncTo(pos);
-        return this.string;
-    }
-    get lineChunks() { return true; }
-    read(from, to) {
-        let stringStart = this.cursorPos - this.string.length;
-        if (from < stringStart || to >= this.cursorPos)
-            return this.doc.sliceString(from, to);
-        else
-            return this.string.slice(from - stringStart, to - stringStart);
-    }
-};
-let currentContext$5 = null;
-/**
-A parse context provided to parsers working on the editor content.
-*/
-let ParseContext$5 = class ParseContext {
-    constructor(parser, 
-    /**
-    The current editor state.
-    */
-    state, 
-    /**
-    Tree fragments that can be reused by incremental re-parses.
-    */
-    fragments = [], 
-    /**
-    @internal
-    */
-    tree, 
-    /**
-    @internal
-    */
-    treeLen, 
-    /**
-    The current editor viewport (or some overapproximation
-    thereof). Intended to be used for opportunistically avoiding
-    work (in which case
-    [`skipUntilInView`](https://codemirror.net/6/docs/ref/#language.ParseContext.skipUntilInView)
-    should be called to make sure the parser is restarted when the
-    skipped region becomes visible).
-    */
-    viewport, 
-    /**
-    @internal
-    */
-    skipped, 
-    /**
-    This is where skipping parsers can register a promise that,
-    when resolved, will schedule a new parse. It is cleared when
-    the parse worker picks up the promise. @internal
-    */
-    scheduleOn) {
-        this.parser = parser;
-        this.state = state;
-        this.fragments = fragments;
-        this.tree = tree;
-        this.treeLen = treeLen;
-        this.viewport = viewport;
-        this.skipped = skipped;
-        this.scheduleOn = scheduleOn;
-        this.parse = null;
-        /**
-        @internal
-        */
-        this.tempSkipped = [];
-    }
-    /**
-    @internal
-    */
-    static create(parser, state, viewport) {
-        return new ParseContext(parser, state, [], Tree.empty, 0, viewport, [], null);
-    }
-    startParse() {
-        return this.parser.startParse(new DocInput$5(this.state.doc), this.fragments);
-    }
-    /**
-    @internal
-    */
-    work(until, upto) {
-        if (upto != null && upto >= this.state.doc.length)
-            upto = undefined;
-        if (this.tree != Tree.empty && this.isDone(upto !== null && upto !== void 0 ? upto : this.state.doc.length)) {
-            this.takeTree();
-            return true;
-        }
-        return this.withContext(() => {
-            var _a;
-            if (typeof until == "number") {
-                let endTime = Date.now() + until;
-                until = () => Date.now() > endTime;
-            }
-            if (!this.parse)
-                this.parse = this.startParse();
-            if (upto != null && (this.parse.stoppedAt == null || this.parse.stoppedAt > upto) &&
-                upto < this.state.doc.length)
-                this.parse.stopAt(upto);
-            for (;;) {
-                let done = this.parse.advance();
-                if (done) {
-                    this.fragments = this.withoutTempSkipped(TreeFragment.addTree(done, this.fragments, this.parse.stoppedAt != null));
-                    this.treeLen = (_a = this.parse.stoppedAt) !== null && _a !== void 0 ? _a : this.state.doc.length;
-                    this.tree = done;
-                    this.parse = null;
-                    if (this.treeLen < (upto !== null && upto !== void 0 ? upto : this.state.doc.length))
-                        this.parse = this.startParse();
-                    else
-                        return true;
-                }
-                if (until())
-                    return false;
-            }
-        });
-    }
-    /**
-    @internal
-    */
-    takeTree() {
-        let pos, tree;
-        if (this.parse && (pos = this.parse.parsedPos) >= this.treeLen) {
-            if (this.parse.stoppedAt == null || this.parse.stoppedAt > pos)
-                this.parse.stopAt(pos);
-            this.withContext(() => { while (!(tree = this.parse.advance())) { } });
-            this.treeLen = pos;
-            this.tree = tree;
-            this.fragments = this.withoutTempSkipped(TreeFragment.addTree(this.tree, this.fragments, true));
-            this.parse = null;
-        }
-    }
-    withContext(f) {
-        let prev = currentContext$5;
-        currentContext$5 = this;
-        try {
-            return f();
-        }
-        finally {
-            currentContext$5 = prev;
-        }
-    }
-    withoutTempSkipped(fragments) {
-        for (let r; r = this.tempSkipped.pop();)
-            fragments = cutFragments$5(fragments, r.from, r.to);
-        return fragments;
-    }
-    /**
-    @internal
-    */
-    changes(changes, newState) {
-        let { fragments, tree, treeLen, viewport, skipped } = this;
-        this.takeTree();
-        if (!changes.empty) {
-            let ranges = [];
-            changes.iterChangedRanges((fromA, toA, fromB, toB) => ranges.push({ fromA, toA, fromB, toB }));
-            fragments = TreeFragment.applyChanges(fragments, ranges);
-            tree = Tree.empty;
-            treeLen = 0;
-            viewport = { from: changes.mapPos(viewport.from, -1), to: changes.mapPos(viewport.to, 1) };
-            if (this.skipped.length) {
-                skipped = [];
-                for (let r of this.skipped) {
-                    let from = changes.mapPos(r.from, 1), to = changes.mapPos(r.to, -1);
-                    if (from < to)
-                        skipped.push({ from, to });
-                }
-            }
-        }
-        return new ParseContext(this.parser, newState, fragments, tree, treeLen, viewport, skipped, this.scheduleOn);
-    }
-    /**
-    @internal
-    */
-    updateViewport(viewport) {
-        if (this.viewport.from == viewport.from && this.viewport.to == viewport.to)
-            return false;
-        this.viewport = viewport;
-        let startLen = this.skipped.length;
-        for (let i = 0; i < this.skipped.length; i++) {
-            let { from, to } = this.skipped[i];
-            if (from < viewport.to && to > viewport.from) {
-                this.fragments = cutFragments$5(this.fragments, from, to);
-                this.skipped.splice(i--, 1);
-            }
-        }
-        if (this.skipped.length >= startLen)
-            return false;
-        this.reset();
-        return true;
-    }
-    /**
-    @internal
-    */
-    reset() {
-        if (this.parse) {
-            this.takeTree();
-            this.parse = null;
-        }
-    }
-    /**
-    Notify the parse scheduler that the given region was skipped
-    because it wasn't in view, and the parse should be restarted
-    when it comes into view.
-    */
-    skipUntilInView(from, to) {
-        this.skipped.push({ from, to });
-    }
-    /**
-    Returns a parser intended to be used as placeholder when
-    asynchronously loading a nested parser. It'll skip its input and
-    mark it as not-really-parsed, so that the next update will parse
-    it again.
-    
-    When `until` is given, a reparse will be scheduled when that
-    promise resolves.
-    */
-    static getSkippingParser(until) {
-        return new class extends Parser {
-            createParse(input, fragments, ranges) {
-                let from = ranges[0].from, to = ranges[ranges.length - 1].to;
-                let parser = {
-                    parsedPos: from,
-                    advance() {
-                        let cx = currentContext$5;
-                        if (cx) {
-                            for (let r of ranges)
-                                cx.tempSkipped.push(r);
-                            if (until)
-                                cx.scheduleOn = cx.scheduleOn ? Promise.all([cx.scheduleOn, until]) : until;
-                        }
-                        this.parsedPos = to;
-                        return new Tree(NodeType.none, [], [], to - from);
-                    },
-                    stoppedAt: null,
-                    stopAt() { }
-                };
-                return parser;
-            }
-        };
-    }
-    /**
-    @internal
-    */
-    isDone(upto) {
-        upto = Math.min(upto, this.state.doc.length);
-        let frags = this.fragments;
-        return this.treeLen >= upto && frags.length && frags[0].from == 0 && frags[0].to >= upto;
-    }
-    /**
-    Get the context for the current parse, or `null` if no editor
-    parse is in progress.
-    */
-    static get() { return currentContext$5; }
-};
-function cutFragments$5(fragments, from, to) {
-    return TreeFragment.applyChanges(fragments, [{ fromA: from, toA: to, fromB: from, toB: to }]);
-}
-let LanguageState$5 = class LanguageState {
-    constructor(
-    // A mutable parse state that is used to preserve work done during
-    // the lifetime of a state when moving to the next state.
-    context) {
-        this.context = context;
-        this.tree = context.tree;
-    }
-    apply(tr) {
-        if (!tr.docChanged && this.tree == this.context.tree)
-            return this;
-        let newCx = this.context.changes(tr.changes, tr.state);
-        // If the previous parse wasn't done, go forward only up to its
-        // end position or the end of the viewport, to avoid slowing down
-        // state updates with parse work beyond the viewport.
-        let upto = this.context.treeLen == tr.startState.doc.length ? undefined
-            : Math.max(tr.changes.mapPos(this.context.treeLen), newCx.viewport.to);
-        if (!newCx.work(20 /* Work.Apply */, upto))
-            newCx.takeTree();
-        return new LanguageState(newCx);
-    }
-    static init(state) {
-        let vpTo = Math.min(3000 /* Work.InitViewport */, state.doc.length);
-        let parseState = ParseContext$5.create(state.facet(language$5).parser, state, { from: 0, to: vpTo });
-        if (!parseState.work(20 /* Work.Apply */, vpTo))
-            parseState.takeTree();
-        return new LanguageState(parseState);
-    }
-};
-Language$5.state = /*@__PURE__*/StateField.define({
-    create: LanguageState$5.init,
-    update(value, tr) {
-        for (let e of tr.effects)
-            if (e.is(Language$5.setState))
-                return e.value;
-        if (tr.startState.facet(language$5) != tr.state.facet(language$5))
-            return LanguageState$5.init(tr.state);
-        return value.apply(tr);
-    }
-});
-let requestIdle$5 = (callback) => {
-    let timeout = setTimeout(() => callback(), 500 /* Work.MaxPause */);
-    return () => clearTimeout(timeout);
-};
-if (typeof requestIdleCallback != "undefined")
-    requestIdle$5 = (callback) => {
-        let idle = -1, timeout = setTimeout(() => {
-            idle = requestIdleCallback(callback, { timeout: 500 /* Work.MaxPause */ - 100 /* Work.MinPause */ });
-        }, 100 /* Work.MinPause */);
-        return () => idle < 0 ? clearTimeout(timeout) : cancelIdleCallback(idle);
-    };
-const isInputPending$5 = typeof navigator != "undefined" && ((_a$5 = navigator.scheduling) === null || _a$5 === void 0 ? void 0 : _a$5.isInputPending)
-    ? () => navigator.scheduling.isInputPending() : null;
-const parseWorker$5 = /*@__PURE__*/ViewPlugin.fromClass(class ParseWorker {
-    constructor(view) {
-        this.view = view;
-        this.working = null;
-        this.workScheduled = 0;
-        // End of the current time chunk
-        this.chunkEnd = -1;
-        // Milliseconds of budget left for this chunk
-        this.chunkBudget = -1;
-        this.work = this.work.bind(this);
-        this.scheduleWork();
-    }
-    update(update) {
-        let cx = this.view.state.field(Language$5.state).context;
-        if (cx.updateViewport(update.view.viewport) || this.view.viewport.to > cx.treeLen)
-            this.scheduleWork();
-        if (update.docChanged || update.selectionSet) {
-            if (this.view.hasFocus)
-                this.chunkBudget += 50 /* Work.ChangeBonus */;
-            this.scheduleWork();
-        }
-        this.checkAsyncSchedule(cx);
-    }
-    scheduleWork() {
-        if (this.working)
-            return;
-        let { state } = this.view, field = state.field(Language$5.state);
-        if (field.tree != field.context.tree || !field.context.isDone(state.doc.length))
-            this.working = requestIdle$5(this.work);
-    }
-    work(deadline) {
-        this.working = null;
-        let now = Date.now();
-        if (this.chunkEnd < now && (this.chunkEnd < 0 || this.view.hasFocus)) { // Start a new chunk
-            this.chunkEnd = now + 30000 /* Work.ChunkTime */;
-            this.chunkBudget = 3000 /* Work.ChunkBudget */;
-        }
-        if (this.chunkBudget <= 0)
-            return; // No more budget
-        let { state, viewport: { to: vpTo } } = this.view, field = state.field(Language$5.state);
-        if (field.tree == field.context.tree && field.context.isDone(vpTo + 100000 /* Work.MaxParseAhead */))
-            return;
-        let endTime = Date.now() + Math.min(this.chunkBudget, 100 /* Work.Slice */, deadline && !isInputPending$5 ? Math.max(25 /* Work.MinSlice */, deadline.timeRemaining() - 5) : 1e9);
-        let viewportFirst = field.context.treeLen < vpTo && state.doc.length > vpTo + 1000;
-        let done = field.context.work(() => {
-            return isInputPending$5 && isInputPending$5() || Date.now() > endTime;
-        }, vpTo + (viewportFirst ? 0 : 100000 /* Work.MaxParseAhead */));
-        this.chunkBudget -= Date.now() - now;
-        if (done || this.chunkBudget <= 0) {
-            field.context.takeTree();
-            this.view.dispatch({ effects: Language$5.setState.of(new LanguageState$5(field.context)) });
-        }
-        if (this.chunkBudget > 0 && !(done && !viewportFirst))
-            this.scheduleWork();
-        this.checkAsyncSchedule(field.context);
-    }
-    checkAsyncSchedule(cx) {
-        if (cx.scheduleOn) {
-            this.workScheduled++;
-            cx.scheduleOn
-                .then(() => this.scheduleWork())
-                .catch(err => logException(this.view.state, err))
-                .then(() => this.workScheduled--);
-            cx.scheduleOn = null;
-        }
-    }
-    destroy() {
-        if (this.working)
-            this.working();
-    }
-    isWorking() {
-        return !!(this.working || this.workScheduled > 0);
-    }
-}, {
-    eventHandlers: { focus() { this.scheduleWork(); } }
-});
-/**
-The facet used to associate a language with an editor state. Used
-by `Language` object's `extension` property (so you don't need to
-manually wrap your languages in this). Can be used to access the
-current language on a state.
-*/
-const language$5 = /*@__PURE__*/Facet.define({
-    combine(languages) { return languages.length ? languages[0] : null; },
-    enables: language => [
-        Language$5.state,
-        parseWorker$5,
-        EditorView.contentAttributes.compute([language], state => {
-            let lang = state.facet(language);
-            return lang && lang.name ? { "data-language": lang.name } : {};
-        })
-    ]
-});
-
-/**
-Facet that defines a way to provide a function that computes the
-appropriate indentation depth, as a column number (see
-[`indentString`](https://codemirror.net/6/docs/ref/#language.indentString)), at the start of a given
-line. A return value of `null` indicates no indentation can be
-determined, and the line should inherit the indentation of the one
-above it. A return value of `undefined` defers to the next indent
-service.
-*/
-const indentService = /*@__PURE__*/Facet.define();
-/**
-Facet for overriding the unit by which indentation happens. Should
-be a string consisting either entirely of the same whitespace
-character. When not set, this defaults to 2 spaces.
-*/
-const indentUnit$2 = /*@__PURE__*/Facet.define({
-    combine: values => {
-        if (!values.length)
-            return "  ";
-        let unit = values[0];
-        if (!unit || /\S/.test(unit) || Array.from(unit).some(e => e != unit[0]))
-            throw new Error("Invalid indent unit: " + JSON.stringify(values[0]));
-        return unit;
-    }
-});
-/**
-Return the _column width_ of an indent unit in the state.
-Determined by the [`indentUnit`](https://codemirror.net/6/docs/ref/#language.indentUnit)
-facet, and [`tabSize`](https://codemirror.net/6/docs/ref/#state.EditorState^tabSize) when that
-contains tabs.
-*/
-function getIndentUnit$1(state) {
-    let unit = state.facet(indentUnit$2);
-    return unit.charCodeAt(0) == 9 ? state.tabSize * unit.length : unit.length;
-}
-/**
-Create an indentation string that covers columns 0 to `cols`.
-Will use tabs for as much of the columns as possible when the
-[`indentUnit`](https://codemirror.net/6/docs/ref/#language.indentUnit) facet contains
-tabs.
-*/
-function indentString(state, cols) {
-    let result = "", ts = state.tabSize, ch = state.facet(indentUnit$2)[0];
-    if (ch == "\t") {
-        while (cols >= ts) {
-            result += "\t";
-            cols -= ts;
-        }
-        ch = " ";
-    }
-    for (let i = 0; i < cols; i++)
-        result += ch;
-    return result;
-}
-/**
-Get the indentation, as a column number, at the given position.
-Will first consult any [indent services](https://codemirror.net/6/docs/ref/#language.indentService)
-that are registered, and if none of those return an indentation,
-this will check the syntax tree for the [indent node
-prop](https://codemirror.net/6/docs/ref/#language.indentNodeProp) and use that if found. Returns a
-number when an indentation could be determined, and null
-otherwise.
-*/
-function getIndentation(context, pos) {
-    if (context instanceof EditorState)
-        context = new IndentContext(context);
-    for (let service of context.state.facet(indentService)) {
-        let result = service(context, pos);
-        if (result !== undefined)
-            return result;
-    }
-    let tree = syntaxTree$5(context.state);
-    return tree.length >= pos ? syntaxIndentation(context, tree, pos) : null;
-}
-/**
-Indentation contexts are used when calling [indentation
-services](https://codemirror.net/6/docs/ref/#language.indentService). They provide helper utilities
-useful in indentation logic, and can selectively override the
-indentation reported for some lines.
-*/
-class IndentContext {
-    /**
-    Create an indent context.
-    */
-    constructor(
-    /**
-    The editor state.
-    */
-    state, 
-    /**
-    @internal
-    */
-    options = {}) {
-        this.state = state;
-        this.options = options;
-        this.unit = getIndentUnit$1(state);
-    }
-    /**
-    Get a description of the line at the given position, taking
-    [simulated line
-    breaks](https://codemirror.net/6/docs/ref/#language.IndentContext.constructor^options.simulateBreak)
-    into account. If there is such a break at `pos`, the `bias`
-    argument determines whether the part of the line line before or
-    after the break is used.
-    */
-    lineAt(pos, bias = 1) {
-        let line = this.state.doc.lineAt(pos);
-        let { simulateBreak, simulateDoubleBreak } = this.options;
-        if (simulateBreak != null && simulateBreak >= line.from && simulateBreak <= line.to) {
-            if (simulateDoubleBreak && simulateBreak == pos)
-                return { text: "", from: pos };
-            else if (bias < 0 ? simulateBreak < pos : simulateBreak <= pos)
-                return { text: line.text.slice(simulateBreak - line.from), from: simulateBreak };
-            else
-                return { text: line.text.slice(0, simulateBreak - line.from), from: line.from };
-        }
-        return line;
-    }
-    /**
-    Get the text directly after `pos`, either the entire line
-    or the next 100 characters, whichever is shorter.
-    */
-    textAfterPos(pos, bias = 1) {
-        if (this.options.simulateDoubleBreak && pos == this.options.simulateBreak)
-            return "";
-        let { text, from } = this.lineAt(pos, bias);
-        return text.slice(pos - from, Math.min(text.length, pos + 100 - from));
-    }
-    /**
-    Find the column for the given position.
-    */
-    column(pos, bias = 1) {
-        let { text, from } = this.lineAt(pos, bias);
-        let result = this.countColumn(text, pos - from);
-        let override = this.options.overrideIndentation ? this.options.overrideIndentation(from) : -1;
-        if (override > -1)
-            result += override - this.countColumn(text, text.search(/\S|$/));
-        return result;
-    }
-    /**
-    Find the column position (taking tabs into account) of the given
-    position in the given string.
-    */
-    countColumn(line, pos = line.length) {
-        return countColumn(line, this.state.tabSize, pos);
-    }
-    /**
-    Find the indentation column of the line at the given point.
-    */
-    lineIndent(pos, bias = 1) {
-        let { text, from } = this.lineAt(pos, bias);
-        let override = this.options.overrideIndentation;
-        if (override) {
-            let overriden = override(from);
-            if (overriden > -1)
-                return overriden;
-        }
-        return this.countColumn(text, text.search(/\S|$/));
-    }
-    /**
-    Returns the [simulated line
-    break](https://codemirror.net/6/docs/ref/#language.IndentContext.constructor^options.simulateBreak)
-    for this context, if any.
-    */
-    get simulatedBreak() {
-        return this.options.simulateBreak || null;
-    }
-}
-/**
-A syntax tree node prop used to associate indentation strategies
-with node types. Such a strategy is a function from an indentation
-context to a column number (see also
-[`indentString`](https://codemirror.net/6/docs/ref/#language.indentString)) or null, where null
-indicates that no definitive indentation can be determined.
-*/
-const indentNodeProp$4 = /*@__PURE__*/new NodeProp();
-// Compute the indentation for a given position from the syntax tree.
-function syntaxIndentation(cx, ast, pos) {
-    let stack = ast.resolveStack(pos);
-    let inner = ast.resolveInner(pos, -1).resolve(pos, 0).enterUnfinishedNodesBefore(pos);
-    if (inner != stack.node) {
-        let add = [];
-        for (let cur = inner; cur && !(cur.from == stack.node.from && cur.type == stack.node.type); cur = cur.parent)
-            add.push(cur);
-        for (let i = add.length - 1; i >= 0; i--)
-            stack = { node: add[i], next: stack };
-    }
-    return indentFor(stack, cx, pos);
-}
-function indentFor(stack, cx, pos) {
-    for (let cur = stack; cur; cur = cur.next) {
-        let strategy = indentStrategy(cur.node);
-        if (strategy)
-            return strategy(TreeIndentContext.create(cx, pos, cur));
-    }
-    return 0;
-}
-function ignoreClosed(cx) {
-    return cx.pos == cx.options.simulateBreak && cx.options.simulateDoubleBreak;
-}
-function indentStrategy(tree) {
-    let strategy = tree.type.prop(indentNodeProp$4);
-    if (strategy)
-        return strategy;
-    let first = tree.firstChild, close;
-    if (first && (close = first.type.prop(NodeProp.closedBy))) {
-        let last = tree.lastChild, closed = last && close.indexOf(last.name) > -1;
-        return cx => delimitedStrategy$1(cx, true, 1, undefined, closed && !ignoreClosed(cx) ? last.from : undefined);
-    }
-    return tree.parent == null ? topIndent : null;
-}
-function topIndent() { return 0; }
-/**
-Objects of this type provide context information and helper
-methods to indentation functions registered on syntax nodes.
-*/
-class TreeIndentContext extends IndentContext {
-    constructor(base, 
-    /**
-    The position at which indentation is being computed.
-    */
-    pos, 
-    /**
-    @internal
-    */
-    context) {
-        super(base.state, base.options);
-        this.base = base;
-        this.pos = pos;
-        this.context = context;
-    }
-    /**
-    The syntax tree node to which the indentation strategy
-    applies.
-    */
-    get node() { return this.context.node; }
-    /**
-    @internal
-    */
-    static create(base, pos, context) {
-        return new TreeIndentContext(base, pos, context);
-    }
-    /**
-    Get the text directly after `this.pos`, either the entire line
-    or the next 100 characters, whichever is shorter.
-    */
-    get textAfter() {
-        return this.textAfterPos(this.pos);
-    }
-    /**
-    Get the indentation at the reference line for `this.node`, which
-    is the line on which it starts, unless there is a node that is
-    _not_ a parent of this node covering the start of that line. If
-    so, the line at the start of that node is tried, again skipping
-    on if it is covered by another such node.
-    */
-    get baseIndent() {
-        return this.baseIndentFor(this.node);
-    }
-    /**
-    Get the indentation for the reference line of the given node
-    (see [`baseIndent`](https://codemirror.net/6/docs/ref/#language.TreeIndentContext.baseIndent)).
-    */
-    baseIndentFor(node) {
-        let line = this.state.doc.lineAt(node.from);
-        // Skip line starts that are covered by a sibling (or cousin, etc)
-        for (;;) {
-            let atBreak = node.resolve(line.from);
-            while (atBreak.parent && atBreak.parent.from == atBreak.from)
-                atBreak = atBreak.parent;
-            if (isParent(atBreak, node))
-                break;
-            line = this.state.doc.lineAt(atBreak.from);
-        }
-        return this.lineIndent(line.from);
-    }
-    /**
-    Continue looking for indentations in the node's parent nodes,
-    and return the result of that.
-    */
-    continue() {
-        return indentFor(this.context.next, this.base, this.pos);
-    }
-}
-function isParent(parent, of) {
-    for (let cur = of; cur; cur = cur.parent)
-        if (parent == cur)
-            return true;
-    return false;
-}
-// Check whether a delimited node is aligned (meaning there are
-// non-skipped nodes on the same line as the opening delimiter). And
-// if so, return the opening token.
-function bracketedAligned$1(context) {
-    let tree = context.node;
-    let openToken = tree.childAfter(tree.from), last = tree.lastChild;
-    if (!openToken)
-        return null;
-    let sim = context.options.simulateBreak;
-    let openLine = context.state.doc.lineAt(openToken.from);
-    let lineEnd = sim == null || sim <= openLine.from ? openLine.to : Math.min(openLine.to, sim);
-    for (let pos = openToken.to;;) {
-        let next = tree.childAfter(pos);
-        if (!next || next == last)
-            return null;
-        if (!next.type.isSkipped) {
-            if (next.from >= lineEnd)
-                return null;
-            let space = /^ */.exec(openLine.text.slice(openToken.to - openLine.from))[0].length;
-            return { from: openToken.from, to: openToken.to + space };
-        }
-        pos = next.to;
-    }
-}
-function delimitedStrategy$1(context, align, units, closing, closedAt) {
-    let after = context.textAfter, space = after.match(/^\s*/)[0].length;
-    let closed = closing && after.slice(space, space + closing.length) == closing || closedAt == context.pos + space;
-    let aligned = bracketedAligned$1(context) ;
-    if (aligned)
-        return closed ? context.column(aligned.from) : context.column(aligned.to);
-    return context.baseIndent + (closed ? 0 : context.unit * units);
-}
-const DefaultScanDist = 10000, DefaultBrackets = "()[]{}";
-/**
-When larger syntax nodes, such as HTML tags, are marked as
-opening/closing, it can be a bit messy to treat the whole node as
-a matchable bracket. This node prop allows you to define, for such
-a node, a ‘handle’—the part of the node that is highlighted, and
-that the cursor must be on to activate highlighting in the first
-place.
-*/
-const bracketMatchingHandle$1 = /*@__PURE__*/new NodeProp();
+const bracketMatchingHandle = /*@__PURE__*/new NodeProp();
 function matchingNodes(node, dir, brackets) {
     let byProp = node.prop(dir < 0 ? NodeProp.openedBy : NodeProp.closedBy);
     if (byProp)
@@ -21144,7 +20203,7 @@ function matchingNodes(node, dir, brackets) {
     return null;
 }
 function findHandle(node) {
-    let hasHandle = node.type.prop(bracketMatchingHandle$1);
+    let hasHandle = node.type.prop(bracketMatchingHandle);
     return hasHandle ? hasHandle(node.node) : node;
 }
 /**
@@ -21155,7 +20214,7 @@ bracket was found at `pos`, or a match result otherwise.
 */
 function matchBrackets(state, pos, dir, config = {}) {
     let maxScanDistance = config.maxScanDistance || DefaultScanDist, brackets = config.brackets || DefaultBrackets;
-    let tree = syntaxTree$5(state), node = tree.resolveInner(pos, dir);
+    let tree = syntaxTree(state), node = tree.resolveInner(pos, dir);
     for (let cur = node; cur; cur = cur.parent) {
         let matches = matchingNodes(cur.type, dir, brackets);
         if (matches && cur.from < cur.to) {
@@ -21225,12 +20284,483 @@ function matchPlainBrackets(state, pos, dir, tree, tokenType, maxScanDistance, b
     }
     return iter.done ? { start: startToken, matched: false } : null;
 }
-const noTokens$5 = /*@__PURE__*/Object.create(null);
-const typeArray$5 = [NodeType.none];
-const warned$5 = [];
+
+// Counts the column offset in a string, taking tabs into account.
+// Used mostly to find indentation.
+function countCol(string, end, tabSize, startIndex = 0, startValue = 0) {
+    if (end == null) {
+        end = string.search(/[^\s\u00a0]/);
+        if (end == -1)
+            end = string.length;
+    }
+    let n = startValue;
+    for (let i = startIndex; i < end; i++) {
+        if (string.charCodeAt(i) == 9)
+            n += tabSize - (n % tabSize);
+        else
+            n++;
+    }
+    return n;
+}
+/**
+Encapsulates a single line of input. Given to stream syntax code,
+which uses it to tokenize the content.
+*/
+class StringStream {
+    /**
+    Create a stream.
+    */
+    constructor(
+    /**
+    The line.
+    */
+    string, tabSize, 
+    /**
+    The current indent unit size.
+    */
+    indentUnit, overrideIndent) {
+        this.string = string;
+        this.tabSize = tabSize;
+        this.indentUnit = indentUnit;
+        this.overrideIndent = overrideIndent;
+        /**
+        The current position on the line.
+        */
+        this.pos = 0;
+        /**
+        The start position of the current token.
+        */
+        this.start = 0;
+        this.lastColumnPos = 0;
+        this.lastColumnValue = 0;
+    }
+    /**
+    True if we are at the end of the line.
+    */
+    eol() { return this.pos >= this.string.length; }
+    /**
+    True if we are at the start of the line.
+    */
+    sol() { return this.pos == 0; }
+    /**
+    Get the next code unit after the current position, or undefined
+    if we're at the end of the line.
+    */
+    peek() { return this.string.charAt(this.pos) || undefined; }
+    /**
+    Read the next code unit and advance `this.pos`.
+    */
+    next() {
+        if (this.pos < this.string.length)
+            return this.string.charAt(this.pos++);
+    }
+    /**
+    Match the next character against the given string, regular
+    expression, or predicate. Consume and return it if it matches.
+    */
+    eat(match) {
+        let ch = this.string.charAt(this.pos);
+        let ok;
+        if (typeof match == "string")
+            ok = ch == match;
+        else
+            ok = ch && (match instanceof RegExp ? match.test(ch) : match(ch));
+        if (ok) {
+            ++this.pos;
+            return ch;
+        }
+    }
+    /**
+    Continue matching characters that match the given string,
+    regular expression, or predicate function. Return true if any
+    characters were consumed.
+    */
+    eatWhile(match) {
+        let start = this.pos;
+        while (this.eat(match)) { }
+        return this.pos > start;
+    }
+    /**
+    Consume whitespace ahead of `this.pos`. Return true if any was
+    found.
+    */
+    eatSpace() {
+        let start = this.pos;
+        while (/[\s\u00a0]/.test(this.string.charAt(this.pos)))
+            ++this.pos;
+        return this.pos > start;
+    }
+    /**
+    Move to the end of the line.
+    */
+    skipToEnd() { this.pos = this.string.length; }
+    /**
+    Move to directly before the given character, if found on the
+    current line.
+    */
+    skipTo(ch) {
+        let found = this.string.indexOf(ch, this.pos);
+        if (found > -1) {
+            this.pos = found;
+            return true;
+        }
+    }
+    /**
+    Move back `n` characters.
+    */
+    backUp(n) { this.pos -= n; }
+    /**
+    Get the column position at `this.pos`.
+    */
+    column() {
+        if (this.lastColumnPos < this.start) {
+            this.lastColumnValue = countCol(this.string, this.start, this.tabSize, this.lastColumnPos, this.lastColumnValue);
+            this.lastColumnPos = this.start;
+        }
+        return this.lastColumnValue;
+    }
+    /**
+    Get the indentation column of the current line.
+    */
+    indentation() {
+        var _a;
+        return (_a = this.overrideIndent) !== null && _a !== void 0 ? _a : countCol(this.string, null, this.tabSize);
+    }
+    /**
+    Match the input against the given string or regular expression
+    (which should start with a `^`). Return true or the regexp match
+    if it matches.
+    
+    Unless `consume` is set to `false`, this will move `this.pos`
+    past the matched text.
+    
+    When matching a string `caseInsensitive` can be set to true to
+    make the match case-insensitive.
+    */
+    match(pattern, consume, caseInsensitive) {
+        if (typeof pattern == "string") {
+            let cased = (str) => caseInsensitive ? str.toLowerCase() : str;
+            let substr = this.string.substr(this.pos, pattern.length);
+            if (cased(substr) == cased(pattern)) {
+                if (consume !== false)
+                    this.pos += pattern.length;
+                return true;
+            }
+            else
+                return null;
+        }
+        else {
+            let match = this.string.slice(this.pos).match(pattern);
+            if (match && match.index > 0)
+                return null;
+            if (match && consume !== false)
+                this.pos += match[0].length;
+            return match;
+        }
+    }
+    /**
+    Get the current token.
+    */
+    current() { return this.string.slice(this.start, this.pos); }
+}
+
+function fullParser(spec) {
+    return {
+        name: spec.name || "",
+        token: spec.token,
+        blankLine: spec.blankLine || (() => { }),
+        startState: spec.startState || (() => true),
+        copyState: spec.copyState || defaultCopyState,
+        indent: spec.indent || (() => null),
+        languageData: spec.languageData || {},
+        tokenTable: spec.tokenTable || noTokens,
+        mergeTokens: spec.mergeTokens !== false
+    };
+}
+function defaultCopyState(state) {
+    if (typeof state != "object")
+        return state;
+    let newState = {};
+    for (let prop in state) {
+        let val = state[prop];
+        newState[prop] = (val instanceof Array ? val.slice() : val);
+    }
+    return newState;
+}
+const IndentedFrom = /*@__PURE__*/new WeakMap();
+/**
+A [language](https://codemirror.net/6/docs/ref/#language.Language) class based on a CodeMirror
+5-style [streaming parser](https://codemirror.net/6/docs/ref/#language.StreamParser).
+*/
+class StreamLanguage extends Language {
+    constructor(parser) {
+        let data = defineLanguageFacet(parser.languageData);
+        let p = fullParser(parser), self;
+        let impl = new class extends Parser {
+            createParse(input, fragments, ranges) {
+                return new Parse$1(self, input, fragments, ranges);
+            }
+        };
+        super(data, impl, [], parser.name);
+        this.topNode = docID(data, this);
+        self = this;
+        this.streamParser = p;
+        this.stateAfter = new NodeProp({ perNode: true });
+        this.tokenTable = parser.tokenTable ? new TokenTable(p.tokenTable) : defaultTokenTable;
+    }
+    /**
+    Define a stream language.
+    */
+    static define(spec) { return new StreamLanguage(spec); }
+    /**
+    @internal
+    */
+    getIndent(cx) {
+        let from = undefined;
+        let { overrideIndentation } = cx.options;
+        if (overrideIndentation) {
+            from = IndentedFrom.get(cx.state);
+            if (from != null && from < cx.pos - 1e4)
+                from = undefined;
+        }
+        let start = findState(this, cx.node.tree, cx.node.from, cx.node.from, from !== null && from !== void 0 ? from : cx.pos), statePos, state;
+        if (start) {
+            state = start.state;
+            statePos = start.pos + 1;
+        }
+        else {
+            state = this.streamParser.startState(cx.unit);
+            statePos = cx.node.from;
+        }
+        if (cx.pos - statePos > 10000 /* C.MaxIndentScanDist */)
+            return null;
+        while (statePos < cx.pos) {
+            let line = cx.state.doc.lineAt(statePos), end = Math.min(cx.pos, line.to);
+            if (line.length) {
+                let indentation = overrideIndentation ? overrideIndentation(line.from) : -1;
+                let stream = new StringStream(line.text, cx.state.tabSize, cx.unit, indentation < 0 ? undefined : indentation);
+                while (stream.pos < end - line.from)
+                    readToken$1(this.streamParser.token, stream, state);
+            }
+            else {
+                this.streamParser.blankLine(state, cx.unit);
+            }
+            if (end == cx.pos)
+                break;
+            statePos = line.to + 1;
+        }
+        let line = cx.lineAt(cx.pos);
+        if (overrideIndentation && from == null)
+            IndentedFrom.set(cx.state, line.from);
+        return this.streamParser.indent(state, /^\s*(.*)/.exec(line.text)[1], cx);
+    }
+    get allowsNesting() { return false; }
+}
+function findState(lang, tree, off, startPos, before) {
+    let state = off >= startPos && off + tree.length <= before && tree.prop(lang.stateAfter);
+    if (state)
+        return { state: lang.streamParser.copyState(state), pos: off + tree.length };
+    for (let i = tree.children.length - 1; i >= 0; i--) {
+        let child = tree.children[i], pos = off + tree.positions[i];
+        let found = child instanceof Tree && pos < before && findState(lang, child, pos, startPos, before);
+        if (found)
+            return found;
+    }
+    return null;
+}
+function cutTree(lang, tree, from, to, inside) {
+    if (inside && from <= 0 && to >= tree.length)
+        return tree;
+    if (!inside && from == 0 && tree.type == lang.topNode)
+        inside = true;
+    for (let i = tree.children.length - 1; i >= 0; i--) {
+        let pos = tree.positions[i], child = tree.children[i], inner;
+        if (pos < to && child instanceof Tree) {
+            if (!(inner = cutTree(lang, child, from - pos, to - pos, inside)))
+                break;
+            return !inside ? inner
+                : new Tree(tree.type, tree.children.slice(0, i).concat(inner), tree.positions.slice(0, i + 1), pos + inner.length);
+        }
+    }
+    return null;
+}
+function findStartInFragments(lang, fragments, startPos, endPos, editorState) {
+    for (let f of fragments) {
+        let from = f.from + (f.openStart ? 25 : 0), to = f.to - (f.openEnd ? 25 : 0);
+        let found = from <= startPos && to > startPos && findState(lang, f.tree, 0 - f.offset, startPos, to), tree;
+        if (found && found.pos <= endPos && (tree = cutTree(lang, f.tree, startPos + f.offset, found.pos + f.offset, false)))
+            return { state: found.state, tree };
+    }
+    return { state: lang.streamParser.startState(editorState ? getIndentUnit(editorState) : 4), tree: Tree.empty };
+}
+let Parse$1 = class Parse {
+    constructor(lang, input, fragments, ranges) {
+        this.lang = lang;
+        this.input = input;
+        this.fragments = fragments;
+        this.ranges = ranges;
+        this.stoppedAt = null;
+        this.chunks = [];
+        this.chunkPos = [];
+        this.chunk = [];
+        this.chunkReused = undefined;
+        this.rangeIndex = 0;
+        this.to = ranges[ranges.length - 1].to;
+        let context = ParseContext.get(), from = ranges[0].from;
+        let { state, tree } = findStartInFragments(lang, fragments, from, this.to, context === null || context === void 0 ? void 0 : context.state);
+        this.state = state;
+        this.parsedPos = this.chunkStart = from + tree.length;
+        for (let i = 0; i < tree.children.length; i++) {
+            this.chunks.push(tree.children[i]);
+            this.chunkPos.push(tree.positions[i]);
+        }
+        if (context && this.parsedPos < context.viewport.from - 100000 /* C.MaxDistanceBeforeViewport */ &&
+            ranges.some(r => r.from <= context.viewport.from && r.to >= context.viewport.from)) {
+            this.state = this.lang.streamParser.startState(getIndentUnit(context.state));
+            context.skipUntilInView(this.parsedPos, context.viewport.from);
+            this.parsedPos = context.viewport.from;
+        }
+        this.moveRangeIndex();
+    }
+    advance() {
+        let context = ParseContext.get();
+        let parseEnd = this.stoppedAt == null ? this.to : Math.min(this.to, this.stoppedAt);
+        let end = Math.min(parseEnd, this.chunkStart + 2048 /* C.ChunkSize */);
+        if (context)
+            end = Math.min(end, context.viewport.to);
+        while (this.parsedPos < end)
+            this.parseLine(context);
+        if (this.chunkStart < this.parsedPos)
+            this.finishChunk();
+        if (this.parsedPos >= parseEnd)
+            return this.finish();
+        if (context && this.parsedPos >= context.viewport.to) {
+            context.skipUntilInView(this.parsedPos, parseEnd);
+            return this.finish();
+        }
+        return null;
+    }
+    stopAt(pos) {
+        this.stoppedAt = pos;
+    }
+    lineAfter(pos) {
+        let chunk = this.input.chunk(pos);
+        if (!this.input.lineChunks) {
+            let eol = chunk.indexOf("\n");
+            if (eol > -1)
+                chunk = chunk.slice(0, eol);
+        }
+        else if (chunk == "\n") {
+            chunk = "";
+        }
+        return pos + chunk.length <= this.to ? chunk : chunk.slice(0, this.to - pos);
+    }
+    nextLine() {
+        let from = this.parsedPos, line = this.lineAfter(from), end = from + line.length;
+        for (let index = this.rangeIndex;;) {
+            let rangeEnd = this.ranges[index].to;
+            if (rangeEnd >= end)
+                break;
+            line = line.slice(0, rangeEnd - (end - line.length));
+            index++;
+            if (index == this.ranges.length)
+                break;
+            let rangeStart = this.ranges[index].from;
+            let after = this.lineAfter(rangeStart);
+            line += after;
+            end = rangeStart + after.length;
+        }
+        return { line, end };
+    }
+    skipGapsTo(pos, offset, side) {
+        for (;;) {
+            let end = this.ranges[this.rangeIndex].to, offPos = pos + offset;
+            if (side > 0 ? end > offPos : end >= offPos)
+                break;
+            let start = this.ranges[++this.rangeIndex].from;
+            offset += start - end;
+        }
+        return offset;
+    }
+    moveRangeIndex() {
+        while (this.ranges[this.rangeIndex].to < this.parsedPos)
+            this.rangeIndex++;
+    }
+    emitToken(id, from, to, offset) {
+        let size = 4;
+        if (this.ranges.length > 1) {
+            offset = this.skipGapsTo(from, offset, 1);
+            from += offset;
+            let len0 = this.chunk.length;
+            offset = this.skipGapsTo(to, offset, -1);
+            to += offset;
+            size += this.chunk.length - len0;
+        }
+        let last = this.chunk.length - 4;
+        if (this.lang.streamParser.mergeTokens && size == 4 && last >= 0 &&
+            this.chunk[last] == id && this.chunk[last + 2] == from)
+            this.chunk[last + 2] = to;
+        else
+            this.chunk.push(id, from, to, size);
+        return offset;
+    }
+    parseLine(context) {
+        let { line, end } = this.nextLine(), offset = 0, { streamParser } = this.lang;
+        let stream = new StringStream(line, context ? context.state.tabSize : 4, context ? getIndentUnit(context.state) : 2);
+        if (stream.eol()) {
+            streamParser.blankLine(this.state, stream.indentUnit);
+        }
+        else {
+            while (!stream.eol()) {
+                let token = readToken$1(streamParser.token, stream, this.state);
+                if (token)
+                    offset = this.emitToken(this.lang.tokenTable.resolve(token), this.parsedPos + stream.start, this.parsedPos + stream.pos, offset);
+                if (stream.start > 10000 /* C.MaxLineLength */)
+                    break;
+            }
+        }
+        this.parsedPos = end;
+        this.moveRangeIndex();
+        if (this.parsedPos < this.to)
+            this.parsedPos++;
+    }
+    finishChunk() {
+        let tree = Tree.build({
+            buffer: this.chunk,
+            start: this.chunkStart,
+            length: this.parsedPos - this.chunkStart,
+            nodeSet,
+            topID: 0,
+            maxBufferLength: 2048 /* C.ChunkSize */,
+            reused: this.chunkReused
+        });
+        tree = new Tree(tree.type, tree.children, tree.positions, tree.length, [[this.lang.stateAfter, this.lang.streamParser.copyState(this.state)]]);
+        this.chunks.push(tree);
+        this.chunkPos.push(this.chunkStart - this.ranges[0].from);
+        this.chunk = [];
+        this.chunkReused = undefined;
+        this.chunkStart = this.parsedPos;
+    }
+    finish() {
+        return new Tree(this.lang.topNode, this.chunks, this.chunkPos, this.parsedPos - this.ranges[0].from).balance();
+    }
+};
+function readToken$1(token, stream, state) {
+    stream.start = stream.pos;
+    for (let i = 0; i < 10; i++) {
+        let result = token(stream, state);
+        if (stream.pos > stream.start)
+            return result;
+    }
+    throw new Error("Stream parser failed to advance stream.");
+}
+const noTokens = /*@__PURE__*/Object.create(null);
+const typeArray = [NodeType.none];
+const nodeSet = /*@__PURE__*/new NodeSet(typeArray);
+const warned = [];
 // Cache of node types by name and tags
-const byTag$5 = /*@__PURE__*/Object.create(null);
-const defaultTable$5 = /*@__PURE__*/Object.create(null);
+const byTag = /*@__PURE__*/Object.create(null);
+const defaultTable = /*@__PURE__*/Object.create(null);
 for (let [legacyName, name] of [
     ["variable", "variableName"],
     ["variable-2", "variableName.special"],
@@ -21245,31 +20775,41 @@ for (let [legacyName, name] of [
     ["header", "heading"],
     ["property", "propertyName"]
 ])
-    defaultTable$5[legacyName] = /*@__PURE__*/createTokenType$5(noTokens$5, name);
-function warnForPart$5(part, msg) {
-    if (warned$5.indexOf(part) > -1)
+    defaultTable[legacyName] = /*@__PURE__*/createTokenType(noTokens, name);
+class TokenTable {
+    constructor(extra) {
+        this.extra = extra;
+        this.table = Object.assign(Object.create(null), defaultTable);
+    }
+    resolve(tag) {
+        return !tag ? 0 : this.table[tag] || (this.table[tag] = createTokenType(this.extra, tag));
+    }
+}
+const defaultTokenTable = /*@__PURE__*/new TokenTable(noTokens);
+function warnForPart(part, msg) {
+    if (warned.indexOf(part) > -1)
         return;
-    warned$5.push(part);
+    warned.push(part);
     console.warn(msg);
 }
-function createTokenType$5(extra, tagStr) {
+function createTokenType(extra, tagStr) {
     let tags$1$1 = [];
     for (let name of tagStr.split(" ")) {
         let found = [];
         for (let part of name.split(".")) {
             let value = (extra[part] || tags$1[part]);
             if (!value) {
-                warnForPart$5(part, `Unknown highlighting tag ${part}`);
+                warnForPart(part, `Unknown highlighting tag ${part}`);
             }
             else if (typeof value == "function") {
                 if (!found.length)
-                    warnForPart$5(part, `Modifier ${part} used at start of tag`);
+                    warnForPart(part, `Modifier ${part} used at start of tag`);
                 else
                     found = found.map(value);
             }
             else {
                 if (found.length)
-                    warnForPart$5(part, `Tag ${part} used as modifier`);
+                    warnForPart(part, `Tag ${part} used as modifier`);
                 else
                     found = Array.isArray(value) ? value : [value];
             }
@@ -21280,16 +20820,24 @@ function createTokenType$5(extra, tagStr) {
     if (!tags$1$1.length)
         return 0;
     let name = tagStr.replace(/ /g, "_"), key = name + " " + tags$1$1.map(t => t.id);
-    let known = byTag$5[key];
+    let known = byTag[key];
     if (known)
         return known.id;
-    let type = byTag$5[key] = NodeType.define({
-        id: typeArray$5.length,
+    let type = byTag[key] = NodeType.define({
+        id: typeArray.length,
         name,
         props: [styleTags({ [name]: tags$1$1 })]
     });
-    typeArray$5.push(type);
+    typeArray.push(type);
     return type.id;
+}
+function docID(data, lang) {
+    let type = NodeType.define({ id: typeArray.length, name: "Document", props: [
+            languageDataProp.add(() => data),
+            indentNodeProp.add(() => cx => lang.getIndent(cx))
+        ], top: true });
+    typeArray.push(type);
+    return type;
 }
 ({
     rtl: /*@__PURE__*/Decoration.mark({ class: "cm-iso", inclusive: true, attributes: { dir: "rtl" }, bidiIsolate: Direction.RTL }),
@@ -21855,7 +21403,7 @@ function interestingNode(state, node, bracketProp) {
     return len && (len > 2 || /[^\s,.;:]/.test(state.sliceDoc(node.from, node.to))) || node.firstChild;
 }
 function moveBySyntax(state, start, forward) {
-    let pos = syntaxTree$5(state).resolveInner(start.head);
+    let pos = syntaxTree(state).resolveInner(start.head);
     let bracketProp = forward ? NodeProp.closedBy : NodeProp.openedBy;
     // Scan forward through child nodes to see if there's an interesting
     // node ahead.
@@ -22145,7 +21693,7 @@ syntax tree.
 */
 const selectParentSyntax = ({ state, dispatch }) => {
     let selection = updateSel(state.selection, range => {
-        let tree = syntaxTree$5(state), stack = tree.resolveStack(range.from, 1);
+        let tree = syntaxTree(state), stack = tree.resolveStack(range.from, 1);
         if (range.empty) {
             let stackBefore = tree.resolveStack(range.from, -1);
             if (stackBefore.node.from >= stack.node.from && stackBefore.node.to <= stack.node.to)
@@ -22230,7 +21778,7 @@ const deleteByChar = (target, forward, byIndentUnit) => deleteBy(target, range =
         !/[^ \t]/.test(before = line.text.slice(0, pos - line.from))) {
         if (before[before.length - 1] == "\t")
             return pos - 1;
-        let col = countColumn(before, state.tabSize), drop = col % getIndentUnit$1(state) || getIndentUnit$1(state);
+        let col = countColumn(before, state.tabSize), drop = col % getIndentUnit(state) || getIndentUnit(state);
         for (let i = 0; i < drop && before[before.length - 1 - i] == " "; i++)
             pos--;
         targetPos = pos;
@@ -22447,7 +21995,7 @@ const deleteLine = view => {
 function isBetweenBrackets(state, pos) {
     if (/\(\)|\[\]|\{\}/.test(state.sliceDoc(pos - 1, pos + 1)))
         return { from: pos, to: pos };
-    let context = syntaxTree$5(state).resolveInner(pos);
+    let context = syntaxTree(state).resolveInner(pos);
     let before = context.childBefore(pos), after = context.childAfter(pos), closedBy;
     if (before && after && before.to <= pos && after.from >= pos &&
         (closedBy = before.type.prop(NodeProp.closedBy)) && closedBy.indexOf(after.name) > -1 &&
@@ -22552,7 +22100,7 @@ const indentMore = ({ state, dispatch }) => {
     if (state.readOnly)
         return false;
     dispatch(state.update(changeBySelectedLine(state, (line, changes) => {
-        changes.push({ from: line.from, insert: state.facet(indentUnit$2) });
+        changes.push({ from: line.from, insert: state.facet(indentUnit) });
     }), { userEvent: "input.indent" }));
     return true;
 };
@@ -22568,7 +22116,7 @@ const indentLess = ({ state, dispatch }) => {
         if (!space)
             return;
         let col = countColumn(space, state.tabSize), keep = 0;
-        let insert = indentString(state, Math.max(0, col - getIndentUnit$1(state)));
+        let insert = indentString(state, Math.max(0, col - getIndentUnit(state)));
         while (keep < space.length && keep < insert.length && space.charCodeAt(keep) == insert.charCodeAt(keep))
             keep++;
         changes.push({ from: line.from + keep, to: line.from + space.length, insert: insert.slice(keep) });
@@ -23948,657 +23496,6 @@ const searchExtensions = [
     baseTheme$3
 ];
 
-var _a$4;
-/**
-Node prop stored in a parser's top syntax node to provide the
-facet that stores language-specific data for that language.
-*/
-const languageDataProp$4 = /*@__PURE__*/new NodeProp();
-/**
-Syntax node prop used to register sublanguages. Should be added to
-the top level node type for the language.
-*/
-const sublanguageProp$4 = /*@__PURE__*/new NodeProp();
-/**
-A language object manages parsing and per-language
-[metadata](https://codemirror.net/6/docs/ref/#state.EditorState.languageDataAt). Parse data is
-managed as a [Lezer](https://lezer.codemirror.net) tree. The class
-can be used directly, via the [`LRLanguage`](https://codemirror.net/6/docs/ref/#language.LRLanguage)
-subclass for [Lezer](https://lezer.codemirror.net/) LR parsers, or
-via the [`StreamLanguage`](https://codemirror.net/6/docs/ref/#language.StreamLanguage) subclass
-for stream parsers.
-*/
-let Language$4 = class Language {
-    /**
-    Construct a language object. If you need to invoke this
-    directly, first define a data facet with
-    [`defineLanguageFacet`](https://codemirror.net/6/docs/ref/#language.defineLanguageFacet), and then
-    configure your parser to [attach](https://codemirror.net/6/docs/ref/#language.languageDataProp) it
-    to the language's outer syntax node.
-    */
-    constructor(
-    /**
-    The [language data](https://codemirror.net/6/docs/ref/#state.EditorState.languageDataAt) facet
-    used for this language.
-    */
-    data, parser, extraExtensions = [], 
-    /**
-    A language name.
-    */
-    name = "") {
-        this.data = data;
-        this.name = name;
-        // Kludge to define EditorState.tree as a debugging helper,
-        // without the EditorState package actually knowing about
-        // languages and lezer trees.
-        if (!EditorState.prototype.hasOwnProperty("tree"))
-            Object.defineProperty(EditorState.prototype, "tree", { get() { return syntaxTree$4(this); } });
-        this.parser = parser;
-        this.extension = [
-            language$4.of(this),
-            EditorState.languageData.of((state, pos, side) => {
-                let top = topNodeAt$4(state, pos, side), data = top.type.prop(languageDataProp$4);
-                if (!data)
-                    return [];
-                let base = state.facet(data), sub = top.type.prop(sublanguageProp$4);
-                if (sub) {
-                    let innerNode = top.resolve(pos - top.from, side);
-                    for (let sublang of sub)
-                        if (sublang.test(innerNode, state)) {
-                            let data = state.facet(sublang.facet);
-                            return sublang.type == "replace" ? data : data.concat(base);
-                        }
-                }
-                return base;
-            })
-        ].concat(extraExtensions);
-    }
-    /**
-    Query whether this language is active at the given position.
-    */
-    isActiveAt(state, pos, side = -1) {
-        return topNodeAt$4(state, pos, side).type.prop(languageDataProp$4) == this.data;
-    }
-    /**
-    Find the document regions that were parsed using this language.
-    The returned regions will _include_ any nested languages rooted
-    in this language, when those exist.
-    */
-    findRegions(state) {
-        let lang = state.facet(language$4);
-        if ((lang === null || lang === void 0 ? void 0 : lang.data) == this.data)
-            return [{ from: 0, to: state.doc.length }];
-        if (!lang || !lang.allowsNesting)
-            return [];
-        let result = [];
-        let explore = (tree, from) => {
-            if (tree.prop(languageDataProp$4) == this.data) {
-                result.push({ from, to: from + tree.length });
-                return;
-            }
-            let mount = tree.prop(NodeProp.mounted);
-            if (mount) {
-                if (mount.tree.prop(languageDataProp$4) == this.data) {
-                    if (mount.overlay)
-                        for (let r of mount.overlay)
-                            result.push({ from: r.from + from, to: r.to + from });
-                    else
-                        result.push({ from: from, to: from + tree.length });
-                    return;
-                }
-                else if (mount.overlay) {
-                    let size = result.length;
-                    explore(mount.tree, mount.overlay[0].from + from);
-                    if (result.length > size)
-                        return;
-                }
-            }
-            for (let i = 0; i < tree.children.length; i++) {
-                let ch = tree.children[i];
-                if (ch instanceof Tree)
-                    explore(ch, tree.positions[i] + from);
-            }
-        };
-        explore(syntaxTree$4(state), 0);
-        return result;
-    }
-    /**
-    Indicates whether this language allows nested languages. The
-    default implementation returns true.
-    */
-    get allowsNesting() { return true; }
-};
-/**
-@internal
-*/
-Language$4.setState = /*@__PURE__*/StateEffect.define();
-function topNodeAt$4(state, pos, side) {
-    let topLang = state.facet(language$4), tree = syntaxTree$4(state).topNode;
-    if (!topLang || topLang.allowsNesting) {
-        for (let node = tree; node; node = node.enter(pos, side, IterMode.ExcludeBuffers))
-            if (node.type.isTop)
-                tree = node;
-    }
-    return tree;
-}
-/**
-Get the syntax tree for a state, which is the current (possibly
-incomplete) parse tree of the active
-[language](https://codemirror.net/6/docs/ref/#language.Language), or the empty tree if there is no
-language available.
-*/
-function syntaxTree$4(state) {
-    let field = state.field(Language$4.state, false);
-    return field ? field.tree : Tree.empty;
-}
-/**
-Lezer-style
-[`Input`](https://lezer.codemirror.net/docs/ref#common.Input)
-object for a [`Text`](https://codemirror.net/6/docs/ref/#state.Text) object.
-*/
-let DocInput$4 = class DocInput {
-    /**
-    Create an input object for the given document.
-    */
-    constructor(doc) {
-        this.doc = doc;
-        this.cursorPos = 0;
-        this.string = "";
-        this.cursor = doc.iter();
-    }
-    get length() { return this.doc.length; }
-    syncTo(pos) {
-        this.string = this.cursor.next(pos - this.cursorPos).value;
-        this.cursorPos = pos + this.string.length;
-        return this.cursorPos - this.string.length;
-    }
-    chunk(pos) {
-        this.syncTo(pos);
-        return this.string;
-    }
-    get lineChunks() { return true; }
-    read(from, to) {
-        let stringStart = this.cursorPos - this.string.length;
-        if (from < stringStart || to >= this.cursorPos)
-            return this.doc.sliceString(from, to);
-        else
-            return this.string.slice(from - stringStart, to - stringStart);
-    }
-};
-let currentContext$4 = null;
-/**
-A parse context provided to parsers working on the editor content.
-*/
-let ParseContext$4 = class ParseContext {
-    constructor(parser, 
-    /**
-    The current editor state.
-    */
-    state, 
-    /**
-    Tree fragments that can be reused by incremental re-parses.
-    */
-    fragments = [], 
-    /**
-    @internal
-    */
-    tree, 
-    /**
-    @internal
-    */
-    treeLen, 
-    /**
-    The current editor viewport (or some overapproximation
-    thereof). Intended to be used for opportunistically avoiding
-    work (in which case
-    [`skipUntilInView`](https://codemirror.net/6/docs/ref/#language.ParseContext.skipUntilInView)
-    should be called to make sure the parser is restarted when the
-    skipped region becomes visible).
-    */
-    viewport, 
-    /**
-    @internal
-    */
-    skipped, 
-    /**
-    This is where skipping parsers can register a promise that,
-    when resolved, will schedule a new parse. It is cleared when
-    the parse worker picks up the promise. @internal
-    */
-    scheduleOn) {
-        this.parser = parser;
-        this.state = state;
-        this.fragments = fragments;
-        this.tree = tree;
-        this.treeLen = treeLen;
-        this.viewport = viewport;
-        this.skipped = skipped;
-        this.scheduleOn = scheduleOn;
-        this.parse = null;
-        /**
-        @internal
-        */
-        this.tempSkipped = [];
-    }
-    /**
-    @internal
-    */
-    static create(parser, state, viewport) {
-        return new ParseContext(parser, state, [], Tree.empty, 0, viewport, [], null);
-    }
-    startParse() {
-        return this.parser.startParse(new DocInput$4(this.state.doc), this.fragments);
-    }
-    /**
-    @internal
-    */
-    work(until, upto) {
-        if (upto != null && upto >= this.state.doc.length)
-            upto = undefined;
-        if (this.tree != Tree.empty && this.isDone(upto !== null && upto !== void 0 ? upto : this.state.doc.length)) {
-            this.takeTree();
-            return true;
-        }
-        return this.withContext(() => {
-            var _a;
-            if (typeof until == "number") {
-                let endTime = Date.now() + until;
-                until = () => Date.now() > endTime;
-            }
-            if (!this.parse)
-                this.parse = this.startParse();
-            if (upto != null && (this.parse.stoppedAt == null || this.parse.stoppedAt > upto) &&
-                upto < this.state.doc.length)
-                this.parse.stopAt(upto);
-            for (;;) {
-                let done = this.parse.advance();
-                if (done) {
-                    this.fragments = this.withoutTempSkipped(TreeFragment.addTree(done, this.fragments, this.parse.stoppedAt != null));
-                    this.treeLen = (_a = this.parse.stoppedAt) !== null && _a !== void 0 ? _a : this.state.doc.length;
-                    this.tree = done;
-                    this.parse = null;
-                    if (this.treeLen < (upto !== null && upto !== void 0 ? upto : this.state.doc.length))
-                        this.parse = this.startParse();
-                    else
-                        return true;
-                }
-                if (until())
-                    return false;
-            }
-        });
-    }
-    /**
-    @internal
-    */
-    takeTree() {
-        let pos, tree;
-        if (this.parse && (pos = this.parse.parsedPos) >= this.treeLen) {
-            if (this.parse.stoppedAt == null || this.parse.stoppedAt > pos)
-                this.parse.stopAt(pos);
-            this.withContext(() => { while (!(tree = this.parse.advance())) { } });
-            this.treeLen = pos;
-            this.tree = tree;
-            this.fragments = this.withoutTempSkipped(TreeFragment.addTree(this.tree, this.fragments, true));
-            this.parse = null;
-        }
-    }
-    withContext(f) {
-        let prev = currentContext$4;
-        currentContext$4 = this;
-        try {
-            return f();
-        }
-        finally {
-            currentContext$4 = prev;
-        }
-    }
-    withoutTempSkipped(fragments) {
-        for (let r; r = this.tempSkipped.pop();)
-            fragments = cutFragments$4(fragments, r.from, r.to);
-        return fragments;
-    }
-    /**
-    @internal
-    */
-    changes(changes, newState) {
-        let { fragments, tree, treeLen, viewport, skipped } = this;
-        this.takeTree();
-        if (!changes.empty) {
-            let ranges = [];
-            changes.iterChangedRanges((fromA, toA, fromB, toB) => ranges.push({ fromA, toA, fromB, toB }));
-            fragments = TreeFragment.applyChanges(fragments, ranges);
-            tree = Tree.empty;
-            treeLen = 0;
-            viewport = { from: changes.mapPos(viewport.from, -1), to: changes.mapPos(viewport.to, 1) };
-            if (this.skipped.length) {
-                skipped = [];
-                for (let r of this.skipped) {
-                    let from = changes.mapPos(r.from, 1), to = changes.mapPos(r.to, -1);
-                    if (from < to)
-                        skipped.push({ from, to });
-                }
-            }
-        }
-        return new ParseContext(this.parser, newState, fragments, tree, treeLen, viewport, skipped, this.scheduleOn);
-    }
-    /**
-    @internal
-    */
-    updateViewport(viewport) {
-        if (this.viewport.from == viewport.from && this.viewport.to == viewport.to)
-            return false;
-        this.viewport = viewport;
-        let startLen = this.skipped.length;
-        for (let i = 0; i < this.skipped.length; i++) {
-            let { from, to } = this.skipped[i];
-            if (from < viewport.to && to > viewport.from) {
-                this.fragments = cutFragments$4(this.fragments, from, to);
-                this.skipped.splice(i--, 1);
-            }
-        }
-        if (this.skipped.length >= startLen)
-            return false;
-        this.reset();
-        return true;
-    }
-    /**
-    @internal
-    */
-    reset() {
-        if (this.parse) {
-            this.takeTree();
-            this.parse = null;
-        }
-    }
-    /**
-    Notify the parse scheduler that the given region was skipped
-    because it wasn't in view, and the parse should be restarted
-    when it comes into view.
-    */
-    skipUntilInView(from, to) {
-        this.skipped.push({ from, to });
-    }
-    /**
-    Returns a parser intended to be used as placeholder when
-    asynchronously loading a nested parser. It'll skip its input and
-    mark it as not-really-parsed, so that the next update will parse
-    it again.
-    
-    When `until` is given, a reparse will be scheduled when that
-    promise resolves.
-    */
-    static getSkippingParser(until) {
-        return new class extends Parser {
-            createParse(input, fragments, ranges) {
-                let from = ranges[0].from, to = ranges[ranges.length - 1].to;
-                let parser = {
-                    parsedPos: from,
-                    advance() {
-                        let cx = currentContext$4;
-                        if (cx) {
-                            for (let r of ranges)
-                                cx.tempSkipped.push(r);
-                            if (until)
-                                cx.scheduleOn = cx.scheduleOn ? Promise.all([cx.scheduleOn, until]) : until;
-                        }
-                        this.parsedPos = to;
-                        return new Tree(NodeType.none, [], [], to - from);
-                    },
-                    stoppedAt: null,
-                    stopAt() { }
-                };
-                return parser;
-            }
-        };
-    }
-    /**
-    @internal
-    */
-    isDone(upto) {
-        upto = Math.min(upto, this.state.doc.length);
-        let frags = this.fragments;
-        return this.treeLen >= upto && frags.length && frags[0].from == 0 && frags[0].to >= upto;
-    }
-    /**
-    Get the context for the current parse, or `null` if no editor
-    parse is in progress.
-    */
-    static get() { return currentContext$4; }
-};
-function cutFragments$4(fragments, from, to) {
-    return TreeFragment.applyChanges(fragments, [{ fromA: from, toA: to, fromB: from, toB: to }]);
-}
-let LanguageState$4 = class LanguageState {
-    constructor(
-    // A mutable parse state that is used to preserve work done during
-    // the lifetime of a state when moving to the next state.
-    context) {
-        this.context = context;
-        this.tree = context.tree;
-    }
-    apply(tr) {
-        if (!tr.docChanged && this.tree == this.context.tree)
-            return this;
-        let newCx = this.context.changes(tr.changes, tr.state);
-        // If the previous parse wasn't done, go forward only up to its
-        // end position or the end of the viewport, to avoid slowing down
-        // state updates with parse work beyond the viewport.
-        let upto = this.context.treeLen == tr.startState.doc.length ? undefined
-            : Math.max(tr.changes.mapPos(this.context.treeLen), newCx.viewport.to);
-        if (!newCx.work(20 /* Work.Apply */, upto))
-            newCx.takeTree();
-        return new LanguageState(newCx);
-    }
-    static init(state) {
-        let vpTo = Math.min(3000 /* Work.InitViewport */, state.doc.length);
-        let parseState = ParseContext$4.create(state.facet(language$4).parser, state, { from: 0, to: vpTo });
-        if (!parseState.work(20 /* Work.Apply */, vpTo))
-            parseState.takeTree();
-        return new LanguageState(parseState);
-    }
-};
-Language$4.state = /*@__PURE__*/StateField.define({
-    create: LanguageState$4.init,
-    update(value, tr) {
-        for (let e of tr.effects)
-            if (e.is(Language$4.setState))
-                return e.value;
-        if (tr.startState.facet(language$4) != tr.state.facet(language$4))
-            return LanguageState$4.init(tr.state);
-        return value.apply(tr);
-    }
-});
-let requestIdle$4 = (callback) => {
-    let timeout = setTimeout(() => callback(), 500 /* Work.MaxPause */);
-    return () => clearTimeout(timeout);
-};
-if (typeof requestIdleCallback != "undefined")
-    requestIdle$4 = (callback) => {
-        let idle = -1, timeout = setTimeout(() => {
-            idle = requestIdleCallback(callback, { timeout: 500 /* Work.MaxPause */ - 100 /* Work.MinPause */ });
-        }, 100 /* Work.MinPause */);
-        return () => idle < 0 ? clearTimeout(timeout) : cancelIdleCallback(idle);
-    };
-const isInputPending$4 = typeof navigator != "undefined" && ((_a$4 = navigator.scheduling) === null || _a$4 === void 0 ? void 0 : _a$4.isInputPending)
-    ? () => navigator.scheduling.isInputPending() : null;
-const parseWorker$4 = /*@__PURE__*/ViewPlugin.fromClass(class ParseWorker {
-    constructor(view) {
-        this.view = view;
-        this.working = null;
-        this.workScheduled = 0;
-        // End of the current time chunk
-        this.chunkEnd = -1;
-        // Milliseconds of budget left for this chunk
-        this.chunkBudget = -1;
-        this.work = this.work.bind(this);
-        this.scheduleWork();
-    }
-    update(update) {
-        let cx = this.view.state.field(Language$4.state).context;
-        if (cx.updateViewport(update.view.viewport) || this.view.viewport.to > cx.treeLen)
-            this.scheduleWork();
-        if (update.docChanged || update.selectionSet) {
-            if (this.view.hasFocus)
-                this.chunkBudget += 50 /* Work.ChangeBonus */;
-            this.scheduleWork();
-        }
-        this.checkAsyncSchedule(cx);
-    }
-    scheduleWork() {
-        if (this.working)
-            return;
-        let { state } = this.view, field = state.field(Language$4.state);
-        if (field.tree != field.context.tree || !field.context.isDone(state.doc.length))
-            this.working = requestIdle$4(this.work);
-    }
-    work(deadline) {
-        this.working = null;
-        let now = Date.now();
-        if (this.chunkEnd < now && (this.chunkEnd < 0 || this.view.hasFocus)) { // Start a new chunk
-            this.chunkEnd = now + 30000 /* Work.ChunkTime */;
-            this.chunkBudget = 3000 /* Work.ChunkBudget */;
-        }
-        if (this.chunkBudget <= 0)
-            return; // No more budget
-        let { state, viewport: { to: vpTo } } = this.view, field = state.field(Language$4.state);
-        if (field.tree == field.context.tree && field.context.isDone(vpTo + 100000 /* Work.MaxParseAhead */))
-            return;
-        let endTime = Date.now() + Math.min(this.chunkBudget, 100 /* Work.Slice */, deadline && !isInputPending$4 ? Math.max(25 /* Work.MinSlice */, deadline.timeRemaining() - 5) : 1e9);
-        let viewportFirst = field.context.treeLen < vpTo && state.doc.length > vpTo + 1000;
-        let done = field.context.work(() => {
-            return isInputPending$4 && isInputPending$4() || Date.now() > endTime;
-        }, vpTo + (viewportFirst ? 0 : 100000 /* Work.MaxParseAhead */));
-        this.chunkBudget -= Date.now() - now;
-        if (done || this.chunkBudget <= 0) {
-            field.context.takeTree();
-            this.view.dispatch({ effects: Language$4.setState.of(new LanguageState$4(field.context)) });
-        }
-        if (this.chunkBudget > 0 && !(done && !viewportFirst))
-            this.scheduleWork();
-        this.checkAsyncSchedule(field.context);
-    }
-    checkAsyncSchedule(cx) {
-        if (cx.scheduleOn) {
-            this.workScheduled++;
-            cx.scheduleOn
-                .then(() => this.scheduleWork())
-                .catch(err => logException(this.view.state, err))
-                .then(() => this.workScheduled--);
-            cx.scheduleOn = null;
-        }
-    }
-    destroy() {
-        if (this.working)
-            this.working();
-    }
-    isWorking() {
-        return !!(this.working || this.workScheduled > 0);
-    }
-}, {
-    eventHandlers: { focus() { this.scheduleWork(); } }
-});
-/**
-The facet used to associate a language with an editor state. Used
-by `Language` object's `extension` property (so you don't need to
-manually wrap your languages in this). Can be used to access the
-current language on a state.
-*/
-const language$4 = /*@__PURE__*/Facet.define({
-    combine(languages) { return languages.length ? languages[0] : null; },
-    enables: language => [
-        Language$4.state,
-        parseWorker$4,
-        EditorView.contentAttributes.compute([language], state => {
-            let lang = state.facet(language);
-            return lang && lang.name ? { "data-language": lang.name } : {};
-        })
-    ]
-});
-/**
-Facet for overriding the unit by which indentation happens. Should
-be a string consisting either entirely of the same whitespace
-character. When not set, this defaults to 2 spaces.
-*/
-const indentUnit$1 = /*@__PURE__*/Facet.define({
-    combine: values => {
-        if (!values.length)
-            return "  ";
-        let unit = values[0];
-        if (!unit || /\S/.test(unit) || Array.from(unit).some(e => e != unit[0]))
-            throw new Error("Invalid indent unit: " + JSON.stringify(values[0]));
-        return unit;
-    }
-});
-const noTokens$4 = /*@__PURE__*/Object.create(null);
-const typeArray$4 = [NodeType.none];
-const warned$4 = [];
-// Cache of node types by name and tags
-const byTag$4 = /*@__PURE__*/Object.create(null);
-const defaultTable$4 = /*@__PURE__*/Object.create(null);
-for (let [legacyName, name] of [
-    ["variable", "variableName"],
-    ["variable-2", "variableName.special"],
-    ["string-2", "string.special"],
-    ["def", "variableName.definition"],
-    ["tag", "tagName"],
-    ["attribute", "attributeName"],
-    ["type", "typeName"],
-    ["builtin", "variableName.standard"],
-    ["qualifier", "modifier"],
-    ["error", "invalid"],
-    ["header", "heading"],
-    ["property", "propertyName"]
-])
-    defaultTable$4[legacyName] = /*@__PURE__*/createTokenType$4(noTokens$4, name);
-function warnForPart$4(part, msg) {
-    if (warned$4.indexOf(part) > -1)
-        return;
-    warned$4.push(part);
-    console.warn(msg);
-}
-function createTokenType$4(extra, tagStr) {
-    let tags$1$1 = [];
-    for (let name of tagStr.split(" ")) {
-        let found = [];
-        for (let part of name.split(".")) {
-            let value = (extra[part] || tags$1[part]);
-            if (!value) {
-                warnForPart$4(part, `Unknown highlighting tag ${part}`);
-            }
-            else if (typeof value == "function") {
-                if (!found.length)
-                    warnForPart$4(part, `Modifier ${part} used at start of tag`);
-                else
-                    found = found.map(value);
-            }
-            else {
-                if (found.length)
-                    warnForPart$4(part, `Tag ${part} used as modifier`);
-                else
-                    found = Array.isArray(value) ? value : [value];
-            }
-        }
-        for (let tag of found)
-            tags$1$1.push(tag);
-    }
-    if (!tags$1$1.length)
-        return 0;
-    let name = tagStr.replace(/ /g, "_"), key = name + " " + tags$1$1.map(t => t.id);
-    let known = byTag$4[key];
-    if (known)
-        return known.id;
-    let type = byTag$4[key] = NodeType.define({
-        id: typeArray$4.length,
-        name,
-        props: [styleTags({ [name]: tags$1$1 })]
-    });
-    typeArray$4.push(type);
-    return type.id;
-}
-({
-    rtl: /*@__PURE__*/Decoration.mark({ class: "cm-iso", inclusive: true, attributes: { dir: "rtl" }, bidiIsolate: Direction.RTL }),
-    ltr: /*@__PURE__*/Decoration.mark({ class: "cm-iso", inclusive: true, attributes: { dir: "ltr" }, bidiIsolate: Direction.LTR })});
-
 /**
 An instance of this is passed to completion source functions.
 */
@@ -24650,7 +23547,7 @@ class CompletionContext {
     token before `this.pos`.
     */
     tokenBefore(types) {
-        let token = syntaxTree$4(this.state).resolveInner(this.pos, -1);
+        let token = syntaxTree(this.state).resolveInner(this.pos, -1);
         while (token && types.indexOf(token.name) < 0)
             token = token.parent;
         return token ? { from: token.from, to: this.pos,
@@ -24729,7 +23626,7 @@ cursor is in a syntax node with one of the given names.
 */
 function ifNotIn(nodes, source) {
     return (context) => {
-        for (let pos = syntaxTree$4(context.state).resolveInner(context.pos, -1); pos; pos = pos.parent) {
+        for (let pos = syntaxTree(context.state).resolveInner(context.pos, -1); pos; pos = pos.parent) {
             if (nodes.indexOf(pos.name) > -1)
                 return null;
             if (pos.type.isTop)
@@ -26011,7 +24908,7 @@ class Snippet {
             if (text.length) {
                 let indent = baseIndent, tabs = /^\t*/.exec(line)[0].length;
                 for (let i = 0; i < tabs; i++)
-                    indent += state.facet(indentUnit$1);
+                    indent += state.facet(indentUnit);
                 lineStart.push(pos + indent.length - tabs);
                 line = indent + line.slice(tabs);
             }
@@ -26443,11 +25340,11 @@ function handleSame(state, token, allowTriple, config) {
     });
 }
 function nodeStart(state, pos) {
-    let tree = syntaxTree$4(state).resolveInner(pos + 1);
+    let tree = syntaxTree(state).resolveInner(pos + 1);
     return tree.parent && tree.from == pos;
 }
 function probablyInString(state, pos, quoteToken, prefixes) {
-    let node = syntaxTree$4(state).resolveInner(pos, -1);
+    let node = syntaxTree(state).resolveInner(pos, -1);
     let maxPrefix = prefixes.reduce((m, p) => Math.max(m, p.length), 0);
     for (let i = 0; i < 5; i++) {
         let start = state.sliceDoc(node.from, Math.min(node.to, node.from + quoteToken.length + maxPrefix));
@@ -30371,7 +29268,7 @@ class TokenGroup {
     }
     token(input, stack) {
         let { parser } = stack.p;
-        readToken$1(this.data, input, stack, this.id, parser.data, parser.tokenPrecTable);
+        readToken(this.data, input, stack, this.id, parser.data, parser.tokenPrecTable);
     }
 }
 TokenGroup.prototype.contextual = TokenGroup.prototype.fallback = TokenGroup.prototype.extend = false;
@@ -30388,7 +29285,7 @@ class LocalTokenGroup {
         let start = input.pos, skipped = 0;
         for (;;) {
             let atEof = input.next < 0, nextPos = input.resolveOffset(1, 1);
-            readToken$1(this.data, input, stack, 0, this.data, this.precTable);
+            readToken(this.data, input, stack, 0, this.data, this.precTable);
             if (input.token.value > -1)
                 break;
             if (this.elseToken == null)
@@ -30449,7 +29346,7 @@ class ExternalTokenizer {
 // This function interprets that data, running through a stream as
 // long as new states with the a matching group mask can be reached,
 // and updating `input.token` when it matches a token.
-function readToken$1(data, input, stack, group, precTable, precOffset) {
+function readToken(data, input, stack, group, precTable, precOffset) {
     let state = 0, groupMask = 1 << group, { dialect } = stack.p.parser;
     scan: for (;;) {
         if ((groupMask & data[state]) == 0)
@@ -30721,7 +29618,7 @@ class TokenCache {
         return index;
     }
 }
-let Parse$1 = class Parse {
+class Parse {
     constructor(parser, input, fragments, ranges) {
         this.parser = parser;
         this.input = input;
@@ -30997,7 +29894,7 @@ let Parse$1 = class Parse {
             stackIDs.set(stack, id = String.fromCodePoint(this.nextStackID++));
         return id + stack;
     }
-};
+}
 function pushStackDedup(stack, newStacks) {
     for (let i = 0; i < newStacks.length; i++) {
         let other = newStacks[i];
@@ -31123,7 +30020,7 @@ class LRParser extends Parser {
         this.top = this.topRules[Object.keys(this.topRules)[0]];
     }
     createParse(input, fragments, ranges) {
-        let parse = new Parse$1(this, input, fragments, ranges);
+        let parse = new Parse(this, input, fragments, ranges);
         for (let w of this.wrappers)
             parse = w(parse, input, fragments, ranges);
         return parse;
@@ -31700,12 +30597,14 @@ function configureNesting(tags = [], attributes = []) {
 }
 
 // This file was generated by lezer-generator. You probably shouldn't edit it.
-const descendantOp = 107,
+const descendantOp = 122,
   Unit = 1,
-  callee = 108,
-  identifier$2 = 109,
+  identifier$2 = 123,
+  callee = 124,
   VariableName = 2,
-  queryIdentifier = 110;
+  queryIdentifier = 125,
+  queryVariableName = 3,
+  QueryCallee = 4;
 
 /* Hand-written tokenizers for CSS tokens that can't be
    expressed by Lezer's built-in tokenizer. */
@@ -31719,7 +30618,9 @@ function isAlpha(ch) { return ch >= 65 && ch <= 90 || ch >= 97 && ch <= 122 || c
 
 function isDigit(ch) { return ch >= 48 && ch <= 57 }
 
-const identifiers = new ExternalTokenizer((input, stack) => {
+function isHex(ch) { return isDigit(ch) || ch >= 97 && ch <= 102 || ch >= 65 && ch <= 70 }
+
+const identifierTokens = (id, varName, callee) => (input, stack) => {
   for (let inside = false, dashes = 0, i = 0;; i++) {
     let {next} = input;
     if (isAlpha(next) || next == dash || next == underscore || (inside && isDigit(next))) {
@@ -31728,18 +30629,28 @@ const identifiers = new ExternalTokenizer((input, stack) => {
       input.advance();
     } else if (next == backslash && input.peek(1) != newline$1) {
       input.advance();
-      if (input.next > -1) input.advance();
+      if (isHex(input.next)) {
+        do { input.advance(); } while (isHex(input.next))
+        if (input.next == 32) input.advance();
+      } else if (input.next > -1) {
+        input.advance();
+      }
       inside = true;
     } else {
       if (inside) input.acceptToken(
-        dashes == 2 && stack.canShift(VariableName) ? VariableName
-          : stack.canShift(queryIdentifier) ? queryIdentifier
-          : next == parenL ? callee
-          : identifier$2);
+        dashes == 2 && stack.canShift(VariableName) ? varName : next == parenL ? callee : id
+      );
       break
     }
   }
-});
+};
+
+const identifiers = new ExternalTokenizer(
+  identifierTokens(identifier$2, VariableName, callee)
+);
+const queryIdentifiers = new ExternalTokenizer(
+  identifierTokens(queryIdentifier, queryVariableName, QueryCallee)
+);
 
 const descendant = new ExternalTokenizer(input => {
   if (space$1.includes(input.peek(-1))) {
@@ -31798,773 +30709,32 @@ const cssHighlighting = styleTags({
 });
 
 // This file was generated by lezer-generator. You probably shouldn't edit it.
-const spec_callee = {__proto__:null,lang:34, "nth-child":34, "nth-last-child":34, "nth-of-type":34, "nth-last-of-type":34, dir:34, "host-context":34, url:62, "url-prefix":62, domain:62, regexp:62};
-const spec_AtKeyword = {__proto__:null,"@import":120, "@media":154, "@charset":158, "@namespace":162, "@keyframes":168, "@supports":180};
-const spec_queryIdentifier = {__proto__:null,layer:124, not:144, only:144, selector:150};
+const spec_callee = {__proto__:null,lang:38, "nth-child":38, "nth-last-child":38, "nth-of-type":38, "nth-last-of-type":38, dir:38, "host-context":38, if:84, url:124, "url-prefix":124, domain:124, regexp:124};
+const spec_queryIdentifier = {__proto__:null,or:98, and:98, not:106, only:106, layer:170};
+const spec_QueryCallee = {__proto__:null,selector:112, layer:166};
+const spec_AtKeyword = {__proto__:null,"@import":162, "@media":174, "@charset":178, "@namespace":182, "@keyframes":188, "@supports":200, "@scope":204};
+const spec_identifier$1 = {__proto__:null,to:207};
 const parser$1 = LRParser.deserialize({
   version: 14,
-  states: ">`QYQ[OOO#kQ[OOP#rOWOOOOQP'#Cd'#CdOOQP'#Cc'#CcO#wQ[O'#CfO$hQXO'#CaO$rQ[O'#CiO$}Q[O'#DUO%SQ[O'#DXO%XQ[O'#D[O%XQ[O'#D_OOQP'#Ev'#EvO%yQdO'#DhO&hQ[O'#DzO%yQdO'#D|O&yQ[O'#EOO'UQ[O'#ERO'^Q[O'#EXO'lQ[O'#EZOOQS'#Eu'#EuOOQS'#E^'#E^QYQ[OOO'sQXO'#CdO(hQWO'#DdO(mQWO'#E{O(xQ[O'#E{QOQWOOP)SO#tO'#C_POOO)C@e)C@eOOQP'#Ch'#ChOOQP,59Q,59QO#wQ[O,59QO)_Q[O,59TO$}Q[O,59pO%SQ[O,59sO%XQ[O,59vO%XQ[O,59xO%XQ[O,59yO%XQ[O'#EcO)jQWO,58{O)rQ[O'#DcOOQS,58{,58{OOQP'#Cl'#ClOOQO'#DS'#DSOOQP,59T,59TO)yQWO,59TO*OQWO,59TOOQP'#DW'#DWOOQP,59p,59pOOQO'#DY'#DYO*TQ`O,59sO*nQXO,59vO+UQXO,59yOOQS'#Cq'#CqO%yQdO'#CrO+lQvO'#CtO-hQtO,5:SOOQO'#Cy'#CyO*OQWO'#CxO-rQWO'#CzO-wQ[O'#DPOOQS'#Ex'#ExOOQO'#Dn'#DnO.eQdO'#DwO.uQWO'#E|O'^Q[O'#DuO/TQWO'#DxOOQO'#E}'#E}O)mQWO,5:fO/YQpO,5:hOOQS'#EQ'#EQO/bQWO,5:jO/gQ[O,5:jOOQO'#ET'#ETO/oQWO,5:mO/tQWO,5:sO/|QWO,5:uOOQS-E8[-E8[O0UQdO,5:OO0fQ[O'#EeO0sQWO,5;gO0sQWO,5;gPOOO'#E]'#E]P1OO#tO,58yPOOO,58y,58yOOQP1G.l1G.lOOQP1G.o1G.oO)yQWO1G.oO*OQWO1G.oOOQP1G/[1G/[O1ZQ`O1G/_O1cQXO1G/bO1yQXO1G/dO2aQXO1G/eO2wQXO,5:}OOQO-E8a-E8aOOQS1G.g1G.gO3RQWO,59}O3WQ[O'#DTO3_QdO'#CpOOQP1G/_1G/_O%yQdO1G/_O3fQpO,59^OOQS,59`,59`O%yQdO,59bO3nQ[O'#DkO4PQWO1G/nO-VQ[O1G/nOOQS,59d,59dO4UQ!bO,59fOOQS'#DQ'#DQOOQS'#E`'#E`O4aQ[O,59kOOQS,59k,59kO4iQpO'#DnO4wQpO,5:ZO5PQWO,5:cOOQO'#FO'#FOO4zQpO,5:_O'^Q[O,5:]O5XQ[O'#EgO5pQWO,5;hO5{QWO,5:aO%XQ[O,5:dOOQS1G0Q1G0QOOQS1G0S1G0SOOQS1G0U1G0UO6^QWO1G0UO6cQdO'#EUOOQS1G0X1G0XOOQS1G0_1G0_OOQS1G0a1G0aO6nQtO1G/jOOQO1G/j1G/jOOQO,5;P,5;PO7UQ[O,5;POOQO-E8c-E8cO7cQWO1G1RPOOO-E8Z-E8ZPOOO1G.e1G.eOOQP7+$Z7+$ZOOQP7+$y7+$yO%yQdO7+$yOOQS1G/i1G/iO7nQXO'#EzO7xQWO,59oO7}QtO'#E_O8uQdO'#EwO9PQWO,59[O9UQpO7+$yOOQS1G.x1G.xOOQS1G.|1G.|O9^Q[O,5:VOOQS7+%Y7+%YO9cQWO7+%YOOQS1G/Q1G/QO9hQWO1G/QOOQS-E8^-E8^OOQS1G/V1G/VO%yQdO1G/uO9mQdO1G/yOOQO1G/}1G/}OOQO1G/w1G/wO9tQWO,5;ROOQO-E8e-E8eO:SQXO1G0OOOQS7+%p7+%pO:ZQYO'#CtOOQO'#EW'#EWO:iQ`O'#EVOOQO'#EV'#EVO:tQWO'#EhO:|QdO,5:pOOQS,5:p,5:pO;XQtO'#EdO%yQdO'#EdO<YQdO7+%UOOQO7+%U7+%UOOQO1G0k1G0kO<mQpO<<HeO<uQ[O'#EbO=PQWO,5;fOOQP1G/Z1G/ZOOQS-E8]-E8]O=XQdO'#EaO=cQWO,5;cOOQT1G.v1G.vOOQP<<He<<HeOOQO'#Dm'#DmO=kQWO1G/qOOQS<<Ht<<HtOOQS7+$l7+$lO=sQdO7+%aOOQO'#Dp'#DpO=zQpO7+%eOOQO7+%j7+%jOOQO,5:q,5:qO6fQdO'#EiO:tQWO,5;SOOQS,5;S,5;SOOQS-E8f-E8fOOQS1G0[1G0[O>SQtO,5;OOOQS-E8b-E8bOOQO<<Hp<<HpOOQPAN>PAN>PO?TQXO,5:|OOQO-E8`-E8`O?_QdO,5:{OOQO-E8_-E8_O9^Q[O'#EfO?iQWO7+%]OOQS7+%]7+%]OOQO<<H{<<H{OOQO<<IP<<IPO?qQdO<<IPOOQO,5;T,5;TOOQO-E8g-E8gOOQS1G0n1G0nOOQO,5;Q,5;QOOQO-E8d-E8dOOQS<<Hw<<HwO@YQWOAN>kOOQOG24VG24V",
-  stateData: "@g~O#dOS#eQQ~OU[OX[OZTO^VO_VOrXOyWO!PYO!SZO!]cO!^]O!o^O!q_O!s`O!vaO!|bO#aRO~OQhOU[OX[OZTO^VO_VOrXOyWO!PYO!SZO!]cO!^]O!o^O!q_O!s`O!vaO!|bO#agO~O#^#oP~P!aO#elO~O#anO~OZpO^qO_qOrsOyrO!PtO!SvO#_uO~OuwO!UyO~P#|Oa!PO#`|O#a{O~O#a!QO~O#a!SO~OU[OX[OZTO^VO_VOrXOyWO!PYO!SZO#aRO~OQ!`Oc!XOg!`Oi!`Oo!^Or!_O#`![O#a!WO#m!YO~Oc!bO!j!dO!m!eO#b!aO!U#pP~Oi!jOo!^O#a!iO~Oi!lO#a!lO~Oc!bO!j!dO!m!eO#b!aO~O!Z#pP~P&hOZWX^WX^!XX_WXrWXuWXyWX!PWX!SWX!UWX#_WX~O^!qO~O!Z!rO#^#oX!T#oX~O#^#oX!T#oX~P!aO#f!uO#g!uO#h!wO~Oa!{O#`|O#a{O~OuwO!UyO~O!T#oP~P!aOc#VO~Oc#WO~Oq#XO}#YO~OZpO^qO_qOrsOyrO~Ou!Oa!P!Oa!S!Oa!U!Oa#_!Oab!Oa~P*]Ou!Ra!P!Ra!S!Ra!U!Ra#_!Rab!Ra~P*]OP#[OchXkhX!ZhX!`hX!jhX!mhX#bhXbhX!hhXQhXghXihXohXrhXuhX!YhX#^hX#`hX#ahX#mhXqhX!ThX~Oc!bO!j!dO!m!eO#b!aO!Z#pP~Ok#]O!`#^O~P-VOc#bO~Oq#fO#a#cO~OQ#jOg#jOi#jOo!^O#`![O#m!YO~Oc!bO!j!dO!m!eO#b#gO~P.POu#mO!f#lO!U#pX!Z#pX~Oc#pO~Ok#]O!Z#rO~O!Z#sO~Oi#tOo!^O~O!U#uO~O!UyO!f#lO~O!UyO!Z#xO~O!Y#zO!Z!Wa#^!Wa!T!Wa~P%yO!Z#XX#^#XX!T#XX~P!aO!Z!rO#^#oa!T#oa~O#f!uO#g!uO#h$QO~Oq$SO}$TO~Ou!Oi!P!Oi!S!Oi!U!Oi#_!Oib!Oi~P*]Ou!Qi!P!Qi!S!Qi!U!Qi#_!Qib!Qi~P*]Ou!Ri!P!Ri!S!Ri!U!Ri#_!Rib!Ri~P*]Ou#Va!U#Va~P#|O!T$UO~Ob#nP~P%XOb#kP~P%yOb$]Ok#]O~Oc$_O!Z!_X!j!_X!m!_X#b!_X~O!Z$`O~Ob$bOi$cOp$cO~Oq$eO#a#cO~O^!dXb!bX!f!bX!h!dX~O^$fO!h$gO~Ob$hO!f#lO~Oc!bO!j!dO!m!eO#b!aOu#ZX!U#ZX!Z#ZX~Ou#mO!U#pa!Z#pa~O!f#lOu!ia!U!ia!Z!iab!ia~O!Z$mO~O!T$tO#a$oO#m$nO~Ok#]Ou$vO!Y$xO!Z!Wi#^!Wi!T!Wi~P%yO!Z#Xa#^#Xa!T#Xa~P!aO!Z!rO#^#oi!T#oi~Ou${Ob#nX~P#|Ob$}O~Ok#]OQ#RXb#RXc#RXg#RXi#RXo#RXr#RXu#RX#`#RX#a#RX#m#RX~Ou%POb#kX~P%yOb%RO~Ok#]Oq%SO~O#a%TO~O!Z%VO~Ob%WO~O#b%YO~P.PO!f#lOu#Za!U#Za!Z#Za~Ob%[O~P#|OP#[OuhX!UhXbhX~O#m$nOu!yX!U!yX~Ou%^O!UyO~O!T%bO#a$oO#m$nO~Ok#]OQ#WXc#WXg#WXi#WXo#WXr#WXu#WX!Y#WX!Z#WX#^#WX#`#WX#a#WX#m#WX!T#WX~Ou$vO!Y%eO!Z!Wq#^!Wq!T!Wq~P%yOk#]Oq%fO~Ob#UXu#UX~P%XOu${Ob#na~Ob#TXu#TX~P%yOu%POb#ka~OZ%kOb%mO~Ob%nO~P%yOb%oO!h%pO~Ok#]OQ#Wac#Wag#Wai#Wao#War#Wau#Wa!Y#Wa!Z#Wa#^#Wa#`#Wa#a#Wa#m#Wa!T#Wa~Ob#Uau#Ua~P#|Ob#Tau#Ta~P%yOZ%kOb%vO~OQ#jOg#jOi#jOo!^O#`![O#b%YO#m$nO~Ob%xO~O#dp#e#mk!S#m~",
-  goto: "/l#sPPP#tP#wP$Q$dP$QP$v$QPP$|PPP%S%]%]P%oP%]P&`&w'^PPPP%]'{P(P(V$QP(]$Q(cP$QP$Q$QPPP(i)O)]PP#wPP)dP)g)m)m)x)mP)mP)mP)m)mP#wP#wP#wP*R#wP*U*X*[*c#wP#wP*h*n*}+]+c+i+o+u+{,V,],c,iPPPPPPPPPPP,o,x-n-qP.g.j.p.|/cRmQ_dOPfjy!r#|q[OPYZfjtuvwy!r#V#p#|${qSOPYZfjtuvwy!r#V#p#|${QoTR!xpQ}VR!yqQ!y!PQ#a!]R$R!{q!`]_!X!q#W#Y#]#y$T$Y$f$v$w%P%X%ip!`]_!X!q#W#Y#]#y$T$Y$f$v$w%P%X%iU#j!b$g%pU$q#u$s%^R%]$pp!`]_!X!q#W#Y#]#y$T$Y$f$v$w%P%X%iV#j!b$g%pw!]]_!X!b!q#W#Y#]#y$T$Y$f$g$v$w%P%X%i%pp!`]_!X!q#W#Y#]#y$T$Y$f$v$w%P%X%iQ!j`U#j!b$g%pR#t!kT#d!_#eQ!OVR!zqQ!y!OR$R!zQ!RWR!|rQ!TXR!}sQzUQ#TxQ#q!gQ#w!nQ#x!oQ%`$rR%s%_SiPyQ!tjQ#{!rR$y#|ZhPjy!r#|R#`!ZQ%U$_R%t%kc!f^bc!Z!b!d#`#l#mQ#h!bQ%Z$gR%w%pR!k`R!maR#v!mS$r#u$sR%q%^V$p#u$s%^Q!vlR$P!vQfOSjPyU!pfj#|R#|!rQ$Y#WU%O$Y%X%iQ%X$fR%i%PQ#e!_R$d#eQ%Q$YR%j%QQ$|$VR%h$|QxUR#SxQ$w#yR%d$wQ!siS#}!s$OR$O!tQ%l%UR%u%lQ#n!cR$k#nQ$s#uR%a$sQ%_$rR%r%__eOPfjy!r#|^UOPfjy!r#|Q!UYQ!VZQ#OtQ#PuQ#QvQ#RwQ$V#VQ$l#pR%g${R$Z#WQ!Z]Q!h_Q#Z!XQ#y!q[$X#W$Y$f%P%X%iQ$[#YQ$^#]S$u#y$wQ$z$TR%c$vR$W#VQkPR#UyQ!g^Q!ocQ#_!ZR$a#`W!c^c!Z#`Q!nbQ#i!bQ#o!dQ$i#lR$j#mQ#k!bQ%Z$gR%w%p",
-  nodeNames: "⚠ Unit VariableName Comment StyleSheet RuleSet UniversalSelector TagSelector TagName NestingSelector ClassSelector . ClassName PseudoClassSelector : :: PseudoClassName PseudoClassName ) ( ArgList ValueName ParenthesizedValue ColorLiteral NumberLiteral StringLiteral BinaryExpression BinOp CallExpression Callee CallLiteral CallTag ParenthesizedContent ] [ LineNames LineName , PseudoClassName ArgList IdSelector # IdName AttributeSelector AttributeName MatchOp ChildSelector ChildOp DescendantSelector SiblingSelector SiblingOp } { Block Declaration PropertyName Important ; ImportStatement AtKeyword import Layer layer LayerName KeywordQuery FeatureQuery FeatureName BinaryQuery LogicOp ComparisonQuery CompareOp UnaryQuery UnaryQueryOp ParenthesizedQuery SelectorQuery selector MediaStatement media CharsetStatement charset NamespaceStatement namespace NamespaceName KeyframesStatement keyframes KeyframeName KeyframeList KeyframeSelector KeyframeRangeName SupportsStatement supports AtRule Styles",
-  maxTerm: 126,
+  states: "EbQYQdOOO#qQdOOP#xO`OOOOQP'#Cf'#CfOOQP'#Ce'#CeO#}QdO'#ChO$nQaO'#CcO$xQdO'#CkO%TQdO'#DpO%YQdO'#DrO%_QdO'#DuO%_QdO'#DxOOQP'#FV'#FVO&eQhO'#EhOOQS'#FU'#FUOOQS'#Ek'#EkQYQdOOO&lQdO'#EOO&PQhO'#EUO&lQdO'#EWO'aQdO'#EYO'lQdO'#E]O'tQhO'#EcO(VQdO'#EeO(bQaO'#CfO)VQ`O'#D{O)[Q`O'#F`O)gQdO'#F`QOQ`OOP)qO&jO'#CaPOOO)C@t)C@tOOQP'#Cj'#CjOOQP,59S,59SO#}QdO,59SO)|QdO,59VO%TQdO,5:[O%YQdO,5:^O%_QdO,5:aO%_QdO,5:cO%_QdO,5:dO%_QdO'#ErO*XQ`O,58}O*aQdO'#DzOOQS,58},58}OOQP'#Cn'#CnOOQO'#Dn'#DnOOQP,59V,59VO*hQ`O,59VO*mQ`O,59VOOQP'#Dq'#DqOOQP,5:[,5:[OOQO'#Ds'#DsO*rQpO,5:^O+]QaO,5:aO+sQaO,5:dOOQW'#DZ'#DZO,ZQhO'#DdO,xQhO'#FaO'tQhO'#DbO-WQ`O'#DhOOQW'#F['#F[O-]Q`O,5;SO-eQ`O'#DeOOQS-E8i-E8iOOQ['#Cs'#CsO-jQdO'#CtO.QQdO'#CzO.hQdO'#C}O/OQ!pO'#DPO1RQ!jO,5:jOOQO'#DU'#DUO*mQ`O'#DTO1cQ!nO'#FXO3`Q`O'#DVO3eQ`O'#DkOOQ['#FX'#FXO-`Q`O,5:pO3jQ!bO,5:rOOQS'#E['#E[O3rQ`O,5:tO3wQdO,5:tOOQO'#E_'#E_O4PQ`O,5:wO4UQhO,5:}O%_QdO'#DgOOQS,5;P,5;PO-eQ`O,5;PO4^QdO,5;PO4fQdO,5:gO4vQdO'#EtO5TQ`O,5;zO5TQ`O,5;zPOOO'#Ej'#EjP5`O&jO,58{POOO,58{,58{OOQP1G.n1G.nOOQP1G.q1G.qO*hQ`O1G.qO*mQ`O1G.qOOQP1G/v1G/vO5kQpO1G/xO5sQaO1G/{O6ZQaO1G/}O6qQaO1G0OO7XQaO,5;^OOQO-E8p-E8pOOQS1G.i1G.iO7cQ`O,5:fO7hQdO'#DoO7oQdO'#CrOOQP1G/x1G/xO&lQdO1G/xO7vQ!jO'#DZO8UQ!bO,59vO8^QhO,5:OOOQO'#F]'#F]O8XQ!bO,59zO'tQhO,59xO8fQhO'#EvO8sQ`O,5;{O9OQhO,59|O9uQhO'#DiOOQW,5:S,5:SOOQS1G0n1G0nOOQW,5:P,5:PO9|Q!fO'#FYOOQS'#FY'#FYOOQS'#Em'#EmO;^QdO,59`OOQ[,59`,59`O;tQdO,59fOOQ[,59f,59fO<[QdO,59iOOQ[,59i,59iOOQ[,59k,59kO&lQdO,59mO<rQhO'#EQOOQW'#EQ'#EQO=WQ`O1G0UO1[QhO1G0UOOQ[,59o,59oO'tQhO'#DXOOQ[,59q,59qO=]Q#tO,5:VOOQS1G0[1G0[OOQS1G0^1G0^OOQS1G0`1G0`O=hQ`O1G0`O=mQdO'#E`OOQS1G0c1G0cOOQS1G0i1G0iO=xQaO,5:RO-`Q`O1G0kOOQS1G0k1G0kO-eQ`O1G0kO>PQ!fO1G0ROOQO1G0R1G0ROOQO,5;`,5;`O>gQdO,5;`OOQO-E8r-E8rO>tQ`O1G1fPOOO-E8h-E8hPOOO1G.g1G.gOOQP7+$]7+$]OOQP7+%d7+%dO&lQdO7+%dOOQS1G0Q1G0QO?PQaO'#F_O?ZQ`O,5:ZO?`Q!fO'#ElO@^QdO'#FWO@hQ`O,59^O@mQ!bO7+%dO&lQdO1G/bO@uQhO1G/fOOQW1G/j1G/jOOQW1G/d1G/dOAWQhO,5;bOOQO-E8t-E8tOAfQhO'#DZOAtQhO'#F^OBPQ`O'#F^OBUQ`O,5:TOOQS-E8k-E8kOOQ[1G.z1G.zOOQ[1G/Q1G/QOOQ[1G/T1G/TOOQ[1G/X1G/XOBZQdO,5:lOOQS7+%p7+%pOB`Q`O7+%pOBeQhO'#DYOBmQ`O,59sO'tQhO,59sOOQ[1G/q1G/qOBuQ`O1G/qOOQS7+%z7+%zOBzQbO'#DPOOQO'#Eb'#EbOCYQ`O'#EaOOQO'#Ea'#EaOCeQ`O'#EwOCmQdO,5:zOOQS,5:z,5:zOOQ[1G/m1G/mOOQS7+&V7+&VO-`Q`O7+&VOCxQ!fO'#EsO&lQdO'#EsOEPQdO7+%mOOQO7+%m7+%mOOQO1G0z1G0zOEdQ!bO<<IOOElQdO'#EqOEvQ`O,5;yOOQP1G/u1G/uOOQS-E8j-E8jOFOQdO'#EpOFYQ`O,5;rOOQ]1G.x1G.xOOQP<<IO<<IOOFbQdO7+$|OOQO'#D]'#D]OFiQ!bO7+%QOFqQhO'#EoOF{Q`O,5;xO&lQdO,5;xOOQW1G/o1G/oOOQO'#ES'#ESOGTQ`O1G0WOOQS<<I[<<I[O&lQdO,59tOGnQhO1G/_OOQ[1G/_1G/_OGuQ`O1G/_OOQW-E8l-E8lOOQ[7+%]7+%]OOQO,5:{,5:{O=pQdO'#ExOCeQ`O,5;cOOQS,5;c,5;cOOQS-E8u-E8uOOQS1G0f1G0fOOQS<<Iq<<IqOG}Q!fO,5;_OOQS-E8q-E8qOOQO<<IX<<IXOOQPAN>jAN>jOIUQaO,5;]OOQO-E8o-E8oOI`QdO,5;[OOQO-E8n-E8nOOQW<<Hh<<HhOOQW<<Hl<<HlOIjQhO<<HlOI{QhO,5;ZOJWQ`O,5;ZOOQO-E8m-E8mOJ]QdO1G1dOBZQdO'#EuOJgQ`O7+%rOOQW7+%r7+%rOJoQ!bO1G/`OOQ[7+$y7+$yOJzQhO7+$yPKRQ`O'#EnOOQO,5;d,5;dOOQO-E8v-E8vOOQS1G0}1G0}OKWQ`OAN>WO&lQdO1G0uOK]Q`O7+'OOOQO,5;a,5;aOOQO-E8s-E8sOOQW<<I^<<I^OOQ[<<He<<HePOQW,5;Y,5;YOOQWG23rG23rOKeQdO7+&a",
+  stateData: "Kx~O#sOS#tQQ~OW[OZ[O]TO`VOaVOi]OjWOmXO!jYO!mZO!saO!ybO!{cO!}dO#QeO#WfO#YgO#oRO~OQiOW[OZ[O]TO`VOaVOi]OjWOmXO!jYO!mZO!saO!ybO!{cO!}dO#QeO#WfO#YgO#ohO~O#m$SP~P!dO#tmO~O#ooO~O]qO`rOarOjsOmtO!juO!mwO#nvO~OpzO!^xO~P$SOc!QO#o|O#p}O~O#o!RO~O#o!TO~OW[OZ[O]TO`VOaVOjWOmXO!jYO!mZO#oRO~OS!]Oe!YO!V![O!Y!`O#q!XOp$TP~Ok$TP~P&POQ!jOe!cOm!dOp!eOr!mOt!mOz!kO!`!lO#o!bO#p!hO#}!fO~Ot!qO!`!lO#o!pO~Ot!sO#o!sO~OS!]Oe!YO!V![O!Y!`O#q!XO~Oe!vOpzO#Z!xO~O]YX`YX`!pXaYXjYXmYXpYX!^YX!jYX!mYX#nYX~O`!zO~Ok!{O#m$SXo$SX~O#m$SXo$SX~P!dO#u#OO#v#OO#w#QO~Oc#UO#o|O#p}O~OpzO!^xO~Oo$SP~P!dOe#`O~Oe#aO~Ol#bO!h#cO~O]qO`rOarOjsOmtO~Op!ia!^!ia!j!ia!m!ia#n!iad!ia~P*zOp!la!^!la!j!la!m!la#n!lad!la~P*zOR#gOS!]Oe!YOr#gOt#gO!V![O!Y!`O#q#dO#}!fO~O!R#iO!^#jOk$TXp$TX~Oe#mO~Ok#oOpzO~Oe!vO~O]#rO`#rOd#uOi#rOj#rOk#rO~P&lO]#rO`#rOi#rOj#rOk#rOl#wO~P&lO]#rO`#rOi#rOj#rOk#rOo#yO~P&lOP#zOSsXesXksXvsX!VsX!YsX!usX!wsX#qsX!TsXQsX]sX`sXdsXisXjsXmsXpsXrsXtsXzsX!`sX#osX#psX#}sXlsXosX!^sX!qsX#msX~Ov#{O!u#|O!w#}Ok$TP~P'tOe#aOS#{Xk#{Xv#{X!V#{X!Y#{X!u#{X!w#{X#q#{XQ#{X]#{X`#{Xd#{Xi#{Xj#{Xm#{Xp#{Xr#{Xt#{Xz#{X!`#{X#o#{X#p#{X#}#{Xl#{Xo#{X!^#{X!q#{X#m#{X~Oe$RO~Oe$TO~Ok$VOv#{O~Ok$WO~Ot$XO!`!lO~Op$YO~OpzO!R#iO~OpzO#Z$`O~O!q$bOk!oa#m!oao!oa~P&lOk#hX#m#hXo#hX~P!dOk!{O#m$Sao$Sa~O#u#OO#v#OO#w$hO~Ol$jO!h$kO~Op!ii!^!ii!j!ii!m!ii#n!iid!ii~P*zOp!ki!^!ki!j!ki!m!ki#n!kid!ki~P*zOp!li!^!li!j!li!m!li#n!lid!li~P*zOp#fa!^#fa~P$SOo$lO~Od$RP~P%_Od#zP~P&lO`!PXd}X!R}X!T!PX~O`$sO!T$tO~Od$uO!R#iO~Ok#jXp#jX!^#jX~P'tO!^#jOk$Tap$Ta~O!R#iOk!Uap!Ua!^!Uad!Ua`!Ua~OS!]Oe!YO!V![O!Y!`O#q$yO~Od$QP~P9dOv#{OQ#|X]#|X`#|Xd#|Xe#|Xi#|Xj#|Xk#|Xm#|Xp#|Xr#|Xt#|Xz#|X!`#|X#o#|X#p#|X#}#|Xl#|Xo#|X~O]#rO`#rOd%OOi#rOj#rOk#rO~P&lO]#rO`#rOi#rOj#rOk#rOl%PO~P&lO]#rO`#rOi#rOj#rOk#rOo%QO~P&lOe%SOS!tXk!tX!V!tX!Y!tX#q!tX~Ok%TO~Od%YOt%ZO!a%ZO~Ok%[O~Oo%cO#o%^O#}%]O~Od%dO~P$SOv#{O!^%hO!q%jOk!oi#m!oio!oi~P&lOk#ha#m#hao#ha~P!dOk!{O#m$Sio$Si~O!^%mOd$RX~P$SOd%oO~Ov#{OQ#`Xd#`Xe#`Xm#`Xp#`Xr#`Xt#`Xz#`X!^#`X!`#`X#o#`X#p#`X#}#`X~O!^%qOd#zX~P&lOd%sO~Ol%tOv#{O~OR#gOr#gOt#gO#q%vO#}!fO~O!R#iOk#jap#ja!^#ja~O`!PXd}X!R}X!^}X~O!R#iO!^%xOd$QX~O`%zO~Od%{O~O#o%|O~Ok&OO~O`&PO!R#iO~Od&ROk&QO~Od&UO~OP#zOpsX!^sXdsX~O#}%]Op#TX!^#TX~OpzO!^&WO~Oo&[O#o%^O#}%]O~Ov#{OQ#gXe#gXk#gXm#gXp#gXr#gXt#gXz#gX!^#gX!`#gX!q#gX#m#gX#o#gX#p#gX#}#gXo#gX~O!^%hO!q&`Ok!oq#m!oqo!oq~P&lOl&aOv#{O~Od#eX!^#eX~P%_O!^%mOd$Ra~Od#dX!^#dX~P&lO!^%qOd#za~Od&fO~P&lOd&gO!T&hO~Od#cX!^#cX~P9dO!^%xOd$Qa~O]&mOd&oO~OS#bae#ba!V#ba!Y#ba#q#ba~Od&qO~PG]Od&qOk&rO~Ov#{OQ#gae#gak#gam#gap#gar#gat#gaz#ga!^#ga!`#ga!q#ga#m#ga#o#ga#p#ga#}#gao#ga~Od#ea!^#ea~P$SOd#da!^#da~P&lOR#gOr#gOt#gO#q%vO#}%]O~O!R#iOd#ca!^#ca~O`&xO~O!^%xOd$Qi~P&lO]&mOd&|O~Ov#{Od|ik|i~Od&}O~PG]Ok'OO~Od'PO~O!^%xOd$Qq~Od#cq!^#cq~P&lO#s!a#t#}]#}v!m~",
+  goto: "2h$UPPPPP$VP$YP$c$uP$cP%X$cPP%_PPP%e%o%oPPPPP%oPP%oP&]P%oP%o'W%oP't'w'}'}(^'}P'}P'}P'}'}P(m'}(yP(|PP)p)v$c)|$c*SP$cP$c$cP*Y*{+YP$YP+aP+dP$YP$YP$YP+j$YP+m+p+s+z$YP$YPP$YP,P,V,f,|-[-b-l-r-x.O.U.`.f.l.rPPPPPPPPPPP.x/R/w/z0|P1U1u2O2R2U2[RnQ_^OP`kz!{$dq[OPYZ`kuvwxz!v!{#`$d%mqSOPYZ`kuvwxz!v!{#`$d%mQpTR#RqQ!OVR#SrQ#S!QS$Q!i!jR$i#U!V!mac!c!d!e!z#a#c#t#v#x#{$a$k$p$s%h%i%q%u%z&P&d&l&x'Q!U!mac!c!d!e!z#a#c#t#v#x#{$a$k$p$s%h%i%q%u%z&P&d&l&x'QU#g!Y$t&hU%`$Y%b&WR&V%_!V!iac!c!d!e!z#a#c#t#v#x#{$a$k$p$s%h%i%q%u%z&P&d&l&x'QR$S!kQ%W$RR&S%Xk!^]bf!Y![!g#i#j#m$P$R%X%xQ#e!YQ${#mQ%w$tQ&j%xR&w&hQ!ygQ#p!`Q$^!xR%f$`R#n!]!U!mac!c!d!e!z#a#c#t#v#x#{$a$k$p$s%h%i%q%u%z&P&d&l&x'QQ!qdR$X!rQ!PVR#TrQ#S!PR$i#TQ!SWR#VsQ!UXR#WtQ{UQ!wgQ#^yQ#o!_Q$U!nQ$[!uQ$_!yQ%e$^Q&Y%aQ&]%fR&v&XSjPzQ!}kQ$c!{R%k$dZiPkz!{$dR$P!gQ%}%SR&z&mR!rdR!teR$Z!tS%a$Y%bR&t&WV%_$Y%b&WQ#PmR$g#PQ`OSkPzU!a`k$dR$d!{Q$p#aY%p$p%u&d&l'QQ%u$sQ&d%qQ&l%zR'Q&xQ#t!cQ#v!dQ#x!eV$}#t#v#xQ%X$RR&T%XQ%y$zS&k%y&yR&y&lQ%r$pR&e%rQ%n$mR&c%nQyUR#]yQ%i$aR&_%iQ!|jS$e!|$fR$f!}Q&n%}R&{&nQ#k!ZR$x#kQ%b$YR&Z%bQ&X%aR&u&X__OP`kz!{$d^UOP`kz!{$dQ!VYQ!WZQ#XuQ#YvQ#ZwQ#[xQ$]!vQ$m#`R&b%mR$q#aQ!gaQ!oc[#q!c!d!e#t#v#xQ$a!zd$o#a$p$s%q%u%z&d&l&x'QQ$r#cQ%R#{S%g$a%iQ%l$kQ&^%hR&p&P]#s!c!d!e#t#v#xW!Z]b!g$PQ!ufQ#f!YQ#l![Q$v#iQ$w#jQ$z#mS%V$R%XR&i%xQ#h!YQ%w$tR&w&hR$|#mR$n#`QlPR#_zQ!_]Q!nbQ$O!gR%U$P",
+  nodeNames: "⚠ Unit VariableName VariableName QueryCallee Comment StyleSheet RuleSet UniversalSelector TagSelector TagName NestingSelector ClassSelector . ClassName PseudoClassSelector : :: PseudoClassName PseudoClassName ) ( ArgList ValueName ParenthesizedValue AtKeyword # ; ] [ BracketedValue } { BracedValue ColorLiteral NumberLiteral StringLiteral BinaryExpression BinOp CallExpression Callee IfExpression if ArgList IfBranch KeywordQuery FeatureQuery FeatureName BinaryQuery LogicOp ComparisonQuery CompareOp UnaryQuery UnaryQueryOp ParenthesizedQuery SelectorQuery selector ParenthesizedSelector CallQuery ArgList , CallLiteral CallTag ParenthesizedContent PseudoClassName ArgList IdSelector IdName AttributeSelector AttributeName MatchOp ChildSelector ChildOp DescendantSelector SiblingSelector SiblingOp Block Declaration PropertyName Important ImportStatement import Layer layer LayerName layer MediaStatement media CharsetStatement charset NamespaceStatement namespace NamespaceName KeyframesStatement keyframes KeyframeName KeyframeList KeyframeSelector KeyframeRangeName SupportsStatement supports ScopeStatement scope to AtRule Styles",
+  maxTerm: 143,
   nodeProps: [
-    ["isolate", -2,3,25,""],
-    ["openedBy", 18,"(",33,"[",51,"{"],
-    ["closedBy", 19,")",34,"]",52,"}"]
+    ["isolate", -2,5,36,""],
+    ["openedBy", 20,"(",28,"[",31,"{"],
+    ["closedBy", 21,")",29,"]",32,"}"]
   ],
   propSources: [cssHighlighting],
-  skippedNodes: [0,3,93],
-  repeatNodeCount: 13,
-  tokenData: "LU~R!^OX$}X^%u^p$}pq%uqr)Xrs.Rst/utu6duv$}vw7^wx7oxy9^yz9oz{9t{|:_|}?Q}!O?c!O!P@Q!P!Q@i!Q![Ab![!]B]!]!^CX!^!_Cj!_!`Df!`!aDy!a!b$}!b!cEz!c!}$}!}#OHX#O#P$}#P#QHj#Q#R6d#R#T$}#T#UH{#U#c$}#c#dJ^#d#o$}#o#pJs#p#q6d#q#rKU#r#sKg#s#y$}#y#z%u#z$f$}$f$g%u$g#BY$}#BY#BZ%u#BZ$IS$}$IS$I_%u$I_$I|$}$I|$JO%u$JO$JT$}$JT$JU%u$JU$KV$}$KV$KW%u$KW&FU$}&FU&FV%u&FV;'S$};'S;=`LO<%lO$}`%QSOy%^z;'S%^;'S;=`%o<%lO%^`%cSp`Oy%^z;'S%^;'S;=`%o<%lO%^`%rP;=`<%l%^~%zh#d~OX%^X^'f^p%^pq'fqy%^z#y%^#y#z'f#z$f%^$f$g'f$g#BY%^#BY#BZ'f#BZ$IS%^$IS$I_'f$I_$I|%^$I|$JO'f$JO$JT%^$JT$JU'f$JU$KV%^$KV$KW'f$KW&FU%^&FU&FV'f&FV;'S%^;'S;=`%o<%lO%^~'mh#d~p`OX%^X^'f^p%^pq'fqy%^z#y%^#y#z'f#z$f%^$f$g'f$g#BY%^#BY#BZ'f#BZ$IS%^$IS$I_'f$I_$I|%^$I|$JO'f$JO$JT%^$JT$JU'f$JU$KV%^$KV$KW'f$KW&FU%^&FU&FV'f&FV;'S%^;'S;=`%o<%lO%^l)[UOy%^z#]%^#]#^)n#^;'S%^;'S;=`%o<%lO%^l)sUp`Oy%^z#a%^#a#b*V#b;'S%^;'S;=`%o<%lO%^l*[Up`Oy%^z#d%^#d#e*n#e;'S%^;'S;=`%o<%lO%^l*sUp`Oy%^z#c%^#c#d+V#d;'S%^;'S;=`%o<%lO%^l+[Up`Oy%^z#f%^#f#g+n#g;'S%^;'S;=`%o<%lO%^l+sUp`Oy%^z#h%^#h#i,V#i;'S%^;'S;=`%o<%lO%^l,[Up`Oy%^z#T%^#T#U,n#U;'S%^;'S;=`%o<%lO%^l,sUp`Oy%^z#b%^#b#c-V#c;'S%^;'S;=`%o<%lO%^l-[Up`Oy%^z#h%^#h#i-n#i;'S%^;'S;=`%o<%lO%^l-uS!Y[p`Oy%^z;'S%^;'S;=`%o<%lO%^~.UWOY.RZr.Rrs.ns#O.R#O#P.s#P;'S.R;'S;=`/o<%lO.R~.sOi~~.vRO;'S.R;'S;=`/P;=`O.R~/SXOY.RZr.Rrs.ns#O.R#O#P.s#P;'S.R;'S;=`/o;=`<%l.R<%lO.R~/rP;=`<%l.Rn/zYyQOy%^z!Q%^!Q![0j![!c%^!c!i0j!i#T%^#T#Z0j#Z;'S%^;'S;=`%o<%lO%^l0oYp`Oy%^z!Q%^!Q![1_![!c%^!c!i1_!i#T%^#T#Z1_#Z;'S%^;'S;=`%o<%lO%^l1dYp`Oy%^z!Q%^!Q![2S![!c%^!c!i2S!i#T%^#T#Z2S#Z;'S%^;'S;=`%o<%lO%^l2ZYg[p`Oy%^z!Q%^!Q![2y![!c%^!c!i2y!i#T%^#T#Z2y#Z;'S%^;'S;=`%o<%lO%^l3QYg[p`Oy%^z!Q%^!Q![3p![!c%^!c!i3p!i#T%^#T#Z3p#Z;'S%^;'S;=`%o<%lO%^l3uYp`Oy%^z!Q%^!Q![4e![!c%^!c!i4e!i#T%^#T#Z4e#Z;'S%^;'S;=`%o<%lO%^l4lYg[p`Oy%^z!Q%^!Q![5[![!c%^!c!i5[!i#T%^#T#Z5[#Z;'S%^;'S;=`%o<%lO%^l5aYp`Oy%^z!Q%^!Q![6P![!c%^!c!i6P!i#T%^#T#Z6P#Z;'S%^;'S;=`%o<%lO%^l6WSg[p`Oy%^z;'S%^;'S;=`%o<%lO%^d6gUOy%^z!_%^!_!`6y!`;'S%^;'S;=`%o<%lO%^d7QS}Sp`Oy%^z;'S%^;'S;=`%o<%lO%^b7cSXQOy%^z;'S%^;'S;=`%o<%lO%^~7rWOY7oZw7owx.nx#O7o#O#P8[#P;'S7o;'S;=`9W<%lO7o~8_RO;'S7o;'S;=`8h;=`O7o~8kXOY7oZw7owx.nx#O7o#O#P8[#P;'S7o;'S;=`9W;=`<%l7o<%lO7o~9ZP;=`<%l7on9cSc^Oy%^z;'S%^;'S;=`%o<%lO%^~9tOb~n9{UUQkWOy%^z!_%^!_!`6y!`;'S%^;'S;=`%o<%lO%^n:fWkW!SQOy%^z!O%^!O!P;O!P!Q%^!Q![>T![;'S%^;'S;=`%o<%lO%^l;TUp`Oy%^z!Q%^!Q![;g![;'S%^;'S;=`%o<%lO%^l;nYp`#m[Oy%^z!Q%^!Q![;g![!g%^!g!h<^!h#X%^#X#Y<^#Y;'S%^;'S;=`%o<%lO%^l<cYp`Oy%^z{%^{|=R|}%^}!O=R!O!Q%^!Q![=j![;'S%^;'S;=`%o<%lO%^l=WUp`Oy%^z!Q%^!Q![=j![;'S%^;'S;=`%o<%lO%^l=qUp`#m[Oy%^z!Q%^!Q![=j![;'S%^;'S;=`%o<%lO%^l>[[p`#m[Oy%^z!O%^!O!P;g!P!Q%^!Q![>T![!g%^!g!h<^!h#X%^#X#Y<^#Y;'S%^;'S;=`%o<%lO%^n?VSu^Oy%^z;'S%^;'S;=`%o<%lO%^l?hWkWOy%^z!O%^!O!P;O!P!Q%^!Q![>T![;'S%^;'S;=`%o<%lO%^n@VUZQOy%^z!Q%^!Q![;g![;'S%^;'S;=`%o<%lO%^~@nTkWOy%^z{@}{;'S%^;'S;=`%o<%lO%^~AUSp`#e~Oy%^z;'S%^;'S;=`%o<%lO%^lAg[#m[Oy%^z!O%^!O!P;g!P!Q%^!Q![>T![!g%^!g!h<^!h#X%^#X#Y<^#Y;'S%^;'S;=`%o<%lO%^jBbU^YOy%^z![%^![!]Bt!];'S%^;'S;=`%o<%lO%^bB{S_Qp`Oy%^z;'S%^;'S;=`%o<%lO%^nC^S!Z^Oy%^z;'S%^;'S;=`%o<%lO%^hCoU!hWOy%^z!_%^!_!`DR!`;'S%^;'S;=`%o<%lO%^hDYS!hWp`Oy%^z;'S%^;'S;=`%o<%lO%^lDmS!hW}SOy%^z;'S%^;'S;=`%o<%lO%^jEQV!PQ!hWOy%^z!_%^!_!`DR!`!aEg!a;'S%^;'S;=`%o<%lO%^bEnS!PQp`Oy%^z;'S%^;'S;=`%o<%lO%^bE}YOy%^z}%^}!OFm!O!c%^!c!}G[!}#T%^#T#oG[#o;'S%^;'S;=`%o<%lO%^bFrWp`Oy%^z!c%^!c!}G[!}#T%^#T#oG[#o;'S%^;'S;=`%o<%lO%^bGc[!]Qp`Oy%^z}%^}!OG[!O!Q%^!Q![G[![!c%^!c!}G[!}#T%^#T#oG[#o;'S%^;'S;=`%o<%lO%^nH^Sr^Oy%^z;'S%^;'S;=`%o<%lO%^nHoSq^Oy%^z;'S%^;'S;=`%o<%lO%^jIOUOy%^z#b%^#b#cIb#c;'S%^;'S;=`%o<%lO%^jIgUp`Oy%^z#W%^#W#XIy#X;'S%^;'S;=`%o<%lO%^jJQS!fYp`Oy%^z;'S%^;'S;=`%o<%lO%^jJaUOy%^z#f%^#f#gIy#g;'S%^;'S;=`%o<%lO%^fJxS!UUOy%^z;'S%^;'S;=`%o<%lO%^nKZS!T^Oy%^z;'S%^;'S;=`%o<%lO%^fKlU!SQOy%^z!_%^!_!`6y!`;'S%^;'S;=`%o<%lO%^`LRP;=`<%l$}",
-  tokenizers: [descendant, unitToken, identifiers, 1, 2, 3, 4, new LocalTokenGroup("m~RRYZ[z{a~~g~aO#g~~dP!P!Qg~lO#h~~", 28, 114)],
-  topRules: {"StyleSheet":[0,4],"Styles":[1,92]},
-  specialized: [{term: 108, get: (value) => spec_callee[value] || -1},{term: 59, get: (value) => spec_AtKeyword[value] || -1},{term: 110, get: (value) => spec_queryIdentifier[value] || -1}],
-  tokenPrec: 1441
+  skippedNodes: [0,5,106],
+  repeatNodeCount: 15,
+  tokenData: "JQ~R!YOX$qX^%i^p$qpq%iqr({rs-ust/itu6Wuv$qvw7Qwx7cxy9Qyz9cz{9h{|:R|}>t}!O?V!O!P?t!P!Q@]!Q![AU![!]BP!]!^B{!^!_C^!_!`DY!`!aDm!a!b$q!b!cEn!c!}$q!}#OG{#O#P$q#P#QH^#Q#R6W#R#o$q#o#pHo#p#q6W#q#rIQ#r#sIc#s#y$q#y#z%i#z$f$q$f$g%i$g#BY$q#BY#BZ%i#BZ$IS$q$IS$I_%i$I_$I|$q$I|$JO%i$JO$JT$q$JT$JU%i$JU$KV$q$KV$KW%i$KW&FU$q&FU&FV%i&FV;'S$q;'S;=`Iz<%lO$q`$tSOy%Qz;'S%Q;'S;=`%c<%lO%Q`%VS!a`Oy%Qz;'S%Q;'S;=`%c<%lO%Q`%fP;=`<%l%Q~%nh#s~OX%QX^'Y^p%Qpq'Yqy%Qz#y%Q#y#z'Y#z$f%Q$f$g'Y$g#BY%Q#BY#BZ'Y#BZ$IS%Q$IS$I_'Y$I_$I|%Q$I|$JO'Y$JO$JT%Q$JT$JU'Y$JU$KV%Q$KV$KW'Y$KW&FU%Q&FU&FV'Y&FV;'S%Q;'S;=`%c<%lO%Q~'ah#s~!a`OX%QX^'Y^p%Qpq'Yqy%Qz#y%Q#y#z'Y#z$f%Q$f$g'Y$g#BY%Q#BY#BZ'Y#BZ$IS%Q$IS$I_'Y$I_$I|%Q$I|$JO'Y$JO$JT%Q$JT$JU'Y$JU$KV%Q$KV$KW'Y$KW&FU%Q&FU&FV'Y&FV;'S%Q;'S;=`%c<%lO%Qj)OUOy%Qz#]%Q#]#^)b#^;'S%Q;'S;=`%c<%lO%Qj)gU!a`Oy%Qz#a%Q#a#b)y#b;'S%Q;'S;=`%c<%lO%Qj*OU!a`Oy%Qz#d%Q#d#e*b#e;'S%Q;'S;=`%c<%lO%Qj*gU!a`Oy%Qz#c%Q#c#d*y#d;'S%Q;'S;=`%c<%lO%Qj+OU!a`Oy%Qz#f%Q#f#g+b#g;'S%Q;'S;=`%c<%lO%Qj+gU!a`Oy%Qz#h%Q#h#i+y#i;'S%Q;'S;=`%c<%lO%Qj,OU!a`Oy%Qz#T%Q#T#U,b#U;'S%Q;'S;=`%c<%lO%Qj,gU!a`Oy%Qz#b%Q#b#c,y#c;'S%Q;'S;=`%c<%lO%Qj-OU!a`Oy%Qz#h%Q#h#i-b#i;'S%Q;'S;=`%c<%lO%Qj-iS!qY!a`Oy%Qz;'S%Q;'S;=`%c<%lO%Q~-xWOY-uZr-urs.bs#O-u#O#P.g#P;'S-u;'S;=`/c<%lO-u~.gOt~~.jRO;'S-u;'S;=`.s;=`O-u~.vXOY-uZr-urs.bs#O-u#O#P.g#P;'S-u;'S;=`/c;=`<%l-u<%lO-u~/fP;=`<%l-uj/nYjYOy%Qz!Q%Q!Q![0^![!c%Q!c!i0^!i#T%Q#T#Z0^#Z;'S%Q;'S;=`%c<%lO%Qj0cY!a`Oy%Qz!Q%Q!Q![1R![!c%Q!c!i1R!i#T%Q#T#Z1R#Z;'S%Q;'S;=`%c<%lO%Qj1WY!a`Oy%Qz!Q%Q!Q![1v![!c%Q!c!i1v!i#T%Q#T#Z1v#Z;'S%Q;'S;=`%c<%lO%Qj1}YrY!a`Oy%Qz!Q%Q!Q![2m![!c%Q!c!i2m!i#T%Q#T#Z2m#Z;'S%Q;'S;=`%c<%lO%Qj2tYrY!a`Oy%Qz!Q%Q!Q![3d![!c%Q!c!i3d!i#T%Q#T#Z3d#Z;'S%Q;'S;=`%c<%lO%Qj3iY!a`Oy%Qz!Q%Q!Q![4X![!c%Q!c!i4X!i#T%Q#T#Z4X#Z;'S%Q;'S;=`%c<%lO%Qj4`YrY!a`Oy%Qz!Q%Q!Q![5O![!c%Q!c!i5O!i#T%Q#T#Z5O#Z;'S%Q;'S;=`%c<%lO%Qj5TY!a`Oy%Qz!Q%Q!Q![5s![!c%Q!c!i5s!i#T%Q#T#Z5s#Z;'S%Q;'S;=`%c<%lO%Qj5zSrY!a`Oy%Qz;'S%Q;'S;=`%c<%lO%Qd6ZUOy%Qz!_%Q!_!`6m!`;'S%Q;'S;=`%c<%lO%Qd6tS!hS!a`Oy%Qz;'S%Q;'S;=`%c<%lO%Qb7VSZQOy%Qz;'S%Q;'S;=`%c<%lO%Q~7fWOY7cZw7cwx.bx#O7c#O#P8O#P;'S7c;'S;=`8z<%lO7c~8RRO;'S7c;'S;=`8[;=`O7c~8_XOY7cZw7cwx.bx#O7c#O#P8O#P;'S7c;'S;=`8z;=`<%l7c<%lO7c~8}P;=`<%l7cj9VSeYOy%Qz;'S%Q;'S;=`%c<%lO%Q~9hOd~n9oUWQvWOy%Qz!_%Q!_!`6m!`;'S%Q;'S;=`%c<%lO%Qj:YWvW!mQOy%Qz!O%Q!O!P:r!P!Q%Q!Q![=w![;'S%Q;'S;=`%c<%lO%Qj:wU!a`Oy%Qz!Q%Q!Q![;Z![;'S%Q;'S;=`%c<%lO%Qj;bY!a`#}YOy%Qz!Q%Q!Q![;Z![!g%Q!g!h<Q!h#X%Q#X#Y<Q#Y;'S%Q;'S;=`%c<%lO%Qj<VY!a`Oy%Qz{%Q{|<u|}%Q}!O<u!O!Q%Q!Q![=^![;'S%Q;'S;=`%c<%lO%Qj<zU!a`Oy%Qz!Q%Q!Q![=^![;'S%Q;'S;=`%c<%lO%Qj=eU!a`#}YOy%Qz!Q%Q!Q![=^![;'S%Q;'S;=`%c<%lO%Qj>O[!a`#}YOy%Qz!O%Q!O!P;Z!P!Q%Q!Q![=w![!g%Q!g!h<Q!h#X%Q#X#Y<Q#Y;'S%Q;'S;=`%c<%lO%Qj>yS!^YOy%Qz;'S%Q;'S;=`%c<%lO%Qj?[WvWOy%Qz!O%Q!O!P:r!P!Q%Q!Q![=w![;'S%Q;'S;=`%c<%lO%Qj?yU]YOy%Qz!Q%Q!Q![;Z![;'S%Q;'S;=`%c<%lO%Q~@bTvWOy%Qz{@q{;'S%Q;'S;=`%c<%lO%Q~@xS!a`#t~Oy%Qz;'S%Q;'S;=`%c<%lO%QjAZ[#}YOy%Qz!O%Q!O!P;Z!P!Q%Q!Q![=w![!g%Q!g!h<Q!h#X%Q#X#Y<Q#Y;'S%Q;'S;=`%c<%lO%QjBUU`YOy%Qz![%Q![!]Bh!];'S%Q;'S;=`%c<%lO%QbBoSaQ!a`Oy%Qz;'S%Q;'S;=`%c<%lO%QjCQSkYOy%Qz;'S%Q;'S;=`%c<%lO%QhCcU!TWOy%Qz!_%Q!_!`Cu!`;'S%Q;'S;=`%c<%lO%QhC|S!TW!a`Oy%Qz;'S%Q;'S;=`%c<%lO%QlDaS!TW!hSOy%Qz;'S%Q;'S;=`%c<%lO%QjDtV!jQ!TWOy%Qz!_%Q!_!`Cu!`!aEZ!a;'S%Q;'S;=`%c<%lO%QbEbS!jQ!a`Oy%Qz;'S%Q;'S;=`%c<%lO%QjEqYOy%Qz}%Q}!OFa!O!c%Q!c!}GO!}#T%Q#T#oGO#o;'S%Q;'S;=`%c<%lO%QjFfW!a`Oy%Qz!c%Q!c!}GO!}#T%Q#T#oGO#o;'S%Q;'S;=`%c<%lO%QjGV[iY!a`Oy%Qz}%Q}!OGO!O!Q%Q!Q![GO![!c%Q!c!}GO!}#T%Q#T#oGO#o;'S%Q;'S;=`%c<%lO%QjHQSmYOy%Qz;'S%Q;'S;=`%c<%lO%QnHcSl^Oy%Qz;'S%Q;'S;=`%c<%lO%QjHtSpYOy%Qz;'S%Q;'S;=`%c<%lO%QjIVSoYOy%Qz;'S%Q;'S;=`%c<%lO%QfIhU!mQOy%Qz!_%Q!_!`6m!`;'S%Q;'S;=`%c<%lO%Q`I}P;=`<%l$q",
+  tokenizers: [descendant, unitToken, identifiers, queryIdentifiers, 1, 2, 3, 4, new LocalTokenGroup("m~RRYZ[z{a~~g~aO#v~~dP!P!Qg~lO#w~~", 28, 129)],
+  topRules: {"StyleSheet":[0,6],"Styles":[1,105]},
+  specialized: [{term: 124, get: (value) => spec_callee[value] || -1},{term: 125, get: (value) => spec_queryIdentifier[value] || -1},{term: 4, get: (value) => spec_QueryCallee[value] || -1},{term: 25, get: (value) => spec_AtKeyword[value] || -1},{term: 123, get: (value) => spec_identifier$1[value] || -1}],
+  tokenPrec: 1963
 });
-
-var _a$3;
-/**
-Node prop stored in a parser's top syntax node to provide the
-facet that stores language-specific data for that language.
-*/
-const languageDataProp$3 = /*@__PURE__*/new NodeProp();
-/**
-Helper function to define a facet (to be added to the top syntax
-node(s) for a language via
-[`languageDataProp`](https://codemirror.net/6/docs/ref/#language.languageDataProp)), that will be
-used to associate language data with the language. You
-probably only need this when subclassing
-[`Language`](https://codemirror.net/6/docs/ref/#language.Language).
-*/
-function defineLanguageFacet$3(baseData) {
-    return Facet.define({
-        combine: baseData ? values => values.concat(baseData) : undefined
-    });
-}
-/**
-Syntax node prop used to register sublanguages. Should be added to
-the top level node type for the language.
-*/
-const sublanguageProp$3 = /*@__PURE__*/new NodeProp();
-/**
-A language object manages parsing and per-language
-[metadata](https://codemirror.net/6/docs/ref/#state.EditorState.languageDataAt). Parse data is
-managed as a [Lezer](https://lezer.codemirror.net) tree. The class
-can be used directly, via the [`LRLanguage`](https://codemirror.net/6/docs/ref/#language.LRLanguage)
-subclass for [Lezer](https://lezer.codemirror.net/) LR parsers, or
-via the [`StreamLanguage`](https://codemirror.net/6/docs/ref/#language.StreamLanguage) subclass
-for stream parsers.
-*/
-let Language$3 = class Language {
-    /**
-    Construct a language object. If you need to invoke this
-    directly, first define a data facet with
-    [`defineLanguageFacet`](https://codemirror.net/6/docs/ref/#language.defineLanguageFacet), and then
-    configure your parser to [attach](https://codemirror.net/6/docs/ref/#language.languageDataProp) it
-    to the language's outer syntax node.
-    */
-    constructor(
-    /**
-    The [language data](https://codemirror.net/6/docs/ref/#state.EditorState.languageDataAt) facet
-    used for this language.
-    */
-    data, parser, extraExtensions = [], 
-    /**
-    A language name.
-    */
-    name = "") {
-        this.data = data;
-        this.name = name;
-        // Kludge to define EditorState.tree as a debugging helper,
-        // without the EditorState package actually knowing about
-        // languages and lezer trees.
-        if (!EditorState.prototype.hasOwnProperty("tree"))
-            Object.defineProperty(EditorState.prototype, "tree", { get() { return syntaxTree$3(this); } });
-        this.parser = parser;
-        this.extension = [
-            language$3.of(this),
-            EditorState.languageData.of((state, pos, side) => {
-                let top = topNodeAt$3(state, pos, side), data = top.type.prop(languageDataProp$3);
-                if (!data)
-                    return [];
-                let base = state.facet(data), sub = top.type.prop(sublanguageProp$3);
-                if (sub) {
-                    let innerNode = top.resolve(pos - top.from, side);
-                    for (let sublang of sub)
-                        if (sublang.test(innerNode, state)) {
-                            let data = state.facet(sublang.facet);
-                            return sublang.type == "replace" ? data : data.concat(base);
-                        }
-                }
-                return base;
-            })
-        ].concat(extraExtensions);
-    }
-    /**
-    Query whether this language is active at the given position.
-    */
-    isActiveAt(state, pos, side = -1) {
-        return topNodeAt$3(state, pos, side).type.prop(languageDataProp$3) == this.data;
-    }
-    /**
-    Find the document regions that were parsed using this language.
-    The returned regions will _include_ any nested languages rooted
-    in this language, when those exist.
-    */
-    findRegions(state) {
-        let lang = state.facet(language$3);
-        if ((lang === null || lang === void 0 ? void 0 : lang.data) == this.data)
-            return [{ from: 0, to: state.doc.length }];
-        if (!lang || !lang.allowsNesting)
-            return [];
-        let result = [];
-        let explore = (tree, from) => {
-            if (tree.prop(languageDataProp$3) == this.data) {
-                result.push({ from, to: from + tree.length });
-                return;
-            }
-            let mount = tree.prop(NodeProp.mounted);
-            if (mount) {
-                if (mount.tree.prop(languageDataProp$3) == this.data) {
-                    if (mount.overlay)
-                        for (let r of mount.overlay)
-                            result.push({ from: r.from + from, to: r.to + from });
-                    else
-                        result.push({ from: from, to: from + tree.length });
-                    return;
-                }
-                else if (mount.overlay) {
-                    let size = result.length;
-                    explore(mount.tree, mount.overlay[0].from + from);
-                    if (result.length > size)
-                        return;
-                }
-            }
-            for (let i = 0; i < tree.children.length; i++) {
-                let ch = tree.children[i];
-                if (ch instanceof Tree)
-                    explore(ch, tree.positions[i] + from);
-            }
-        };
-        explore(syntaxTree$3(state), 0);
-        return result;
-    }
-    /**
-    Indicates whether this language allows nested languages. The
-    default implementation returns true.
-    */
-    get allowsNesting() { return true; }
-};
-/**
-@internal
-*/
-Language$3.setState = /*@__PURE__*/StateEffect.define();
-function topNodeAt$3(state, pos, side) {
-    let topLang = state.facet(language$3), tree = syntaxTree$3(state).topNode;
-    if (!topLang || topLang.allowsNesting) {
-        for (let node = tree; node; node = node.enter(pos, side, IterMode.ExcludeBuffers))
-            if (node.type.isTop)
-                tree = node;
-    }
-    return tree;
-}
-/**
-A subclass of [`Language`](https://codemirror.net/6/docs/ref/#language.Language) for use with Lezer
-[LR parsers](https://lezer.codemirror.net/docs/ref#lr.LRParser)
-parsers.
-*/
-let LRLanguage$2 = class LRLanguage extends Language$3 {
-    constructor(data, parser, name) {
-        super(data, parser, [], name);
-        this.parser = parser;
-    }
-    /**
-    Define a language from a parser.
-    */
-    static define(spec) {
-        let data = defineLanguageFacet$3(spec.languageData);
-        return new LRLanguage(data, spec.parser.configure({
-            props: [languageDataProp$3.add(type => type.isTop ? data : undefined)]
-        }), spec.name);
-    }
-    /**
-    Create a new instance of this language with a reconfigured
-    version of its parser and optionally a new name.
-    */
-    configure(options, name) {
-        return new LRLanguage(this.data, this.parser.configure(options), name || this.name);
-    }
-    get allowsNesting() { return this.parser.hasWrappers(); }
-};
-/**
-Get the syntax tree for a state, which is the current (possibly
-incomplete) parse tree of the active
-[language](https://codemirror.net/6/docs/ref/#language.Language), or the empty tree if there is no
-language available.
-*/
-function syntaxTree$3(state) {
-    let field = state.field(Language$3.state, false);
-    return field ? field.tree : Tree.empty;
-}
-/**
-Lezer-style
-[`Input`](https://lezer.codemirror.net/docs/ref#common.Input)
-object for a [`Text`](https://codemirror.net/6/docs/ref/#state.Text) object.
-*/
-let DocInput$3 = class DocInput {
-    /**
-    Create an input object for the given document.
-    */
-    constructor(doc) {
-        this.doc = doc;
-        this.cursorPos = 0;
-        this.string = "";
-        this.cursor = doc.iter();
-    }
-    get length() { return this.doc.length; }
-    syncTo(pos) {
-        this.string = this.cursor.next(pos - this.cursorPos).value;
-        this.cursorPos = pos + this.string.length;
-        return this.cursorPos - this.string.length;
-    }
-    chunk(pos) {
-        this.syncTo(pos);
-        return this.string;
-    }
-    get lineChunks() { return true; }
-    read(from, to) {
-        let stringStart = this.cursorPos - this.string.length;
-        if (from < stringStart || to >= this.cursorPos)
-            return this.doc.sliceString(from, to);
-        else
-            return this.string.slice(from - stringStart, to - stringStart);
-    }
-};
-let currentContext$3 = null;
-/**
-A parse context provided to parsers working on the editor content.
-*/
-let ParseContext$3 = class ParseContext {
-    constructor(parser, 
-    /**
-    The current editor state.
-    */
-    state, 
-    /**
-    Tree fragments that can be reused by incremental re-parses.
-    */
-    fragments = [], 
-    /**
-    @internal
-    */
-    tree, 
-    /**
-    @internal
-    */
-    treeLen, 
-    /**
-    The current editor viewport (or some overapproximation
-    thereof). Intended to be used for opportunistically avoiding
-    work (in which case
-    [`skipUntilInView`](https://codemirror.net/6/docs/ref/#language.ParseContext.skipUntilInView)
-    should be called to make sure the parser is restarted when the
-    skipped region becomes visible).
-    */
-    viewport, 
-    /**
-    @internal
-    */
-    skipped, 
-    /**
-    This is where skipping parsers can register a promise that,
-    when resolved, will schedule a new parse. It is cleared when
-    the parse worker picks up the promise. @internal
-    */
-    scheduleOn) {
-        this.parser = parser;
-        this.state = state;
-        this.fragments = fragments;
-        this.tree = tree;
-        this.treeLen = treeLen;
-        this.viewport = viewport;
-        this.skipped = skipped;
-        this.scheduleOn = scheduleOn;
-        this.parse = null;
-        /**
-        @internal
-        */
-        this.tempSkipped = [];
-    }
-    /**
-    @internal
-    */
-    static create(parser, state, viewport) {
-        return new ParseContext(parser, state, [], Tree.empty, 0, viewport, [], null);
-    }
-    startParse() {
-        return this.parser.startParse(new DocInput$3(this.state.doc), this.fragments);
-    }
-    /**
-    @internal
-    */
-    work(until, upto) {
-        if (upto != null && upto >= this.state.doc.length)
-            upto = undefined;
-        if (this.tree != Tree.empty && this.isDone(upto !== null && upto !== void 0 ? upto : this.state.doc.length)) {
-            this.takeTree();
-            return true;
-        }
-        return this.withContext(() => {
-            var _a;
-            if (typeof until == "number") {
-                let endTime = Date.now() + until;
-                until = () => Date.now() > endTime;
-            }
-            if (!this.parse)
-                this.parse = this.startParse();
-            if (upto != null && (this.parse.stoppedAt == null || this.parse.stoppedAt > upto) &&
-                upto < this.state.doc.length)
-                this.parse.stopAt(upto);
-            for (;;) {
-                let done = this.parse.advance();
-                if (done) {
-                    this.fragments = this.withoutTempSkipped(TreeFragment.addTree(done, this.fragments, this.parse.stoppedAt != null));
-                    this.treeLen = (_a = this.parse.stoppedAt) !== null && _a !== void 0 ? _a : this.state.doc.length;
-                    this.tree = done;
-                    this.parse = null;
-                    if (this.treeLen < (upto !== null && upto !== void 0 ? upto : this.state.doc.length))
-                        this.parse = this.startParse();
-                    else
-                        return true;
-                }
-                if (until())
-                    return false;
-            }
-        });
-    }
-    /**
-    @internal
-    */
-    takeTree() {
-        let pos, tree;
-        if (this.parse && (pos = this.parse.parsedPos) >= this.treeLen) {
-            if (this.parse.stoppedAt == null || this.parse.stoppedAt > pos)
-                this.parse.stopAt(pos);
-            this.withContext(() => { while (!(tree = this.parse.advance())) { } });
-            this.treeLen = pos;
-            this.tree = tree;
-            this.fragments = this.withoutTempSkipped(TreeFragment.addTree(this.tree, this.fragments, true));
-            this.parse = null;
-        }
-    }
-    withContext(f) {
-        let prev = currentContext$3;
-        currentContext$3 = this;
-        try {
-            return f();
-        }
-        finally {
-            currentContext$3 = prev;
-        }
-    }
-    withoutTempSkipped(fragments) {
-        for (let r; r = this.tempSkipped.pop();)
-            fragments = cutFragments$3(fragments, r.from, r.to);
-        return fragments;
-    }
-    /**
-    @internal
-    */
-    changes(changes, newState) {
-        let { fragments, tree, treeLen, viewport, skipped } = this;
-        this.takeTree();
-        if (!changes.empty) {
-            let ranges = [];
-            changes.iterChangedRanges((fromA, toA, fromB, toB) => ranges.push({ fromA, toA, fromB, toB }));
-            fragments = TreeFragment.applyChanges(fragments, ranges);
-            tree = Tree.empty;
-            treeLen = 0;
-            viewport = { from: changes.mapPos(viewport.from, -1), to: changes.mapPos(viewport.to, 1) };
-            if (this.skipped.length) {
-                skipped = [];
-                for (let r of this.skipped) {
-                    let from = changes.mapPos(r.from, 1), to = changes.mapPos(r.to, -1);
-                    if (from < to)
-                        skipped.push({ from, to });
-                }
-            }
-        }
-        return new ParseContext(this.parser, newState, fragments, tree, treeLen, viewport, skipped, this.scheduleOn);
-    }
-    /**
-    @internal
-    */
-    updateViewport(viewport) {
-        if (this.viewport.from == viewport.from && this.viewport.to == viewport.to)
-            return false;
-        this.viewport = viewport;
-        let startLen = this.skipped.length;
-        for (let i = 0; i < this.skipped.length; i++) {
-            let { from, to } = this.skipped[i];
-            if (from < viewport.to && to > viewport.from) {
-                this.fragments = cutFragments$3(this.fragments, from, to);
-                this.skipped.splice(i--, 1);
-            }
-        }
-        if (this.skipped.length >= startLen)
-            return false;
-        this.reset();
-        return true;
-    }
-    /**
-    @internal
-    */
-    reset() {
-        if (this.parse) {
-            this.takeTree();
-            this.parse = null;
-        }
-    }
-    /**
-    Notify the parse scheduler that the given region was skipped
-    because it wasn't in view, and the parse should be restarted
-    when it comes into view.
-    */
-    skipUntilInView(from, to) {
-        this.skipped.push({ from, to });
-    }
-    /**
-    Returns a parser intended to be used as placeholder when
-    asynchronously loading a nested parser. It'll skip its input and
-    mark it as not-really-parsed, so that the next update will parse
-    it again.
-    
-    When `until` is given, a reparse will be scheduled when that
-    promise resolves.
-    */
-    static getSkippingParser(until) {
-        return new class extends Parser {
-            createParse(input, fragments, ranges) {
-                let from = ranges[0].from, to = ranges[ranges.length - 1].to;
-                let parser = {
-                    parsedPos: from,
-                    advance() {
-                        let cx = currentContext$3;
-                        if (cx) {
-                            for (let r of ranges)
-                                cx.tempSkipped.push(r);
-                            if (until)
-                                cx.scheduleOn = cx.scheduleOn ? Promise.all([cx.scheduleOn, until]) : until;
-                        }
-                        this.parsedPos = to;
-                        return new Tree(NodeType.none, [], [], to - from);
-                    },
-                    stoppedAt: null,
-                    stopAt() { }
-                };
-                return parser;
-            }
-        };
-    }
-    /**
-    @internal
-    */
-    isDone(upto) {
-        upto = Math.min(upto, this.state.doc.length);
-        let frags = this.fragments;
-        return this.treeLen >= upto && frags.length && frags[0].from == 0 && frags[0].to >= upto;
-    }
-    /**
-    Get the context for the current parse, or `null` if no editor
-    parse is in progress.
-    */
-    static get() { return currentContext$3; }
-};
-function cutFragments$3(fragments, from, to) {
-    return TreeFragment.applyChanges(fragments, [{ fromA: from, toA: to, fromB: from, toB: to }]);
-}
-let LanguageState$3 = class LanguageState {
-    constructor(
-    // A mutable parse state that is used to preserve work done during
-    // the lifetime of a state when moving to the next state.
-    context) {
-        this.context = context;
-        this.tree = context.tree;
-    }
-    apply(tr) {
-        if (!tr.docChanged && this.tree == this.context.tree)
-            return this;
-        let newCx = this.context.changes(tr.changes, tr.state);
-        // If the previous parse wasn't done, go forward only up to its
-        // end position or the end of the viewport, to avoid slowing down
-        // state updates with parse work beyond the viewport.
-        let upto = this.context.treeLen == tr.startState.doc.length ? undefined
-            : Math.max(tr.changes.mapPos(this.context.treeLen), newCx.viewport.to);
-        if (!newCx.work(20 /* Work.Apply */, upto))
-            newCx.takeTree();
-        return new LanguageState(newCx);
-    }
-    static init(state) {
-        let vpTo = Math.min(3000 /* Work.InitViewport */, state.doc.length);
-        let parseState = ParseContext$3.create(state.facet(language$3).parser, state, { from: 0, to: vpTo });
-        if (!parseState.work(20 /* Work.Apply */, vpTo))
-            parseState.takeTree();
-        return new LanguageState(parseState);
-    }
-};
-Language$3.state = /*@__PURE__*/StateField.define({
-    create: LanguageState$3.init,
-    update(value, tr) {
-        for (let e of tr.effects)
-            if (e.is(Language$3.setState))
-                return e.value;
-        if (tr.startState.facet(language$3) != tr.state.facet(language$3))
-            return LanguageState$3.init(tr.state);
-        return value.apply(tr);
-    }
-});
-let requestIdle$3 = (callback) => {
-    let timeout = setTimeout(() => callback(), 500 /* Work.MaxPause */);
-    return () => clearTimeout(timeout);
-};
-if (typeof requestIdleCallback != "undefined")
-    requestIdle$3 = (callback) => {
-        let idle = -1, timeout = setTimeout(() => {
-            idle = requestIdleCallback(callback, { timeout: 500 /* Work.MaxPause */ - 100 /* Work.MinPause */ });
-        }, 100 /* Work.MinPause */);
-        return () => idle < 0 ? clearTimeout(timeout) : cancelIdleCallback(idle);
-    };
-const isInputPending$3 = typeof navigator != "undefined" && ((_a$3 = navigator.scheduling) === null || _a$3 === void 0 ? void 0 : _a$3.isInputPending)
-    ? () => navigator.scheduling.isInputPending() : null;
-const parseWorker$3 = /*@__PURE__*/ViewPlugin.fromClass(class ParseWorker {
-    constructor(view) {
-        this.view = view;
-        this.working = null;
-        this.workScheduled = 0;
-        // End of the current time chunk
-        this.chunkEnd = -1;
-        // Milliseconds of budget left for this chunk
-        this.chunkBudget = -1;
-        this.work = this.work.bind(this);
-        this.scheduleWork();
-    }
-    update(update) {
-        let cx = this.view.state.field(Language$3.state).context;
-        if (cx.updateViewport(update.view.viewport) || this.view.viewport.to > cx.treeLen)
-            this.scheduleWork();
-        if (update.docChanged || update.selectionSet) {
-            if (this.view.hasFocus)
-                this.chunkBudget += 50 /* Work.ChangeBonus */;
-            this.scheduleWork();
-        }
-        this.checkAsyncSchedule(cx);
-    }
-    scheduleWork() {
-        if (this.working)
-            return;
-        let { state } = this.view, field = state.field(Language$3.state);
-        if (field.tree != field.context.tree || !field.context.isDone(state.doc.length))
-            this.working = requestIdle$3(this.work);
-    }
-    work(deadline) {
-        this.working = null;
-        let now = Date.now();
-        if (this.chunkEnd < now && (this.chunkEnd < 0 || this.view.hasFocus)) { // Start a new chunk
-            this.chunkEnd = now + 30000 /* Work.ChunkTime */;
-            this.chunkBudget = 3000 /* Work.ChunkBudget */;
-        }
-        if (this.chunkBudget <= 0)
-            return; // No more budget
-        let { state, viewport: { to: vpTo } } = this.view, field = state.field(Language$3.state);
-        if (field.tree == field.context.tree && field.context.isDone(vpTo + 100000 /* Work.MaxParseAhead */))
-            return;
-        let endTime = Date.now() + Math.min(this.chunkBudget, 100 /* Work.Slice */, deadline && !isInputPending$3 ? Math.max(25 /* Work.MinSlice */, deadline.timeRemaining() - 5) : 1e9);
-        let viewportFirst = field.context.treeLen < vpTo && state.doc.length > vpTo + 1000;
-        let done = field.context.work(() => {
-            return isInputPending$3 && isInputPending$3() || Date.now() > endTime;
-        }, vpTo + (viewportFirst ? 0 : 100000 /* Work.MaxParseAhead */));
-        this.chunkBudget -= Date.now() - now;
-        if (done || this.chunkBudget <= 0) {
-            field.context.takeTree();
-            this.view.dispatch({ effects: Language$3.setState.of(new LanguageState$3(field.context)) });
-        }
-        if (this.chunkBudget > 0 && !(done && !viewportFirst))
-            this.scheduleWork();
-        this.checkAsyncSchedule(field.context);
-    }
-    checkAsyncSchedule(cx) {
-        if (cx.scheduleOn) {
-            this.workScheduled++;
-            cx.scheduleOn
-                .then(() => this.scheduleWork())
-                .catch(err => logException(this.view.state, err))
-                .then(() => this.workScheduled--);
-            cx.scheduleOn = null;
-        }
-    }
-    destroy() {
-        if (this.working)
-            this.working();
-    }
-    isWorking() {
-        return !!(this.working || this.workScheduled > 0);
-    }
-}, {
-    eventHandlers: { focus() { this.scheduleWork(); } }
-});
-/**
-The facet used to associate a language with an editor state. Used
-by `Language` object's `extension` property (so you don't need to
-manually wrap your languages in this). Can be used to access the
-current language on a state.
-*/
-const language$3 = /*@__PURE__*/Facet.define({
-    combine(languages) { return languages.length ? languages[0] : null; },
-    enables: language => [
-        Language$3.state,
-        parseWorker$3,
-        EditorView.contentAttributes.compute([language], state => {
-            let lang = state.facet(language);
-            return lang && lang.name ? { "data-language": lang.name } : {};
-        })
-    ]
-});
-/**
-This class bundles a [language](https://codemirror.net/6/docs/ref/#language.Language) with an
-optional set of supporting extensions. Language packages are
-encouraged to export a function that optionally takes a
-configuration object and returns a `LanguageSupport` instance, as
-the main way for client code to use the package.
-*/
-let LanguageSupport$3 = class LanguageSupport {
-    /**
-    Create a language support object.
-    */
-    constructor(
-    /**
-    The language object.
-    */
-    language, 
-    /**
-    An optional set of supporting extensions. When nesting a
-    language in another language, the outer language is encouraged
-    to include the supporting extensions for its inner languages
-    in its own set of support extensions.
-    */
-    support = []) {
-        this.language = language;
-        this.support = support;
-        this.extension = [language, support];
-    }
-};
-/**
-A syntax tree node prop used to associate indentation strategies
-with node types. Such a strategy is a function from an indentation
-context to a column number (see also
-[`indentString`](https://codemirror.net/6/docs/ref/#language.indentString)) or null, where null
-indicates that no definitive indentation can be determined.
-*/
-const indentNodeProp$3 = /*@__PURE__*/new NodeProp();
-/**
-Creates an indentation strategy that, by default, indents
-continued lines one unit more than the node's base indentation.
-You can provide `except` to prevent indentation of lines that
-match a pattern (for example `/^else\b/` in `if`/`else`
-constructs), and you can change the amount of units used with the
-`units` option.
-*/
-function continuedIndent$1({ except, units = 1 } = {}) {
-    return (context) => {
-        let matchExcept = except && except.test(context.textAfter);
-        return context.baseIndent + (matchExcept ? 0 : units * context.unit);
-    };
-}
-/**
-This node prop is used to associate folding information with
-syntax node types. Given a syntax node, it should check whether
-that tree is foldable and return the range that can be collapsed
-when it is.
-*/
-const foldNodeProp$3 = /*@__PURE__*/new NodeProp();
-/**
-[Fold](https://codemirror.net/6/docs/ref/#language.foldNodeProp) function that folds everything but
-the first and the last child of a syntax node. Useful for nodes
-that start and end with delimiters.
-*/
-function foldInside$1(node) {
-    let first = node.firstChild, last = node.lastChild;
-    return first && first.to < last.from ? { from: first.to, to: last.type.isError ? node.to : last.from } : null;
-}
-const noTokens$3 = /*@__PURE__*/Object.create(null);
-const typeArray$3 = [NodeType.none];
-const warned$3 = [];
-// Cache of node types by name and tags
-const byTag$3 = /*@__PURE__*/Object.create(null);
-const defaultTable$3 = /*@__PURE__*/Object.create(null);
-for (let [legacyName, name] of [
-    ["variable", "variableName"],
-    ["variable-2", "variableName.special"],
-    ["string-2", "string.special"],
-    ["def", "variableName.definition"],
-    ["tag", "tagName"],
-    ["attribute", "attributeName"],
-    ["type", "typeName"],
-    ["builtin", "variableName.standard"],
-    ["qualifier", "modifier"],
-    ["error", "invalid"],
-    ["header", "heading"],
-    ["property", "propertyName"]
-])
-    defaultTable$3[legacyName] = /*@__PURE__*/createTokenType$3(noTokens$3, name);
-function warnForPart$3(part, msg) {
-    if (warned$3.indexOf(part) > -1)
-        return;
-    warned$3.push(part);
-    console.warn(msg);
-}
-function createTokenType$3(extra, tagStr) {
-    let tags$1$1 = [];
-    for (let name of tagStr.split(" ")) {
-        let found = [];
-        for (let part of name.split(".")) {
-            let value = (extra[part] || tags$1[part]);
-            if (!value) {
-                warnForPart$3(part, `Unknown highlighting tag ${part}`);
-            }
-            else if (typeof value == "function") {
-                if (!found.length)
-                    warnForPart$3(part, `Modifier ${part} used at start of tag`);
-                else
-                    found = found.map(value);
-            }
-            else {
-                if (found.length)
-                    warnForPart$3(part, `Tag ${part} used as modifier`);
-                else
-                    found = Array.isArray(value) ? value : [value];
-            }
-        }
-        for (let tag of found)
-            tags$1$1.push(tag);
-    }
-    if (!tags$1$1.length)
-        return 0;
-    let name = tagStr.replace(/ /g, "_"), key = name + " " + tags$1$1.map(t => t.id);
-    let known = byTag$3[key];
-    if (known)
-        return known.id;
-    let type = byTag$3[key] = NodeType.define({
-        id: typeArray$3.length,
-        name,
-        props: [styleTags({ [name]: tags$1$1 })]
-    });
-    typeArray$3.push(type);
-    return type.id;
-}
-({
-    rtl: /*@__PURE__*/Decoration.mark({ class: "cm-iso", inclusive: true, attributes: { dir: "rtl" }, bidiIsolate: Direction.RTL }),
-    ltr: /*@__PURE__*/Decoration.mark({ class: "cm-iso", inclusive: true, attributes: { dir: "ltr" }, bidiIsolate: Direction.LTR })});
 
 let _properties = null;
 function properties() {
@@ -32758,7 +30928,7 @@ completable variable. This is used by language modes like Sass and
 Less to reuse this package's completion logic.
 */
 const defineCSSCompletionSource = (isVariable) => context => {
-    let { state, pos } = context, node = syntaxTree$3(state).resolveInner(pos, -1);
+    let { state, pos } = context, node = syntaxTree(state).resolveInner(pos, -1);
     let isDash = node.type.isError && node.from == node.to - 1 && state.doc.sliceString(node.from, node.to) == "-";
     if (node.name == "PropertyName" ||
         (isDash || node.name == "TagName") && /^(Block|Styles)$/.test(node.resolve(node.to).name))
@@ -32800,15 +30970,15 @@ A language provider based on the [Lezer CSS
 parser](https://github.com/lezer-parser/css), extended with
 highlighting and indentation information.
 */
-const cssLanguage = /*@__PURE__*/LRLanguage$2.define({
+const cssLanguage = /*@__PURE__*/LRLanguage.define({
     name: "css",
     parser: /*@__PURE__*/parser$1.configure({
         props: [
-            /*@__PURE__*/indentNodeProp$3.add({
-                Declaration: /*@__PURE__*/continuedIndent$1()
+            /*@__PURE__*/indentNodeProp.add({
+                Declaration: /*@__PURE__*/continuedIndent()
             }),
-            /*@__PURE__*/foldNodeProp$3.add({
-                "Block KeyframeList": foldInside$1
+            /*@__PURE__*/foldNodeProp.add({
+                "Block KeyframeList": foldInside
             })
         ]
     }),
@@ -32822,10 +30992,10 @@ const cssLanguage = /*@__PURE__*/LRLanguage$2.define({
 Language support for CSS.
 */
 function css() {
-    return new LanguageSupport$3(cssLanguage, cssLanguage.data.of({ autocomplete: cssCompletionSource }));
+    return new LanguageSupport(cssLanguage, cssLanguage.data.of({ autocomplete: cssCompletionSource }));
 }
 
-var index$2 = /*#__PURE__*/Object.freeze({
+var index$3 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   css: css,
   cssCompletionSource: cssCompletionSource,
@@ -33021,800 +31191,6 @@ const parser = LRParser.deserialize({
   tokenPrec: 15124
 });
 
-var _a$2;
-/**
-Node prop stored in a parser's top syntax node to provide the
-facet that stores language-specific data for that language.
-*/
-const languageDataProp$2 = /*@__PURE__*/new NodeProp();
-/**
-Helper function to define a facet (to be added to the top syntax
-node(s) for a language via
-[`languageDataProp`](https://codemirror.net/6/docs/ref/#language.languageDataProp)), that will be
-used to associate language data with the language. You
-probably only need this when subclassing
-[`Language`](https://codemirror.net/6/docs/ref/#language.Language).
-*/
-function defineLanguageFacet$2(baseData) {
-    return Facet.define({
-        combine: baseData ? values => values.concat(baseData) : undefined
-    });
-}
-/**
-Syntax node prop used to register sublanguages. Should be added to
-the top level node type for the language.
-*/
-const sublanguageProp$2 = /*@__PURE__*/new NodeProp();
-/**
-A language object manages parsing and per-language
-[metadata](https://codemirror.net/6/docs/ref/#state.EditorState.languageDataAt). Parse data is
-managed as a [Lezer](https://lezer.codemirror.net) tree. The class
-can be used directly, via the [`LRLanguage`](https://codemirror.net/6/docs/ref/#language.LRLanguage)
-subclass for [Lezer](https://lezer.codemirror.net/) LR parsers, or
-via the [`StreamLanguage`](https://codemirror.net/6/docs/ref/#language.StreamLanguage) subclass
-for stream parsers.
-*/
-let Language$2 = class Language {
-    /**
-    Construct a language object. If you need to invoke this
-    directly, first define a data facet with
-    [`defineLanguageFacet`](https://codemirror.net/6/docs/ref/#language.defineLanguageFacet), and then
-    configure your parser to [attach](https://codemirror.net/6/docs/ref/#language.languageDataProp) it
-    to the language's outer syntax node.
-    */
-    constructor(
-    /**
-    The [language data](https://codemirror.net/6/docs/ref/#state.EditorState.languageDataAt) facet
-    used for this language.
-    */
-    data, parser, extraExtensions = [], 
-    /**
-    A language name.
-    */
-    name = "") {
-        this.data = data;
-        this.name = name;
-        // Kludge to define EditorState.tree as a debugging helper,
-        // without the EditorState package actually knowing about
-        // languages and lezer trees.
-        if (!EditorState.prototype.hasOwnProperty("tree"))
-            Object.defineProperty(EditorState.prototype, "tree", { get() { return syntaxTree$2(this); } });
-        this.parser = parser;
-        this.extension = [
-            language$2.of(this),
-            EditorState.languageData.of((state, pos, side) => {
-                let top = topNodeAt$2(state, pos, side), data = top.type.prop(languageDataProp$2);
-                if (!data)
-                    return [];
-                let base = state.facet(data), sub = top.type.prop(sublanguageProp$2);
-                if (sub) {
-                    let innerNode = top.resolve(pos - top.from, side);
-                    for (let sublang of sub)
-                        if (sublang.test(innerNode, state)) {
-                            let data = state.facet(sublang.facet);
-                            return sublang.type == "replace" ? data : data.concat(base);
-                        }
-                }
-                return base;
-            })
-        ].concat(extraExtensions);
-    }
-    /**
-    Query whether this language is active at the given position.
-    */
-    isActiveAt(state, pos, side = -1) {
-        return topNodeAt$2(state, pos, side).type.prop(languageDataProp$2) == this.data;
-    }
-    /**
-    Find the document regions that were parsed using this language.
-    The returned regions will _include_ any nested languages rooted
-    in this language, when those exist.
-    */
-    findRegions(state) {
-        let lang = state.facet(language$2);
-        if ((lang === null || lang === void 0 ? void 0 : lang.data) == this.data)
-            return [{ from: 0, to: state.doc.length }];
-        if (!lang || !lang.allowsNesting)
-            return [];
-        let result = [];
-        let explore = (tree, from) => {
-            if (tree.prop(languageDataProp$2) == this.data) {
-                result.push({ from, to: from + tree.length });
-                return;
-            }
-            let mount = tree.prop(NodeProp.mounted);
-            if (mount) {
-                if (mount.tree.prop(languageDataProp$2) == this.data) {
-                    if (mount.overlay)
-                        for (let r of mount.overlay)
-                            result.push({ from: r.from + from, to: r.to + from });
-                    else
-                        result.push({ from: from, to: from + tree.length });
-                    return;
-                }
-                else if (mount.overlay) {
-                    let size = result.length;
-                    explore(mount.tree, mount.overlay[0].from + from);
-                    if (result.length > size)
-                        return;
-                }
-            }
-            for (let i = 0; i < tree.children.length; i++) {
-                let ch = tree.children[i];
-                if (ch instanceof Tree)
-                    explore(ch, tree.positions[i] + from);
-            }
-        };
-        explore(syntaxTree$2(state), 0);
-        return result;
-    }
-    /**
-    Indicates whether this language allows nested languages. The
-    default implementation returns true.
-    */
-    get allowsNesting() { return true; }
-};
-/**
-@internal
-*/
-Language$2.setState = /*@__PURE__*/StateEffect.define();
-function topNodeAt$2(state, pos, side) {
-    let topLang = state.facet(language$2), tree = syntaxTree$2(state).topNode;
-    if (!topLang || topLang.allowsNesting) {
-        for (let node = tree; node; node = node.enter(pos, side, IterMode.ExcludeBuffers))
-            if (node.type.isTop)
-                tree = node;
-    }
-    return tree;
-}
-/**
-A subclass of [`Language`](https://codemirror.net/6/docs/ref/#language.Language) for use with Lezer
-[LR parsers](https://lezer.codemirror.net/docs/ref#lr.LRParser)
-parsers.
-*/
-let LRLanguage$1 = class LRLanguage extends Language$2 {
-    constructor(data, parser, name) {
-        super(data, parser, [], name);
-        this.parser = parser;
-    }
-    /**
-    Define a language from a parser.
-    */
-    static define(spec) {
-        let data = defineLanguageFacet$2(spec.languageData);
-        return new LRLanguage(data, spec.parser.configure({
-            props: [languageDataProp$2.add(type => type.isTop ? data : undefined)]
-        }), spec.name);
-    }
-    /**
-    Create a new instance of this language with a reconfigured
-    version of its parser and optionally a new name.
-    */
-    configure(options, name) {
-        return new LRLanguage(this.data, this.parser.configure(options), name || this.name);
-    }
-    get allowsNesting() { return this.parser.hasWrappers(); }
-};
-/**
-Get the syntax tree for a state, which is the current (possibly
-incomplete) parse tree of the active
-[language](https://codemirror.net/6/docs/ref/#language.Language), or the empty tree if there is no
-language available.
-*/
-function syntaxTree$2(state) {
-    let field = state.field(Language$2.state, false);
-    return field ? field.tree : Tree.empty;
-}
-/**
-Lezer-style
-[`Input`](https://lezer.codemirror.net/docs/ref#common.Input)
-object for a [`Text`](https://codemirror.net/6/docs/ref/#state.Text) object.
-*/
-let DocInput$2 = class DocInput {
-    /**
-    Create an input object for the given document.
-    */
-    constructor(doc) {
-        this.doc = doc;
-        this.cursorPos = 0;
-        this.string = "";
-        this.cursor = doc.iter();
-    }
-    get length() { return this.doc.length; }
-    syncTo(pos) {
-        this.string = this.cursor.next(pos - this.cursorPos).value;
-        this.cursorPos = pos + this.string.length;
-        return this.cursorPos - this.string.length;
-    }
-    chunk(pos) {
-        this.syncTo(pos);
-        return this.string;
-    }
-    get lineChunks() { return true; }
-    read(from, to) {
-        let stringStart = this.cursorPos - this.string.length;
-        if (from < stringStart || to >= this.cursorPos)
-            return this.doc.sliceString(from, to);
-        else
-            return this.string.slice(from - stringStart, to - stringStart);
-    }
-};
-let currentContext$2 = null;
-/**
-A parse context provided to parsers working on the editor content.
-*/
-let ParseContext$2 = class ParseContext {
-    constructor(parser, 
-    /**
-    The current editor state.
-    */
-    state, 
-    /**
-    Tree fragments that can be reused by incremental re-parses.
-    */
-    fragments = [], 
-    /**
-    @internal
-    */
-    tree, 
-    /**
-    @internal
-    */
-    treeLen, 
-    /**
-    The current editor viewport (or some overapproximation
-    thereof). Intended to be used for opportunistically avoiding
-    work (in which case
-    [`skipUntilInView`](https://codemirror.net/6/docs/ref/#language.ParseContext.skipUntilInView)
-    should be called to make sure the parser is restarted when the
-    skipped region becomes visible).
-    */
-    viewport, 
-    /**
-    @internal
-    */
-    skipped, 
-    /**
-    This is where skipping parsers can register a promise that,
-    when resolved, will schedule a new parse. It is cleared when
-    the parse worker picks up the promise. @internal
-    */
-    scheduleOn) {
-        this.parser = parser;
-        this.state = state;
-        this.fragments = fragments;
-        this.tree = tree;
-        this.treeLen = treeLen;
-        this.viewport = viewport;
-        this.skipped = skipped;
-        this.scheduleOn = scheduleOn;
-        this.parse = null;
-        /**
-        @internal
-        */
-        this.tempSkipped = [];
-    }
-    /**
-    @internal
-    */
-    static create(parser, state, viewport) {
-        return new ParseContext(parser, state, [], Tree.empty, 0, viewport, [], null);
-    }
-    startParse() {
-        return this.parser.startParse(new DocInput$2(this.state.doc), this.fragments);
-    }
-    /**
-    @internal
-    */
-    work(until, upto) {
-        if (upto != null && upto >= this.state.doc.length)
-            upto = undefined;
-        if (this.tree != Tree.empty && this.isDone(upto !== null && upto !== void 0 ? upto : this.state.doc.length)) {
-            this.takeTree();
-            return true;
-        }
-        return this.withContext(() => {
-            var _a;
-            if (typeof until == "number") {
-                let endTime = Date.now() + until;
-                until = () => Date.now() > endTime;
-            }
-            if (!this.parse)
-                this.parse = this.startParse();
-            if (upto != null && (this.parse.stoppedAt == null || this.parse.stoppedAt > upto) &&
-                upto < this.state.doc.length)
-                this.parse.stopAt(upto);
-            for (;;) {
-                let done = this.parse.advance();
-                if (done) {
-                    this.fragments = this.withoutTempSkipped(TreeFragment.addTree(done, this.fragments, this.parse.stoppedAt != null));
-                    this.treeLen = (_a = this.parse.stoppedAt) !== null && _a !== void 0 ? _a : this.state.doc.length;
-                    this.tree = done;
-                    this.parse = null;
-                    if (this.treeLen < (upto !== null && upto !== void 0 ? upto : this.state.doc.length))
-                        this.parse = this.startParse();
-                    else
-                        return true;
-                }
-                if (until())
-                    return false;
-            }
-        });
-    }
-    /**
-    @internal
-    */
-    takeTree() {
-        let pos, tree;
-        if (this.parse && (pos = this.parse.parsedPos) >= this.treeLen) {
-            if (this.parse.stoppedAt == null || this.parse.stoppedAt > pos)
-                this.parse.stopAt(pos);
-            this.withContext(() => { while (!(tree = this.parse.advance())) { } });
-            this.treeLen = pos;
-            this.tree = tree;
-            this.fragments = this.withoutTempSkipped(TreeFragment.addTree(this.tree, this.fragments, true));
-            this.parse = null;
-        }
-    }
-    withContext(f) {
-        let prev = currentContext$2;
-        currentContext$2 = this;
-        try {
-            return f();
-        }
-        finally {
-            currentContext$2 = prev;
-        }
-    }
-    withoutTempSkipped(fragments) {
-        for (let r; r = this.tempSkipped.pop();)
-            fragments = cutFragments$2(fragments, r.from, r.to);
-        return fragments;
-    }
-    /**
-    @internal
-    */
-    changes(changes, newState) {
-        let { fragments, tree, treeLen, viewport, skipped } = this;
-        this.takeTree();
-        if (!changes.empty) {
-            let ranges = [];
-            changes.iterChangedRanges((fromA, toA, fromB, toB) => ranges.push({ fromA, toA, fromB, toB }));
-            fragments = TreeFragment.applyChanges(fragments, ranges);
-            tree = Tree.empty;
-            treeLen = 0;
-            viewport = { from: changes.mapPos(viewport.from, -1), to: changes.mapPos(viewport.to, 1) };
-            if (this.skipped.length) {
-                skipped = [];
-                for (let r of this.skipped) {
-                    let from = changes.mapPos(r.from, 1), to = changes.mapPos(r.to, -1);
-                    if (from < to)
-                        skipped.push({ from, to });
-                }
-            }
-        }
-        return new ParseContext(this.parser, newState, fragments, tree, treeLen, viewport, skipped, this.scheduleOn);
-    }
-    /**
-    @internal
-    */
-    updateViewport(viewport) {
-        if (this.viewport.from == viewport.from && this.viewport.to == viewport.to)
-            return false;
-        this.viewport = viewport;
-        let startLen = this.skipped.length;
-        for (let i = 0; i < this.skipped.length; i++) {
-            let { from, to } = this.skipped[i];
-            if (from < viewport.to && to > viewport.from) {
-                this.fragments = cutFragments$2(this.fragments, from, to);
-                this.skipped.splice(i--, 1);
-            }
-        }
-        if (this.skipped.length >= startLen)
-            return false;
-        this.reset();
-        return true;
-    }
-    /**
-    @internal
-    */
-    reset() {
-        if (this.parse) {
-            this.takeTree();
-            this.parse = null;
-        }
-    }
-    /**
-    Notify the parse scheduler that the given region was skipped
-    because it wasn't in view, and the parse should be restarted
-    when it comes into view.
-    */
-    skipUntilInView(from, to) {
-        this.skipped.push({ from, to });
-    }
-    /**
-    Returns a parser intended to be used as placeholder when
-    asynchronously loading a nested parser. It'll skip its input and
-    mark it as not-really-parsed, so that the next update will parse
-    it again.
-    
-    When `until` is given, a reparse will be scheduled when that
-    promise resolves.
-    */
-    static getSkippingParser(until) {
-        return new class extends Parser {
-            createParse(input, fragments, ranges) {
-                let from = ranges[0].from, to = ranges[ranges.length - 1].to;
-                let parser = {
-                    parsedPos: from,
-                    advance() {
-                        let cx = currentContext$2;
-                        if (cx) {
-                            for (let r of ranges)
-                                cx.tempSkipped.push(r);
-                            if (until)
-                                cx.scheduleOn = cx.scheduleOn ? Promise.all([cx.scheduleOn, until]) : until;
-                        }
-                        this.parsedPos = to;
-                        return new Tree(NodeType.none, [], [], to - from);
-                    },
-                    stoppedAt: null,
-                    stopAt() { }
-                };
-                return parser;
-            }
-        };
-    }
-    /**
-    @internal
-    */
-    isDone(upto) {
-        upto = Math.min(upto, this.state.doc.length);
-        let frags = this.fragments;
-        return this.treeLen >= upto && frags.length && frags[0].from == 0 && frags[0].to >= upto;
-    }
-    /**
-    Get the context for the current parse, or `null` if no editor
-    parse is in progress.
-    */
-    static get() { return currentContext$2; }
-};
-function cutFragments$2(fragments, from, to) {
-    return TreeFragment.applyChanges(fragments, [{ fromA: from, toA: to, fromB: from, toB: to }]);
-}
-let LanguageState$2 = class LanguageState {
-    constructor(
-    // A mutable parse state that is used to preserve work done during
-    // the lifetime of a state when moving to the next state.
-    context) {
-        this.context = context;
-        this.tree = context.tree;
-    }
-    apply(tr) {
-        if (!tr.docChanged && this.tree == this.context.tree)
-            return this;
-        let newCx = this.context.changes(tr.changes, tr.state);
-        // If the previous parse wasn't done, go forward only up to its
-        // end position or the end of the viewport, to avoid slowing down
-        // state updates with parse work beyond the viewport.
-        let upto = this.context.treeLen == tr.startState.doc.length ? undefined
-            : Math.max(tr.changes.mapPos(this.context.treeLen), newCx.viewport.to);
-        if (!newCx.work(20 /* Work.Apply */, upto))
-            newCx.takeTree();
-        return new LanguageState(newCx);
-    }
-    static init(state) {
-        let vpTo = Math.min(3000 /* Work.InitViewport */, state.doc.length);
-        let parseState = ParseContext$2.create(state.facet(language$2).parser, state, { from: 0, to: vpTo });
-        if (!parseState.work(20 /* Work.Apply */, vpTo))
-            parseState.takeTree();
-        return new LanguageState(parseState);
-    }
-};
-Language$2.state = /*@__PURE__*/StateField.define({
-    create: LanguageState$2.init,
-    update(value, tr) {
-        for (let e of tr.effects)
-            if (e.is(Language$2.setState))
-                return e.value;
-        if (tr.startState.facet(language$2) != tr.state.facet(language$2))
-            return LanguageState$2.init(tr.state);
-        return value.apply(tr);
-    }
-});
-let requestIdle$2 = (callback) => {
-    let timeout = setTimeout(() => callback(), 500 /* Work.MaxPause */);
-    return () => clearTimeout(timeout);
-};
-if (typeof requestIdleCallback != "undefined")
-    requestIdle$2 = (callback) => {
-        let idle = -1, timeout = setTimeout(() => {
-            idle = requestIdleCallback(callback, { timeout: 500 /* Work.MaxPause */ - 100 /* Work.MinPause */ });
-        }, 100 /* Work.MinPause */);
-        return () => idle < 0 ? clearTimeout(timeout) : cancelIdleCallback(idle);
-    };
-const isInputPending$2 = typeof navigator != "undefined" && ((_a$2 = navigator.scheduling) === null || _a$2 === void 0 ? void 0 : _a$2.isInputPending)
-    ? () => navigator.scheduling.isInputPending() : null;
-const parseWorker$2 = /*@__PURE__*/ViewPlugin.fromClass(class ParseWorker {
-    constructor(view) {
-        this.view = view;
-        this.working = null;
-        this.workScheduled = 0;
-        // End of the current time chunk
-        this.chunkEnd = -1;
-        // Milliseconds of budget left for this chunk
-        this.chunkBudget = -1;
-        this.work = this.work.bind(this);
-        this.scheduleWork();
-    }
-    update(update) {
-        let cx = this.view.state.field(Language$2.state).context;
-        if (cx.updateViewport(update.view.viewport) || this.view.viewport.to > cx.treeLen)
-            this.scheduleWork();
-        if (update.docChanged || update.selectionSet) {
-            if (this.view.hasFocus)
-                this.chunkBudget += 50 /* Work.ChangeBonus */;
-            this.scheduleWork();
-        }
-        this.checkAsyncSchedule(cx);
-    }
-    scheduleWork() {
-        if (this.working)
-            return;
-        let { state } = this.view, field = state.field(Language$2.state);
-        if (field.tree != field.context.tree || !field.context.isDone(state.doc.length))
-            this.working = requestIdle$2(this.work);
-    }
-    work(deadline) {
-        this.working = null;
-        let now = Date.now();
-        if (this.chunkEnd < now && (this.chunkEnd < 0 || this.view.hasFocus)) { // Start a new chunk
-            this.chunkEnd = now + 30000 /* Work.ChunkTime */;
-            this.chunkBudget = 3000 /* Work.ChunkBudget */;
-        }
-        if (this.chunkBudget <= 0)
-            return; // No more budget
-        let { state, viewport: { to: vpTo } } = this.view, field = state.field(Language$2.state);
-        if (field.tree == field.context.tree && field.context.isDone(vpTo + 100000 /* Work.MaxParseAhead */))
-            return;
-        let endTime = Date.now() + Math.min(this.chunkBudget, 100 /* Work.Slice */, deadline && !isInputPending$2 ? Math.max(25 /* Work.MinSlice */, deadline.timeRemaining() - 5) : 1e9);
-        let viewportFirst = field.context.treeLen < vpTo && state.doc.length > vpTo + 1000;
-        let done = field.context.work(() => {
-            return isInputPending$2 && isInputPending$2() || Date.now() > endTime;
-        }, vpTo + (viewportFirst ? 0 : 100000 /* Work.MaxParseAhead */));
-        this.chunkBudget -= Date.now() - now;
-        if (done || this.chunkBudget <= 0) {
-            field.context.takeTree();
-            this.view.dispatch({ effects: Language$2.setState.of(new LanguageState$2(field.context)) });
-        }
-        if (this.chunkBudget > 0 && !(done && !viewportFirst))
-            this.scheduleWork();
-        this.checkAsyncSchedule(field.context);
-    }
-    checkAsyncSchedule(cx) {
-        if (cx.scheduleOn) {
-            this.workScheduled++;
-            cx.scheduleOn
-                .then(() => this.scheduleWork())
-                .catch(err => logException(this.view.state, err))
-                .then(() => this.workScheduled--);
-            cx.scheduleOn = null;
-        }
-    }
-    destroy() {
-        if (this.working)
-            this.working();
-    }
-    isWorking() {
-        return !!(this.working || this.workScheduled > 0);
-    }
-}, {
-    eventHandlers: { focus() { this.scheduleWork(); } }
-});
-/**
-The facet used to associate a language with an editor state. Used
-by `Language` object's `extension` property (so you don't need to
-manually wrap your languages in this). Can be used to access the
-current language on a state.
-*/
-const language$2 = /*@__PURE__*/Facet.define({
-    combine(languages) { return languages.length ? languages[0] : null; },
-    enables: language => [
-        Language$2.state,
-        parseWorker$2,
-        EditorView.contentAttributes.compute([language], state => {
-            let lang = state.facet(language);
-            return lang && lang.name ? { "data-language": lang.name } : {};
-        })
-    ]
-});
-/**
-This class bundles a [language](https://codemirror.net/6/docs/ref/#language.Language) with an
-optional set of supporting extensions. Language packages are
-encouraged to export a function that optionally takes a
-configuration object and returns a `LanguageSupport` instance, as
-the main way for client code to use the package.
-*/
-let LanguageSupport$2 = class LanguageSupport {
-    /**
-    Create a language support object.
-    */
-    constructor(
-    /**
-    The language object.
-    */
-    language, 
-    /**
-    An optional set of supporting extensions. When nesting a
-    language in another language, the outer language is encouraged
-    to include the supporting extensions for its inner languages
-    in its own set of support extensions.
-    */
-    support = []) {
-        this.language = language;
-        this.support = support;
-        this.extension = [language, support];
-    }
-};
-/**
-A syntax tree node prop used to associate indentation strategies
-with node types. Such a strategy is a function from an indentation
-context to a column number (see also
-[`indentString`](https://codemirror.net/6/docs/ref/#language.indentString)) or null, where null
-indicates that no definitive indentation can be determined.
-*/
-const indentNodeProp$2 = /*@__PURE__*/new NodeProp();
-// Check whether a delimited node is aligned (meaning there are
-// non-skipped nodes on the same line as the opening delimiter). And
-// if so, return the opening token.
-function bracketedAligned(context) {
-    let tree = context.node;
-    let openToken = tree.childAfter(tree.from), last = tree.lastChild;
-    if (!openToken)
-        return null;
-    let sim = context.options.simulateBreak;
-    let openLine = context.state.doc.lineAt(openToken.from);
-    let lineEnd = sim == null || sim <= openLine.from ? openLine.to : Math.min(openLine.to, sim);
-    for (let pos = openToken.to;;) {
-        let next = tree.childAfter(pos);
-        if (!next || next == last)
-            return null;
-        if (!next.type.isSkipped) {
-            if (next.from >= lineEnd)
-                return null;
-            let space = /^ */.exec(openLine.text.slice(openToken.to - openLine.from))[0].length;
-            return { from: openToken.from, to: openToken.to + space };
-        }
-        pos = next.to;
-    }
-}
-/**
-An indentation strategy for delimited (usually bracketed) nodes.
-Will, by default, indent one unit more than the parent's base
-indent unless the line starts with a closing token. When `align`
-is true and there are non-skipped nodes on the node's opening
-line, the content of the node will be aligned with the end of the
-opening node, like this:
-
-    foo(bar,
-        baz)
-*/
-function delimitedIndent({ closing, align = true, units = 1 }) {
-    return (context) => delimitedStrategy(context, align, units, closing);
-}
-function delimitedStrategy(context, align, units, closing, closedAt) {
-    let after = context.textAfter, space = after.match(/^\s*/)[0].length;
-    let closed = closing && after.slice(space, space + closing.length) == closing || closedAt == context.pos + space;
-    let aligned = align ? bracketedAligned(context) : null;
-    if (aligned)
-        return closed ? context.column(aligned.from) : context.column(aligned.to);
-    return context.baseIndent + (closed ? 0 : context.unit * units);
-}
-/**
-An indentation strategy that aligns a node's content to its base
-indentation.
-*/
-const flatIndent = (context) => context.baseIndent;
-/**
-Creates an indentation strategy that, by default, indents
-continued lines one unit more than the node's base indentation.
-You can provide `except` to prevent indentation of lines that
-match a pattern (for example `/^else\b/` in `if`/`else`
-constructs), and you can change the amount of units used with the
-`units` option.
-*/
-function continuedIndent({ except, units = 1 } = {}) {
-    return (context) => {
-        let matchExcept = except && except.test(context.textAfter);
-        return context.baseIndent + (matchExcept ? 0 : units * context.unit);
-    };
-}
-/**
-This node prop is used to associate folding information with
-syntax node types. Given a syntax node, it should check whether
-that tree is foldable and return the range that can be collapsed
-when it is.
-*/
-const foldNodeProp$2 = /*@__PURE__*/new NodeProp();
-/**
-[Fold](https://codemirror.net/6/docs/ref/#language.foldNodeProp) function that folds everything but
-the first and the last child of a syntax node. Useful for nodes
-that start and end with delimiters.
-*/
-function foldInside(node) {
-    let first = node.firstChild, last = node.lastChild;
-    return first && first.to < last.from ? { from: first.to, to: last.type.isError ? node.to : last.from } : null;
-}
-const noTokens$2 = /*@__PURE__*/Object.create(null);
-const typeArray$2 = [NodeType.none];
-const warned$2 = [];
-// Cache of node types by name and tags
-const byTag$2 = /*@__PURE__*/Object.create(null);
-const defaultTable$2 = /*@__PURE__*/Object.create(null);
-for (let [legacyName, name] of [
-    ["variable", "variableName"],
-    ["variable-2", "variableName.special"],
-    ["string-2", "string.special"],
-    ["def", "variableName.definition"],
-    ["tag", "tagName"],
-    ["attribute", "attributeName"],
-    ["type", "typeName"],
-    ["builtin", "variableName.standard"],
-    ["qualifier", "modifier"],
-    ["error", "invalid"],
-    ["header", "heading"],
-    ["property", "propertyName"]
-])
-    defaultTable$2[legacyName] = /*@__PURE__*/createTokenType$2(noTokens$2, name);
-function warnForPart$2(part, msg) {
-    if (warned$2.indexOf(part) > -1)
-        return;
-    warned$2.push(part);
-    console.warn(msg);
-}
-function createTokenType$2(extra, tagStr) {
-    let tags$1$1 = [];
-    for (let name of tagStr.split(" ")) {
-        let found = [];
-        for (let part of name.split(".")) {
-            let value = (extra[part] || tags$1[part]);
-            if (!value) {
-                warnForPart$2(part, `Unknown highlighting tag ${part}`);
-            }
-            else if (typeof value == "function") {
-                if (!found.length)
-                    warnForPart$2(part, `Modifier ${part} used at start of tag`);
-                else
-                    found = found.map(value);
-            }
-            else {
-                if (found.length)
-                    warnForPart$2(part, `Tag ${part} used as modifier`);
-                else
-                    found = Array.isArray(value) ? value : [value];
-            }
-        }
-        for (let tag of found)
-            tags$1$1.push(tag);
-    }
-    if (!tags$1$1.length)
-        return 0;
-    let name = tagStr.replace(/ /g, "_"), key = name + " " + tags$1$1.map(t => t.id);
-    let known = byTag$2[key];
-    if (known)
-        return known.id;
-    let type = byTag$2[key] = NodeType.define({
-        id: typeArray$2.length,
-        name,
-        props: [styleTags({ [name]: tags$1$1 })]
-    });
-    typeArray$2.push(type);
-    return type.id;
-}
-({
-    rtl: /*@__PURE__*/Decoration.mark({ class: "cm-iso", inclusive: true, attributes: { dir: "rtl" }, bidiIsolate: Direction.RTL }),
-    ltr: /*@__PURE__*/Decoration.mark({ class: "cm-iso", inclusive: true, attributes: { dir: "ltr" }, bidiIsolate: Direction.LTR })});
-
 /**
 A collection of JavaScript-related
 [snippets](https://codemirror.net/6/docs/ref/#autocomplete.snippet).
@@ -33968,7 +31344,7 @@ Completion source that looks up locally defined names in
 JavaScript code.
 */
 function localCompletionSource(context) {
-    let inner = syntaxTree$2(context.state).resolveInner(context.pos, -1);
+    let inner = syntaxTree(context.state).resolveInner(context.pos, -1);
     if (dontComplete.indexOf(inner.name) > -1)
         return null;
     let isWord = inner.name == "VariableName" ||
@@ -34016,7 +31392,7 @@ name, it will return null if `context.explicit` is false, and
 */
 function completionPath(context) {
     let read = (node) => context.state.doc.sliceString(node.from, node.to);
-    let inner = syntaxTree$2(context.state).resolveInner(context.pos, -1);
+    let inner = syntaxTree(context.state).resolveInner(context.pos, -1);
     if (inner.name == "PropertyName") {
         return pathFor(read, inner.parent, read(inner));
     }
@@ -34097,11 +31473,11 @@ A language provider based on the [Lezer JavaScript
 parser](https://github.com/lezer-parser/javascript), extended with
 highlighting and indentation information.
 */
-const javascriptLanguage = /*@__PURE__*/LRLanguage$1.define({
+const javascriptLanguage = /*@__PURE__*/LRLanguage.define({
     name: "javascript",
     parser: /*@__PURE__*/parser.configure({
         props: [
-            /*@__PURE__*/indentNodeProp$2.add({
+            /*@__PURE__*/indentNodeProp.add({
                 IfStatement: /*@__PURE__*/continuedIndent({ except: /^\s*({|else\b)/ }),
                 TryStatement: /*@__PURE__*/continuedIndent({ except: /^\s*({|catch\b|finally\b)/ }),
                 LabeledStatement: flatIndent,
@@ -34125,7 +31501,7 @@ const javascriptLanguage = /*@__PURE__*/LRLanguage$1.define({
                     return context.column(context.node.from) + context.unit;
                 }
             }),
-            /*@__PURE__*/foldNodeProp$2.add({
+            /*@__PURE__*/foldNodeProp.add({
                 "Block ClassBody SwitchBody EnumBody ObjectExpression ArrayExpression ObjectType": foldInside,
                 BlockComment(tree) { return { from: tree.from + 2, to: tree.to - 2 }; }
             })
@@ -34140,7 +31516,7 @@ const javascriptLanguage = /*@__PURE__*/LRLanguage$1.define({
 });
 const jsxSublanguage = {
     test: node => /^JSX/.test(node.name),
-    facet: /*@__PURE__*/defineLanguageFacet$2({ commentTokens: { block: { open: "{/*", close: "*/}" } } })
+    facet: /*@__PURE__*/defineLanguageFacet({ commentTokens: { block: { open: "{/*", close: "*/}" } } })
 };
 /**
 A language provider for TypeScript.
@@ -34151,14 +31527,14 @@ Language provider for JSX.
 */
 const jsxLanguage = /*@__PURE__*/javascriptLanguage.configure({
     dialect: "jsx",
-    props: [/*@__PURE__*/sublanguageProp$2.add(n => n.isTop ? [jsxSublanguage] : undefined)]
+    props: [/*@__PURE__*/sublanguageProp.add(n => n.isTop ? [jsxSublanguage] : undefined)]
 });
 /**
 Language provider for JSX + TypeScript.
 */
 const tsxLanguage = /*@__PURE__*/javascriptLanguage.configure({
     dialect: "jsx ts",
-    props: [/*@__PURE__*/sublanguageProp$2.add(n => n.isTop ? [jsxSublanguage] : undefined)]
+    props: [/*@__PURE__*/sublanguageProp.add(n => n.isTop ? [jsxSublanguage] : undefined)]
 }, "typescript");
 let kwCompletion = (name) => ({ label: name, type: "keyword" });
 const keywords = /*@__PURE__*/"break case const continue default delete export extends false finally in instanceof let new return static super switch this throw true typeof var yield".split(" ").map(kwCompletion);
@@ -34171,7 +31547,7 @@ function javascript(config = {}) {
     let lang = config.jsx ? (config.typescript ? tsxLanguage : jsxLanguage)
         : config.typescript ? typescriptLanguage : javascriptLanguage;
     let completions = config.typescript ? typescriptSnippets.concat(typescriptKeywords) : snippets.concat(keywords);
-    return new LanguageSupport$2(lang, [
+    return new LanguageSupport(lang, [
         javascriptLanguage.data.of({
             autocomplete: ifNotIn(dontComplete, completeFromList(completions))
         }),
@@ -34211,7 +31587,7 @@ const autoCloseTags$1 = /*@__PURE__*/EditorView.inputHandler.of((view, from, to,
     let base = defaultInsert(), { state } = base;
     let closeTags = state.changeByRange(range => {
         var _a;
-        let { head } = range, around = syntaxTree$2(state).resolveInner(head - 1, -1), name;
+        let { head } = range, around = syntaxTree(state).resolveInner(head - 1, -1), name;
         if (around.name == "JSXStartTag")
             around = around.parent;
         if (state.doc.sliceString(head - 1, head) != text || around.name == "JSXAttributeValue" && around.to > head) ;
@@ -34305,7 +31681,7 @@ function translateDiagnostic(input, doc, offset) {
     return result;
 }
 
-var index$1 = /*#__PURE__*/Object.freeze({
+var index$2 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   autoCloseTags: autoCloseTags$1,
   completionPath: completionPath,
@@ -34320,735 +31696,6 @@ var index$1 = /*#__PURE__*/Object.freeze({
   typescriptLanguage: typescriptLanguage,
   typescriptSnippets: typescriptSnippets
 });
-
-var _a$1;
-/**
-Node prop stored in a parser's top syntax node to provide the
-facet that stores language-specific data for that language.
-*/
-const languageDataProp$1 = /*@__PURE__*/new NodeProp();
-/**
-Helper function to define a facet (to be added to the top syntax
-node(s) for a language via
-[`languageDataProp`](https://codemirror.net/6/docs/ref/#language.languageDataProp)), that will be
-used to associate language data with the language. You
-probably only need this when subclassing
-[`Language`](https://codemirror.net/6/docs/ref/#language.Language).
-*/
-function defineLanguageFacet$1(baseData) {
-    return Facet.define({
-        combine: baseData ? values => values.concat(baseData) : undefined
-    });
-}
-/**
-Syntax node prop used to register sublanguages. Should be added to
-the top level node type for the language.
-*/
-const sublanguageProp$1 = /*@__PURE__*/new NodeProp();
-/**
-A language object manages parsing and per-language
-[metadata](https://codemirror.net/6/docs/ref/#state.EditorState.languageDataAt). Parse data is
-managed as a [Lezer](https://lezer.codemirror.net) tree. The class
-can be used directly, via the [`LRLanguage`](https://codemirror.net/6/docs/ref/#language.LRLanguage)
-subclass for [Lezer](https://lezer.codemirror.net/) LR parsers, or
-via the [`StreamLanguage`](https://codemirror.net/6/docs/ref/#language.StreamLanguage) subclass
-for stream parsers.
-*/
-let Language$1 = class Language {
-    /**
-    Construct a language object. If you need to invoke this
-    directly, first define a data facet with
-    [`defineLanguageFacet`](https://codemirror.net/6/docs/ref/#language.defineLanguageFacet), and then
-    configure your parser to [attach](https://codemirror.net/6/docs/ref/#language.languageDataProp) it
-    to the language's outer syntax node.
-    */
-    constructor(
-    /**
-    The [language data](https://codemirror.net/6/docs/ref/#state.EditorState.languageDataAt) facet
-    used for this language.
-    */
-    data, parser, extraExtensions = [], 
-    /**
-    A language name.
-    */
-    name = "") {
-        this.data = data;
-        this.name = name;
-        // Kludge to define EditorState.tree as a debugging helper,
-        // without the EditorState package actually knowing about
-        // languages and lezer trees.
-        if (!EditorState.prototype.hasOwnProperty("tree"))
-            Object.defineProperty(EditorState.prototype, "tree", { get() { return syntaxTree$1(this); } });
-        this.parser = parser;
-        this.extension = [
-            language$1.of(this),
-            EditorState.languageData.of((state, pos, side) => {
-                let top = topNodeAt$1(state, pos, side), data = top.type.prop(languageDataProp$1);
-                if (!data)
-                    return [];
-                let base = state.facet(data), sub = top.type.prop(sublanguageProp$1);
-                if (sub) {
-                    let innerNode = top.resolve(pos - top.from, side);
-                    for (let sublang of sub)
-                        if (sublang.test(innerNode, state)) {
-                            let data = state.facet(sublang.facet);
-                            return sublang.type == "replace" ? data : data.concat(base);
-                        }
-                }
-                return base;
-            })
-        ].concat(extraExtensions);
-    }
-    /**
-    Query whether this language is active at the given position.
-    */
-    isActiveAt(state, pos, side = -1) {
-        return topNodeAt$1(state, pos, side).type.prop(languageDataProp$1) == this.data;
-    }
-    /**
-    Find the document regions that were parsed using this language.
-    The returned regions will _include_ any nested languages rooted
-    in this language, when those exist.
-    */
-    findRegions(state) {
-        let lang = state.facet(language$1);
-        if ((lang === null || lang === void 0 ? void 0 : lang.data) == this.data)
-            return [{ from: 0, to: state.doc.length }];
-        if (!lang || !lang.allowsNesting)
-            return [];
-        let result = [];
-        let explore = (tree, from) => {
-            if (tree.prop(languageDataProp$1) == this.data) {
-                result.push({ from, to: from + tree.length });
-                return;
-            }
-            let mount = tree.prop(NodeProp.mounted);
-            if (mount) {
-                if (mount.tree.prop(languageDataProp$1) == this.data) {
-                    if (mount.overlay)
-                        for (let r of mount.overlay)
-                            result.push({ from: r.from + from, to: r.to + from });
-                    else
-                        result.push({ from: from, to: from + tree.length });
-                    return;
-                }
-                else if (mount.overlay) {
-                    let size = result.length;
-                    explore(mount.tree, mount.overlay[0].from + from);
-                    if (result.length > size)
-                        return;
-                }
-            }
-            for (let i = 0; i < tree.children.length; i++) {
-                let ch = tree.children[i];
-                if (ch instanceof Tree)
-                    explore(ch, tree.positions[i] + from);
-            }
-        };
-        explore(syntaxTree$1(state), 0);
-        return result;
-    }
-    /**
-    Indicates whether this language allows nested languages. The
-    default implementation returns true.
-    */
-    get allowsNesting() { return true; }
-};
-/**
-@internal
-*/
-Language$1.setState = /*@__PURE__*/StateEffect.define();
-function topNodeAt$1(state, pos, side) {
-    let topLang = state.facet(language$1), tree = syntaxTree$1(state).topNode;
-    if (!topLang || topLang.allowsNesting) {
-        for (let node = tree; node; node = node.enter(pos, side, IterMode.ExcludeBuffers))
-            if (node.type.isTop)
-                tree = node;
-    }
-    return tree;
-}
-/**
-A subclass of [`Language`](https://codemirror.net/6/docs/ref/#language.Language) for use with Lezer
-[LR parsers](https://lezer.codemirror.net/docs/ref#lr.LRParser)
-parsers.
-*/
-class LRLanguage extends Language$1 {
-    constructor(data, parser, name) {
-        super(data, parser, [], name);
-        this.parser = parser;
-    }
-    /**
-    Define a language from a parser.
-    */
-    static define(spec) {
-        let data = defineLanguageFacet$1(spec.languageData);
-        return new LRLanguage(data, spec.parser.configure({
-            props: [languageDataProp$1.add(type => type.isTop ? data : undefined)]
-        }), spec.name);
-    }
-    /**
-    Create a new instance of this language with a reconfigured
-    version of its parser and optionally a new name.
-    */
-    configure(options, name) {
-        return new LRLanguage(this.data, this.parser.configure(options), name || this.name);
-    }
-    get allowsNesting() { return this.parser.hasWrappers(); }
-}
-/**
-Get the syntax tree for a state, which is the current (possibly
-incomplete) parse tree of the active
-[language](https://codemirror.net/6/docs/ref/#language.Language), or the empty tree if there is no
-language available.
-*/
-function syntaxTree$1(state) {
-    let field = state.field(Language$1.state, false);
-    return field ? field.tree : Tree.empty;
-}
-/**
-Lezer-style
-[`Input`](https://lezer.codemirror.net/docs/ref#common.Input)
-object for a [`Text`](https://codemirror.net/6/docs/ref/#state.Text) object.
-*/
-let DocInput$1 = class DocInput {
-    /**
-    Create an input object for the given document.
-    */
-    constructor(doc) {
-        this.doc = doc;
-        this.cursorPos = 0;
-        this.string = "";
-        this.cursor = doc.iter();
-    }
-    get length() { return this.doc.length; }
-    syncTo(pos) {
-        this.string = this.cursor.next(pos - this.cursorPos).value;
-        this.cursorPos = pos + this.string.length;
-        return this.cursorPos - this.string.length;
-    }
-    chunk(pos) {
-        this.syncTo(pos);
-        return this.string;
-    }
-    get lineChunks() { return true; }
-    read(from, to) {
-        let stringStart = this.cursorPos - this.string.length;
-        if (from < stringStart || to >= this.cursorPos)
-            return this.doc.sliceString(from, to);
-        else
-            return this.string.slice(from - stringStart, to - stringStart);
-    }
-};
-let currentContext$1 = null;
-/**
-A parse context provided to parsers working on the editor content.
-*/
-let ParseContext$1 = class ParseContext {
-    constructor(parser, 
-    /**
-    The current editor state.
-    */
-    state, 
-    /**
-    Tree fragments that can be reused by incremental re-parses.
-    */
-    fragments = [], 
-    /**
-    @internal
-    */
-    tree, 
-    /**
-    @internal
-    */
-    treeLen, 
-    /**
-    The current editor viewport (or some overapproximation
-    thereof). Intended to be used for opportunistically avoiding
-    work (in which case
-    [`skipUntilInView`](https://codemirror.net/6/docs/ref/#language.ParseContext.skipUntilInView)
-    should be called to make sure the parser is restarted when the
-    skipped region becomes visible).
-    */
-    viewport, 
-    /**
-    @internal
-    */
-    skipped, 
-    /**
-    This is where skipping parsers can register a promise that,
-    when resolved, will schedule a new parse. It is cleared when
-    the parse worker picks up the promise. @internal
-    */
-    scheduleOn) {
-        this.parser = parser;
-        this.state = state;
-        this.fragments = fragments;
-        this.tree = tree;
-        this.treeLen = treeLen;
-        this.viewport = viewport;
-        this.skipped = skipped;
-        this.scheduleOn = scheduleOn;
-        this.parse = null;
-        /**
-        @internal
-        */
-        this.tempSkipped = [];
-    }
-    /**
-    @internal
-    */
-    static create(parser, state, viewport) {
-        return new ParseContext(parser, state, [], Tree.empty, 0, viewport, [], null);
-    }
-    startParse() {
-        return this.parser.startParse(new DocInput$1(this.state.doc), this.fragments);
-    }
-    /**
-    @internal
-    */
-    work(until, upto) {
-        if (upto != null && upto >= this.state.doc.length)
-            upto = undefined;
-        if (this.tree != Tree.empty && this.isDone(upto !== null && upto !== void 0 ? upto : this.state.doc.length)) {
-            this.takeTree();
-            return true;
-        }
-        return this.withContext(() => {
-            var _a;
-            if (typeof until == "number") {
-                let endTime = Date.now() + until;
-                until = () => Date.now() > endTime;
-            }
-            if (!this.parse)
-                this.parse = this.startParse();
-            if (upto != null && (this.parse.stoppedAt == null || this.parse.stoppedAt > upto) &&
-                upto < this.state.doc.length)
-                this.parse.stopAt(upto);
-            for (;;) {
-                let done = this.parse.advance();
-                if (done) {
-                    this.fragments = this.withoutTempSkipped(TreeFragment.addTree(done, this.fragments, this.parse.stoppedAt != null));
-                    this.treeLen = (_a = this.parse.stoppedAt) !== null && _a !== void 0 ? _a : this.state.doc.length;
-                    this.tree = done;
-                    this.parse = null;
-                    if (this.treeLen < (upto !== null && upto !== void 0 ? upto : this.state.doc.length))
-                        this.parse = this.startParse();
-                    else
-                        return true;
-                }
-                if (until())
-                    return false;
-            }
-        });
-    }
-    /**
-    @internal
-    */
-    takeTree() {
-        let pos, tree;
-        if (this.parse && (pos = this.parse.parsedPos) >= this.treeLen) {
-            if (this.parse.stoppedAt == null || this.parse.stoppedAt > pos)
-                this.parse.stopAt(pos);
-            this.withContext(() => { while (!(tree = this.parse.advance())) { } });
-            this.treeLen = pos;
-            this.tree = tree;
-            this.fragments = this.withoutTempSkipped(TreeFragment.addTree(this.tree, this.fragments, true));
-            this.parse = null;
-        }
-    }
-    withContext(f) {
-        let prev = currentContext$1;
-        currentContext$1 = this;
-        try {
-            return f();
-        }
-        finally {
-            currentContext$1 = prev;
-        }
-    }
-    withoutTempSkipped(fragments) {
-        for (let r; r = this.tempSkipped.pop();)
-            fragments = cutFragments$1(fragments, r.from, r.to);
-        return fragments;
-    }
-    /**
-    @internal
-    */
-    changes(changes, newState) {
-        let { fragments, tree, treeLen, viewport, skipped } = this;
-        this.takeTree();
-        if (!changes.empty) {
-            let ranges = [];
-            changes.iterChangedRanges((fromA, toA, fromB, toB) => ranges.push({ fromA, toA, fromB, toB }));
-            fragments = TreeFragment.applyChanges(fragments, ranges);
-            tree = Tree.empty;
-            treeLen = 0;
-            viewport = { from: changes.mapPos(viewport.from, -1), to: changes.mapPos(viewport.to, 1) };
-            if (this.skipped.length) {
-                skipped = [];
-                for (let r of this.skipped) {
-                    let from = changes.mapPos(r.from, 1), to = changes.mapPos(r.to, -1);
-                    if (from < to)
-                        skipped.push({ from, to });
-                }
-            }
-        }
-        return new ParseContext(this.parser, newState, fragments, tree, treeLen, viewport, skipped, this.scheduleOn);
-    }
-    /**
-    @internal
-    */
-    updateViewport(viewport) {
-        if (this.viewport.from == viewport.from && this.viewport.to == viewport.to)
-            return false;
-        this.viewport = viewport;
-        let startLen = this.skipped.length;
-        for (let i = 0; i < this.skipped.length; i++) {
-            let { from, to } = this.skipped[i];
-            if (from < viewport.to && to > viewport.from) {
-                this.fragments = cutFragments$1(this.fragments, from, to);
-                this.skipped.splice(i--, 1);
-            }
-        }
-        if (this.skipped.length >= startLen)
-            return false;
-        this.reset();
-        return true;
-    }
-    /**
-    @internal
-    */
-    reset() {
-        if (this.parse) {
-            this.takeTree();
-            this.parse = null;
-        }
-    }
-    /**
-    Notify the parse scheduler that the given region was skipped
-    because it wasn't in view, and the parse should be restarted
-    when it comes into view.
-    */
-    skipUntilInView(from, to) {
-        this.skipped.push({ from, to });
-    }
-    /**
-    Returns a parser intended to be used as placeholder when
-    asynchronously loading a nested parser. It'll skip its input and
-    mark it as not-really-parsed, so that the next update will parse
-    it again.
-    
-    When `until` is given, a reparse will be scheduled when that
-    promise resolves.
-    */
-    static getSkippingParser(until) {
-        return new class extends Parser {
-            createParse(input, fragments, ranges) {
-                let from = ranges[0].from, to = ranges[ranges.length - 1].to;
-                let parser = {
-                    parsedPos: from,
-                    advance() {
-                        let cx = currentContext$1;
-                        if (cx) {
-                            for (let r of ranges)
-                                cx.tempSkipped.push(r);
-                            if (until)
-                                cx.scheduleOn = cx.scheduleOn ? Promise.all([cx.scheduleOn, until]) : until;
-                        }
-                        this.parsedPos = to;
-                        return new Tree(NodeType.none, [], [], to - from);
-                    },
-                    stoppedAt: null,
-                    stopAt() { }
-                };
-                return parser;
-            }
-        };
-    }
-    /**
-    @internal
-    */
-    isDone(upto) {
-        upto = Math.min(upto, this.state.doc.length);
-        let frags = this.fragments;
-        return this.treeLen >= upto && frags.length && frags[0].from == 0 && frags[0].to >= upto;
-    }
-    /**
-    Get the context for the current parse, or `null` if no editor
-    parse is in progress.
-    */
-    static get() { return currentContext$1; }
-};
-function cutFragments$1(fragments, from, to) {
-    return TreeFragment.applyChanges(fragments, [{ fromA: from, toA: to, fromB: from, toB: to }]);
-}
-let LanguageState$1 = class LanguageState {
-    constructor(
-    // A mutable parse state that is used to preserve work done during
-    // the lifetime of a state when moving to the next state.
-    context) {
-        this.context = context;
-        this.tree = context.tree;
-    }
-    apply(tr) {
-        if (!tr.docChanged && this.tree == this.context.tree)
-            return this;
-        let newCx = this.context.changes(tr.changes, tr.state);
-        // If the previous parse wasn't done, go forward only up to its
-        // end position or the end of the viewport, to avoid slowing down
-        // state updates with parse work beyond the viewport.
-        let upto = this.context.treeLen == tr.startState.doc.length ? undefined
-            : Math.max(tr.changes.mapPos(this.context.treeLen), newCx.viewport.to);
-        if (!newCx.work(20 /* Work.Apply */, upto))
-            newCx.takeTree();
-        return new LanguageState(newCx);
-    }
-    static init(state) {
-        let vpTo = Math.min(3000 /* Work.InitViewport */, state.doc.length);
-        let parseState = ParseContext$1.create(state.facet(language$1).parser, state, { from: 0, to: vpTo });
-        if (!parseState.work(20 /* Work.Apply */, vpTo))
-            parseState.takeTree();
-        return new LanguageState(parseState);
-    }
-};
-Language$1.state = /*@__PURE__*/StateField.define({
-    create: LanguageState$1.init,
-    update(value, tr) {
-        for (let e of tr.effects)
-            if (e.is(Language$1.setState))
-                return e.value;
-        if (tr.startState.facet(language$1) != tr.state.facet(language$1))
-            return LanguageState$1.init(tr.state);
-        return value.apply(tr);
-    }
-});
-let requestIdle$1 = (callback) => {
-    let timeout = setTimeout(() => callback(), 500 /* Work.MaxPause */);
-    return () => clearTimeout(timeout);
-};
-if (typeof requestIdleCallback != "undefined")
-    requestIdle$1 = (callback) => {
-        let idle = -1, timeout = setTimeout(() => {
-            idle = requestIdleCallback(callback, { timeout: 500 /* Work.MaxPause */ - 100 /* Work.MinPause */ });
-        }, 100 /* Work.MinPause */);
-        return () => idle < 0 ? clearTimeout(timeout) : cancelIdleCallback(idle);
-    };
-const isInputPending$1 = typeof navigator != "undefined" && ((_a$1 = navigator.scheduling) === null || _a$1 === void 0 ? void 0 : _a$1.isInputPending)
-    ? () => navigator.scheduling.isInputPending() : null;
-const parseWorker$1 = /*@__PURE__*/ViewPlugin.fromClass(class ParseWorker {
-    constructor(view) {
-        this.view = view;
-        this.working = null;
-        this.workScheduled = 0;
-        // End of the current time chunk
-        this.chunkEnd = -1;
-        // Milliseconds of budget left for this chunk
-        this.chunkBudget = -1;
-        this.work = this.work.bind(this);
-        this.scheduleWork();
-    }
-    update(update) {
-        let cx = this.view.state.field(Language$1.state).context;
-        if (cx.updateViewport(update.view.viewport) || this.view.viewport.to > cx.treeLen)
-            this.scheduleWork();
-        if (update.docChanged || update.selectionSet) {
-            if (this.view.hasFocus)
-                this.chunkBudget += 50 /* Work.ChangeBonus */;
-            this.scheduleWork();
-        }
-        this.checkAsyncSchedule(cx);
-    }
-    scheduleWork() {
-        if (this.working)
-            return;
-        let { state } = this.view, field = state.field(Language$1.state);
-        if (field.tree != field.context.tree || !field.context.isDone(state.doc.length))
-            this.working = requestIdle$1(this.work);
-    }
-    work(deadline) {
-        this.working = null;
-        let now = Date.now();
-        if (this.chunkEnd < now && (this.chunkEnd < 0 || this.view.hasFocus)) { // Start a new chunk
-            this.chunkEnd = now + 30000 /* Work.ChunkTime */;
-            this.chunkBudget = 3000 /* Work.ChunkBudget */;
-        }
-        if (this.chunkBudget <= 0)
-            return; // No more budget
-        let { state, viewport: { to: vpTo } } = this.view, field = state.field(Language$1.state);
-        if (field.tree == field.context.tree && field.context.isDone(vpTo + 100000 /* Work.MaxParseAhead */))
-            return;
-        let endTime = Date.now() + Math.min(this.chunkBudget, 100 /* Work.Slice */, deadline && !isInputPending$1 ? Math.max(25 /* Work.MinSlice */, deadline.timeRemaining() - 5) : 1e9);
-        let viewportFirst = field.context.treeLen < vpTo && state.doc.length > vpTo + 1000;
-        let done = field.context.work(() => {
-            return isInputPending$1 && isInputPending$1() || Date.now() > endTime;
-        }, vpTo + (viewportFirst ? 0 : 100000 /* Work.MaxParseAhead */));
-        this.chunkBudget -= Date.now() - now;
-        if (done || this.chunkBudget <= 0) {
-            field.context.takeTree();
-            this.view.dispatch({ effects: Language$1.setState.of(new LanguageState$1(field.context)) });
-        }
-        if (this.chunkBudget > 0 && !(done && !viewportFirst))
-            this.scheduleWork();
-        this.checkAsyncSchedule(field.context);
-    }
-    checkAsyncSchedule(cx) {
-        if (cx.scheduleOn) {
-            this.workScheduled++;
-            cx.scheduleOn
-                .then(() => this.scheduleWork())
-                .catch(err => logException(this.view.state, err))
-                .then(() => this.workScheduled--);
-            cx.scheduleOn = null;
-        }
-    }
-    destroy() {
-        if (this.working)
-            this.working();
-    }
-    isWorking() {
-        return !!(this.working || this.workScheduled > 0);
-    }
-}, {
-    eventHandlers: { focus() { this.scheduleWork(); } }
-});
-/**
-The facet used to associate a language with an editor state. Used
-by `Language` object's `extension` property (so you don't need to
-manually wrap your languages in this). Can be used to access the
-current language on a state.
-*/
-const language$1 = /*@__PURE__*/Facet.define({
-    combine(languages) { return languages.length ? languages[0] : null; },
-    enables: language => [
-        Language$1.state,
-        parseWorker$1,
-        EditorView.contentAttributes.compute([language], state => {
-            let lang = state.facet(language);
-            return lang && lang.name ? { "data-language": lang.name } : {};
-        })
-    ]
-});
-/**
-This class bundles a [language](https://codemirror.net/6/docs/ref/#language.Language) with an
-optional set of supporting extensions. Language packages are
-encouraged to export a function that optionally takes a
-configuration object and returns a `LanguageSupport` instance, as
-the main way for client code to use the package.
-*/
-let LanguageSupport$1 = class LanguageSupport {
-    /**
-    Create a language support object.
-    */
-    constructor(
-    /**
-    The language object.
-    */
-    language, 
-    /**
-    An optional set of supporting extensions. When nesting a
-    language in another language, the outer language is encouraged
-    to include the supporting extensions for its inner languages
-    in its own set of support extensions.
-    */
-    support = []) {
-        this.language = language;
-        this.support = support;
-        this.extension = [language, support];
-    }
-};
-/**
-A syntax tree node prop used to associate indentation strategies
-with node types. Such a strategy is a function from an indentation
-context to a column number (see also
-[`indentString`](https://codemirror.net/6/docs/ref/#language.indentString)) or null, where null
-indicates that no definitive indentation can be determined.
-*/
-const indentNodeProp$1 = /*@__PURE__*/new NodeProp();
-/**
-This node prop is used to associate folding information with
-syntax node types. Given a syntax node, it should check whether
-that tree is foldable and return the range that can be collapsed
-when it is.
-*/
-const foldNodeProp$1 = /*@__PURE__*/new NodeProp();
-/**
-When larger syntax nodes, such as HTML tags, are marked as
-opening/closing, it can be a bit messy to treat the whole node as
-a matchable bracket. This node prop allows you to define, for such
-a node, a ‘handle’—the part of the node that is highlighted, and
-that the cursor must be on to activate highlighting in the first
-place.
-*/
-const bracketMatchingHandle = /*@__PURE__*/new NodeProp();
-const noTokens$1 = /*@__PURE__*/Object.create(null);
-const typeArray$1 = [NodeType.none];
-const warned$1 = [];
-// Cache of node types by name and tags
-const byTag$1 = /*@__PURE__*/Object.create(null);
-const defaultTable$1 = /*@__PURE__*/Object.create(null);
-for (let [legacyName, name] of [
-    ["variable", "variableName"],
-    ["variable-2", "variableName.special"],
-    ["string-2", "string.special"],
-    ["def", "variableName.definition"],
-    ["tag", "tagName"],
-    ["attribute", "attributeName"],
-    ["type", "typeName"],
-    ["builtin", "variableName.standard"],
-    ["qualifier", "modifier"],
-    ["error", "invalid"],
-    ["header", "heading"],
-    ["property", "propertyName"]
-])
-    defaultTable$1[legacyName] = /*@__PURE__*/createTokenType$1(noTokens$1, name);
-function warnForPart$1(part, msg) {
-    if (warned$1.indexOf(part) > -1)
-        return;
-    warned$1.push(part);
-    console.warn(msg);
-}
-function createTokenType$1(extra, tagStr) {
-    let tags$1$1 = [];
-    for (let name of tagStr.split(" ")) {
-        let found = [];
-        for (let part of name.split(".")) {
-            let value = (extra[part] || tags$1[part]);
-            if (!value) {
-                warnForPart$1(part, `Unknown highlighting tag ${part}`);
-            }
-            else if (typeof value == "function") {
-                if (!found.length)
-                    warnForPart$1(part, `Modifier ${part} used at start of tag`);
-                else
-                    found = found.map(value);
-            }
-            else {
-                if (found.length)
-                    warnForPart$1(part, `Tag ${part} used as modifier`);
-                else
-                    found = Array.isArray(value) ? value : [value];
-            }
-        }
-        for (let tag of found)
-            tags$1$1.push(tag);
-    }
-    if (!tags$1$1.length)
-        return 0;
-    let name = tagStr.replace(/ /g, "_"), key = name + " " + tags$1$1.map(t => t.id);
-    let known = byTag$1[key];
-    if (known)
-        return known.id;
-    let type = byTag$1[key] = NodeType.define({
-        id: typeArray$1.length,
-        name,
-        props: [styleTags({ [name]: tags$1$1 })]
-    });
-    typeArray$1.push(type);
-    return type.id;
-}
-({
-    rtl: /*@__PURE__*/Decoration.mark({ class: "cm-iso", inclusive: true, attributes: { dir: "rtl" }, bidiIsolate: Direction.RTL }),
-    ltr: /*@__PURE__*/Decoration.mark({ class: "cm-iso", inclusive: true, attributes: { dir: "ltr" }, bidiIsolate: Direction.LTR })});
 
 const Targets = ["_blank", "_self", "_top", "_parent"];
 const Charsets = ["ascii", "utf-8", "utf-16", "latin1", "latin1"];
@@ -35495,7 +32142,7 @@ function completeAttrValue(state, schema, tree, from, to) {
     return { from, to, options, validFor: token };
 }
 function htmlCompletionFor(schema, context) {
-    let { state, pos } = context, tree = syntaxTree$1(state).resolveInner(pos, -1), around = tree.resolve(pos);
+    let { state, pos } = context, tree = syntaxTree(state).resolveInner(pos, -1), around = tree.resolve(pos);
     for (let scan = pos, before; around == tree && (before = tree.childBefore(scan));) {
         let last = before.lastChild;
         if (!last || !last.type.isError || last.from < last.to)
@@ -35584,7 +32231,7 @@ const htmlPlain = /*@__PURE__*/LRLanguage.define({
     name: "html",
     parser: /*@__PURE__*/parser$2.configure({
         props: [
-            /*@__PURE__*/indentNodeProp$1.add({
+            /*@__PURE__*/indentNodeProp.add({
                 Element(context) {
                     let after = /^(\s*)(<\/)?/.exec(context.textAfter);
                     if (context.node.to <= context.pos + after[0].length)
@@ -35609,7 +32256,7 @@ const htmlPlain = /*@__PURE__*/LRLanguage.define({
                     return null;
                 }
             }),
-            /*@__PURE__*/foldNodeProp$1.add({
+            /*@__PURE__*/foldNodeProp.add({
                 Element(node) {
                     let first = node.firstChild, last = node.lastChild;
                     if (!first || first.name != "OpenTag")
@@ -35652,7 +32299,7 @@ function html(config = {}) {
         config.nestedAttributes && config.nestedAttributes.length)
         wrap = configureNesting((config.nestedLanguages || []).concat(defaultNesting), (config.nestedAttributes || []).concat(defaultAttrs));
     let lang = wrap ? htmlPlain.configure({ wrap, dialect }) : dialect ? htmlLanguage.configure({ dialect }) : htmlLanguage;
-    return new LanguageSupport$1(lang, [
+    return new LanguageSupport(lang, [
         htmlLanguage.data.of({ autocomplete: htmlCompletionSourceWith(config) }),
         config.autoCloseTags !== false ? autoCloseTags : [],
         javascript().support,
@@ -35672,7 +32319,7 @@ const autoCloseTags = /*@__PURE__*/EditorView.inputHandler.of((view, from, to, t
     let closeTags = state.changeByRange(range => {
         var _a, _b, _c;
         let didType = state.doc.sliceString(range.from - 1, range.to) == text;
-        let { head } = range, after = syntaxTree$1(state).resolveInner(head, -1), name;
+        let { head } = range, after = syntaxTree(state).resolveInner(head, -1), name;
         if (didType && text == ">" && after.name == "EndTag") {
             let tag = after.parent;
             if (((_b = (_a = tag.parent) === null || _a === void 0 ? void 0 : _a.lastChild) === null || _b === void 0 ? void 0 : _b.name) != "CloseTag" &&
@@ -35709,7 +32356,7 @@ const autoCloseTags = /*@__PURE__*/EditorView.inputHandler.of((view, from, to, t
     return true;
 });
 
-var index = /*#__PURE__*/Object.freeze({
+var index$1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   autoCloseTags: autoCloseTags,
   html: html,
@@ -35719,19 +32366,19 @@ var index = /*#__PURE__*/Object.freeze({
   htmlPlain: htmlPlain
 });
 
-const data = /*@__PURE__*/defineLanguageFacet$4({ commentTokens: { block: { open: "<!--", close: "-->" } } });
+const data = /*@__PURE__*/defineLanguageFacet({ commentTokens: { block: { open: "<!--", close: "-->" } } });
 const headingProp = /*@__PURE__*/new NodeProp();
 const commonmark = /*@__PURE__*/parser$3.configure({
     props: [
-        /*@__PURE__*/foldNodeProp$4.add(type => {
+        /*@__PURE__*/foldNodeProp.add(type => {
             return !type.is("Block") || type.is("Document") || isHeading(type) != null || isList(type) ? undefined
                 : (tree, state) => ({ from: state.doc.lineAt(tree.from).to, to: tree.to });
         }),
         /*@__PURE__*/headingProp.add(isHeading),
-        /*@__PURE__*/indentNodeProp$5.add({
+        /*@__PURE__*/indentNodeProp.add({
             Document: () => null
         }),
-        /*@__PURE__*/languageDataProp$6.add({
+        /*@__PURE__*/languageDataProp.add({
             Document: data
         })
     ]
@@ -35753,8 +32400,8 @@ function findSectionEnd(headerNode, level) {
     }
     return last.to;
 }
-const headerIndent = /*@__PURE__*/foldService$1.of((state, start, end) => {
-    for (let node = syntaxTree$6(state).resolveInner(end, -1); node; node = node.parent) {
+const headerIndent = /*@__PURE__*/foldService.of((state, start, end) => {
+    for (let node = syntaxTree(state).resolveInner(end, -1); node; node = node.parent) {
         if (node.from < start)
             break;
         let heading = node.type.prop(headingProp);
@@ -35767,7 +32414,7 @@ const headerIndent = /*@__PURE__*/foldService$1.of((state, start, end) => {
     return null;
 });
 function mkLang(parser) {
-    return new Language$6(data, parser, [], "markdown");
+    return new Language(data, parser, [], "markdown");
 }
 /**
 Language support for strict CommonMark.
@@ -35775,7 +32422,7 @@ Language support for strict CommonMark.
 const commonmarkLanguage = /*@__PURE__*/mkLang(commonmark);
 const extended = /*@__PURE__*/commonmark.configure([GFM, Subscript, Superscript, Emoji, {
         props: [
-            /*@__PURE__*/foldNodeProp$4.add({
+            /*@__PURE__*/foldNodeProp.add({
                 Table: (tree, state) => ({ from: state.doc.lineAt(tree.from).to, to: tree.to })
             })
         ]
@@ -35794,9 +32441,9 @@ function getCodeParser(languages, defaultLanguage) {
             if (typeof languages == "function")
                 found = languages(info);
             else
-                found = LanguageDescription$1.matchLanguageName(languages, info, true);
-            if (found instanceof LanguageDescription$1)
-                return found.support ? found.support.language.parser : ParseContext$6.getSkippingParser(found.load());
+                found = LanguageDescription.matchLanguageName(languages, info, true);
+            if (found instanceof LanguageDescription)
+                return found.support ? found.support.language.parser : ParseContext.getSkippingParser(found.load());
             else if (found)
                 return found.parser;
         }
@@ -35893,7 +32540,7 @@ function renumberList(after, doc, changes, offset = 0) {
 }
 function normalizeIndent(content, state) {
     let blank = /^[ \t]*/.exec(content)[0].length;
-    if (!blank || state.facet(indentUnit$3) != "\t")
+    if (!blank || state.facet(indentUnit) != "\t")
         return content;
     let col = countColumn(content, 4, blank);
     let space = "";
@@ -35921,7 +32568,7 @@ not be used as the only binding for Enter (even in a Markdown
 document, HTML and code regions might use a different language).
 */
 const insertNewlineContinueMarkup = ({ state, dispatch }) => {
-    let tree = syntaxTree$6(state), { doc } = state;
+    let tree = syntaxTree(state), { doc } = state;
     let dont = null, changes = state.changeByRange(range => {
         if (!range.empty || !markdownLanguage.isActiveAt(state, range.from, -1) && !markdownLanguage.isActiveAt(state, range.from, 1))
             return dont = { range };
@@ -36052,7 +32699,7 @@ false, so it is intended to be bound alongside other deletion
 commands, with a higher precedence than the more generic commands.
 */
 const deleteMarkupBackward = ({ state, dispatch }) => {
-    let tree = syntaxTree$6(state);
+    let tree = syntaxTree(state);
     let dont = null, changes = state.changeByRange(range => {
         let pos = range.from, { doc } = state;
         if (range.empty && markdownLanguage.isActiveAt(state, range.from)) {
@@ -36113,7 +32760,7 @@ function markdown(config = {}) {
         throw new RangeError("Base parser provided to `markdown` should be a Markdown parser");
     let extensions = config.extensions ? [config.extensions] : [];
     let support = [htmlTagLanguage.support, headerIndent], defaultCode;
-    if (defaultCodeLanguage instanceof LanguageSupport$4) {
+    if (defaultCodeLanguage instanceof LanguageSupport) {
         support.push(defaultCodeLanguage.support);
         defaultCode = defaultCodeLanguage.language;
     }
@@ -36127,13 +32774,13 @@ function markdown(config = {}) {
     let lang = mkLang(parser.configure(extensions));
     if (completeHTMLTags)
         support.push(lang.data.of({ autocomplete: htmlTagCompletion }));
-    return new LanguageSupport$4(lang, support);
+    return new LanguageSupport(lang, support);
 }
 function htmlTagCompletion(context) {
     let { state, pos } = context, m = /<[:\-\.\w\u00b7-\uffff]*$/.exec(state.sliceDoc(pos - 25, pos));
     if (!m)
         return null;
-    let tree = syntaxTree$6(state).resolveInner(pos, -1);
+    let tree = syntaxTree(state).resolveInner(pos, -1);
     while (tree && !tree.type.isTop) {
         if (tree.name == "CodeBlock" || tree.name == "FencedCode" || tree.name == "ProcessingInstructionBlock" ||
             tree.name == "CommentBlock" || tree.name == "Link" || tree.name == "Image")
@@ -36154,1322 +32801,21 @@ function htmlTagCompletions() {
     return _tagCompletions = result ? result.options : [];
 }
 
-var _a;
-/**
-Node prop stored in a parser's top syntax node to provide the
-facet that stores language-specific data for that language.
-*/
-const languageDataProp = /*@__PURE__*/new NodeProp();
-/**
-Helper function to define a facet (to be added to the top syntax
-node(s) for a language via
-[`languageDataProp`](https://codemirror.net/6/docs/ref/#language.languageDataProp)), that will be
-used to associate language data with the language. You
-probably only need this when subclassing
-[`Language`](https://codemirror.net/6/docs/ref/#language.Language).
-*/
-function defineLanguageFacet(baseData) {
-    return Facet.define({
-        combine: baseData ? values => values.concat(baseData) : undefined
-    });
-}
-/**
-Syntax node prop used to register sublanguages. Should be added to
-the top level node type for the language.
-*/
-const sublanguageProp = /*@__PURE__*/new NodeProp();
-/**
-A language object manages parsing and per-language
-[metadata](https://codemirror.net/6/docs/ref/#state.EditorState.languageDataAt). Parse data is
-managed as a [Lezer](https://lezer.codemirror.net) tree. The class
-can be used directly, via the [`LRLanguage`](https://codemirror.net/6/docs/ref/#language.LRLanguage)
-subclass for [Lezer](https://lezer.codemirror.net/) LR parsers, or
-via the [`StreamLanguage`](https://codemirror.net/6/docs/ref/#language.StreamLanguage) subclass
-for stream parsers.
-*/
-class Language {
-    /**
-    Construct a language object. If you need to invoke this
-    directly, first define a data facet with
-    [`defineLanguageFacet`](https://codemirror.net/6/docs/ref/#language.defineLanguageFacet), and then
-    configure your parser to [attach](https://codemirror.net/6/docs/ref/#language.languageDataProp) it
-    to the language's outer syntax node.
-    */
-    constructor(
-    /**
-    The [language data](https://codemirror.net/6/docs/ref/#state.EditorState.languageDataAt) facet
-    used for this language.
-    */
-    data, parser, extraExtensions = [], 
-    /**
-    A language name.
-    */
-    name = "") {
-        this.data = data;
-        this.name = name;
-        // Kludge to define EditorState.tree as a debugging helper,
-        // without the EditorState package actually knowing about
-        // languages and lezer trees.
-        if (!EditorState.prototype.hasOwnProperty("tree"))
-            Object.defineProperty(EditorState.prototype, "tree", { get() { return syntaxTree(this); } });
-        this.parser = parser;
-        this.extension = [
-            language.of(this),
-            EditorState.languageData.of((state, pos, side) => {
-                let top = topNodeAt(state, pos, side), data = top.type.prop(languageDataProp);
-                if (!data)
-                    return [];
-                let base = state.facet(data), sub = top.type.prop(sublanguageProp);
-                if (sub) {
-                    let innerNode = top.resolve(pos - top.from, side);
-                    for (let sublang of sub)
-                        if (sublang.test(innerNode, state)) {
-                            let data = state.facet(sublang.facet);
-                            return sublang.type == "replace" ? data : data.concat(base);
-                        }
-                }
-                return base;
-            })
-        ].concat(extraExtensions);
-    }
-    /**
-    Query whether this language is active at the given position.
-    */
-    isActiveAt(state, pos, side = -1) {
-        return topNodeAt(state, pos, side).type.prop(languageDataProp) == this.data;
-    }
-    /**
-    Find the document regions that were parsed using this language.
-    The returned regions will _include_ any nested languages rooted
-    in this language, when those exist.
-    */
-    findRegions(state) {
-        let lang = state.facet(language);
-        if ((lang === null || lang === void 0 ? void 0 : lang.data) == this.data)
-            return [{ from: 0, to: state.doc.length }];
-        if (!lang || !lang.allowsNesting)
-            return [];
-        let result = [];
-        let explore = (tree, from) => {
-            if (tree.prop(languageDataProp) == this.data) {
-                result.push({ from, to: from + tree.length });
-                return;
-            }
-            let mount = tree.prop(NodeProp.mounted);
-            if (mount) {
-                if (mount.tree.prop(languageDataProp) == this.data) {
-                    if (mount.overlay)
-                        for (let r of mount.overlay)
-                            result.push({ from: r.from + from, to: r.to + from });
-                    else
-                        result.push({ from: from, to: from + tree.length });
-                    return;
-                }
-                else if (mount.overlay) {
-                    let size = result.length;
-                    explore(mount.tree, mount.overlay[0].from + from);
-                    if (result.length > size)
-                        return;
-                }
-            }
-            for (let i = 0; i < tree.children.length; i++) {
-                let ch = tree.children[i];
-                if (ch instanceof Tree)
-                    explore(ch, tree.positions[i] + from);
-            }
-        };
-        explore(syntaxTree(state), 0);
-        return result;
-    }
-    /**
-    Indicates whether this language allows nested languages. The
-    default implementation returns true.
-    */
-    get allowsNesting() { return true; }
-}
-/**
-@internal
-*/
-Language.setState = /*@__PURE__*/StateEffect.define();
-function topNodeAt(state, pos, side) {
-    let topLang = state.facet(language), tree = syntaxTree(state).topNode;
-    if (!topLang || topLang.allowsNesting) {
-        for (let node = tree; node; node = node.enter(pos, side, IterMode.ExcludeBuffers))
-            if (node.type.isTop)
-                tree = node;
-    }
-    return tree;
-}
-/**
-Get the syntax tree for a state, which is the current (possibly
-incomplete) parse tree of the active
-[language](https://codemirror.net/6/docs/ref/#language.Language), or the empty tree if there is no
-language available.
-*/
-function syntaxTree(state) {
-    let field = state.field(Language.state, false);
-    return field ? field.tree : Tree.empty;
-}
-/**
-Lezer-style
-[`Input`](https://lezer.codemirror.net/docs/ref#common.Input)
-object for a [`Text`](https://codemirror.net/6/docs/ref/#state.Text) object.
-*/
-class DocInput {
-    /**
-    Create an input object for the given document.
-    */
-    constructor(doc) {
-        this.doc = doc;
-        this.cursorPos = 0;
-        this.string = "";
-        this.cursor = doc.iter();
-    }
-    get length() { return this.doc.length; }
-    syncTo(pos) {
-        this.string = this.cursor.next(pos - this.cursorPos).value;
-        this.cursorPos = pos + this.string.length;
-        return this.cursorPos - this.string.length;
-    }
-    chunk(pos) {
-        this.syncTo(pos);
-        return this.string;
-    }
-    get lineChunks() { return true; }
-    read(from, to) {
-        let stringStart = this.cursorPos - this.string.length;
-        if (from < stringStart || to >= this.cursorPos)
-            return this.doc.sliceString(from, to);
-        else
-            return this.string.slice(from - stringStart, to - stringStart);
-    }
-}
-let currentContext = null;
-/**
-A parse context provided to parsers working on the editor content.
-*/
-class ParseContext {
-    constructor(parser, 
-    /**
-    The current editor state.
-    */
-    state, 
-    /**
-    Tree fragments that can be reused by incremental re-parses.
-    */
-    fragments = [], 
-    /**
-    @internal
-    */
-    tree, 
-    /**
-    @internal
-    */
-    treeLen, 
-    /**
-    The current editor viewport (or some overapproximation
-    thereof). Intended to be used for opportunistically avoiding
-    work (in which case
-    [`skipUntilInView`](https://codemirror.net/6/docs/ref/#language.ParseContext.skipUntilInView)
-    should be called to make sure the parser is restarted when the
-    skipped region becomes visible).
-    */
-    viewport, 
-    /**
-    @internal
-    */
-    skipped, 
-    /**
-    This is where skipping parsers can register a promise that,
-    when resolved, will schedule a new parse. It is cleared when
-    the parse worker picks up the promise. @internal
-    */
-    scheduleOn) {
-        this.parser = parser;
-        this.state = state;
-        this.fragments = fragments;
-        this.tree = tree;
-        this.treeLen = treeLen;
-        this.viewport = viewport;
-        this.skipped = skipped;
-        this.scheduleOn = scheduleOn;
-        this.parse = null;
-        /**
-        @internal
-        */
-        this.tempSkipped = [];
-    }
-    /**
-    @internal
-    */
-    static create(parser, state, viewport) {
-        return new ParseContext(parser, state, [], Tree.empty, 0, viewport, [], null);
-    }
-    startParse() {
-        return this.parser.startParse(new DocInput(this.state.doc), this.fragments);
-    }
-    /**
-    @internal
-    */
-    work(until, upto) {
-        if (upto != null && upto >= this.state.doc.length)
-            upto = undefined;
-        if (this.tree != Tree.empty && this.isDone(upto !== null && upto !== void 0 ? upto : this.state.doc.length)) {
-            this.takeTree();
-            return true;
-        }
-        return this.withContext(() => {
-            var _a;
-            if (typeof until == "number") {
-                let endTime = Date.now() + until;
-                until = () => Date.now() > endTime;
-            }
-            if (!this.parse)
-                this.parse = this.startParse();
-            if (upto != null && (this.parse.stoppedAt == null || this.parse.stoppedAt > upto) &&
-                upto < this.state.doc.length)
-                this.parse.stopAt(upto);
-            for (;;) {
-                let done = this.parse.advance();
-                if (done) {
-                    this.fragments = this.withoutTempSkipped(TreeFragment.addTree(done, this.fragments, this.parse.stoppedAt != null));
-                    this.treeLen = (_a = this.parse.stoppedAt) !== null && _a !== void 0 ? _a : this.state.doc.length;
-                    this.tree = done;
-                    this.parse = null;
-                    if (this.treeLen < (upto !== null && upto !== void 0 ? upto : this.state.doc.length))
-                        this.parse = this.startParse();
-                    else
-                        return true;
-                }
-                if (until())
-                    return false;
-            }
-        });
-    }
-    /**
-    @internal
-    */
-    takeTree() {
-        let pos, tree;
-        if (this.parse && (pos = this.parse.parsedPos) >= this.treeLen) {
-            if (this.parse.stoppedAt == null || this.parse.stoppedAt > pos)
-                this.parse.stopAt(pos);
-            this.withContext(() => { while (!(tree = this.parse.advance())) { } });
-            this.treeLen = pos;
-            this.tree = tree;
-            this.fragments = this.withoutTempSkipped(TreeFragment.addTree(this.tree, this.fragments, true));
-            this.parse = null;
-        }
-    }
-    withContext(f) {
-        let prev = currentContext;
-        currentContext = this;
-        try {
-            return f();
-        }
-        finally {
-            currentContext = prev;
-        }
-    }
-    withoutTempSkipped(fragments) {
-        for (let r; r = this.tempSkipped.pop();)
-            fragments = cutFragments(fragments, r.from, r.to);
-        return fragments;
-    }
-    /**
-    @internal
-    */
-    changes(changes, newState) {
-        let { fragments, tree, treeLen, viewport, skipped } = this;
-        this.takeTree();
-        if (!changes.empty) {
-            let ranges = [];
-            changes.iterChangedRanges((fromA, toA, fromB, toB) => ranges.push({ fromA, toA, fromB, toB }));
-            fragments = TreeFragment.applyChanges(fragments, ranges);
-            tree = Tree.empty;
-            treeLen = 0;
-            viewport = { from: changes.mapPos(viewport.from, -1), to: changes.mapPos(viewport.to, 1) };
-            if (this.skipped.length) {
-                skipped = [];
-                for (let r of this.skipped) {
-                    let from = changes.mapPos(r.from, 1), to = changes.mapPos(r.to, -1);
-                    if (from < to)
-                        skipped.push({ from, to });
-                }
-            }
-        }
-        return new ParseContext(this.parser, newState, fragments, tree, treeLen, viewport, skipped, this.scheduleOn);
-    }
-    /**
-    @internal
-    */
-    updateViewport(viewport) {
-        if (this.viewport.from == viewport.from && this.viewport.to == viewport.to)
-            return false;
-        this.viewport = viewport;
-        let startLen = this.skipped.length;
-        for (let i = 0; i < this.skipped.length; i++) {
-            let { from, to } = this.skipped[i];
-            if (from < viewport.to && to > viewport.from) {
-                this.fragments = cutFragments(this.fragments, from, to);
-                this.skipped.splice(i--, 1);
-            }
-        }
-        if (this.skipped.length >= startLen)
-            return false;
-        this.reset();
-        return true;
-    }
-    /**
-    @internal
-    */
-    reset() {
-        if (this.parse) {
-            this.takeTree();
-            this.parse = null;
-        }
-    }
-    /**
-    Notify the parse scheduler that the given region was skipped
-    because it wasn't in view, and the parse should be restarted
-    when it comes into view.
-    */
-    skipUntilInView(from, to) {
-        this.skipped.push({ from, to });
-    }
-    /**
-    Returns a parser intended to be used as placeholder when
-    asynchronously loading a nested parser. It'll skip its input and
-    mark it as not-really-parsed, so that the next update will parse
-    it again.
-    
-    When `until` is given, a reparse will be scheduled when that
-    promise resolves.
-    */
-    static getSkippingParser(until) {
-        return new class extends Parser {
-            createParse(input, fragments, ranges) {
-                let from = ranges[0].from, to = ranges[ranges.length - 1].to;
-                let parser = {
-                    parsedPos: from,
-                    advance() {
-                        let cx = currentContext;
-                        if (cx) {
-                            for (let r of ranges)
-                                cx.tempSkipped.push(r);
-                            if (until)
-                                cx.scheduleOn = cx.scheduleOn ? Promise.all([cx.scheduleOn, until]) : until;
-                        }
-                        this.parsedPos = to;
-                        return new Tree(NodeType.none, [], [], to - from);
-                    },
-                    stoppedAt: null,
-                    stopAt() { }
-                };
-                return parser;
-            }
-        };
-    }
-    /**
-    @internal
-    */
-    isDone(upto) {
-        upto = Math.min(upto, this.state.doc.length);
-        let frags = this.fragments;
-        return this.treeLen >= upto && frags.length && frags[0].from == 0 && frags[0].to >= upto;
-    }
-    /**
-    Get the context for the current parse, or `null` if no editor
-    parse is in progress.
-    */
-    static get() { return currentContext; }
-}
-function cutFragments(fragments, from, to) {
-    return TreeFragment.applyChanges(fragments, [{ fromA: from, toA: to, fromB: from, toB: to }]);
-}
-class LanguageState {
-    constructor(
-    // A mutable parse state that is used to preserve work done during
-    // the lifetime of a state when moving to the next state.
-    context) {
-        this.context = context;
-        this.tree = context.tree;
-    }
-    apply(tr) {
-        if (!tr.docChanged && this.tree == this.context.tree)
-            return this;
-        let newCx = this.context.changes(tr.changes, tr.state);
-        // If the previous parse wasn't done, go forward only up to its
-        // end position or the end of the viewport, to avoid slowing down
-        // state updates with parse work beyond the viewport.
-        let upto = this.context.treeLen == tr.startState.doc.length ? undefined
-            : Math.max(tr.changes.mapPos(this.context.treeLen), newCx.viewport.to);
-        if (!newCx.work(20 /* Work.Apply */, upto))
-            newCx.takeTree();
-        return new LanguageState(newCx);
-    }
-    static init(state) {
-        let vpTo = Math.min(3000 /* Work.InitViewport */, state.doc.length);
-        let parseState = ParseContext.create(state.facet(language).parser, state, { from: 0, to: vpTo });
-        if (!parseState.work(20 /* Work.Apply */, vpTo))
-            parseState.takeTree();
-        return new LanguageState(parseState);
-    }
-}
-Language.state = /*@__PURE__*/StateField.define({
-    create: LanguageState.init,
-    update(value, tr) {
-        for (let e of tr.effects)
-            if (e.is(Language.setState))
-                return e.value;
-        if (tr.startState.facet(language) != tr.state.facet(language))
-            return LanguageState.init(tr.state);
-        return value.apply(tr);
-    }
+var index = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  commonmarkLanguage: commonmarkLanguage,
+  deleteMarkupBackward: deleteMarkupBackward,
+  insertNewlineContinueMarkup: insertNewlineContinueMarkup,
+  markdown: markdown,
+  markdownKeymap: markdownKeymap,
+  markdownLanguage: markdownLanguage
 });
-let requestIdle = (callback) => {
-    let timeout = setTimeout(() => callback(), 500 /* Work.MaxPause */);
-    return () => clearTimeout(timeout);
-};
-if (typeof requestIdleCallback != "undefined")
-    requestIdle = (callback) => {
-        let idle = -1, timeout = setTimeout(() => {
-            idle = requestIdleCallback(callback, { timeout: 500 /* Work.MaxPause */ - 100 /* Work.MinPause */ });
-        }, 100 /* Work.MinPause */);
-        return () => idle < 0 ? clearTimeout(timeout) : cancelIdleCallback(idle);
-    };
-const isInputPending = typeof navigator != "undefined" && ((_a = navigator.scheduling) === null || _a === void 0 ? void 0 : _a.isInputPending)
-    ? () => navigator.scheduling.isInputPending() : null;
-const parseWorker = /*@__PURE__*/ViewPlugin.fromClass(class ParseWorker {
-    constructor(view) {
-        this.view = view;
-        this.working = null;
-        this.workScheduled = 0;
-        // End of the current time chunk
-        this.chunkEnd = -1;
-        // Milliseconds of budget left for this chunk
-        this.chunkBudget = -1;
-        this.work = this.work.bind(this);
-        this.scheduleWork();
-    }
-    update(update) {
-        let cx = this.view.state.field(Language.state).context;
-        if (cx.updateViewport(update.view.viewport) || this.view.viewport.to > cx.treeLen)
-            this.scheduleWork();
-        if (update.docChanged || update.selectionSet) {
-            if (this.view.hasFocus)
-                this.chunkBudget += 50 /* Work.ChangeBonus */;
-            this.scheduleWork();
-        }
-        this.checkAsyncSchedule(cx);
-    }
-    scheduleWork() {
-        if (this.working)
-            return;
-        let { state } = this.view, field = state.field(Language.state);
-        if (field.tree != field.context.tree || !field.context.isDone(state.doc.length))
-            this.working = requestIdle(this.work);
-    }
-    work(deadline) {
-        this.working = null;
-        let now = Date.now();
-        if (this.chunkEnd < now && (this.chunkEnd < 0 || this.view.hasFocus)) { // Start a new chunk
-            this.chunkEnd = now + 30000 /* Work.ChunkTime */;
-            this.chunkBudget = 3000 /* Work.ChunkBudget */;
-        }
-        if (this.chunkBudget <= 0)
-            return; // No more budget
-        let { state, viewport: { to: vpTo } } = this.view, field = state.field(Language.state);
-        if (field.tree == field.context.tree && field.context.isDone(vpTo + 100000 /* Work.MaxParseAhead */))
-            return;
-        let endTime = Date.now() + Math.min(this.chunkBudget, 100 /* Work.Slice */, deadline && !isInputPending ? Math.max(25 /* Work.MinSlice */, deadline.timeRemaining() - 5) : 1e9);
-        let viewportFirst = field.context.treeLen < vpTo && state.doc.length > vpTo + 1000;
-        let done = field.context.work(() => {
-            return isInputPending && isInputPending() || Date.now() > endTime;
-        }, vpTo + (viewportFirst ? 0 : 100000 /* Work.MaxParseAhead */));
-        this.chunkBudget -= Date.now() - now;
-        if (done || this.chunkBudget <= 0) {
-            field.context.takeTree();
-            this.view.dispatch({ effects: Language.setState.of(new LanguageState(field.context)) });
-        }
-        if (this.chunkBudget > 0 && !(done && !viewportFirst))
-            this.scheduleWork();
-        this.checkAsyncSchedule(field.context);
-    }
-    checkAsyncSchedule(cx) {
-        if (cx.scheduleOn) {
-            this.workScheduled++;
-            cx.scheduleOn
-                .then(() => this.scheduleWork())
-                .catch(err => logException(this.view.state, err))
-                .then(() => this.workScheduled--);
-            cx.scheduleOn = null;
-        }
-    }
-    destroy() {
-        if (this.working)
-            this.working();
-    }
-    isWorking() {
-        return !!(this.working || this.workScheduled > 0);
-    }
-}, {
-    eventHandlers: { focus() { this.scheduleWork(); } }
-});
-/**
-The facet used to associate a language with an editor state. Used
-by `Language` object's `extension` property (so you don't need to
-manually wrap your languages in this). Can be used to access the
-current language on a state.
-*/
-const language = /*@__PURE__*/Facet.define({
-    combine(languages) { return languages.length ? languages[0] : null; },
-    enables: language => [
-        Language.state,
-        parseWorker,
-        EditorView.contentAttributes.compute([language], state => {
-            let lang = state.facet(language);
-            return lang && lang.name ? { "data-language": lang.name } : {};
-        })
-    ]
-});
-/**
-This class bundles a [language](https://codemirror.net/6/docs/ref/#language.Language) with an
-optional set of supporting extensions. Language packages are
-encouraged to export a function that optionally takes a
-configuration object and returns a `LanguageSupport` instance, as
-the main way for client code to use the package.
-*/
-class LanguageSupport {
-    /**
-    Create a language support object.
-    */
-    constructor(
-    /**
-    The language object.
-    */
-    language, 
-    /**
-    An optional set of supporting extensions. When nesting a
-    language in another language, the outer language is encouraged
-    to include the supporting extensions for its inner languages
-    in its own set of support extensions.
-    */
-    support = []) {
-        this.language = language;
-        this.support = support;
-        this.extension = [language, support];
-    }
-}
-/**
-Language descriptions are used to store metadata about languages
-and to dynamically load them. Their main role is finding the
-appropriate language for a filename or dynamically loading nested
-parsers.
-*/
-class LanguageDescription {
-    constructor(
-    /**
-    The name of this language.
-    */
-    name, 
-    /**
-    Alternative names for the mode (lowercased, includes `this.name`).
-    */
-    alias, 
-    /**
-    File extensions associated with this language.
-    */
-    extensions, 
-    /**
-    Optional filename pattern that should be associated with this
-    language.
-    */
-    filename, loadFunc, 
-    /**
-    If the language has been loaded, this will hold its value.
-    */
-    support = undefined) {
-        this.name = name;
-        this.alias = alias;
-        this.extensions = extensions;
-        this.filename = filename;
-        this.loadFunc = loadFunc;
-        this.support = support;
-        this.loading = null;
-    }
-    /**
-    Start loading the the language. Will return a promise that
-    resolves to a [`LanguageSupport`](https://codemirror.net/6/docs/ref/#language.LanguageSupport)
-    object when the language successfully loads.
-    */
-    load() {
-        return this.loading || (this.loading = this.loadFunc().then(support => this.support = support, err => { this.loading = null; throw err; }));
-    }
-    /**
-    Create a language description.
-    */
-    static of(spec) {
-        let { load, support } = spec;
-        if (!load) {
-            if (!support)
-                throw new RangeError("Must pass either 'load' or 'support' to LanguageDescription.of");
-            load = () => Promise.resolve(support);
-        }
-        return new LanguageDescription(spec.name, (spec.alias || []).concat(spec.name).map(s => s.toLowerCase()), spec.extensions || [], spec.filename, load, support);
-    }
-    /**
-    Look for a language in the given array of descriptions that
-    matches the filename. Will first match
-    [`filename`](https://codemirror.net/6/docs/ref/#language.LanguageDescription.filename) patterns,
-    and then [extensions](https://codemirror.net/6/docs/ref/#language.LanguageDescription.extensions),
-    and return the first language that matches.
-    */
-    static matchFilename(descs, filename) {
-        for (let d of descs)
-            if (d.filename && d.filename.test(filename))
-                return d;
-        let ext = /\.([^.]+)$/.exec(filename);
-        if (ext)
-            for (let d of descs)
-                if (d.extensions.indexOf(ext[1]) > -1)
-                    return d;
-        return null;
-    }
-    /**
-    Look for a language whose name or alias matches the the given
-    name (case-insensitively). If `fuzzy` is true, and no direct
-    matchs is found, this'll also search for a language whose name
-    or alias occurs in the string (for names shorter than three
-    characters, only when surrounded by non-word characters).
-    */
-    static matchLanguageName(descs, name, fuzzy = true) {
-        name = name.toLowerCase();
-        for (let d of descs)
-            if (d.alias.some(a => a == name))
-                return d;
-        if (fuzzy)
-            for (let d of descs)
-                for (let a of d.alias) {
-                    let found = name.indexOf(a);
-                    if (found > -1 && (a.length > 2 || !/\w/.test(name[found - 1]) && !/\w/.test(name[found + a.length])))
-                        return d;
-                }
-        return null;
-    }
-}
-/**
-Facet for overriding the unit by which indentation happens. Should
-be a string consisting either entirely of the same whitespace
-character. When not set, this defaults to 2 spaces.
-*/
-const indentUnit = /*@__PURE__*/Facet.define({
-    combine: values => {
-        if (!values.length)
-            return "  ";
-        let unit = values[0];
-        if (!unit || /\S/.test(unit) || Array.from(unit).some(e => e != unit[0]))
-            throw new Error("Invalid indent unit: " + JSON.stringify(values[0]));
-        return unit;
-    }
-});
-/**
-Return the _column width_ of an indent unit in the state.
-Determined by the [`indentUnit`](https://codemirror.net/6/docs/ref/#language.indentUnit)
-facet, and [`tabSize`](https://codemirror.net/6/docs/ref/#state.EditorState^tabSize) when that
-contains tabs.
-*/
-function getIndentUnit(state) {
-    let unit = state.facet(indentUnit);
-    return unit.charCodeAt(0) == 9 ? state.tabSize * unit.length : unit.length;
-}
-/**
-A syntax tree node prop used to associate indentation strategies
-with node types. Such a strategy is a function from an indentation
-context to a column number (see also
-[`indentString`](https://codemirror.net/6/docs/ref/#language.indentString)) or null, where null
-indicates that no definitive indentation can be determined.
-*/
-const indentNodeProp = /*@__PURE__*/new NodeProp();
-
-/**
-A facet that registers a code folding service. When called with
-the extent of a line, such a function should return a foldable
-range that starts on that line (but continues beyond it), if one
-can be found.
-*/
-const foldService = /*@__PURE__*/Facet.define();
-/**
-This node prop is used to associate folding information with
-syntax node types. Given a syntax node, it should check whether
-that tree is foldable and return the range that can be collapsed
-when it is.
-*/
-const foldNodeProp = /*@__PURE__*/new NodeProp();
-
-// Counts the column offset in a string, taking tabs into account.
-// Used mostly to find indentation.
-function countCol(string, end, tabSize, startIndex = 0, startValue = 0) {
-    if (end == null) {
-        end = string.search(/[^\s\u00a0]/);
-        if (end == -1)
-            end = string.length;
-    }
-    let n = startValue;
-    for (let i = startIndex; i < end; i++) {
-        if (string.charCodeAt(i) == 9)
-            n += tabSize - (n % tabSize);
-        else
-            n++;
-    }
-    return n;
-}
-/**
-Encapsulates a single line of input. Given to stream syntax code,
-which uses it to tokenize the content.
-*/
-class StringStream {
-    /**
-    Create a stream.
-    */
-    constructor(
-    /**
-    The line.
-    */
-    string, tabSize, 
-    /**
-    The current indent unit size.
-    */
-    indentUnit, overrideIndent) {
-        this.string = string;
-        this.tabSize = tabSize;
-        this.indentUnit = indentUnit;
-        this.overrideIndent = overrideIndent;
-        /**
-        The current position on the line.
-        */
-        this.pos = 0;
-        /**
-        The start position of the current token.
-        */
-        this.start = 0;
-        this.lastColumnPos = 0;
-        this.lastColumnValue = 0;
-    }
-    /**
-    True if we are at the end of the line.
-    */
-    eol() { return this.pos >= this.string.length; }
-    /**
-    True if we are at the start of the line.
-    */
-    sol() { return this.pos == 0; }
-    /**
-    Get the next code unit after the current position, or undefined
-    if we're at the end of the line.
-    */
-    peek() { return this.string.charAt(this.pos) || undefined; }
-    /**
-    Read the next code unit and advance `this.pos`.
-    */
-    next() {
-        if (this.pos < this.string.length)
-            return this.string.charAt(this.pos++);
-    }
-    /**
-    Match the next character against the given string, regular
-    expression, or predicate. Consume and return it if it matches.
-    */
-    eat(match) {
-        let ch = this.string.charAt(this.pos);
-        let ok;
-        if (typeof match == "string")
-            ok = ch == match;
-        else
-            ok = ch && (match instanceof RegExp ? match.test(ch) : match(ch));
-        if (ok) {
-            ++this.pos;
-            return ch;
-        }
-    }
-    /**
-    Continue matching characters that match the given string,
-    regular expression, or predicate function. Return true if any
-    characters were consumed.
-    */
-    eatWhile(match) {
-        let start = this.pos;
-        while (this.eat(match)) { }
-        return this.pos > start;
-    }
-    /**
-    Consume whitespace ahead of `this.pos`. Return true if any was
-    found.
-    */
-    eatSpace() {
-        let start = this.pos;
-        while (/[\s\u00a0]/.test(this.string.charAt(this.pos)))
-            ++this.pos;
-        return this.pos > start;
-    }
-    /**
-    Move to the end of the line.
-    */
-    skipToEnd() { this.pos = this.string.length; }
-    /**
-    Move to directly before the given character, if found on the
-    current line.
-    */
-    skipTo(ch) {
-        let found = this.string.indexOf(ch, this.pos);
-        if (found > -1) {
-            this.pos = found;
-            return true;
-        }
-    }
-    /**
-    Move back `n` characters.
-    */
-    backUp(n) { this.pos -= n; }
-    /**
-    Get the column position at `this.pos`.
-    */
-    column() {
-        if (this.lastColumnPos < this.start) {
-            this.lastColumnValue = countCol(this.string, this.start, this.tabSize, this.lastColumnPos, this.lastColumnValue);
-            this.lastColumnPos = this.start;
-        }
-        return this.lastColumnValue;
-    }
-    /**
-    Get the indentation column of the current line.
-    */
-    indentation() {
-        var _a;
-        return (_a = this.overrideIndent) !== null && _a !== void 0 ? _a : countCol(this.string, null, this.tabSize);
-    }
-    /**
-    Match the input against the given string or regular expression
-    (which should start with a `^`). Return true or the regexp match
-    if it matches.
-    
-    Unless `consume` is set to `false`, this will move `this.pos`
-    past the matched text.
-    
-    When matching a string `caseInsensitive` can be set to true to
-    make the match case-insensitive.
-    */
-    match(pattern, consume, caseInsensitive) {
-        if (typeof pattern == "string") {
-            let cased = (str) => caseInsensitive ? str.toLowerCase() : str;
-            let substr = this.string.substr(this.pos, pattern.length);
-            if (cased(substr) == cased(pattern)) {
-                if (consume !== false)
-                    this.pos += pattern.length;
-                return true;
-            }
-            else
-                return null;
-        }
-        else {
-            let match = this.string.slice(this.pos).match(pattern);
-            if (match && match.index > 0)
-                return null;
-            if (match && consume !== false)
-                this.pos += match[0].length;
-            return match;
-        }
-    }
-    /**
-    Get the current token.
-    */
-    current() { return this.string.slice(this.start, this.pos); }
-}
-
-function fullParser(spec) {
-    return {
-        name: spec.name || "",
-        token: spec.token,
-        blankLine: spec.blankLine || (() => { }),
-        startState: spec.startState || (() => true),
-        copyState: spec.copyState || defaultCopyState,
-        indent: spec.indent || (() => null),
-        languageData: spec.languageData || {},
-        tokenTable: spec.tokenTable || noTokens,
-        mergeTokens: spec.mergeTokens !== false
-    };
-}
-function defaultCopyState(state) {
-    if (typeof state != "object")
-        return state;
-    let newState = {};
-    for (let prop in state) {
-        let val = state[prop];
-        newState[prop] = (val instanceof Array ? val.slice() : val);
-    }
-    return newState;
-}
-const IndentedFrom = /*@__PURE__*/new WeakMap();
-/**
-A [language](https://codemirror.net/6/docs/ref/#language.Language) class based on a CodeMirror
-5-style [streaming parser](https://codemirror.net/6/docs/ref/#language.StreamParser).
-*/
-class StreamLanguage extends Language {
-    constructor(parser) {
-        let data = defineLanguageFacet(parser.languageData);
-        let p = fullParser(parser), self;
-        let impl = new class extends Parser {
-            createParse(input, fragments, ranges) {
-                return new Parse(self, input, fragments, ranges);
-            }
-        };
-        super(data, impl, [], parser.name);
-        this.topNode = docID(data, this);
-        self = this;
-        this.streamParser = p;
-        this.stateAfter = new NodeProp({ perNode: true });
-        this.tokenTable = parser.tokenTable ? new TokenTable(p.tokenTable) : defaultTokenTable;
-    }
-    /**
-    Define a stream language.
-    */
-    static define(spec) { return new StreamLanguage(spec); }
-    /**
-    @internal
-    */
-    getIndent(cx) {
-        let from = undefined;
-        let { overrideIndentation } = cx.options;
-        if (overrideIndentation) {
-            from = IndentedFrom.get(cx.state);
-            if (from != null && from < cx.pos - 1e4)
-                from = undefined;
-        }
-        let start = findState(this, cx.node.tree, cx.node.from, cx.node.from, from !== null && from !== void 0 ? from : cx.pos), statePos, state;
-        if (start) {
-            state = start.state;
-            statePos = start.pos + 1;
-        }
-        else {
-            state = this.streamParser.startState(cx.unit);
-            statePos = cx.node.from;
-        }
-        if (cx.pos - statePos > 10000 /* C.MaxIndentScanDist */)
-            return null;
-        while (statePos < cx.pos) {
-            let line = cx.state.doc.lineAt(statePos), end = Math.min(cx.pos, line.to);
-            if (line.length) {
-                let indentation = overrideIndentation ? overrideIndentation(line.from) : -1;
-                let stream = new StringStream(line.text, cx.state.tabSize, cx.unit, indentation < 0 ? undefined : indentation);
-                while (stream.pos < end - line.from)
-                    readToken(this.streamParser.token, stream, state);
-            }
-            else {
-                this.streamParser.blankLine(state, cx.unit);
-            }
-            if (end == cx.pos)
-                break;
-            statePos = line.to + 1;
-        }
-        let line = cx.lineAt(cx.pos);
-        if (overrideIndentation && from == null)
-            IndentedFrom.set(cx.state, line.from);
-        return this.streamParser.indent(state, /^\s*(.*)/.exec(line.text)[1], cx);
-    }
-    get allowsNesting() { return false; }
-}
-function findState(lang, tree, off, startPos, before) {
-    let state = off >= startPos && off + tree.length <= before && tree.prop(lang.stateAfter);
-    if (state)
-        return { state: lang.streamParser.copyState(state), pos: off + tree.length };
-    for (let i = tree.children.length - 1; i >= 0; i--) {
-        let child = tree.children[i], pos = off + tree.positions[i];
-        let found = child instanceof Tree && pos < before && findState(lang, child, pos, startPos, before);
-        if (found)
-            return found;
-    }
-    return null;
-}
-function cutTree(lang, tree, from, to, inside) {
-    if (inside && from <= 0 && to >= tree.length)
-        return tree;
-    if (!inside && from == 0 && tree.type == lang.topNode)
-        inside = true;
-    for (let i = tree.children.length - 1; i >= 0; i--) {
-        let pos = tree.positions[i], child = tree.children[i], inner;
-        if (pos < to && child instanceof Tree) {
-            if (!(inner = cutTree(lang, child, from - pos, to - pos, inside)))
-                break;
-            return !inside ? inner
-                : new Tree(tree.type, tree.children.slice(0, i).concat(inner), tree.positions.slice(0, i + 1), pos + inner.length);
-        }
-    }
-    return null;
-}
-function findStartInFragments(lang, fragments, startPos, endPos, editorState) {
-    for (let f of fragments) {
-        let from = f.from + (f.openStart ? 25 : 0), to = f.to - (f.openEnd ? 25 : 0);
-        let found = from <= startPos && to > startPos && findState(lang, f.tree, 0 - f.offset, startPos, to), tree;
-        if (found && found.pos <= endPos && (tree = cutTree(lang, f.tree, startPos + f.offset, found.pos + f.offset, false)))
-            return { state: found.state, tree };
-    }
-    return { state: lang.streamParser.startState(editorState ? getIndentUnit(editorState) : 4), tree: Tree.empty };
-}
-class Parse {
-    constructor(lang, input, fragments, ranges) {
-        this.lang = lang;
-        this.input = input;
-        this.fragments = fragments;
-        this.ranges = ranges;
-        this.stoppedAt = null;
-        this.chunks = [];
-        this.chunkPos = [];
-        this.chunk = [];
-        this.chunkReused = undefined;
-        this.rangeIndex = 0;
-        this.to = ranges[ranges.length - 1].to;
-        let context = ParseContext.get(), from = ranges[0].from;
-        let { state, tree } = findStartInFragments(lang, fragments, from, this.to, context === null || context === void 0 ? void 0 : context.state);
-        this.state = state;
-        this.parsedPos = this.chunkStart = from + tree.length;
-        for (let i = 0; i < tree.children.length; i++) {
-            this.chunks.push(tree.children[i]);
-            this.chunkPos.push(tree.positions[i]);
-        }
-        if (context && this.parsedPos < context.viewport.from - 100000 /* C.MaxDistanceBeforeViewport */ &&
-            ranges.some(r => r.from <= context.viewport.from && r.to >= context.viewport.from)) {
-            this.state = this.lang.streamParser.startState(getIndentUnit(context.state));
-            context.skipUntilInView(this.parsedPos, context.viewport.from);
-            this.parsedPos = context.viewport.from;
-        }
-        this.moveRangeIndex();
-    }
-    advance() {
-        let context = ParseContext.get();
-        let parseEnd = this.stoppedAt == null ? this.to : Math.min(this.to, this.stoppedAt);
-        let end = Math.min(parseEnd, this.chunkStart + 2048 /* C.ChunkSize */);
-        if (context)
-            end = Math.min(end, context.viewport.to);
-        while (this.parsedPos < end)
-            this.parseLine(context);
-        if (this.chunkStart < this.parsedPos)
-            this.finishChunk();
-        if (this.parsedPos >= parseEnd)
-            return this.finish();
-        if (context && this.parsedPos >= context.viewport.to) {
-            context.skipUntilInView(this.parsedPos, parseEnd);
-            return this.finish();
-        }
-        return null;
-    }
-    stopAt(pos) {
-        this.stoppedAt = pos;
-    }
-    lineAfter(pos) {
-        let chunk = this.input.chunk(pos);
-        if (!this.input.lineChunks) {
-            let eol = chunk.indexOf("\n");
-            if (eol > -1)
-                chunk = chunk.slice(0, eol);
-        }
-        else if (chunk == "\n") {
-            chunk = "";
-        }
-        return pos + chunk.length <= this.to ? chunk : chunk.slice(0, this.to - pos);
-    }
-    nextLine() {
-        let from = this.parsedPos, line = this.lineAfter(from), end = from + line.length;
-        for (let index = this.rangeIndex;;) {
-            let rangeEnd = this.ranges[index].to;
-            if (rangeEnd >= end)
-                break;
-            line = line.slice(0, rangeEnd - (end - line.length));
-            index++;
-            if (index == this.ranges.length)
-                break;
-            let rangeStart = this.ranges[index].from;
-            let after = this.lineAfter(rangeStart);
-            line += after;
-            end = rangeStart + after.length;
-        }
-        return { line, end };
-    }
-    skipGapsTo(pos, offset, side) {
-        for (;;) {
-            let end = this.ranges[this.rangeIndex].to, offPos = pos + offset;
-            if (side > 0 ? end > offPos : end >= offPos)
-                break;
-            let start = this.ranges[++this.rangeIndex].from;
-            offset += start - end;
-        }
-        return offset;
-    }
-    moveRangeIndex() {
-        while (this.ranges[this.rangeIndex].to < this.parsedPos)
-            this.rangeIndex++;
-    }
-    emitToken(id, from, to, offset) {
-        let size = 4;
-        if (this.ranges.length > 1) {
-            offset = this.skipGapsTo(from, offset, 1);
-            from += offset;
-            let len0 = this.chunk.length;
-            offset = this.skipGapsTo(to, offset, -1);
-            to += offset;
-            size += this.chunk.length - len0;
-        }
-        let last = this.chunk.length - 4;
-        if (this.lang.streamParser.mergeTokens && size == 4 && last >= 0 &&
-            this.chunk[last] == id && this.chunk[last + 2] == from)
-            this.chunk[last + 2] = to;
-        else
-            this.chunk.push(id, from, to, size);
-        return offset;
-    }
-    parseLine(context) {
-        let { line, end } = this.nextLine(), offset = 0, { streamParser } = this.lang;
-        let stream = new StringStream(line, context ? context.state.tabSize : 4, context ? getIndentUnit(context.state) : 2);
-        if (stream.eol()) {
-            streamParser.blankLine(this.state, stream.indentUnit);
-        }
-        else {
-            while (!stream.eol()) {
-                let token = readToken(streamParser.token, stream, this.state);
-                if (token)
-                    offset = this.emitToken(this.lang.tokenTable.resolve(token), this.parsedPos + stream.start, this.parsedPos + stream.pos, offset);
-                if (stream.start > 10000 /* C.MaxLineLength */)
-                    break;
-            }
-        }
-        this.parsedPos = end;
-        this.moveRangeIndex();
-        if (this.parsedPos < this.to)
-            this.parsedPos++;
-    }
-    finishChunk() {
-        let tree = Tree.build({
-            buffer: this.chunk,
-            start: this.chunkStart,
-            length: this.parsedPos - this.chunkStart,
-            nodeSet,
-            topID: 0,
-            maxBufferLength: 2048 /* C.ChunkSize */,
-            reused: this.chunkReused
-        });
-        tree = new Tree(tree.type, tree.children, tree.positions, tree.length, [[this.lang.stateAfter, this.lang.streamParser.copyState(this.state)]]);
-        this.chunks.push(tree);
-        this.chunkPos.push(this.chunkStart - this.ranges[0].from);
-        this.chunk = [];
-        this.chunkReused = undefined;
-        this.chunkStart = this.parsedPos;
-    }
-    finish() {
-        return new Tree(this.lang.topNode, this.chunks, this.chunkPos, this.parsedPos - this.ranges[0].from).balance();
-    }
-}
-function readToken(token, stream, state) {
-    stream.start = stream.pos;
-    for (let i = 0; i < 10; i++) {
-        let result = token(stream, state);
-        if (stream.pos > stream.start)
-            return result;
-    }
-    throw new Error("Stream parser failed to advance stream.");
-}
-const noTokens = /*@__PURE__*/Object.create(null);
-const typeArray = [NodeType.none];
-const nodeSet = /*@__PURE__*/new NodeSet(typeArray);
-const warned = [];
-// Cache of node types by name and tags
-const byTag = /*@__PURE__*/Object.create(null);
-const defaultTable = /*@__PURE__*/Object.create(null);
-for (let [legacyName, name] of [
-    ["variable", "variableName"],
-    ["variable-2", "variableName.special"],
-    ["string-2", "string.special"],
-    ["def", "variableName.definition"],
-    ["tag", "tagName"],
-    ["attribute", "attributeName"],
-    ["type", "typeName"],
-    ["builtin", "variableName.standard"],
-    ["qualifier", "modifier"],
-    ["error", "invalid"],
-    ["header", "heading"],
-    ["property", "propertyName"]
-])
-    defaultTable[legacyName] = /*@__PURE__*/createTokenType(noTokens, name);
-class TokenTable {
-    constructor(extra) {
-        this.extra = extra;
-        this.table = Object.assign(Object.create(null), defaultTable);
-    }
-    resolve(tag) {
-        return !tag ? 0 : this.table[tag] || (this.table[tag] = createTokenType(this.extra, tag));
-    }
-}
-const defaultTokenTable = /*@__PURE__*/new TokenTable(noTokens);
-function warnForPart(part, msg) {
-    if (warned.indexOf(part) > -1)
-        return;
-    warned.push(part);
-    console.warn(msg);
-}
-function createTokenType(extra, tagStr) {
-    let tags$1$1 = [];
-    for (let name of tagStr.split(" ")) {
-        let found = [];
-        for (let part of name.split(".")) {
-            let value = (extra[part] || tags$1[part]);
-            if (!value) {
-                warnForPart(part, `Unknown highlighting tag ${part}`);
-            }
-            else if (typeof value == "function") {
-                if (!found.length)
-                    warnForPart(part, `Modifier ${part} used at start of tag`);
-                else
-                    found = found.map(value);
-            }
-            else {
-                if (found.length)
-                    warnForPart(part, `Tag ${part} used as modifier`);
-                else
-                    found = Array.isArray(value) ? value : [value];
-            }
-        }
-        for (let tag of found)
-            tags$1$1.push(tag);
-    }
-    if (!tags$1$1.length)
-        return 0;
-    let name = tagStr.replace(/ /g, "_"), key = name + " " + tags$1$1.map(t => t.id);
-    let known = byTag[key];
-    if (known)
-        return known.id;
-    let type = byTag[key] = NodeType.define({
-        id: typeArray.length,
-        name,
-        props: [styleTags({ [name]: tags$1$1 })]
-    });
-    typeArray.push(type);
-    return type.id;
-}
-function docID(data, lang) {
-    let type = NodeType.define({ id: typeArray.length, name: "Document", props: [
-            languageDataProp.add(() => data),
-            indentNodeProp.add(() => cx => lang.getIndent(cx))
-        ], top: true });
-    typeArray.push(type);
-    return type;
-}
-({
-    rtl: /*@__PURE__*/Decoration.mark({ class: "cm-iso", inclusive: true, attributes: { dir: "rtl" }, bidiIsolate: Direction.RTL }),
-    ltr: /*@__PURE__*/Decoration.mark({ class: "cm-iso", inclusive: true, attributes: { dir: "ltr" }, bidiIsolate: Direction.LTR })});
 
 function legacy(parser) {
     return new LanguageSupport(StreamLanguage.define(parser));
 }
 function sql(dialectName) {
-    return import('./index-BKAMPMC5.js').then(m => m.sql({ dialect: m[dialectName] }));
+    return import('./index-B_1xmUtX.js').then(m => m.sql({ dialect: m[dialectName] }));
 }
 /**
 An array of language descriptions for known language packages.
@@ -37480,7 +32826,7 @@ const languages = [
         name: "C",
         extensions: ["c", "h", "ino"],
         load() {
-            return import('./index-CzsBwfF1.js').then(m => m.cpp());
+            return import('./index-mpANyKnY.js').then(m => m.cpp());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -37488,7 +32834,7 @@ const languages = [
         alias: ["cpp"],
         extensions: ["cpp", "c++", "cc", "cxx", "hpp", "h++", "hh", "hxx"],
         load() {
-            return import('./index-CzsBwfF1.js').then(m => m.cpp());
+            return import('./index-mpANyKnY.js').then(m => m.cpp());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -37501,14 +32847,14 @@ const languages = [
         name: "CSS",
         extensions: ["css"],
         load() {
-            return Promise.resolve().then(function () { return index$2; }).then(m => m.css());
+            return Promise.resolve().then(function () { return index$3; }).then(m => m.css());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "Go",
         extensions: ["go"],
         load() {
-            return import('./index-COoignKk.js').then(m => m.go());
+            return import('./index-g7rHvElj.js').then(m => m.go());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -37516,14 +32862,14 @@ const languages = [
         alias: ["xhtml"],
         extensions: ["html", "htm", "handlebars", "hbs"],
         load() {
-            return Promise.resolve().then(function () { return index; }).then(m => m.html());
+            return Promise.resolve().then(function () { return index$1; }).then(m => m.html());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "Java",
         extensions: ["java"],
         load() {
-            return import('./index-C1VyMXhO.js').then(m => m.java());
+            return import('./index-BSx9cZJa.js').then(m => m.java());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -37531,7 +32877,7 @@ const languages = [
         alias: ["ecmascript", "js", "node"],
         extensions: ["js", "mjs", "cjs"],
         load() {
-            return Promise.resolve().then(function () { return index$1; }).then(m => m.javascript());
+            return Promise.resolve().then(function () { return index$2; }).then(m => m.javascript());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -37539,28 +32885,28 @@ const languages = [
         alias: ["json5"],
         extensions: ["json", "map"],
         load() {
-            return import('./index-BKq95HaP.js').then(m => m.json());
+            return import('./index-BTRSvrly.js').then(m => m.json());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "JSX",
         extensions: ["jsx"],
         load() {
-            return Promise.resolve().then(function () { return index$1; }).then(m => m.javascript({ jsx: true }));
+            return Promise.resolve().then(function () { return index$2; }).then(m => m.javascript({ jsx: true }));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "LESS",
         extensions: ["less"],
         load() {
-            return import('./index-Bfc3ENHN.js').then(m => m.less());
+            return import('./index-BLRVdi98.js').then(m => m.less());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "Liquid",
         extensions: ["liquid"],
         load() {
-            return import('./index-o0LHZCPV.js').then(m => m.liquid());
+            return import('./index-ChpamVog.js').then(m => m.liquid());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -37571,7 +32917,7 @@ const languages = [
         name: "Markdown",
         extensions: ["md", "markdown", "mkd"],
         load() {
-            return import('./index-BC5b2otm.js').then(m => m.markdown());
+            return Promise.resolve().then(function () { return index; }).then(m => m.markdown());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -37586,7 +32932,7 @@ const languages = [
         name: "PHP",
         extensions: ["php", "php3", "php4", "php5", "php7", "phtml"],
         load() {
-            return import('./index-q6lEN5KO.js').then(m => m.php());
+            return import('./index-COyRQME9.js').then(m => m.php());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -37603,28 +32949,28 @@ const languages = [
         extensions: ["BUILD", "bzl", "py", "pyw"],
         filename: /^(BUCK|BUILD)$/,
         load() {
-            return import('./index-COPA-JXo.js').then(m => m.python());
+            return import('./index-BeOZF8J5.js').then(m => m.python());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "Rust",
         extensions: ["rs"],
         load() {
-            return import('./index-CRvZ0qg_.js').then(m => m.rust());
+            return import('./index-C916aBIe.js').then(m => m.rust());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "Sass",
         extensions: ["sass"],
         load() {
-            return import('./index-Dz98H0tN.js').then(m => m.sass({ indented: true }));
+            return import('./index-BD9Ing3_.js').then(m => m.sass({ indented: true }));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "SCSS",
         extensions: ["scss"],
         load() {
-            return import('./index-Dz98H0tN.js').then(m => m.sass());
+            return import('./index-BD9Ing3_.js').then(m => m.sass());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -37640,7 +32986,7 @@ const languages = [
         name: "TSX",
         extensions: ["tsx"],
         load() {
-            return Promise.resolve().then(function () { return index$1; }).then(m => m.javascript({ jsx: true, typescript: true }));
+            return Promise.resolve().then(function () { return index$2; }).then(m => m.javascript({ jsx: true, typescript: true }));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -37648,14 +32994,14 @@ const languages = [
         alias: ["ts"],
         extensions: ["ts", "mts", "cts"],
         load() {
-            return Promise.resolve().then(function () { return index$1; }).then(m => m.javascript({ typescript: true }));
+            return Promise.resolve().then(function () { return index$2; }).then(m => m.javascript({ typescript: true }));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "WebAssembly",
         extensions: ["wat", "wast"],
         load() {
-            return import('./index-A9sD2wsc.js').then(m => m.wast());
+            return import('./index-DQKEsrVp.js').then(m => m.wast());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -37663,7 +33009,7 @@ const languages = [
         alias: ["rss", "wsdl", "xsd"],
         extensions: ["xml", "xsl", "xsd", "svg"],
         load() {
-            return import('./index-fLWSTnaC.js').then(m => m.xml());
+            return import('./index-wyhnyTSW.js').then(m => m.xml());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -37671,7 +33017,7 @@ const languages = [
         alias: ["yml"],
         extensions: ["yaml", "yml"],
         load() {
-            return import('./index-2iW60fuS.js').then(m => m.yaml());
+            return import('./index-CGpgRw_e.js').then(m => m.yaml());
         }
     }),
     // Legacy modes ported from CodeMirror 5
@@ -38467,13 +33813,13 @@ const languages = [
         name: "Vue",
         extensions: ["vue"],
         load() {
-            return import('./index-Ck0m41XI.js').then(m => m.vue());
+            return import('./index-CAongLIp.js').then(m => m.vue());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "Angular Template",
         load() {
-            return import('./index-CSgXIJiD.js').then(m => m.angular());
+            return import('./index-D9LLx0D_.js').then(m => m.angular());
         }
     })
 ];
@@ -41670,12 +37016,22 @@ const cobalt2Theme = /*@__PURE__*/EditorView.theme({
  * Enhanced syntax highlighting for the Cobalt2 theme
  */
 const cobalt2HighlightStyle = /*@__PURE__*/HighlightStyle.define([
+    // Comments
+    { tag: tags$1.comment, color: blue, fontStyle: 'italic' },
+    { tag: tags$1.docComment, color: blue, fontStyle: 'italic' },
+    { tag: tags$1.lineComment, color: blue, fontStyle: 'italic' },
+    { tag: tags$1.blockComment, color: blue, fontStyle: 'italic' },
     // Keywords and control flow
     { tag: tags$1.keyword, color: orange },
     { tag: tags$1.controlKeyword, color: orange },
     { tag: tags$1.operatorKeyword, color: orange },
     { tag: tags$1.moduleKeyword, color: cyan },
     { tag: tags$1.definitionKeyword, color: hotPink },
+    // Special language constructs
+    { tag: tags$1.self, color: hotPink },
+    { tag: /*@__PURE__*/tags$1.special(tags$1.variableName), color: cyan },
+    { tag: /*@__PURE__*/tags$1.special(tags$1.keyword), color: cyan },
+    { tag: /*@__PURE__*/tags$1.special(tags$1.propertyName), color: cyan },
     // Variables - Enhanced for better distinction
     { tag: tags$1.variableName, color: foreground },
     { tag: /*@__PURE__*/tags$1.definition(tags$1.variableName), color: foreground },
@@ -41685,8 +37041,36 @@ const cobalt2HighlightStyle = /*@__PURE__*/HighlightStyle.define([
     { tag: tags$1.className, color: lightPink, fontStyle: 'italic' },
     { tag: tags$1.namespace, color: lightPink, fontStyle: 'italic' },
     { tag: tags$1.macroName, color: lightPink, fontStyle: 'italic' },
-    { tag: /*@__PURE__*/tags$1.standard(tags$1.tagName), color: supportTeal },
+    // Functions - specific function types first
+    { tag: /*@__PURE__*/tags$1.function(tags$1.variableName), color: yellow },
+    { tag: /*@__PURE__*/tags$1.function(/*@__PURE__*/tags$1.definition(tags$1.variableName)), color: yellow },
+    { tag: /*@__PURE__*/tags$1.function(tags$1.propertyName), color: yellow },
+    // Properties
+    { tag: tags$1.propertyName, color: lightBlue },
+    { tag: /*@__PURE__*/tags$1.definition(tags$1.propertyName), color: lightBlue },
     { tag: /*@__PURE__*/tags$1.standard(tags$1.propertyName), color: supportTeal },
+    // Constants
+    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: pink },
+    { tag: /*@__PURE__*/tags$1.standard(tags$1.name), color: pink },
+    { tag: tags$1.number, color: pink },
+    { tag: tags$1.integer, color: pink },
+    { tag: tags$1.float, color: pink },
+    { tag: tags$1.bool, color: pink },
+    { tag: tags$1.atom, color: pink },
+    { tag: tags$1.null, color: pink },
+    // Strings - specific string types first
+    { tag: /*@__PURE__*/tags$1.special(tags$1.string), color: green },
+    { tag: tags$1.string, color: lightGreen },
+    { tag: tags$1.regexp, color: lightGreen },
+    // String quotes
+    { tag: tags$1.quote, color: stringQuotes },
+    // Parameters
+    { tag: /*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName)), color: parameterYellow },
+    // HTML/XML elements
+    { tag: tags$1.tagName, color: lightBlue },
+    { tag: /*@__PURE__*/tags$1.standard(tags$1.tagName), color: supportTeal },
+    { tag: tags$1.attributeName, color: yellow, fontStyle: 'italic' },
+    { tag: tags$1.attributeValue, color: lightGreen },
     // Operators and punctuation
     { tag: tags$1.operator, color: lightGray },
     { tag: tags$1.derefOperator, color: lightGray },
@@ -41701,52 +37085,13 @@ const cobalt2HighlightStyle = /*@__PURE__*/HighlightStyle.define([
     { tag: tags$1.squareBracket, color: lightGray },
     { tag: tags$1.paren, color: yellow },
     { tag: tags$1.angleBracket, color: lightGray },
-    { tag: [tags$1.operator, tags$1.punctuation], color: lightGray },
-    // Functions
-    { tag: /*@__PURE__*/tags$1.function(tags$1.variableName), color: yellow },
-    { tag: /*@__PURE__*/tags$1.function(/*@__PURE__*/tags$1.definition(tags$1.variableName)), color: yellow },
-    { tag: /*@__PURE__*/tags$1.function(tags$1.propertyName), color: yellow },
-    { tag: [tags$1.moduleKeyword, /*@__PURE__*/tags$1.special(tags$1.keyword)], color: cyan },
-    { tag: [tags$1.definitionKeyword], color: hotPink },
-    // Comments
-    { tag: tags$1.comment, color: blue, fontStyle: 'italic' },
-    { tag: tags$1.docComment, color: blue, fontStyle: 'italic' },
-    { tag: tags$1.lineComment, color: blue, fontStyle: 'italic' },
-    { tag: tags$1.blockComment, color: blue, fontStyle: 'italic' },
     // Storage and function keywords
     { tag: tags$1.modifier, color: yellow, fontStyle: 'italic' },
-    // Special variables and exports
-    { tag: /*@__PURE__*/tags$1.special(tags$1.variableName), color: cyan },
-    // Properties
-    { tag: tags$1.propertyName, color: lightBlue },
-    { tag: /*@__PURE__*/tags$1.definition(tags$1.propertyName), color: lightBlue },
-    // Constants
-    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: pink },
-    { tag: /*@__PURE__*/tags$1.standard(tags$1.name), color: pink },
-    { tag: tags$1.number, color: pink },
-    { tag: tags$1.integer, color: pink },
-    { tag: tags$1.float, color: pink },
-    { tag: tags$1.bool, color: pink },
-    { tag: tags$1.atom, color: pink },
-    { tag: tags$1.null, color: pink },
-    // Strings
-    { tag: tags$1.string, color: lightGreen },
-    { tag: /*@__PURE__*/tags$1.special(tags$1.string), color: green },
-    { tag: tags$1.regexp, color: lightGreen },
-    // String quotes
-    { tag: tags$1.quote, color: stringQuotes },
-    // Parameters
-    { tag: /*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName)), color: parameterYellow },
-    // HTML/XML elements
-    { tag: tags$1.tagName, color: lightBlue },
-    { tag: tags$1.attributeName, color: yellow, fontStyle: 'italic' },
-    { tag: tags$1.attributeValue, color: lightGreen },
-    // Special language constructs
-    { tag: tags$1.self, color: hotPink },
     // Meta and annotations
     { tag: tags$1.meta, color: lightBlue },
     { tag: tags$1.annotation, color: yellow, fontStyle: 'italic' },
     { tag: tags$1.processingInstruction, color: yellow },
+    // Markdown elements
     { tag: tags$1.heading, color: yellow, fontWeight: 'bold' },
     { tag: tags$1.heading1, color: yellow, fontWeight: 'bold' },
     { tag: tags$1.heading2, color: yellow, fontWeight: 'bold' },
@@ -41758,7 +37103,6 @@ const cobalt2HighlightStyle = /*@__PURE__*/HighlightStyle.define([
     { tag: tags$1.strong, color: lightBlue, fontWeight: 'bold' },
     { tag: tags$1.emphasis, color: lightBlue, fontStyle: 'italic' },
     { tag: tags$1.list, color: yellow },
-    { tag: tags$1.quote, color: lightBlue, fontStyle: 'italic' },
     // Code blocks and inline code - Enhanced styling
     { tag: tags$1.monospace, color: lightBlue },
     { tag: /*@__PURE__*/tags$1.special(tags$1.monospace), color: green },
@@ -41771,46 +37115,8 @@ const cobalt2HighlightStyle = /*@__PURE__*/HighlightStyle.define([
     { tag: tags$1.deleted, color: pink },
     { tag: tags$1.inserted, color: lightGreen },
     { tag: tags$1.changed, color: yellow },
-    // Module system - exports, require, module should be cyan
-    { tag: /*@__PURE__*/tags$1.special(tags$1.keyword), color: cyan }, // Special keywords like exports
-    // Function declarations and expressions - function keyword should be magenta
-    { tag: tags$1.definitionKeyword, color: hotPink }, // function, class, etc.
-    // Method names and function assignments - yellow
-    { tag: /*@__PURE__*/tags$1.function(tags$1.propertyName), color: yellow }, // obj.method, exports.functionName
-    // Arrow functions and anonymous functions
-    { tag: /*@__PURE__*/tags$1.function(/*@__PURE__*/tags$1.definition(tags$1.variableName)), color: yellow },
-    // Object property access - cyan for special objects like exports
-    { tag: /*@__PURE__*/tags$1.special(tags$1.propertyName), color: cyan }, // exports.something
     // Language-specific: CSS
     { tag: tags$1.unit, color: parameterYellow }, // CSS units
-    // Enhanced code block syntax highlighting for better JavaScript support
-    // ====================================================================
-    // JavaScript/TypeScript keywords in code blocks
-    { tag: [tags$1.controlKeyword, tags$1.keyword], color: orange }, // return, if, else, etc.
-    // Variables in code blocks - white for better readability
-    { tag: [tags$1.variableName, /*@__PURE__*/tags$1.local(tags$1.variableName)], color: foreground },
-    // Functions in code blocks - yellow
-    {
-        tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), /*@__PURE__*/tags$1.function(/*@__PURE__*/tags$1.definition(tags$1.variableName))],
-        color: yellow,
-    },
-    // Strings in code blocks
-    { tag: [tags$1.string, /*@__PURE__*/tags$1.special(tags$1.string)], color: lightGreen },
-    // Numbers in code blocks
-    { tag: [tags$1.number, tags$1.integer, tags$1.float], color: pink },
-    // Comments in code blocks
-    {
-        tag: [tags$1.comment, tags$1.lineComment, tags$1.blockComment],
-        color: blue,
-        fontStyle: 'italic',
-    },
-    // HTML/XML in code blocks
-    { tag: [tags$1.tagName, tags$1.angleBracket], color: lightBlue },
-    { tag: [tags$1.attributeName], color: yellow, fontStyle: 'italic' },
-    { tag: [tags$1.attributeValue], color: lightGreen },
-    { tag: [tags$1.propertyName], color: lightBlue },
-    { tag: [tags$1.className], color: lightPink, fontStyle: 'italic' },
-    { tag: [/*@__PURE__*/tags$1.standard(tags$1.propertyName)], color: supportTeal },
     // Entity names
     { tag: tags$1.labelName, color: yellow },
     { tag: tags$1.escape, color: yellow },
@@ -51156,7 +46462,7 @@ function deletionWidget(state, chunk, hideContent) {
         if (hideContent || chunk.fromA >= chunk.toA)
             return dom;
         let text = view.state.field(originalDoc).sliceString(chunk.fromA, chunk.endA);
-        let lang = syntaxHighlightDeletions && state.facet(language$6);
+        let lang = syntaxHighlightDeletions && state.facet(language);
         let line = makeLine();
         let changes = chunk.changes, changeI = 0, inside = false;
         function makeLine() {
@@ -51476,4 +46782,4 @@ if (elList && defaultOption) {
     elList.classList.remove('hidden');
 }
 
-export { diffEditor as $, countColumn as A, parser$3 as B, ContextTracker as C, Decoration as D, EditorState as E, Facet as F, indentUnit as G, GFM as H, IterMode as I, Subscript as J, Superscript as K, LRParser as L, MarkdownParser as M, NodeProp as N, Emoji as O, Parser as P, foldNodeProp as Q, indentNodeProp as R, StateEffect as S, Tree as T, languageDataProp as U, ViewPlugin as V, htmlCompletionSource as W, CompletionContext as X, LanguageDescription as Y, ParseContext as Z, javascriptLanguage as _, EditorView as a, unifiedDiff as a0, editor as a1, TreeFragment as b, NodeType as c, StateField as d, Direction as e, ExternalTokenizer as f, completeFromList as g, LocalTokenGroup as h, ifNotIn as i, snippetCompletion as j, NodeWeakMap as k, logException as l, defineCSSCompletionSource as m, html as n, EditorSelection as o, parseMixed as p, LanguageSupport as q, parseCode as r, styleTags as s, tags$1 as t, Prec as u, keymap as v, Language as w, defineLanguageFacet as x, foldService as y, syntaxTree as z };
+export { ContextTracker as C, ExternalTokenizer as E, IterMode as I, LanguageSupport as L, NodeWeakMap as N, LRLanguage as a, LRParser as b, continuedIndent as c, ifNotIn as d, completeFromList as e, foldNodeProp as f, syntaxTree as g, delimitedIndent as h, indentNodeProp as i, flatIndent as j, foldInside as k, LocalTokenGroup as l, snippetCompletion as m, defineCSSCompletionSource as n, EditorView as o, html as p, EditorSelection as q, parseMixed as r, styleTags as s, tags$1 as t, bracketMatchingHandle as u, javascriptLanguage as v, diffEditor as w, unifiedDiff as x, editor as y };
