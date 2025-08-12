@@ -383,12 +383,24 @@ const cobalt2Theme = EditorView.theme(
  * Enhanced syntax highlighting for the Cobalt2 theme
  */
 const cobalt2HighlightStyle = HighlightStyle.define([
+  // Comments
+  { tag: t.comment, color: blue, fontStyle: 'italic' },
+  { tag: t.docComment, color: blue, fontStyle: 'italic' },
+  { tag: t.lineComment, color: blue, fontStyle: 'italic' },
+  { tag: t.blockComment, color: blue, fontStyle: 'italic' },
+
   // Keywords and control flow
   { tag: t.keyword, color: orange },
   { tag: t.controlKeyword, color: orange },
   { tag: t.operatorKeyword, color: orange },
   { tag: t.moduleKeyword, color: cyan },
   { tag: t.definitionKeyword, color: hotPink },
+
+  // Special language constructs
+  { tag: t.self, color: hotPink },
+  { tag: t.special(t.variableName), color: cyan },
+  { tag: t.special(t.keyword), color: cyan },
+  { tag: t.special(t.propertyName), color: cyan },
 
   // Variables - Enhanced for better distinction
   { tag: t.variableName, color: foreground },
@@ -400,8 +412,43 @@ const cobalt2HighlightStyle = HighlightStyle.define([
   { tag: t.className, color: lightPink, fontStyle: 'italic' },
   { tag: t.namespace, color: lightPink, fontStyle: 'italic' },
   { tag: t.macroName, color: lightPink, fontStyle: 'italic' },
-  { tag: t.standard(t.tagName), color: supportTeal },
+
+  // Functions - specific function types first
+  { tag: t.function(t.variableName), color: yellow },
+  { tag: t.function(t.definition(t.variableName)), color: yellow },
+  { tag: t.function(t.propertyName), color: yellow },
+
+  // Properties
+  { tag: t.propertyName, color: lightBlue },
+  { tag: t.definition(t.propertyName), color: lightBlue },
   { tag: t.standard(t.propertyName), color: supportTeal },
+
+  // Constants
+  { tag: t.constant(t.name), color: pink },
+  { tag: t.standard(t.name), color: pink },
+  { tag: t.number, color: pink },
+  { tag: t.integer, color: pink },
+  { tag: t.float, color: pink },
+  { tag: t.bool, color: pink },
+  { tag: t.atom, color: pink },
+  { tag: t.null, color: pink },
+
+  // Strings - specific string types first
+  { tag: t.special(t.string), color: green },
+  { tag: t.string, color: lightGreen },
+  { tag: t.regexp, color: lightGreen },
+
+  // String quotes
+  { tag: t.quote, color: stringQuotes },
+
+  // Parameters
+  { tag: t.definition(t.function(t.variableName)), color: parameterYellow },
+
+  // HTML/XML elements
+  { tag: t.tagName, color: lightBlue },
+  { tag: t.standard(t.tagName), color: supportTeal },
+  { tag: t.attributeName, color: yellow, fontStyle: 'italic' },
+  { tag: t.attributeValue, color: lightGreen },
 
   // Operators and punctuation
   { tag: t.operator, color: lightGray },
@@ -417,64 +464,16 @@ const cobalt2HighlightStyle = HighlightStyle.define([
   { tag: t.squareBracket, color: lightGray },
   { tag: t.paren, color: yellow },
   { tag: t.angleBracket, color: lightGray },
-  { tag: [t.operator, t.punctuation], color: lightGray },
-
-  // Functions
-  { tag: t.function(t.variableName), color: yellow },
-  { tag: t.function(t.definition(t.variableName)), color: yellow },
-  { tag: t.function(t.propertyName), color: yellow },
-  { tag: [t.moduleKeyword, t.special(t.keyword)], color: cyan },
-  { tag: [t.definitionKeyword], color: hotPink },
-
-  // Comments
-  { tag: t.comment, color: blue, fontStyle: 'italic' },
-  { tag: t.docComment, color: blue, fontStyle: 'italic' },
-  { tag: t.lineComment, color: blue, fontStyle: 'italic' },
-  { tag: t.blockComment, color: blue, fontStyle: 'italic' },
 
   // Storage and function keywords
   { tag: t.modifier, color: yellow, fontStyle: 'italic' },
-
-  // Special variables and exports
-  { tag: t.special(t.variableName), color: cyan },
-
-  // Properties
-  { tag: t.propertyName, color: lightBlue },
-  { tag: t.definition(t.propertyName), color: lightBlue },
-
-  // Constants
-  { tag: t.constant(t.name), color: pink },
-  { tag: t.standard(t.name), color: pink },
-  { tag: t.number, color: pink },
-  { tag: t.integer, color: pink },
-  { tag: t.float, color: pink },
-  { tag: t.bool, color: pink },
-  { tag: t.atom, color: pink },
-  { tag: t.null, color: pink },
-
-  // Strings
-  { tag: t.string, color: lightGreen },
-  { tag: t.special(t.string), color: green },
-  { tag: t.regexp, color: lightGreen },
-
-  // String quotes
-  { tag: t.quote, color: stringQuotes },
-
-  // Parameters
-  { tag: t.definition(t.function(t.variableName)), color: parameterYellow },
-
-  // HTML/XML elements
-  { tag: t.tagName, color: lightBlue },
-  { tag: t.attributeName, color: yellow, fontStyle: 'italic' },
-  { tag: t.attributeValue, color: lightGreen },
-
-  // Special language constructs
-  { tag: t.self, color: hotPink },
 
   // Meta and annotations
   { tag: t.meta, color: lightBlue },
   { tag: t.annotation, color: yellow, fontStyle: 'italic' },
   { tag: t.processingInstruction, color: yellow },
+
+  // Markdown elements
   { tag: t.heading, color: yellow, fontWeight: 'bold' },
   { tag: t.heading1, color: yellow, fontWeight: 'bold' },
   { tag: t.heading2, color: yellow, fontWeight: 'bold' },
@@ -486,7 +485,6 @@ const cobalt2HighlightStyle = HighlightStyle.define([
   { tag: t.strong, color: lightBlue, fontWeight: 'bold' },
   { tag: t.emphasis, color: lightBlue, fontStyle: 'italic' },
   { tag: t.list, color: yellow },
-  { tag: t.quote, color: lightBlue, fontStyle: 'italic' },
 
   // Code blocks and inline code - Enhanced styling
   { tag: t.monospace, color: lightBlue },
@@ -503,59 +501,9 @@ const cobalt2HighlightStyle = HighlightStyle.define([
   { tag: t.inserted, color: lightGreen },
   { tag: t.changed, color: yellow },
 
-  // Module system - exports, require, module should be cyan
-  { tag: t.special(t.keyword), color: cyan }, // Special keywords like exports
-
-  // Function declarations and expressions - function keyword should be magenta
-  { tag: t.definitionKeyword, color: hotPink }, // function, class, etc.
-
-  // Method names and function assignments - yellow
-  { tag: t.function(t.propertyName), color: yellow }, // obj.method, exports.functionName
-
-  // Arrow functions and anonymous functions
-  { tag: t.function(t.definition(t.variableName)), color: yellow },
-
-  // Object property access - cyan for special objects like exports
-  { tag: t.special(t.propertyName), color: cyan }, // exports.something
-
   // Language-specific: CSS
   { tag: t.unit, color: parameterYellow }, // CSS units
 
-  // Enhanced code block syntax highlighting for better JavaScript support
-  // ====================================================================
-
-  // JavaScript/TypeScript keywords in code blocks
-  { tag: [t.controlKeyword, t.keyword], color: orange }, // return, if, else, etc.
-
-  // Variables in code blocks - white for better readability
-  { tag: [t.variableName, t.local(t.variableName)], color: foreground },
-
-  // Functions in code blocks - yellow
-  {
-    tag: [t.function(t.variableName), t.function(t.definition(t.variableName))],
-    color: yellow,
-  },
-
-  // Strings in code blocks
-  { tag: [t.string, t.special(t.string)], color: lightGreen },
-
-  // Numbers in code blocks
-  { tag: [t.number, t.integer, t.float], color: pink },
-
-  // Comments in code blocks
-  {
-    tag: [t.comment, t.lineComment, t.blockComment],
-    color: blue,
-    fontStyle: 'italic',
-  },
-
-  // HTML/XML in code blocks
-  { tag: [t.tagName, t.angleBracket], color: lightBlue },
-  { tag: [t.attributeName], color: yellow, fontStyle: 'italic' },
-  { tag: [t.attributeValue], color: lightGreen },
-  { tag: [t.propertyName], color: lightBlue },
-  { tag: [t.className], color: lightPink, fontStyle: 'italic' },
-  { tag: [t.standard(t.propertyName)], color: supportTeal },
 
   // Entity names
   { tag: t.labelName, color: yellow },

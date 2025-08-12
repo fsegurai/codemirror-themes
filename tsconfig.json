@@ -20,9 +20,9 @@
     "useDefineForClassFields": false,
     "lib": ["ES2022", "dom"],
     "paths": {
-      "@cmt/*": ["./packages/*"],
-      "@utils": ["./packages/.helper/utils.ts"],
-    }
+      "@cmt/*": ["./packages/*"]
+    },
+    "forceConsistentCasingInFileNames": true
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
