@@ -56,7 +56,7 @@ No changes have been made yet.
 
 - Upgraded libraries to the latest versions.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.14.0...v6.24.0
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.4.0...v6.24.0
 
 ---
 
@@ -70,7 +70,35 @@ No changes have been made yet.
 
 - Upgraded libraries to the latest versions.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.5...v6.1.4.0
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.8...v6.1.4.0
+
+---
+
+## [6.1.3.8] - 2025-03-03
+
+### 🐞 Fixes
+
+- Fixed release setup files.
+
+### 🛠 Changes
+
+- Improved project README.
+
+### ⚡ Performance
+
+- Upgraded libraries to the latest versions.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.6...v6.1.3.7
+
+---
+
+## [6.1.3.7] - 2025-02-16
+
+### ⚡ Performance
+
+- Upgraded libraries to the latest versions.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.6...v6.1.3.7
 
 ---
 
