@@ -25,9 +25,7 @@
     "themes",
     "syntax",
     "highlight",
-    "basic",
-    "light",
-    "basic-light"
+    "cobalt2",
   ],
   "author": {
     "name": "Fabián Segura",

@@ -7,8 +7,8 @@
       <img src="https://img.shields.io/azure-devops/build/fsegurai/Libraries%2520NodeJs/16/main?label=Build%20Status&"
           alt="Test Status">
   </a>
-  <a href="https://www.npmjs.org/package/@fsegurai/codemirror-theme-basic-light">
-      <img src="https://img.shields.io/npm/v/@fsegurai/codemirror-theme-basic-light.svg"
+  <a href="https://www.npmjs.org/package/@fsegurai/codemirror-theme-cobalt2">
+      <img src="https://img.shields.io/npm/v/@fsegurai/codemirror-theme-cobalt2.svg"
           alt="Latest Release">
   </a>
   <br>
@@ -24,13 +24,13 @@
 
 **A library of custom themes for CodeMirror 6.**
 
-`@fsegurai/codemirror-theme-basic-light` is a theme for CodeMirror 6 editor, making it visually engaging and adaptable
+`@fsegurai/codemirror-theme-cobalt2` is a theme for CodeMirror 6 editor, making it visually engaging and adaptable
 to different coding styles and user preferences.
 
 ### Table of contents
 
 - [Installation](#installation)
-	- [@fsegurai/codemirror-theme-basic-light](#fseguraicodemirror-theme-basic-light)
+	- [@fsegurai/codemirror-theme-cobalt2](#fseguraicodemirror-theme-cobalt2)
 	- [Using Theme](#using-theme)
 	- [Available Themes](#available-themes)
 	- [Demo Application](#demo-application)
@@ -38,13 +38,13 @@ to different coding styles and user preferences.
 
 ## Installation
 
-### @fsegurai/codemirror-theme-basic-light
+### @fsegurai/codemirror-theme-cobalt2
 
-To add `@fsegurai/codemirror-theme-basic-light` along with CodeMirror 6 to your `package.json` use the following
+To add `@fsegurai/codemirror-theme-cobalt2` along with CodeMirror 6 to your `package.json` use the following
 commands.
 
 ```bash
-npm install @fsegurai/codemirror-theme-basic-light codemirror@^6.0.0 --save
+npm install @fsegurai/codemirror-theme-cobalt2 codemirror@^6.0.0 --save
 ```
 
 ### Using Theme
@@ -54,14 +54,14 @@ Import the respective theme from the package and apply it to your CodeMirror ins
 ```javascript
 import { EditorView, basicSetup } from 'codemirror'
 import { markdown } from '@codemirror/lang-markdown'
-import { basicLight } from '@fsegurai/codemirror-theme-basic-basic-light'
+import { cobalt2 } from '@fsegurai/codemirror-theme-basic-cobalt2'
 
 let editor = new EditorView({
 	doc: '# Hello World',
 	extensions: [
 		basicSetup,
 		markdown(),
-		basicLight
+		cobalt2
 	],
 	parent: document.body
 })
@@ -80,6 +80,7 @@ Read the [CodeMirror documentation](https://codemirror.net/6/examples/styling/) 
 | Andromeda         | [@fsegurai/codemirror-theme-andromeda](https://www.npmjs.com/package/@fsegurai/codemirror-theme-andromeda)                 | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-andromeda)         |
 | Basic Light       | [@fsegurai/codemirror-theme-basic-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-basic-light)             | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-basic-light)       |
 | Basic Dark        | [@fsegurai/codemirror-theme-basic-dark](https://www.npmjs.com/package/@fsegurai/codemirror-theme-basic-dark)               | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-basic-dark)        |
+| Cobalt2           | [@fsegurai/codemirror-theme-cobalt](https://www.npmjs.com/package/@fsegurai/codemirror-theme-cobalt2)                      | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-cobalt2)           |
 | Forest            | [@fsegurai/codemirror-theme-forest](https://www.npmjs.com/package/@fsegurai/codemirror-theme-forest)                       | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-forest)            |
 | GitHub Light      | [@fsegurai/codemirror-theme-github-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-github-light)           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-github-light)      |
 | GitHub Dark       | [@fsegurai/codemirror-theme-github-dark](https://www.npmjs.com/package/@fsegurai/codemirror-theme-github-dark)             | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-github-dark)       |
