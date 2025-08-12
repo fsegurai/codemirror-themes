@@ -88,7 +88,7 @@ No changes have been made yet.
 
 - Upgraded libraries to the latest versions.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.6...v6.1.3.7
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.7...v6.1.3.8
 
 ---
 
