@@ -349,7 +349,7 @@ No changes have been made yet.
 - ✅ Firefox
 - ✅ Safari
 - ✅ Edge
-- ⚠️ Internet Explorer is **not supported** - try it by your own, but it probably won't work.
+- ⚠️ Internet Explorer is **not supported**, try it on your own, but it probably won't work.
 
 ---
 
