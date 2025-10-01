@@ -26,7 +26,7 @@ jobs:
           dot: true
 
       - name: Assign PR creator
-        uses: actions/github-script@v6
+        uses: actions/github-script@v8
         with:
           script: |
             const pr = context.payload.pull_request;
