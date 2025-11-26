@@ -58,7 +58,7 @@
     "clean:all": "bun run clean:demo && bun run clean:packages",
     "start": "rollup -w -c rollup.config.js",
     "start:doppler": "doppler run bun run start",
-    "copy:helpers": "node ./helper/copy-helpers.ts",
+    "copy:helpers": "bun ./helper/copy-helpers.ts",
     "build:demo": "rollup -c rollup.config.js",
     "build_post:demo": "cpy ./README.md ./demo && cpy ./LICENSE ./demo",
     "build_doppler:demo": "doppler run bun run build:demo && bun run build_post:demo",

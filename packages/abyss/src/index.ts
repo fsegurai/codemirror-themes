@@ -153,9 +153,11 @@ const abyssTheme = EditorView.theme(
     },
     '.cm-lineNumbers': {
       fontSize: generalGutter.fontSize,
+      lineHeight: generalGutter.lineHeight,
     },
     '.cm-foldGutter': {
       fontSize: generalGutter.fontSize,
+      lineHeight: generalGutter.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
       color: '#5f7e97',

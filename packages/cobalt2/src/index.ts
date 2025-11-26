@@ -194,10 +194,12 @@ const cobalt2Theme = EditorView.theme(
     },
     '.cm-lineNumbers': {
       fontSize: generalGutter.fontSize,
+      lineHeight: generalGutter.lineHeight,
       color: gray,
     },
     '.cm-foldGutter': {
       fontSize: generalGutter.fontSize,
+      lineHeight: generalGutter.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
       color: gray,

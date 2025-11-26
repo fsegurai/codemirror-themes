@@ -22,6 +22,7 @@ export const generalGutter = {
   paddingRight: '8px',
   fontSize: '0.9em',
   fontWeight: '500',
+  lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 
 export const generalPanel = {

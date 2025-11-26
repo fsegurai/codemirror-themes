@@ -16,6 +16,8 @@ No changes have been made yet.
 ### 🐛 Fixed
 
 - For rollout configuration file, fixed `process` import reference to point to `node:process` directly.
+- Fixed inconsistent line-height between editor content and line numbers across all themes. Line numbers now properly
+  align with their corresponding code rows.
 
 ### 🔧 Changed
 
