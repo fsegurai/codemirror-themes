@@ -11,6 +11,47 @@ No changes have been made yet.
 
 ---
 
+## [6.25.1] - 2025-12-xx
+
+### 🐛 Fixed
+
+- For rollout configuration file, fixed `process` import reference to point to `node:process` directly.
+
+### 🔧 Changed
+
+- Refactored the local storage theme keyword to a more accurate one based on the project.
+- Improved keywords declared in the `package.json` files.
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/lang-markdown` from `6.3.4` to `6.5.0`
+		- `@codemirror/language` from `6.11.2` to `6.11.3`
+		- `@codemirror/language-data` from `6.5.1` to `6.5.2`
+		- `@codemirror/legacy-modes` from `6.5.1` to `6.5.2`
+		- `@codemirror/merge` from `6.10.2` to `6.11.2`
+		- `@lezer/markdown` from `1.4.3` to `1.6.0`
+		- `@material/web` from `2.3.0` to `2.4.1`
+		- `marked` from `16.1.2` to `17.0.1`
+		- `marked-highlight` from `2.2.2` to `2.2.3`
+	- Dev Dependencies
+		- `@eslint/js` from `9.33.0` to `9.39.1`
+		  -`@rollup/plugin-commonjs` from `28.0.6` to `29.0.0`
+		- `@rollup/plugin-node-resolve` from `16.0.1` to `16.0.3`
+		- `@rollup/plugin-replace` from `6.0.2` to `6.0.3`
+		- `@rollup/plugin-typescript` from `12.1.4` to `12.3.0`
+		- `@semantic-release/release-notes-generator` from `14.0.3` from `14.1.0`
+		- `cpy-cli` from `5.0.0` to `6.0.0`
+		- `dotenv` from `17.2.1` to `17.2.3`
+		- `eslint` from `9.33.0` to `9.39.1`
+		- `globals` from `16.3.0` to `16.5.0`
+		- `rimraf` from `6.0.1` to `6.1.2`
+		- `rollup` from `4.46.2` to `4.53.3`
+		- `semantic-release` from `24.2.7` to `25.0.2`
+		- `typescript` from `5.9.2` to `5.9.3`
+		- `typescript-eslint` from `8.39.1` to `8.47.0`
+
 ## [6.25.0] - 2025-08-11
 
 ### 🚀 Features
@@ -27,7 +68,7 @@ No changes have been made yet.
 ### 🛠 Changes
 
 - Enhanced helper utilities for easier theme development and testing.
-- Removed unused methods from rollup configuration.
+- Removed unused methods from the rollup configuration.
 - Refactored demo playground for better usability and maintainability.
 - Updated all package `README.md` files to include the new theme.
 
