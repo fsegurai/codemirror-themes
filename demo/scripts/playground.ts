@@ -5,6 +5,7 @@ import { Compartment, EditorState } from '@codemirror/state';
 import { diffMdSample, mdSample } from './markdown.example';
 import { applyMergeRevertStyles, themes } from './themes';
 import { MergeView, unifiedMergeView } from '@codemirror/merge';
+import { foldGutter } from '@codemirror/language';
 
 const elCM = document.querySelector('#codemirror')!;
 const elDCM = document.querySelector('#diff-codemirror')!;
@@ -20,6 +21,7 @@ const diffEditor = new MergeView({
     doc: diffMdSample,
     extensions: [
       basicSetup,
+      foldGutter(),
       EditorView.editable.of(false),
       EditorState.readOnly.of(true),
       markdown({
@@ -35,6 +37,7 @@ const diffEditor = new MergeView({
     doc: diffMdSample.replace(/t/g, 'T') + '\nSix',
     extensions: [
       basicSetup,
+      foldGutter(),
       markdown({
         base: markdownLanguage,
         codeLanguages: languages,
@@ -51,6 +54,7 @@ const unifiedDiff = new EditorView({
   doc: diffMdSample.replace(/t/g, 'T') + '\nSix',
   extensions: [
     basicSetup,
+    foldGutter(),
     unifiedMergeView({
       original: diffMdSample,
     }),
@@ -69,6 +73,7 @@ const editor = new EditorView({
   doc: mdSample,
   extensions: [
     basicSetup,
+    foldGutter(),
     markdown({
       base: markdownLanguage,
       codeLanguages: languages,
