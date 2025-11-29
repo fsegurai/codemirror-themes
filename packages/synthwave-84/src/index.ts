@@ -32,8 +32,6 @@ const base00 = '#262335', // Background - deep purple-black
   base03 = '#495495', // Comments - muted blue
   base04 = '#848bbd', // Dark foreground
   base05 = '#ffffff', // Foreground - white
-  base06 = '#fede5d', // Light yellow
-  base07 = '#ff7edb', // Hot pink
 
   // Neon colors
   neonPink = '#ff7edb',
@@ -46,7 +44,6 @@ const base00 = '#262335', // Background - deep purple-black
   neonRed = '#fe4450',
   darkPurple = '#241b2f',
   glowPink = '#ff6ad5',
-  glowBlue = '#36f9f6',
   glowYellow = '#f3e877';
 
 // UI specific colors

@@ -6,7 +6,6 @@ import { tags as t } from '@lezer/highlight';
 import {
   applyMergeRevertStyles,
   generalContent,
-  generalCursor,
   generalDiff,
   generalGutter,
   generalLine,
@@ -27,15 +26,12 @@ import {
 
 // Base colors - Pure white and black for maximum contrast
 const base00 = '#ffffff', // Background - pure white
-  base01 = '#f5f5f5', // Lighter background
-  base02 = '#e0e0e0', // Selection background
-  base03 = '#707070', // Comments - medium grey
-  base04 = '#505050', // Dark grey
-  base05 = '#000000', // Foreground - pure black
-  base06 = '#000000', // Dark foreground
-  base07 = '#000000', // Pure black
+  base01 = '#e0e0e0', // Selection background
+  base02 = '#707070', // Comments - medium grey
+  base03 = '#505050', // Dark grey
+  base04 = '#000000', // Foreground - pure black
 
-  // High contrast accent colors for light background
+  // High contrast accent colors for a light background
   darkBlue = '#0000ff',
   darkCyan = '#008080',
   darkGreen = '#008000',
@@ -48,7 +44,6 @@ const base00 = '#ffffff', // Background - pure white
 // UI specific colors
 const invalid = darkRed,
   lightBackground = base00,
-  highlightBackground = '#e0e0e0',
   background = base00,
   tooltipBackground = '#f0f0f0',
   selection = '#0078d4',
@@ -73,11 +68,11 @@ const highContrastLightTheme = EditorView.theme(
   {
     // Base editor styles
     '&': {
-      color: base05,
+      color: base04,
       backgroundColor: background,
       fontSize: generalContent.fontSize,
       fontFamily: generalContent.fontFamily,
-      border: `2px solid ${base05}`,
+      border: `2px solid ${base04}`,
     },
 
     // Content and cursor
@@ -92,7 +87,7 @@ const highContrastLightTheme = EditorView.theme(
     '.cm-fat-cursor': {
       backgroundColor: cursor,
       color: background,
-      border: `2px solid ${base05}`,
+      border: `2px solid ${base04}`,
     },
 
     // Selection
@@ -111,27 +106,27 @@ const highContrastLightTheme = EditorView.theme(
     '.cm-searchMatch': {
       backgroundColor: '#ffff00',
       outline: `2px solid ${darkOrange}`,
-      color: base05,
+      color: base04,
       borderRadius: generalSearchField.borderRadius,
 
       '& span': {
-        color: base05,
+        color: base04,
       },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
       backgroundColor: darkOrange,
       color: base00,
       padding: generalSearchField.padding,
-      outline: `2px solid ${base05}`,
+      outline: `2px solid ${base04}`,
 
       '& span': {
         color: base00,
       },
     },
     '.cm-search.cm-panel.cm-textfield': {
-      color: base05,
+      color: base04,
       backgroundColor: base00,
-      border: `2px solid ${base05}`,
+      border: `2px solid ${base04}`,
       borderRadius: generalSearchField.borderRadius,
       padding: generalSearchField.padding,
     },
@@ -139,25 +134,25 @@ const highContrastLightTheme = EditorView.theme(
     // Panels
     '.cm-panels': {
       backgroundColor: lightBackground,
-      color: base05,
+      color: base04,
       borderRadius: '4px',
-      border: `2px solid ${base05}`,
+      border: `2px solid ${base04}`,
     },
     '.cm-panels.cm-panels-top': {
-      borderBottom: `2px solid ${base05}`,
+      borderBottom: `2px solid ${base04}`,
     },
     '.cm-panels.cm-panels-bottom': {
-      borderTop: `2px solid ${base05}`,
+      borderTop: `2px solid ${base04}`,
     },
     '.cm-panel button': {
       backgroundColor: tooltipBackground,
       color: darkBlue,
-      border: `2px solid ${base05}`,
+      border: `2px solid ${base04}`,
       borderRadius: generalPanel.borderRadius,
       padding: generalPanel.padding,
     },
     '.cm-panel button:hover': {
-      backgroundColor: base02,
+      backgroundColor: base01,
       border: `2px solid ${darkBlue}`,
     },
 
@@ -166,23 +161,23 @@ const highContrastLightTheme = EditorView.theme(
       backgroundColor: '#ffffccba',
       borderRadius: generalLine.borderRadius,
       borderLeft: `3px solid ${darkBlue}`,
-      borderRight: `1px solid ${base03}`,
+      borderRight: `1px solid ${base02}`,
       zIndex: 1,
     },
 
     // Gutters
     '.cm-gutters': {
       backgroundColor: lightBackground,
-      color: base04,
+      color: base03,
       border: generalGutter.border,
-      borderRight: `2px solid ${base05}`,
+      borderRight: `2px solid ${base04}`,
       paddingRight: generalGutter.paddingRight,
     },
     '.cm-activeLineGutter': {
-      backgroundColor: base02,
+      backgroundColor: base01,
       color: darkBlue,
       fontWeight: 'bold',
-      border: `1px solid ${base03}`,
+      border: `1px solid ${base02}`,
     },
     '.cm-lineNumbers': {
       fontSize: generalGutter.fontSize,
@@ -193,7 +188,7 @@ const highContrastLightTheme = EditorView.theme(
       lineHeight: generalGutter.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
-      color: base04,
+      color: base03,
       cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
@@ -247,12 +242,12 @@ const highContrastLightTheme = EditorView.theme(
       border: `2px solid ${darkBlue}`,
       borderRadius: generalTooltip.borderRadius,
       padding: generalTooltip.padding,
-      color: base05,
+      color: base04,
     },
     '.cm-tooltip-autocomplete': {
       '& > ul': {
         backgroundColor: tooltipBackground,
-        border: `2px solid ${base05}`,
+        border: `2px solid ${base04}`,
       },
       '& > ul > li': {
         padding: generalTooltip.padding,
@@ -346,11 +341,11 @@ const highContrastLightTheme = EditorView.theme(
     },
     '& .cm-scroller::-webkit-scrollbar-track': {
       background: lightBackground,
-      border: `2px solid ${base05}`,
+      border: `2px solid ${base04}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
-      backgroundColor: base04,
-      border: `2px solid ${base05}`,
+      backgroundColor: base03,
+      border: `2px solid ${base04}`,
       borderRadius: generalScroller.borderRadius,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
@@ -360,7 +355,7 @@ const highContrastLightTheme = EditorView.theme(
     // Ghost text
     '.cm-ghostText': {
       opacity: '0.7',
-      color: base03,
+      color: base02,
     },
   },
   { dark: false },
@@ -376,8 +371,8 @@ const highContrastLightHighlightStyle = HighlightStyle.define([
   { tag: t.moduleKeyword, color: darkMagenta, fontWeight: 'bold' },
 
   // Names and variables
-  { tag: [t.name, t.deleted, t.character, t.macroName], color: base05 },
-  { tag: [t.variableName], color: base05 },
+  { tag: [t.name, t.deleted, t.character, t.macroName], color: base04 },
+  { tag: [t.variableName], color: base04 },
   { tag: [t.propertyName], color: darkBlue, fontStyle: 'normal' },
 
   // Classes and types
@@ -389,7 +384,7 @@ const highContrastLightHighlightStyle = HighlightStyle.define([
   { tag: [t.operator, t.operatorKeyword], color: darkCyan },
   { tag: [t.bracket], color: darkBrown },
   { tag: [t.brace], color: darkCyan },
-  { tag: [t.punctuation], color: base05 },
+  { tag: [t.punctuation], color: base04 },
 
   // Functions and parameters
   { tag: [t.function(t.variableName), t.labelName], color: darkBlue },
@@ -415,9 +410,9 @@ const highContrastLightHighlightStyle = HighlightStyle.define([
   { tag: [t.definition(t.name), t.separator], color: darkBlue },
 
   // Comments and documentation
-  { tag: t.meta, color: base03 },
-  { tag: t.comment, fontStyle: 'italic', color: base03 },
-  { tag: t.docComment, fontStyle: 'italic', color: base03 },
+  { tag: t.meta, color: base02 },
+  { tag: t.comment, fontStyle: 'italic', color: base02 },
+  { tag: t.docComment, fontStyle: 'italic', color: base02 },
 
   // HTML/XML elements
   { tag: [t.tagName], color: darkMagenta },

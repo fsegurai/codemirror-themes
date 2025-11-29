@@ -27,13 +27,11 @@ import {
 
 // Base colors (Mocha variant)
 const base00 = '#1e1e2e', // Background - dark navy
-  base01 = '#181825', // Darker background
-  base02 = '#313244', // Selection background
-  base03 = '#45475a', // Comments
-  base04 = '#585b70', // Dark grey
-  base05 = '#cdd6f4', // Foreground - light blue
-  base06 = '#f5e0dc', // Light foreground
-  base07 = '#b4befe', // Lavender
+  base01 = '#313244', // Selection background
+  base02 = '#45475a', // Comments
+  base03 = '#585b70', // Dark grey
+  base04 = '#cdd6f4', // Foreground - light blue
+  base05 = '#f5e0dc', // Light foreground
 
   // Catppuccin Mocha colors
   rosewater = '#f5e0dc',
@@ -54,10 +52,8 @@ const base00 = '#1e1e2e', // Background - dark navy
 // UI specific colors
 const invalid = '#f38ba8',
   darkBackground = '#181825',
-  highlightBackground = '#313244',
   background = base00,
-  tooltipBackground = base02,
-  selection = base02,
+  tooltipBackground = base01,
   selectionMatch = '#45475a80',
   cursor = rosewater,
   activeBracketBg = '#45475a55',
@@ -79,7 +75,7 @@ const catppuccinMochaTheme = EditorView.theme(
   {
     // Base editor styles
     '&': {
-      color: base05,
+      color: base04,
       backgroundColor: background,
       fontSize: generalContent.fontSize,
       fontFamily: generalContent.fontFamily,
@@ -115,11 +111,11 @@ const catppuccinMochaTheme = EditorView.theme(
     '.cm-searchMatch': {
       backgroundColor: '#89b4fa40',
       outline: `1px solid ${sapphire}`,
-      color: base05,
+      color: base04,
       borderRadius: generalSearchField.borderRadius,
 
       '& span': {
-        color: base05,
+        color: base04,
       },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
@@ -132,7 +128,7 @@ const catppuccinMochaTheme = EditorView.theme(
       },
     },
     '.cm-search.cm-panel.cm-textfield': {
-      color: base05,
+      color: base04,
       borderRadius: generalSearchField.borderRadius,
       padding: generalSearchField.padding,
     },
@@ -140,24 +136,24 @@ const catppuccinMochaTheme = EditorView.theme(
     // Panels
     '.cm-panels': {
       backgroundColor: darkBackground,
-      color: base05,
+      color: base04,
       borderRadius: '4px',
     },
     '.cm-panels.cm-panels-top': {
-      borderBottom: `1px solid ${base03}`,
+      borderBottom: `1px solid ${base02}`,
     },
     '.cm-panels.cm-panels-bottom': {
-      borderTop: `1px solid ${base03}`,
+      borderTop: `1px solid ${base02}`,
     },
     '.cm-panel button': {
       backgroundColor: tooltipBackground,
-      color: base05,
+      color: base04,
       border: generalPanel.border,
       borderRadius: generalPanel.borderRadius,
       padding: generalPanel.padding,
     },
     '.cm-panel button:hover': {
-      backgroundColor: base02,
+      backgroundColor: base01,
     },
 
     // Line highlighting
@@ -171,14 +167,14 @@ const catppuccinMochaTheme = EditorView.theme(
     // Gutters
     '.cm-gutters': {
       backgroundColor: darkBackground,
-      color: base03,
+      color: base02,
       border: generalGutter.border,
-      borderRight: `1px solid ${base02}`,
+      borderRight: `1px solid ${base01}`,
       paddingRight: generalGutter.paddingRight,
     },
     '.cm-activeLineGutter': {
-      backgroundColor: base02,
-      color: base05,
+      backgroundColor: base01,
+      color: base04,
       fontWeight: generalGutter.fontWeight,
     },
     '.cm-lineNumbers': {
@@ -190,11 +186,11 @@ const catppuccinMochaTheme = EditorView.theme(
       lineHeight: generalGutter.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
-      color: base03,
+      color: base02,
       cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-      color: base05,
+      color: base04,
     },
 
     // Diff/Merge View Styles
@@ -239,7 +235,7 @@ const catppuccinMochaTheme = EditorView.theme(
     // Tooltips and autocomplete
     '.cm-tooltip': {
       backgroundColor: tooltipBackground,
-      border: `1px solid ${base03}`,
+      border: `1px solid ${base02}`,
       borderRadius: generalTooltip.borderRadius,
       padding: generalTooltip.padding,
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
@@ -254,16 +250,16 @@ const catppuccinMochaTheme = EditorView.theme(
         lineHeight: generalTooltip.lineHeight,
       },
       '& > ul > li[aria-selected]': {
-        backgroundColor: base02,
-        color: base06,
+        backgroundColor: base01,
+        color: base05,
         borderRadius: generalTooltip.borderRadiusSelected,
       },
       '& > ul > li > span.cm-completionIcon': {
-        color: base03,
+        color: base02,
         paddingRight: generalTooltip.paddingRight,
       },
       '& > ul > li > span.cm-completionDetail': {
-        color: base03,
+        color: base02,
         fontStyle: 'italic',
       },
     },
@@ -310,15 +306,15 @@ const catppuccinMochaTheme = EditorView.theme(
     // Selection matches
     '.cm-selectionMatch': {
       backgroundColor: selectionMatch,
-      outline: `1px solid ${base02}50`,
+      outline: `1px solid ${base01}50`,
       borderRadius: generalMatching.borderRadius,
     },
 
     // Fold placeholder
     '.cm-foldPlaceholder': {
       backgroundColor: tooltipBackground,
-      color: base03,
-      border: `1px dotted ${base03}70`,
+      color: base02,
+      border: `1px dotted ${base02}70`,
       borderRadius: generalPlaceholder.borderRadius,
       padding: generalPlaceholder.padding,
       margin: generalPlaceholder.margin,
@@ -339,18 +335,18 @@ const catppuccinMochaTheme = EditorView.theme(
       background: darkBackground,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
-      backgroundColor: base02,
+      backgroundColor: base01,
       borderRadius: generalScroller.borderRadius,
       border: `3px solid ${darkBackground}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-      backgroundColor: base03,
+      backgroundColor: base02,
     },
 
     // Ghost text
     '.cm-ghostText': {
       opacity: '0.5',
-      color: base03,
+      color: base02,
     },
   },
   { dark: true },
@@ -366,8 +362,8 @@ const catppuccinMochaHighlightStyle = HighlightStyle.define([
   { tag: t.moduleKeyword, color: mauve, fontWeight: 'bold' },
 
   // Names and variables
-  { tag: [t.name, t.deleted, t.character, t.macroName], color: base05 },
-  { tag: [t.variableName], color: base05 },
+  { tag: [t.name, t.deleted, t.character, t.macroName], color: base04 },
+  { tag: [t.variableName], color: base04 },
   { tag: [t.propertyName], color: blue, fontStyle: 'normal' },
 
   // Classes and types
@@ -377,9 +373,9 @@ const catppuccinMochaHighlightStyle = HighlightStyle.define([
 
   // Operators and punctuation
   { tag: [t.operator, t.operatorKeyword], color: sky },
-  { tag: [t.bracket], color: base04 },
+  { tag: [t.bracket], color: base03 },
   { tag: [t.brace], color: teal },
-  { tag: [t.punctuation], color: base04 },
+  { tag: [t.punctuation], color: base03 },
 
   // Functions and parameters
   { tag: [t.function(t.variableName), t.labelName], color: blue },
@@ -405,9 +401,9 @@ const catppuccinMochaHighlightStyle = HighlightStyle.define([
   { tag: [t.definition(t.name), t.separator], color: flamingo },
 
   // Comments and documentation
-  { tag: t.meta, color: base03 },
-  { tag: t.comment, fontStyle: 'italic', color: base03 },
-  { tag: t.docComment, fontStyle: 'italic', color: base03 },
+  { tag: t.meta, color: base02 },
+  { tag: t.comment, fontStyle: 'italic', color: base02 },
+  { tag: t.docComment, fontStyle: 'italic', color: base02 },
 
   // HTML/XML elements
   { tag: [t.tagName], color: pink },
@@ -467,9 +463,9 @@ const catppuccinMocha: Extension = [
  */
 const catppuccinMochaMergeStyles: IMergeRevertStyles = {
   backgroundColor: darkBackground,
-  borderColor: base03,
-  buttonColor: base05,
-  buttonHoverColor: base02,
+  borderColor: base02,
+  buttonColor: base04,
+  buttonHoverColor: base01,
 };
 
 export { catppuccinMocha, catppuccinMochaMergeStyles, applyMergeRevertStyles };
