@@ -73,6 +73,8 @@ No changes have been made yet.
 		- Removed `prettier` dependency.
 		- Removed `ts-node` dependency.
 
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.29.0
+
 ## [6.25.0] - 2025-08-11
 
 ### 🚀 Features
@@ -416,6 +418,8 @@ No changes have been made yet.
 ---
 
 [unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.25.0...HEAD
+
+[6.29.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.25.0...v6.29.0
 
 [6.25.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.24.0...v6.25.0
 
