@@ -88,6 +88,16 @@ This project uses a monorepo structure with individual theme packages in the `pa
 5. Create a README.md with theme preview and usage
 6. Update all packages `README.md` to include your new theme
 
+### Post Build Steps
+
+Once you've finished working on your theme, run the following to build and verify your changes:
+
+```bash
+bun run utils.copy:helpers
+bun run utils.copy:readme
+bun run utils.update:versions # You must update the `versions.json` file as it is the source of truth for the packages versions
+```
+
 ---
 
 ## ✍️ Commit Message Convention
