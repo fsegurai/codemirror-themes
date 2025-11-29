@@ -6,7 +6,6 @@ import { tags as t } from '@lezer/highlight';
 import {
   applyMergeRevertStyles,
   generalContent,
-  generalCursor,
   generalDiff,
   generalGutter,
   generalLine,
@@ -32,8 +31,7 @@ const base00 = '#000000', // Background - pure black
   base03 = '#808080', // Comments - medium grey
   base04 = '#b0b0b0', // Dark grey
   base05 = '#ffffff', // Foreground - pure white
-  base06 = '#ffffff', // Light foreground
-  base07 = '#ffffff', // Bright white
+
   // High contrast accent colors
   brightYellow = '#ffff00',
   brightCyan = '#00ffff',
@@ -47,7 +45,6 @@ const base00 = '#000000', // Background - pure black
 // UI specific colors
 const invalid = brightRed,
   darkBackground = base00,
-  highlightBackground = '#1f1f1f',
   background = base00,
   tooltipBackground = '#1a1a1a',
   selection = '#264f78',
