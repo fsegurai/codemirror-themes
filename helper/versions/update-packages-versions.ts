@@ -174,7 +174,11 @@ async function main() {
     skipped: [] as string[],
     new: newPackages,
     missingInStore,
+    bundleChanges: [] as string[],
   };
+
+  // Track which packages will be updated for bundle dependency updates
+  const updatedPackages: Record<string, string> = {};
 
   for (const p of pkgs) {
     const target = targets[p.name];
@@ -191,6 +195,7 @@ async function main() {
     if (p.version === target) continue;
 
     report.updated.push({ name: p.name, from: p.version, to: target });
+    updatedPackages[p.name] = target;
     p.json.version = target;
     updateInternalDeps(p.json, internalMapping);
     if (opts.write && !opts.dryRun) {
@@ -199,6 +204,40 @@ async function main() {
   }
 
   report.updated.sort((a, b) => a.name.localeCompare(b.name));
+
+  // Update bundle package dependencies to match updated packages
+  const bundlePkg = pkgs.find(p => p.name === '@fsegurai/codemirror-theme-bundle');
+  if (bundlePkg && Object.keys(updatedPackages).length > 0) {
+    let bundleUpdated = false;
+    const bundleChanges: string[] = [];
+    const deps = bundlePkg.json.dependencies;
+
+    if (deps) {
+      for (const [pkgName, newVersion] of Object.entries(updatedPackages)) {
+        if (deps[pkgName]) {
+          const currentDepVersion = deps[pkgName];
+          const prefix = currentDepVersion.startsWith('^') ? '^' : currentDepVersion.startsWith('~') ? '~' : '';
+          const newDepVersion = prefix + newVersion;
+
+          if (deps[pkgName] !== newDepVersion) {
+            const oldVersion = deps[pkgName];
+            deps[pkgName] = newDepVersion;
+            bundleUpdated = true;
+            bundleChanges.push(`  ${colors.cyan}${pkgName}${colors.reset}: ${colors.gray}${oldVersion}${colors.reset} ${colors.yellow}→${colors.reset} ${colors.green}${newDepVersion}${colors.reset}`);
+          }
+        }
+      }
+    }
+
+    if (bundleUpdated) {
+      if (opts.write && !opts.dryRun) {
+        await fs.writeFile(bundlePkg.file, JSON.stringify(bundlePkg.json, null, 2) + '\n', 'utf8');
+      }
+
+      // Store bundle changes in report
+      report.bundleChanges = bundleChanges;
+    }
+  }
 
   // Show summary
   console.log(`${colors.bright}${colors.blue}Summary:${colors.reset}`);
@@ -221,6 +260,15 @@ async function main() {
       console.log(`  ${colors.gray}No changes needed - all packages are up to date${colors.reset}`);
     }
 
+    // Show bundle changes if any
+    if (report.bundleChanges.length > 0) {
+      console.log(`\n${colors.bright}${colors.blue}Bundle Package Dependencies:${colors.reset}`);
+      console.log(`  ${colors.cyan}@fsegurai/codemirror-theme-bundle${colors.reset} will update ${colors.bright}${report.bundleChanges.length}${colors.reset} dependencies:`);
+      for (const change of report.bundleChanges) {
+        console.log(change);
+      }
+    }
+
     console.log(`\n${colors.bright}${colors.blue}Full Projection:${colors.reset}`);
     printProjectionTable(pkgs, targets, previousNames);
 
@@ -233,6 +281,15 @@ async function main() {
       console.log(`\n${colors.green}✓${colors.reset} ${colors.bright}${report.updated.length}${colors.reset} package(s) updated successfully.`);
     } else {
       console.log(`  ${colors.gray}No changes applied - all packages were already up to date${colors.reset}`);
+    }
+
+    // Show bundle changes if any
+    if (report.bundleChanges.length > 0) {
+      console.log(`\n${colors.bright}${colors.blue}Bundle Package:${colors.reset}`);
+      console.log(`  ${colors.cyan}@fsegurai/codemirror-theme-bundle${colors.reset} updated ${colors.bright}${report.bundleChanges.length}${colors.reset} dependencies:`);
+      for (const change of report.bundleChanges) {
+        console.log(change);
+      }
     }
   }
 }
