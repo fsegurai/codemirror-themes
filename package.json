@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-themes",
-  "version": "6.25.1",
+  "version": "6.29.0",
   "description": "Theme packages for the CodeMirror editor",
   "type": "module",
   "license": "MIT",
@@ -30,12 +30,15 @@
     "basic-dark",
     "basic-light",
     "bundle",
+    "catppuccin-mocha",
     "cobalt2",
     "forest",
     "github-dark",
     "github-light",
     "gruvbox-dark",
     "gruvbox-light",
+    "high-contrast-dark",
+    "high-contrast-light",
     "material-dark",
     "material-light",
     "monokai",
@@ -43,6 +46,7 @@
     "palenight",
     "solarized-dark",
     "solarized-light",
+    "synthwave-84",
     "tokyo-night-day",
     "tokyo-night-storm",
     "volcano",
@@ -58,7 +62,6 @@
     "clean:all": "bun run clean:demo && bun run clean:packages",
     "start": "rollup -w -c rollup.config.js",
     "start:doppler": "doppler run bun run start",
-    "copy:helpers": "bun ./helper/copy-helpers.ts",
     "build:demo": "rollup -c rollup.config.js",
     "build_post:demo": "cpy ./README.md ./demo && cpy ./LICENSE ./demo",
     "build_doppler:demo": "doppler run bun run build:demo && bun run build_post:demo",
@@ -66,16 +69,12 @@
     "build:all": "bun run build:demo && bun run build:packages",
     "lint": "bun run lint:demo && bun run lint:packages",
     "lint:demo": "eslint ./demo",
-    "lint:packages": "eslint ./packages/*/src/**"
-  },
-  "prettier": {
-    "arrowParens": "avoid",
-    "singleQuote": true,
-    "bracketSpacing": true,
-    "endOfLine": "lf",
-    "semi": false,
-    "tabWidth": 2,
-    "trailingComma": "none"
+    "lint:packages": "eslint ./packages/*/src/**",
+    "utils.copy:helpers": "bun helper/utils/generate-utils.ts",
+    "utils.copy:readme": "bun ./helper/docs/generate-readme.ts",
+    "utils.update:versions": "bun ./helper/versions/update-packages-versions.ts --write",
+    "utils.update:versions-preview": "bun ./helper/versions/update-packages-versions.ts --dry-run",
+    "utils.update:versions-skip": "bun ./helper/versions/update-packages-versions.ts --dry-run --skip '@fsegurai/codemirror-theme-bundle'"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.0",
@@ -107,13 +106,11 @@
     "dotenv": "^17.2.3",
     "eslint": "^9.39.1",
     "globals": "^16.5.0",
-    "prettier": "^3.6.2",
     "rimraf": "^6.1.2",
     "rollup": "^4.53.3",
     "rollup-plugin-dev": "^2.1.0",
     "semantic-release": "^25.0.2",
-    "ts-node": "^10.9.2",
     "typescript": "5.9.3",
-    "typescript-eslint": "^8.47.0"
+    "typescript-eslint": "^8.48.0"
   }
 }
