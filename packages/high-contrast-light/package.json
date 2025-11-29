@@ -1,7 +1,7 @@
 {
   "name": "@fsegurai/codemirror-theme-high-contrast-light",
   "description": "High Contrast Light theme for the CodeMirror editor",
-  "version": "1.0.0",
+  "version": "6.0.0",
   "type": "module",
   "main": "dist/index.cjs",
   "exports": {
@@ -44,4 +44,3 @@
     "@codemirror/buildhelper": "^1.0.2"
   }
 }
-
