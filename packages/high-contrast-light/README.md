@@ -29,10 +29,10 @@
 ### Table of contents
 
 - [Installation](#installation)
-  - [@fsegurai/codemirror-theme-high-contrast-light](#fseguraicodemirror-theme-high-contrast-light)
-  - [Using Theme](#using-theme)
-  - [Available Themes](#available-themes)
-  - [Demo Application](#demo-application)
+	- [@fsegurai/codemirror-theme-high-contrast-light](#@fsegurai/codemirror-theme-high-contrast-light)
+	- [Using Theme](#using-theme)
+	- [Available Themes](#available-themes)
+	- [Demo Application](#demo-application)
 - [License](#license)
 
 ## Installation
@@ -42,39 +42,80 @@
 To add `@fsegurai/codemirror-theme-high-contrast-light` along with CodeMirror 6 to your `package.json` use the following commands.
 
 ```bash
-npm install @fsegurai/codemirror-theme-high-contrast-light codemirror@^6.0.0 --save
+bun install @fsegurai/codemirror-theme-high-contrast-light codemirror@^6.0.0 --save
 ```
 
-### Using Theme
+## Using Theme
 
 Import the respective theme from the package and apply it to your CodeMirror instance as shown below.
 
-```typescript
-import { EditorState } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
-import { highContrastLight } from '@fsegurai/codemirror-theme-high-contrast-light';
+```javascript
+import { EditorView, basicSetup } from 'codemirror'
+import { markdown } from '@codemirror/lang-markdown'
+import { highContrastLight } from '@fsegurai/codemirror-theme-high-contrast-light'
 
-const state = EditorState.create({
-  doc: 'console.log("Hello, High Contrast!");',
-  extensions: [highContrastLight],
-});
-
-const view = new EditorView({
-  state,
-  parent: document.querySelector('#editor'),
-});
+let editor = new EditorView({
+  doc: '# Hello World',
+  extensions: [
+    basicSetup,
+    markdown(),
+    highContrastLight
+  ],
+  parent: document.body
+})
 ```
+
+Read the [CodeMirror documentation](https://codemirror.net/6/examples/styling/) for more details about themes.
 
 ### Available Themes
 
-Explore the full range of themes available in the `@fsegurai/codemirror-themes` collection by visiting
-the [demo application](https://fsegurai.github.io/codemirror-themes/).
+| Theme               | Package                                                                                                                        | Version                                                                             |
+|---------------------|--------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| All - Bundle        | [@fsegurai/codemirror-theme-bundle](https://www.npmjs.com/package/@fsegurai/codemirror-theme-bundle)                           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-bundle)              |
+| Abcdef              | [@fsegurai/codemirror-theme-abcdef](https://www.npmjs.com/package/@fsegurai/codemirror-theme-abcdef)                           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-abcdef)              |
+| Abyss               | [@fsegurai/codemirror-theme-abyss](https://www.npmjs.com/package/@fsegurai/codemirror-theme-abyss)                             | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-abyss)               |
+| Android Studio      | [@fsegurai/codemirror-theme-android-studio](https://www.npmjs.com/package/@fsegurai/codemirror-theme-android-studio)           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-android-studio)      |
+| Andromeda           | [@fsegurai/codemirror-theme-andromeda](https://www.npmjs.com/package/@fsegurai/codemirror-theme-andromeda)                     | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-andromeda)           |
+| Basic Dark          | [@fsegurai/codemirror-theme-basic-dark](https://www.npmjs.com/package/@fsegurai/codemirror-theme-basic-dark)                   | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-basic-dark)          |
+| Basic Light         | [@fsegurai/codemirror-theme-basic-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-basic-light)                 | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-basic-light)         |
+| Catppuccin Mocha    | [@fsegurai/codemirror-theme-catppuccin-mocha](https://www.npmjs.com/package/@fsegurai/codemirror-theme-catppuccin-mocha)       | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-catppuccin-mocha)    |
+| Cobalt2             | [@fsegurai/codemirror-theme-cobalt](https://www.npmjs.com/package/@fsegurai/codemirror-theme-cobalt2)                          | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-cobalt2)             |
+| Forest              | [@fsegurai/codemirror-theme-forest](https://www.npmjs.com/package/@fsegurai/codemirror-theme-forest)                           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-forest)              |
+| GitHub Dark         | [@fsegurai/codemirror-theme-github-dark](https://www.npmjs.com/package/@fsegurai/codemirror-theme-github-dark)                 | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-github-dark)         |
+| GitHub Light        | [@fsegurai/codemirror-theme-github-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-github-light)               | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-github-light)        |
+| Gruvbox Dark        | [@fsegurai/codemirror-theme-gruvbox-dark](https://www.npmjs.com/package/@fsegurai/codemirror-theme-gruvbox-dark)               | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-gruvbox-dark)        |
+| Gruvbox Light       | [@fsegurai/codemirror-theme-gruvbox-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-gruvbox-light)             | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-gruvbox-light)       |
+| High Contrast Dark  | [@fsegurai/codemirror-theme-high-contrast-dark](https://www.npmjs.com/package/@fsegurai/codemirror-theme-high-contrast-dark)   | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-high-contrast-dark)  |
+| High Contrast Light | [@fsegurai/codemirror-theme-high-contrast-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-high-contrast-light) | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-high-contrast-light) |
+| Material Dark       | [@fsegurai/codemirror-theme-material-dark](https://www.npmjs.com/package/@fsegurai/codemirror-theme-material-dark)             | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-material-dark)       |
+| Material Light      | [@fsegurai/codemirror-theme-material-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-material-light)           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-material-light)      |
+| Monokai             | [@fsegurai/codemirror-theme-monokai](https://www.npmjs.com/package/@fsegurai/codemirror-theme-monokai)                         | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-monokai)             |
+| Nord                | [@fsegurai/codemirror-theme-nord](https://www.npmjs.com/package/@fsegurai/codemirror-theme-nord)                               | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-nord)                |
+| Palenight           | [@fsegurai/codemirror-theme-palenight](https://www.npmjs.com/package/@fsegurai/codemirror-theme-palenight)                     | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-palenight)           |
+| Solarized Dark      | [@fsegurai/codemirror-theme-solarized-dark](https://www.npmjs.com/package/@fsegurai/codemirror-theme-solarized-dark)           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-solarized-dark)      |
+| Solarized Light     | [@fsegurai/codemirror-theme-solarized-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-solarized-light)         | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-solarized-light)     |
+| Synthwave 84	       | [@fsegurai/codemirror-theme-synthwave-84](https://www.npmjs.com/package/@fsegurai/codemirror-theme-synthwave-84)               | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-synthwave-84)        |
+| Tokyo Night Day     | [@fsegurai/codemirror-theme-tokyo-night-day](https://www.npmjs.com/package/@fsegurai/codemirror-theme-tokyo-night-day)         | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-tokyo-night-day)     |
+| Tokyo Night Storm   | [@fsegurai/codemirror-theme-tokyo-night-storm](https://www.npmjs.com/package/@fsegurai/codemirror-theme-tokyo-night-storm)     | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-tokyo-night-storm)   |
+| Volcano             | [@fsegurai/codemirror-theme-volcano](https://www.npmjs.com/package/@fsegurai/codemirror-theme-volcano)                         | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-volcano)             |
+| VS Code Light       | [@fsegurai/codemirror-theme-vscode-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-vscode-light)               | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-vscode-light)        |
+| VS Code Dark        | [@fsegurai/codemirror-theme-vscode-dark](https://www.npmjs.com/package/@fsegurai/codemirror-theme-vscode-dark)                 | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-vscode-dark)         |
 
-### Demo Application
+## Demo Application
 
-Experience the themes in action by visiting the [demo application](https://fsegurai.github.io/codemirror-themes/).
+To see all themes in action, check out the
+demo: [https://fsegurai.github.io/codemirror-themes](https://fsegurai.github.io/codemirror-themes).
+
+To set up the demo locally:
+
+```bash
+git clone https://github.com/fsegurai/codemirror-themes.git
+bun install
+bun start
+```
+
+This will serve the application locally at [http://[::1]:8000](http://[::1]:8000).
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/fsegurai/codemirror-themes/blob/main/LICENSE) file for details.
-
+Licensed under [MIT](https://opensource.org/licenses/MIT).
