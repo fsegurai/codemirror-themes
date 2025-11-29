@@ -11,15 +11,30 @@ No changes have been made yet.
 
 ---
 
-## [6.25.1] - 2025-12-xx
+## [6.29.0] - 2025-11-29
 
-### 🐛 Fixed
+### ⚠️ BREAKING CHANGES ⚠️
+
+- **Theme Declaration**: Changed VS Code theme declaration to be more consistent with the rest of the themes.
+	- Visual Studio Code Dark Theme from `vsCodeDark` to `vscodeDark`
+	- Visual Studio Code Light Theme from `vsCodeLight` to `vscodeLight`
+
+### 🚀 Features
+
+- **New Theme**: Added a new `catppuccin-mocha` theme to the collection.
+- **New Theme**: Added a new `high-contrast-dark` theme to the collection.
+- **New Theme**: Added a new `high-contrast-light` theme to the collection.
+- **New Theme**: Added a new `synthwave-84` theme to the collection.
+
+### 🐞 Fixes
 
 - For rollout configuration file, fixed `process` import reference to point to `node:process` directly.
 - Fixed inconsistent line-height between editor content and line numbers across all themes. Line numbers now properly
   align with their corresponding code rows.
+	- <img alt="Comparison 1" src="https://raw.githubusercontent.com/fsegurai/codemirror-themes/main/demo/public/releases/6.29.0/fix/6.29.0-fix-lineheight-1.png">
+	- <img alt="Comparison 2" src="https://raw.githubusercontent.com/fsegurai/codemirror-themes/main/demo/public/releases/6.29.0/fix/6.29.0-fix-lineheight-2.png">
 
-### 🔧 Changed
+### 🔧 Changes
 
 - Refactored the local storage theme keyword to a more accurate one based on the project.
 - Improved keywords declared in the `package.json` files.
@@ -52,7 +67,11 @@ No changes have been made yet.
 		- `rollup` from `4.46.2` to `4.53.3`
 		- `semantic-release` from `24.2.7` to `25.0.2`
 		- `typescript` from `5.9.2` to `5.9.3`
-		- `typescript-eslint` from `8.39.1` to `8.47.0`
+		- `typescript-eslint` from `8.39.1` to `8.48.0`
+- **Removed dependencies** — removed unused dependencies.
+	- Dev Dependencies
+		- Removed `prettier` dependency.
+		- Removed `ts-node` dependency.
 
 ## [6.25.0] - 2025-08-11
 
@@ -67,7 +86,7 @@ No changes have been made yet.
 - Improved demo playground and logic.
 - Refined overall themes structure styles.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Enhanced helper utilities for easier theme development and testing.
 - Removed unused methods from the rollup configuration.
@@ -89,7 +108,7 @@ No changes have been made yet.
 - **Utils Declaration**: Added utils declaration across themes.
 - **Editor Support**: Added theme support for diff editor and unified editor.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved demo playground and logic.
 - Enhanced package keywords reference.
@@ -123,7 +142,7 @@ No changes have been made yet.
 
 - Fixed release setup files.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved project README.
 
@@ -171,7 +190,7 @@ No changes have been made yet.
 
 - Fixed release setup files.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved `bundle` theme packages versioning.
 
@@ -185,7 +204,7 @@ No changes have been made yet.
 
 ## [6.1.3.3] - 2025-01-13
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Migrated workflows package manager to Bun.js.
 
@@ -199,7 +218,7 @@ No changes have been made yet.
 
 ## [6.1.3.2] - 2024-11-26
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved header theme local storage reference.
 - Improved index logic.
@@ -218,7 +237,7 @@ No changes have been made yet.
 
 - Added code block clipboard and highlight.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved README, pipelines, and styles.
 - Enhanced project structure.
@@ -234,7 +253,7 @@ No changes have been made yet.
 - Fixed local links redirect due to host URL.
 - Fixed header current URL validation.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Refactored demo project.
 
@@ -250,7 +269,7 @@ No changes have been made yet.
 - **New Theme**: Added a new `vscode-light` theme to the collection.
 - **New Theme**: Added a new `vscode-dark` theme to the collection.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved README files.
 
@@ -268,7 +287,7 @@ No changes have been made yet.
 
 - Fixed demo pipeline issues.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved pipelines workflows and README.
 - Enhanced library release pipeline and dependencies.
@@ -283,7 +302,7 @@ No changes have been made yet.
 
 - Fixed README.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Updated pipelines and gitignore files.
 
@@ -312,7 +331,7 @@ No changes have been made yet.
 
 ## [1.2.2] - 2024-06-11
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved main package file.
 - Updated demo pipeline setup.
@@ -327,7 +346,7 @@ No changes have been made yet.
 
 - **New Theme**: Added a new `bundle` theme to the collection.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved selection styles.
 
