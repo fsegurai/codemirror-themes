@@ -5,6 +5,7 @@ import replace from '@rollup/plugin-replace';
 import dev from 'rollup-plugin-dev';
 import process from 'node:process';
 import dotenv from 'dotenv';
+
 dotenv.config();
 
 const { NODE_ENV, HOST_URL } = process.env;
@@ -33,6 +34,7 @@ export default {
         strict: false,
       },
       allowSyntheticDefaultImports: true,
+      exclude: ['**/*.test-d.ts', '**/*.test.js', '**/*.spec.ts', '**/*.spec.js'],
     }),
     resolve(),
     commonjs(),
