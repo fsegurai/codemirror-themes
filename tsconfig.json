@@ -27,16 +27,6 @@
     ],
     "typeRoots": [
       "node_modules/@types"
-    ],
-    "paths": {
-      "@fsegurai/*": [
-        "packages/*/src",
-        "packages/*"
-      ],
-      "@fsegurai/codemirror-theme-*": [
-        "packages/*/src",
-        "packages/*"
-      ]
-    }
+    ]
   }
 }
