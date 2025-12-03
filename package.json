@@ -66,7 +66,7 @@
     "build_post:demo": "cpy ./README.md ./demo && cpy ./LICENSE ./demo",
     "build_doppler:demo": "doppler run bun run build:demo && bun run build_post:demo",
     "build:packages": "bun run --filter '*' prepare",
-    "build:all": "bun run build:demo && bun run build:packages",
+    "build:all": "bun run build:packages && bun run build:demo",
     "lint": "bun run lint:demo && bun run lint:packages",
     "lint:demo": "eslint ./demo",
     "lint:packages": "eslint ./packages/*/src/**",
