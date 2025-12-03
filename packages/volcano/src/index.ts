@@ -171,9 +171,11 @@ const volcanoTheme = EditorView.theme(
     },
     '.cm-lineNumbers': {
       fontSize: generalGutter.fontSize,
+      lineHeight: generalGutter.lineHeight,
     },
     '.cm-foldGutter': {
       fontSize: generalGutter.fontSize,
+      lineHeight: generalGutter.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
       color: base03,
