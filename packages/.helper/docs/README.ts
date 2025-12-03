@@ -31,6 +31,7 @@ const readmeTemplate = `<p align="center">
 - [Installation](#installation)
 \t- [{{NPM_PACKAGE}}](#{{NPM_PACKAGE}})
 \t- [Using Theme](#using-theme)
+- [More Resources](#more-resources)
 \t- [Available Themes](#available-themes)
 \t- [Demo Application](#demo-application)
 - [License](#license)

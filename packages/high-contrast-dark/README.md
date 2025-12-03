@@ -31,6 +31,7 @@
 - [Installation](#installation)
 	- [@fsegurai/codemirror-theme-high-contrast-dark](#@fsegurai/codemirror-theme-high-contrast-dark)
 	- [Using Theme](#using-theme)
+- [More Resources](#more-resources)
 	- [Available Themes](#available-themes)
 	- [Demo Application](#demo-application)
 - [License](#license)

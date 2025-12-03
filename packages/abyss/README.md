@@ -31,6 +31,7 @@
 - [Installation](#installation)
 	- [@fsegurai/codemirror-theme-abyss](#@fsegurai/codemirror-theme-abyss)
 	- [Using Theme](#using-theme)
+- [More Resources](#more-resources)
 	- [Available Themes](#available-themes)
 	- [Demo Application](#demo-application)
 - [License](#license)
