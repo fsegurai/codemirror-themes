@@ -70,6 +70,7 @@ No changes have been made yet.
 		- `typescript-eslint` from `8.39.1` to `8.48.0`
 - **Removed dependencies** — removed unused dependencies.
 	- Dev Dependencies
+  		- Removed `@types/prismjs` dependency.
 		- Removed `prettier` dependency.
 		- Removed `ts-node` dependency.
 
