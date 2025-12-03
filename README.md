@@ -32,9 +32,9 @@ engaging and adaptable to different coding styles and user preferences.
 - [Installation](#installation)
 	- [@fsegurai/codemirror-theme-bundle](#@fseguraicodemirror-theme-bundle)
 	- [Using a Specific Theme](#using-a-specific-theme)
+- [More Resources](#more-resources)
 	- [Available Themes](#available-themes)
 	- [Demo Application](#demo-application)
-	- [Local Development](#local-development)
 - [License](#license)
 
 ## Installation
