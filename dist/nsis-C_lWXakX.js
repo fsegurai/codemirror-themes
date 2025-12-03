@@ -1,4 +1,4 @@
-import { s as simpleMode } from './simple-mode-BAO9cD7H.js';
+import { s as simpleMode } from './simple-mode-DouSrWNz.js';
 
 const nsis = simpleMode({
   start:[

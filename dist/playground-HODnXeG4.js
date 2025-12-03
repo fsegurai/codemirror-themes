@@ -4278,6 +4278,35 @@ function add(elt, child) {
   }
 }
 
+let nav = typeof navigator != "undefined" ? navigator : { userAgent: "", vendor: "", platform: "" };
+let doc = typeof document != "undefined" ? document : { documentElement: { style: {} } };
+const ie_edge = /*@__PURE__*//Edge\/(\d+)/.exec(nav.userAgent);
+const ie_upto10 = /*@__PURE__*//MSIE \d/.test(nav.userAgent);
+const ie_11up = /*@__PURE__*//Trident\/(?:[7-9]|\d{2,})\..*rv:(\d+)/.exec(nav.userAgent);
+const ie = !!(ie_upto10 || ie_11up || ie_edge);
+const gecko = !ie && /*@__PURE__*//gecko\/(\d+)/i.test(nav.userAgent);
+const chrome = !ie && /*@__PURE__*//Chrome\/(\d+)/.exec(nav.userAgent);
+const webkit = "webkitFontSmoothing" in doc.documentElement.style;
+const safari = !ie && /*@__PURE__*//Apple Computer/.test(nav.vendor);
+const ios = safari && (/*@__PURE__*//Mobile\/\w+/.test(nav.userAgent) || nav.maxTouchPoints > 2);
+var browser = {
+    mac: ios || /*@__PURE__*//Mac/.test(nav.platform),
+    windows: /*@__PURE__*//Win/.test(nav.platform),
+    linux: /*@__PURE__*//Linux|X11/.test(nav.platform),
+    ie,
+    ie_version: ie_upto10 ? doc.documentMode || 6 : ie_11up ? +ie_11up[1] : ie_edge ? +ie_edge[1] : 0,
+    gecko,
+    gecko_version: gecko ? +(/*@__PURE__*//Firefox\/(\d+)/.exec(nav.userAgent) || [0, 0])[1] : 0,
+    chrome: !!chrome,
+    chrome_version: chrome ? +chrome[1] : 0,
+    ios,
+    android: /*@__PURE__*//Android\b/.test(nav.userAgent),
+    webkit_version: webkit ? +(/*@__PURE__*//\bAppleWebKit\/(\d+)/.exec(nav.userAgent) || [0, 0])[1] : 0,
+    safari,
+    safari_version: safari ? +(/*@__PURE__*//\bVersion\/(\d+(\.\d+)?)/.exec(nav.userAgent) || [0, 0])[1] : 0,
+    tabSize: doc.documentElement.style.tabSize != null ? "tab-size" : "-moz-tab-size"
+};
+
 function getSelection(root) {
     let target;
     // Browsers differ on whether shadow roots have a getSelection
@@ -4528,6 +4557,9 @@ class DOMSelectionState {
     }
 }
 let preventScrollSupported = null;
+// Safari 26 breaks preventScroll support
+if (browser.safari && browser.safari_version >= 26)
+    preventScrollSupported = false;
 // Feature-detects support for .focus({preventScroll: true}), and uses
 // a fallback kludge when not supported.
 function focusPreventScroll(dom) {
@@ -4996,34 +5028,6 @@ function mergeChildrenInto(parent, from, to, insert, openStart, openEnd) {
     parent.length += dLen;
     replaceRange(parent, fromI, fromOff, toI, toOff, insert, 0, openStart, openEnd);
 }
-
-let nav = typeof navigator != "undefined" ? navigator : { userAgent: "", vendor: "", platform: "" };
-let doc = typeof document != "undefined" ? document : { documentElement: { style: {} } };
-const ie_edge = /*@__PURE__*//Edge\/(\d+)/.exec(nav.userAgent);
-const ie_upto10 = /*@__PURE__*//MSIE \d/.test(nav.userAgent);
-const ie_11up = /*@__PURE__*//Trident\/(?:[7-9]|\d{2,})\..*rv:(\d+)/.exec(nav.userAgent);
-const ie = !!(ie_upto10 || ie_11up || ie_edge);
-const gecko = !ie && /*@__PURE__*//gecko\/(\d+)/i.test(nav.userAgent);
-const chrome = !ie && /*@__PURE__*//Chrome\/(\d+)/.exec(nav.userAgent);
-const webkit = "webkitFontSmoothing" in doc.documentElement.style;
-const safari = !ie && /*@__PURE__*//Apple Computer/.test(nav.vendor);
-const ios = safari && (/*@__PURE__*//Mobile\/\w+/.test(nav.userAgent) || nav.maxTouchPoints > 2);
-var browser = {
-    mac: ios || /*@__PURE__*//Mac/.test(nav.platform),
-    windows: /*@__PURE__*//Win/.test(nav.platform),
-    linux: /*@__PURE__*//Linux|X11/.test(nav.platform),
-    ie,
-    ie_version: ie_upto10 ? doc.documentMode || 6 : ie_11up ? +ie_11up[1] : ie_edge ? +ie_edge[1] : 0,
-    gecko,
-    gecko_version: gecko ? +(/*@__PURE__*//Firefox\/(\d+)/.exec(nav.userAgent) || [0, 0])[1] : 0,
-    chrome: !!chrome,
-    chrome_version: chrome ? +chrome[1] : 0,
-    ios,
-    android: /*@__PURE__*//Android\b/.test(nav.userAgent),
-    safari,
-    webkit_version: webkit ? +(/*@__PURE__*//\bAppleWebKit\/(\d+)/.exec(nav.userAgent) || [0, 0])[1] : 0,
-    tabSize: doc.documentElement.style.tabSize != null ? "tab-size" : "-moz-tab-size"
-};
 
 const MaxJoinLen = 256;
 class TextView extends ContentView {
@@ -6057,13 +6061,14 @@ class ContentBuilder {
                     this.textOff = 0;
                 }
             }
-            let take = Math.min(this.text.length - this.textOff, length, 512 /* T.Chunk */);
+            let remaining = Math.min(this.text.length - this.textOff, length);
+            let take = Math.min(remaining, 512 /* T.Chunk */);
             this.flushBuffer(active.slice(active.length - openStart));
             this.getLine().append(wrapMarks(new TextView(this.text.slice(this.textOff, this.textOff + take)), active), openStart);
             this.atCursorPos = true;
             this.textOff += take;
             length -= take;
-            openStart = 0;
+            openStart = remaining <= take ? 0 : active.length;
         }
     }
     span(from, to, active, openStart) {
@@ -7589,6 +7594,13 @@ class DocView extends ContentView {
         let { offsetWidth, offsetHeight } = this.view.scrollDOM;
         scrollRectIntoView(this.view.scrollDOM, targetRect, range.head < range.anchor ? -1 : 1, target.x, target.y, Math.max(Math.min(target.xMargin, offsetWidth), -offsetWidth), Math.max(Math.min(target.yMargin, offsetHeight), -offsetHeight), this.view.textDirection == Direction.LTR);
     }
+    lineHasWidget(pos) {
+        let { i } = this.childCursor().findPos(pos);
+        if (i == this.children.length)
+            return false;
+        let scan = (child) => child instanceof WidgetView || child.children.some(scan);
+        return scan(this.children[i]);
+    }
 }
 function betweenUneditable(pos) {
     return pos.node.nodeType == 1 && pos.node.firstChild &&
@@ -7806,7 +7818,7 @@ function domPosInText(node, x, y) {
                     // Check for RTL on browsers that support getting client
                     // rects for empty ranges.
                     let rectBefore = textRange(node, i).getBoundingClientRect();
-                    if (rectBefore.left == rect.right)
+                    if (Math.abs(rectBefore.left - rect.right) < 0.1)
                         after = !right;
                 }
                 if (dy <= 0)
@@ -7877,14 +7889,13 @@ function posAtCoords(view, coords, precise, bias = -1) {
         }
         else if (doc.caretRangeFromPoint) {
             let range = doc.caretRangeFromPoint(x, y);
-            if (range) {
+            if (range)
                 ({ startContainer: node, startOffset: offset } = range);
-                if (!view.contentDOM.contains(node) ||
-                    browser.safari && isSuspiciousSafariCaretResult(node, offset, x) ||
-                    browser.chrome && isSuspiciousChromeCaretResult(node, offset, x))
-                    node = undefined;
-            }
         }
+        if (node && (!view.contentDOM.contains(node) ||
+            browser.safari && isSuspiciousSafariCaretResult(node, offset, x) ||
+            browser.chrome && isSuspiciousChromeCaretResult(node, offset, x)))
+            node = undefined;
         // Chrome will return offsets into <input> elements without child
         // nodes, which will lead to a null deref below, so clip the
         // offset to the node size.
@@ -7920,11 +7931,7 @@ function posAtCoordsImprecise(view, contentRect, block, x, y) {
     let content = view.state.sliceDoc(block.from, block.to);
     return block.from + findColumn(content, into, view.state.tabSize);
 }
-// In case of a high line height, Safari's caretRangeFromPoint treats
-// the space between lines as belonging to the last character of the
-// line before. This is used to detect such a result so that it can be
-// ignored (issue #401).
-function isSuspiciousSafariCaretResult(node, offset, x) {
+function isEndOfLineBefore(node, offset, x) {
     let len, scan = node;
     if (node.nodeType != 3 || offset != (len = node.nodeValue.length))
         return false;
@@ -7944,10 +7951,17 @@ function isSuspiciousSafariCaretResult(node, offset, x) {
     }
     return textRange(node, len - 1, len).getBoundingClientRect().right > x;
 }
+// In case of a high line height, Safari's caretRangeFromPoint treats
+// the space between lines as belonging to the last character of the
+// line before. This is used to detect such a result so that it can be
+// ignored (issue #401).
+function isSuspiciousSafariCaretResult(node, offset, x) {
+    return isEndOfLineBefore(node, offset, x);
+}
 // Chrome will move positions between lines to the start of the next line
 function isSuspiciousChromeCaretResult(node, offset, x) {
     if (offset != 0)
-        return false;
+        return isEndOfLineBefore(node, offset, x);
     for (let cur = node;;) {
         let parent = cur.parentNode;
         if (!parent || parent.nodeType != 1 || parent.firstChild != cur)
@@ -8072,6 +8086,29 @@ function skipAtomicRanges(atoms, pos, bias) {
             return pos;
     }
 }
+function skipAtomsForSelection(atoms, sel) {
+    let ranges = null;
+    for (let i = 0; i < sel.ranges.length; i++) {
+        let range = sel.ranges[i], updated = null;
+        if (range.empty) {
+            let pos = skipAtomicRanges(atoms, range.from, 0);
+            if (pos != range.from)
+                updated = EditorSelection.cursor(pos, -1);
+        }
+        else {
+            let from = skipAtomicRanges(atoms, range.from, -1);
+            let to = skipAtomicRanges(atoms, range.to, 1);
+            if (from != range.from || to != range.to)
+                updated = EditorSelection.range(range.from == range.anchor ? from : to, range.from == range.head ? from : to);
+        }
+        if (updated) {
+            if (!ranges)
+                ranges = sel.ranges.slice();
+            ranges[i] = updated;
+        }
+    }
+    return ranges ? EditorSelection.create(ranges, sel.mainIndex) : sel;
+}
 function skipAtoms(view, oldPos, pos) {
     let newPos = skipAtomicRanges(view.state.facet(atomicRanges).map(f => f(view)), pos.from, oldPos.head > pos.from ? -1 : 1);
     return newPos == pos.from ? pos : EditorSelection.cursor(newPos, newPos < pos.from ? 1 : -1);
@@ -8102,9 +8139,10 @@ class DOMReader {
             if (next == end)
                 break;
             let view = ContentView.get(cur), nextView = ContentView.get(next);
-            if (view && nextView ? view.breakAfter :
+            if ((view && nextView ? view.breakAfter :
                 (view ? view.breakAfter : isBlockElement(cur)) ||
-                    (isBlockElement(next) && (cur.nodeName != "BR" || cur.cmIgnore) && this.text.length > oldLen))
+                    (isBlockElement(next) && (cur.nodeName != "BR" || cur.cmIgnore) && this.text.length > oldLen)) &&
+                !isEmptyToEnd(next, end))
                 this.lineBreak();
             cur = next;
         }
@@ -8183,6 +8221,25 @@ function isAtEnd(parent, node, offset) {
         node = node.parentNode;
     }
 }
+function isEmptyToEnd(node, end) {
+    let widgets;
+    for (;; node = node.nextSibling) {
+        if (node == end || !node)
+            break;
+        let view = ContentView.get(node);
+        if (!((view === null || view === void 0 ? void 0 : view.isWidget) || node.cmIgnore))
+            return false;
+        if (view)
+            (widgets || (widgets = [])).push(view);
+    }
+    if (widgets)
+        for (let w of widgets) {
+            let override = w.overrideDOMText;
+            if (override === null || override === void 0 ? void 0 : override.length)
+                return false;
+        }
+    return true;
+}
 class DOMPoint {
     constructor(node, offset) {
         this.node = node;
@@ -8233,7 +8290,10 @@ class DOMChange {
                     anchor = view.state.doc.length;
                 }
             }
-            this.newSel = EditorSelection.single(anchor, head);
+            if (view.inputState.composing > -1 && view.state.selection.ranges.length > 1)
+                this.newSel = view.state.selection.replaceRange(EditorSelection.range(anchor, head));
+            else
+                this.newSel = EditorSelection.single(anchor, head);
         }
     }
 }
@@ -8289,6 +8349,18 @@ function applyDOMChange(view, domChange) {
             insert: view.state.doc.slice(sel.from, change.from).append(change.insert).append(view.state.doc.slice(change.to, sel.to))
         };
     }
+    else if (view.state.doc.lineAt(sel.from).to < sel.to && view.docView.lineHasWidget(sel.to) &&
+        view.inputState.insertingTextAt > Date.now() - 50) {
+        // For a cross-line insertion, Chrome and Safari will crudely take
+        // the text of the line after the selection, flattening any
+        // widgets, and move it into the joined line. This tries to detect
+        // such a situation, and replaces the change with a selection
+        // replace of the text provided by the beforeinput event.
+        change = {
+            from: sel.from, to: sel.to,
+            insert: view.state.toText(view.inputState.insertingText)
+        };
+    }
     else if (browser.chrome && change && change.from == change.to && change.from == sel.head &&
         change.insert.toString() == "\n " && view.lineWrapping) {
         // In Chrome, if you insert a space at the start of a wrapped
@@ -8307,6 +8379,8 @@ function applyDOMChange(view, domChange) {
             if (view.inputState.lastSelectionOrigin == "select")
                 scrollIntoView = true;
             userEvent = view.inputState.lastSelectionOrigin;
+            if (userEvent == "select.pointer")
+                newSel = skipAtomsForSelection(view.state.facet(atomicRanges).map(f => f(view)), newSel);
         }
         view.dispatch({ selection: newSel, scrollIntoView, userEvent });
         return true;
@@ -8348,8 +8422,20 @@ function applyDOMChangeInner(view, change, newSel, lastKey = -1) {
     return true;
 }
 function applyDefaultInsert(view, change, newSel) {
-    let tr, startState = view.state, sel = startState.selection.main;
-    if (change.from >= sel.from && change.to <= sel.to && change.to - change.from >= (sel.to - sel.from) / 3 &&
+    let tr, startState = view.state, sel = startState.selection.main, inAtomic = -1;
+    if (change.from == change.to && change.from < sel.from || change.from > sel.to) {
+        let side = change.from < sel.from ? -1 : 1, pos = side < 0 ? sel.from : sel.to;
+        let moved = skipAtomicRanges(startState.facet(atomicRanges).map(f => f(view)), pos, side);
+        if (change.from == moved)
+            inAtomic = moved;
+    }
+    if (inAtomic > -1) {
+        tr = {
+            changes: change,
+            selection: EditorSelection.cursor(change.from + change.insert.length, -1)
+        };
+    }
+    else if (change.from >= sel.from && change.to <= sel.to && change.to - change.from >= (sel.to - sel.from) / 3 &&
         (!newSel || newSel.main.empty && newSel.main.from == change.from + change.insert.length) &&
         view.inputState.composing < 0) {
         let before = sel.from < change.from ? startState.sliceDoc(sel.from, change.from) : "";
@@ -8360,8 +8446,8 @@ function applyDefaultInsert(view, change, newSel) {
         let changes = startState.changes(change);
         let mainSel = newSel && newSel.main.to <= changes.newLength ? newSel.main : undefined;
         // Try to apply a composition change to all cursors
-        if (startState.selection.ranges.length > 1 && view.inputState.composing >= 0 &&
-            change.to <= sel.to && change.to >= sel.to - 10) {
+        if (startState.selection.ranges.length > 1 && (view.inputState.composing >= 0 || view.inputState.compositionPendingChange) &&
+            change.to <= sel.to + 10 && change.to >= sel.to - 10) {
             let replaced = view.state.sliceDoc(change.from, change.to);
             let compositionRange, composition = newSel && findCompositionNode(view, newSel.main.head);
             if (composition) {
@@ -8371,17 +8457,17 @@ function applyDefaultInsert(view, change, newSel) {
             else {
                 compositionRange = view.state.doc.lineAt(sel.head);
             }
-            let offset = sel.to - change.to, size = sel.to - sel.from;
+            let offset = sel.to - change.to;
             tr = startState.changeByRange(range => {
                 if (range.from == sel.from && range.to == sel.to)
                     return { changes, range: mainSel || range.map(changes) };
                 let to = range.to - offset, from = to - replaced.length;
-                if (range.to - range.from != size || view.state.sliceDoc(from, to) != replaced ||
+                if (view.state.sliceDoc(from, to) != replaced ||
                     // Unfortunately, there's no way to make multiple
                     // changes in the same node work without aborting
                     // composition, so cursors in the composition range are
                     // ignored.
-                    range.to >= compositionRange.from && range.from <= compositionRange.to)
+                    to >= compositionRange.from && from <= compositionRange.to)
                     return { range };
                 let rangeChanges = startState.changes({ from, to, insert: change.insert }), selOff = range.to - sel.to;
                 return {
@@ -8508,6 +8594,9 @@ class InputState {
         // Used to categorize changes as part of a composition, even when
         // the mutation events fire shortly after the compositionend event
         this.compositionPendingChange = false;
+        // Set by beforeinput, used in DOM change reader
+        this.insertingText = "";
+        this.insertingTextAt = 0;
         this.mouseSelection = null;
         // When a drag from the editor is active, this points at the range
         // being dragged.
@@ -8610,7 +8699,7 @@ class InputState {
         return dispatchKey(this.view.contentDOM, key.key, key.keyCode, key instanceof KeyboardEvent ? key : undefined);
     }
     ignoreDuringComposition(event) {
-        if (!/^key/.test(event.type))
+        if (!/^key/.test(event.type) || event.synthetic)
             return false;
         if (this.composing > 0)
             return true;
@@ -8784,31 +8873,8 @@ class MouseSelection {
         if (this.dragging === false)
             this.select(this.lastEvent);
     }
-    skipAtoms(sel) {
-        let ranges = null;
-        for (let i = 0; i < sel.ranges.length; i++) {
-            let range = sel.ranges[i], updated = null;
-            if (range.empty) {
-                let pos = skipAtomicRanges(this.atoms, range.from, 0);
-                if (pos != range.from)
-                    updated = EditorSelection.cursor(pos, -1);
-            }
-            else {
-                let from = skipAtomicRanges(this.atoms, range.from, -1);
-                let to = skipAtomicRanges(this.atoms, range.to, 1);
-                if (from != range.from || to != range.to)
-                    updated = EditorSelection.range(range.from == range.anchor ? from : to, range.from == range.head ? from : to);
-            }
-            if (updated) {
-                if (!ranges)
-                    ranges = sel.ranges.slice();
-                ranges[i] = updated;
-            }
-        }
-        return ranges ? EditorSelection.create(ranges, sel.mainIndex) : sel;
-    }
     select(event) {
-        let { view } = this, selection = this.skipAtoms(this.style.get(event, this.extend, this.multiple));
+        let { view } = this, selection = skipAtomsForSelection(this.atoms, this.style.get(event, this.extend, this.multiple));
         if (this.mustSelect || !selection.eq(view.state.selection, this.dragging === false))
             this.view.dispatch({
                 selection,
@@ -8960,6 +9026,9 @@ handlers.mousedown = (view, event) => {
             mouseSel.start(event);
             return mouseSel.dragging === false;
         }
+    }
+    else {
+        view.inputState.setSelectionOrigin("select.pointer");
     }
     return false;
 };
@@ -9282,6 +9351,10 @@ observers.contextmenu = view => {
 };
 handlers.beforeinput = (view, event) => {
     var _a, _b;
+    if (event.inputType == "insertText" || event.inputType == "insertCompositionText") {
+        view.inputState.insertingText = event.data;
+        view.inputState.insertingTextAt = Date.now();
+    }
     // In EditContext mode, we must handle insertReplacementText events
     // directly, to make spell checking corrections work
     if (event.inputType == "insertReplacementText" && view.observer.editContext) {
@@ -11534,20 +11607,23 @@ class EditContextManager {
             let from = this.toEditorPos(e.updateRangeStart), to = this.toEditorPos(e.updateRangeEnd);
             if (view.inputState.composing >= 0 && !this.composing)
                 this.composing = { contextBase: e.updateRangeStart, editorBase: from, drifted: false };
-            let change = { from, to, insert: Text.of(e.text.split("\n")) };
+            let deletes = to - from > e.text.length;
             // If the window doesn't include the anchor, assume changes
             // adjacent to a side go up to the anchor.
-            if (change.from == this.from && anchor < this.from)
-                change.from = anchor;
-            else if (change.to == this.to && anchor > this.to)
-                change.to = anchor;
+            if (from == this.from && anchor < this.from)
+                from = anchor;
+            else if (to == this.to && anchor > this.to)
+                to = anchor;
+            let diff = findDiff$1(view.state.sliceDoc(from, to), e.text, (deletes ? main.from : main.to) - from, deletes ? "end" : null);
             // Edit contexts sometimes fire empty changes
-            if (change.from == change.to && !change.insert.length) {
+            if (!diff) {
                 let newSel = EditorSelection.single(this.toEditorPos(e.selectionStart), this.toEditorPos(e.selectionEnd));
                 if (!newSel.main.eq(main))
                     view.dispatch({ selection: newSel, userEvent: "select" });
                 return;
             }
+            let change = { from: diff.from + from, to: diff.toA + from,
+                insert: Text.of(e.text.slice(diff.from, diff.toB).split("\n")) };
             if ((browser.mac || browser.android) && change.from == head - 1 &&
                 /^\. ?$/.test(e.text) && view.contentDOM.getAttribute("autocorrect") == "off")
                 change = { from, to, insert: Text.of([e.text.replace(".", " ")]) };
@@ -11562,6 +11638,10 @@ class EditContextManager {
                 this.revertPending(view.state);
                 this.setSelection(view.state);
             }
+            // Work around missed compositionend events. See https://discuss.codemirror.net/t/a/9514
+            if (change.from < change.to && !change.insert.length && view.inputState.composing >= 0 &&
+                !/[\\p{Alphabetic}\\p{Number}_]/.test(context.text.slice(Math.max(0, e.updateRangeStart - 1), Math.min(context.text.length, e.updateRangeStart + 1))))
+                this.handlers.compositionend(e);
         };
         this.handlers.characterboundsupdate = e => {
             let rects = [], prev = null;
@@ -11577,10 +11657,11 @@ class EditContextManager {
             let deco = [];
             for (let format of e.getTextFormats()) {
                 let lineStyle = format.underlineStyle, thickness = format.underlineThickness;
-                if (lineStyle != "None" && thickness != "None") {
+                if (!/none/i.test(lineStyle) && !/none/i.test(thickness)) {
                     let from = this.toEditorPos(format.rangeStart), to = this.toEditorPos(format.rangeEnd);
                     if (from < to) {
-                        let style = `text-decoration: underline ${lineStyle == "Dashed" ? "dashed " : lineStyle == "Squiggle" ? "wavy " : ""}${thickness == "Thin" ? 1 : 2}px`;
+                        // These values changed from capitalized custom strings to lower-case CSS keywords in 2025
+                        let style = `text-decoration: underline ${/^[a-z]/.test(lineStyle) ? lineStyle + " " : lineStyle == "Dashed" ? "dashed " : lineStyle == "Squiggle" ? "wavy " : ""}${/thin/i.test(thickness) ? 1 : 2}px`;
                         deco.push(Decoration.mark({ attributes: { style } }).range(from, to));
                     }
                 }
@@ -12285,7 +12366,7 @@ class EditorView {
     }
     /**
     Find the line block (see
-    [`lineBlockAt`](https://codemirror.net/6/docs/ref/#view.EditorView.lineBlockAt) at the given
+    [`lineBlockAt`](https://codemirror.net/6/docs/ref/#view.EditorView.lineBlockAt)) at the given
     height, again interpreted relative to the [top of the
     document](https://codemirror.net/6/docs/ref/#view.EditorView.documentTop).
     */
@@ -12779,7 +12860,7 @@ Facet that works much like
 [`decorations`](https://codemirror.net/6/docs/ref/#view.EditorView^decorations), but puts its
 inputs at the very bottom of the precedence stack, meaning mark
 decorations provided here will only be split by other, partially
-overlapping \`outerDecorations\` ranges, and wrap around all
+overlapping `outerDecorations` ranges, and wrap around all
 regular decorations. Use this for mark elements that should, as
 much as possible, remain in one piece.
 */
@@ -13072,7 +13153,7 @@ function runHandlers(map, event, view, scope) {
             // Ctrl-Alt may be used for AltGr on Windows
             !(browser.windows && event.ctrlKey && event.altKey) &&
             // Alt-combinations on macOS tend to be typed characters
-            !(browser.mac && event.altKey && !event.ctrlKey) &&
+            !(browser.mac && event.altKey && !(event.ctrlKey || event.metaKey)) &&
             (baseName = base[event.keyCode]) && baseName != name) {
             if (runFor(scopeObj[prefix + modifiers(baseName, event, true)])) {
                 handled = true;
@@ -13347,6 +13428,8 @@ class LayerView {
                 old = next;
             }
             this.drawn = markers;
+            if (browser.safari && browser.safari_version >= 26) // Issue #1600, 1627
+                this.dom.style.display = this.dom.firstChild ? "" : "none";
         }
     }
     destroy() {
@@ -14186,17 +14269,17 @@ const tooltipPlugin = /*@__PURE__*/ViewPlugin.fromClass(class {
         let scaleX = 1, scaleY = 1, makeAbsolute = false;
         if (this.position == "fixed" && this.manager.tooltipViews.length) {
             let { dom } = this.manager.tooltipViews[0];
-            if (browser.gecko) {
-                // Firefox sets the element's `offsetParent` to the
-                // transformed element when a transform interferes with fixed
-                // positioning.
-                makeAbsolute = dom.offsetParent != this.container.ownerDocument.body;
-            }
-            else if (dom.style.top == Outside && dom.style.left == "0px") {
-                // On other browsers, we have to awkwardly try and use other
-                // information to detect a transform.
+            if (browser.safari) {
+                // Safari always sets offsetParent to null, even if a fixed
+                // element is positioned relative to a transformed parent. So
+                // we use this kludge to try and detect this.
                 let rect = dom.getBoundingClientRect();
                 makeAbsolute = Math.abs(rect.top + 10000) > 1 || Math.abs(rect.left) > 1;
+            }
+            else {
+                // More conforming browsers will set offsetParent to the
+                // transformed element.
+                makeAbsolute = !!dom.offsetParent && dom.offsetParent != this.container.ownerDocument.body;
             }
         }
         if (makeAbsolute || this.position == "absolute") {
@@ -15399,6 +15482,7 @@ class NodeProp {
         this.deserialize = config.deserialize || (() => {
             throw new Error("This node type doesn't define a deserialize function");
         });
+        this.combine = config.combine || null;
     }
     /**
     This is meant to be used with
@@ -15663,7 +15747,10 @@ class NodeSet {
                 if (add) {
                     if (!newProps)
                         newProps = Object.assign({}, type.props);
-                    newProps[add[0].id] = add[1];
+                    let value = add[1], prop = add[0];
+                    if (prop.combine && prop.id in newProps)
+                        value = prop.combine(newProps[prop.id], value);
+                    newProps[prop.id] = value;
                 }
             }
             newTypes.push(newProps ? new NodeType(type.name, newProps, type.id, type.flags) : type);
@@ -16136,6 +16223,7 @@ class TreeNode extends BaseNode {
     get lastChild() { return this.nextChild(this._tree.children.length - 1, -1, 0, 4 /* Side.DontCare */); }
     childAfter(pos) { return this.nextChild(0, 1, pos, 2 /* Side.After */); }
     childBefore(pos) { return this.nextChild(this._tree.children.length - 1, -1, pos, -2 /* Side.Before */); }
+    prop(prop) { return this._tree.prop(prop); }
     enter(pos, side, mode = 0) {
         let mounted;
         if (!(mode & IterMode.IgnoreOverlays) && (mounted = MountedTree.get(this._tree)) && mounted.overlay) {
@@ -16229,6 +16317,7 @@ class BufferNode extends BaseNode {
     get lastChild() { return this.child(-1, 0, 4 /* Side.DontCare */); }
     childAfter(pos) { return this.child(1, pos, 2 /* Side.After */); }
     childBefore(pos) { return this.child(-1, pos, -2 /* Side.Before */); }
+    prop(prop) { return this.type.prop(prop); }
     enter(pos, side, mode = 0) {
         if (mode & IterMode.ExcludeBuffers)
             return null;
@@ -16646,7 +16735,7 @@ function buildTree(data) {
     function takeNode(parentStart, minPos, children, positions, inRepeat, depth) {
         let { id, start, end, size } = cursor;
         let lookAheadAtStart = lookAhead, contextAtStart = contextHash;
-        while (size < 0) {
+        if (size < 0) {
             cursor.next();
             if (size == -1 /* SpecialRecord.Reuse */) {
                 let node = reused[id];
@@ -16810,7 +16899,7 @@ function buildTree(data) {
             fork.next();
             while (fork.pos > startPos) {
                 if (fork.size < 0) {
-                    if (fork.size == -3 /* SpecialRecord.ContextChange */)
+                    if (fork.size == -3 /* SpecialRecord.ContextChange */ || fork.size == -4 /* SpecialRecord.LookAhead */)
                         localSkipped += 4;
                     else
                         break scan;
@@ -17251,8 +17340,15 @@ class MixedParse {
             }
             else if (!cursor.type.isAnonymous && (nest = this.nest(cursor, this.input)) &&
                 (cursor.from < cursor.to || !nest.overlay)) {
-                if (!cursor.tree)
+                if (!cursor.tree) {
                     materialize(cursor);
+                    // materialize create one more level of nesting
+                    // we need to add depth to active overlay for going backwards
+                    if (overlay)
+                        overlay.depth++;
+                    if (covered)
+                        covered.depth++;
+                }
                 let oldMounts = fragmentCursor.findMounts(cursor.from, nest.parser);
                 if (typeof nest.overlay == "function") {
                     overlay = new ActiveOverlay(nest.parser, nest.overlay, oldMounts, this.inner.length, cursor.from, cursor.tree, overlay);
@@ -17702,7 +17798,7 @@ must be quoted as JSON strings.
 For example:
 
 ```javascript
-parser.withProps(
+parser.configure({props: [
   styleTags({
     // Style Number and BigNumber nodes
     "Number BigNumber": tags.number,
@@ -17717,7 +17813,7 @@ parser.withProps(
     // Style the node named "/" as punctuation
     '"/"': tags.punctuation
   })
-)
+]})
 ```
 */
 function styleTags(spec) {
@@ -17759,7 +17855,30 @@ function styleTags(spec) {
     }
     return ruleNodeProp.add(byName);
 }
-const ruleNodeProp = new NodeProp();
+const ruleNodeProp = new NodeProp({
+    combine(a, b) {
+        let cur, root, take;
+        while (a || b) {
+            if (!a || b && a.depth >= b.depth) {
+                take = b;
+                b = b.next;
+            }
+            else {
+                take = a;
+                a = a.next;
+            }
+            if (cur && cur.mode == take.mode && !take.context && !cur.context)
+                continue;
+            let copy = new Rule(take.tags, take.mode, take.context);
+            if (cur)
+                cur.next = copy;
+            else
+                root = copy;
+            cur = copy;
+        }
+        return root;
+    }
+});
 class Rule {
     constructor(tags, mode, context, next) {
         this.tags = tags;
@@ -20625,7 +20744,7 @@ let Parse$1 = class Parse {
     advance() {
         let context = ParseContext.get();
         let parseEnd = this.stoppedAt == null ? this.to : Math.min(this.to, this.stoppedAt);
-        let end = Math.min(parseEnd, this.chunkStart + 2048 /* C.ChunkSize */);
+        let end = Math.min(parseEnd, this.chunkStart + 512 /* C.ChunkSize */);
         if (context)
             end = Math.min(end, context.viewport.to);
         while (this.parsedPos < end)
@@ -20731,7 +20850,7 @@ let Parse$1 = class Parse {
             length: this.parsedPos - this.chunkStart,
             nodeSet,
             topID: 0,
-            maxBufferLength: 2048 /* C.ChunkSize */,
+            maxBufferLength: 512 /* C.ChunkSize */,
             reused: this.chunkReused
         });
         tree = new Tree(tree.type, tree.children, tree.positions, tree.length, [[this.lang.stateAfter, this.lang.streamParser.copyState(this.state)]]);
@@ -21713,6 +21832,41 @@ const selectParentSyntax = ({ state, dispatch }) => {
     dispatch(setSel(state, selection));
     return true;
 };
+function addCursorVertically(view, forward) {
+    let { state } = view, sel = state.selection, ranges = state.selection.ranges.slice();
+    for (let range of state.selection.ranges) {
+        let line = state.doc.lineAt(range.head);
+        if (forward ? line.to < view.state.doc.length : line.from > 0)
+            for (let cur = range;;) {
+                let next = view.moveVertically(cur, forward);
+                if (next.head < line.from || next.head > line.to) {
+                    if (!ranges.some(r => r.head == next.head))
+                        ranges.push(next);
+                    break;
+                }
+                else if (next.head == cur.head) {
+                    break;
+                }
+                else {
+                    cur = next;
+                }
+            }
+    }
+    if (ranges.length == sel.ranges.length)
+        return false;
+    view.dispatch(setSel(state, EditorSelection.create(ranges, ranges.length - 1)));
+    return true;
+}
+/**
+Expand the selection by adding a cursor above the heads of
+currently selected ranges.
+*/
+const addCursorAbove = view => addCursorVertically(view, false);
+/**
+Expand the selection by adding a cursor below the heads of
+currently selected ranges.
+*/
+const addCursorBelow = view => addCursorVertically(view, true);
 /**
 Simplify the current selection. When multiple ranges are selected,
 reduce it to its main range. Otherwise, if the selection is
@@ -22222,12 +22376,12 @@ const standardKeymap = /*@__PURE__*/[
     { key: "Mod-End", run: cursorDocEnd, shift: selectDocEnd },
     { key: "Enter", run: insertNewlineAndIndent, shift: insertNewlineAndIndent },
     { key: "Mod-a", run: selectAll },
-    { key: "Backspace", run: deleteCharBackward, shift: deleteCharBackward },
-    { key: "Delete", run: deleteCharForward },
-    { key: "Mod-Backspace", mac: "Alt-Backspace", run: deleteGroupBackward },
-    { key: "Mod-Delete", mac: "Alt-Delete", run: deleteGroupForward },
-    { mac: "Mod-Backspace", run: deleteLineBoundaryBackward },
-    { mac: "Mod-Delete", run: deleteLineBoundaryForward }
+    { key: "Backspace", run: deleteCharBackward, shift: deleteCharBackward, preventDefault: true },
+    { key: "Delete", run: deleteCharForward, preventDefault: true },
+    { key: "Mod-Backspace", mac: "Alt-Backspace", run: deleteGroupBackward, preventDefault: true },
+    { key: "Mod-Delete", mac: "Alt-Delete", run: deleteGroupForward, preventDefault: true },
+    { mac: "Mod-Backspace", run: deleteLineBoundaryBackward, preventDefault: true },
+    { mac: "Mod-Delete", run: deleteLineBoundaryForward, preventDefault: true }
 ].concat(/*@__PURE__*/emacsStyleKeymap.map(b => ({ mac: b.key, run: b.run, shift: b.shift })));
 /**
 The default keymap. Includes all bindings from
@@ -22239,6 +22393,8 @@ The default keymap. Includes all bindings from
 - Alt-ArrowDown: [`moveLineDown`](https://codemirror.net/6/docs/ref/#commands.moveLineDown)
 - Shift-Alt-ArrowUp: [`copyLineUp`](https://codemirror.net/6/docs/ref/#commands.copyLineUp)
 - Shift-Alt-ArrowDown: [`copyLineDown`](https://codemirror.net/6/docs/ref/#commands.copyLineDown)
+- Ctrl-Alt-ArrowUp (Cmd-Alt-ArrowUp on macOS): [`addCursorAbove`](https://codemirror.net/6/docs/ref/#commands.addCursorAbove).
+- Ctrl-Alt-ArrowDown (Cmd-Alt-ArrowDown on macOS): [`addCursorBelow`](https://codemirror.net/6/docs/ref/#commands.addCursorBelow).
 - Escape: [`simplifySelection`](https://codemirror.net/6/docs/ref/#commands.simplifySelection)
 - Ctrl-Enter (Cmd-Enter on macOS): [`insertBlankLine`](https://codemirror.net/6/docs/ref/#commands.insertBlankLine)
 - Alt-l (Ctrl-l on macOS): [`selectLine`](https://codemirror.net/6/docs/ref/#commands.selectLine)
@@ -22259,6 +22415,8 @@ const defaultKeymap = /*@__PURE__*/[
     { key: "Shift-Alt-ArrowUp", run: copyLineUp },
     { key: "Alt-ArrowDown", run: moveLineDown },
     { key: "Shift-Alt-ArrowDown", run: copyLineDown },
+    { key: "Mod-Alt-ArrowUp", run: addCursorAbove },
+    { key: "Mod-Alt-ArrowDown", run: addCursorBelow },
     { key: "Escape", run: simplifySelection },
     { key: "Mod-Enter", run: insertBlankLine },
     { key: "Alt-l", mac: "Ctrl-l", run: selectLine },
@@ -23666,16 +23824,20 @@ selection range that has the same text in front of it.
 */
 function insertCompletionText(state, text, from, to) {
     let { main } = state.selection, fromOff = from - main.from, toOff = to - main.from;
-    return Object.assign(Object.assign({}, state.changeByRange(range => {
-        if (range != main && from != to &&
-            state.sliceDoc(range.from + fromOff, range.from + toOff) != state.sliceDoc(from, to))
-            return { range };
-        let lines = state.toText(text);
-        return {
-            changes: { from: range.from + fromOff, to: to == main.from ? range.to : range.from + toOff, insert: lines },
-            range: EditorSelection.cursor(range.from + fromOff + lines.length)
-        };
-    })), { scrollIntoView: true, userEvent: "input.complete" });
+    return {
+        ...state.changeByRange(range => {
+            if (range != main && from != to &&
+                state.sliceDoc(range.from + fromOff, range.from + toOff) != state.sliceDoc(from, to))
+                return { range };
+            let lines = state.toText(text);
+            return {
+                changes: { from: range.from + fromOff, to: to == main.from ? range.to : range.from + toOff, insert: lines },
+                range: EditorSelection.cursor(range.from + fromOff + lines.length)
+            };
+        }),
+        scrollIntoView: true,
+        userEvent: "input.complete"
+    };
 }
 const SourceCache = /*@__PURE__*/new WeakMap();
 function asSource(source) {
@@ -23864,7 +24026,7 @@ const completionConfig = /*@__PURE__*/Facet.define({
             addToOptions: [],
             positionInfo: defaultPositionInfo,
             filterStrict: false,
-            compareCompletions: (a, b) => a.label.localeCompare(b.label),
+            compareCompletions: (a, b) => (a.sortText || a.label).localeCompare(b.sortText || b.label),
             interactionDelay: 75,
             updateSyncTime: 100
         }, {
@@ -24063,7 +24225,8 @@ class CompletionTooltip {
             this.range = rangeAroundSelected(open.options.length, open.selected, this.view.state.facet(completionConfig).maxRenderedOptions);
             this.showOptions(open.options, cState.id);
         }
-        if (this.updateSelectedOption(open.selected)) {
+        let newSel = this.updateSelectedOption(open.selected);
+        if (newSel) {
             this.destroyInfo();
             let { completion } = open.options[open.selected];
             let { info } = completion;
@@ -24080,6 +24243,7 @@ class CompletionTooltip {
             }
             else {
                 this.addInfoPane(infoResult, completion);
+                newSel.setAttribute("aria-describedby", this.info.id);
             }
         }
     }
@@ -24087,6 +24251,7 @@ class CompletionTooltip {
         this.destroyInfo();
         let wrap = this.info = document.createElement("div");
         wrap.className = "cm-tooltip cm-completionInfo";
+        wrap.id = "cm-completionInfo-" + Math.floor(Math.random() * 0xffff).toString(16);
         if (content.nodeType != null) {
             wrap.appendChild(content);
             this.infoDestroy = null;
@@ -24112,8 +24277,10 @@ class CompletionTooltip {
                 }
             }
             else {
-                if (opt.hasAttribute("aria-selected"))
+                if (opt.hasAttribute("aria-selected")) {
                     opt.removeAttribute("aria-selected");
+                    opt.removeAttribute("aria-describedby");
+                }
             }
         }
         if (set)
@@ -24227,7 +24394,7 @@ function score(option) {
 }
 function sortOptions(active, state) {
     let options = [];
-    let sections = null;
+    let sections = null, dynamicSectionScore = null;
     let addOption = (option) => {
         options.push(option);
         let { section } = option.completion;
@@ -24254,13 +24421,24 @@ function sortOptions(active, state) {
                 for (let option of a.result.options)
                     if (match = matcher.match(option.label)) {
                         let matched = !option.displayLabel ? match.matched : getMatch ? getMatch(option, match.matched) : [];
-                        addOption(new Option(option, a.source, matched, match.score + (option.boost || 0)));
+                        let score = match.score + (option.boost || 0);
+                        addOption(new Option(option, a.source, matched, score));
+                        if (typeof option.section == "object" && option.section.rank === "dynamic") {
+                            let { name } = option.section;
+                            if (!dynamicSectionScore)
+                                dynamicSectionScore = Object.create(null);
+                            dynamicSectionScore[name] = Math.max(score, dynamicSectionScore[name] || -1e9);
+                        }
                     }
             }
         }
     if (sections) {
         let sectionOrder = Object.create(null), pos = 0;
-        let cmp = (a, b) => { var _a, _b; return ((_a = a.rank) !== null && _a !== void 0 ? _a : 1e9) - ((_b = b.rank) !== null && _b !== void 0 ? _b : 1e9) || (a.name < b.name ? -1 : 1); };
+        let cmp = (a, b) => {
+            return (a.rank === "dynamic" && b.rank === "dynamic" ? dynamicSectionScore[b.name] - dynamicSectionScore[a.name] : 0) ||
+                (typeof a.rank == "number" ? a.rank : 1e9) - (typeof b.rank == "number" ? b.rank : 1e9) ||
+                (a.name < b.name ? -1 : 1);
+        };
         for (let s of sections.sort(cmp)) {
             pos -= 1e5;
             sectionOrder[s.name] = pos;
@@ -24320,7 +24498,7 @@ class CompletionDialog {
         }, prev ? prev.timestamp : Date.now(), selected, false);
     }
     map(changes) {
-        return new CompletionDialog(this.options, this.attrs, Object.assign(Object.assign({}, this.tooltip), { pos: changes.mapPos(this.tooltip.pos) }), this.timestamp, this.selected, this.disabled);
+        return new CompletionDialog(this.options, this.attrs, { ...this.tooltip, pos: changes.mapPos(this.tooltip.pos) }, this.timestamp, this.selected, this.disabled);
     }
     setDisabled() {
         return new CompletionDialog(this.options, this.attrs, this.tooltip, this.timestamp, this.selected, true);
@@ -24505,7 +24683,10 @@ function applyCompletion(view, option) {
     if (!(result instanceof ActiveResult))
         return false;
     if (typeof apply == "string")
-        view.dispatch(Object.assign(Object.assign({}, insertCompletionText(view.state, apply, result.from, result.to)), { annotations: pickedCompletion.of(option.completion) }));
+        view.dispatch({
+            ...insertCompletionText(view.state, apply, result.from, result.to),
+            annotations: pickedCompletion.of(option.completion)
+        });
     else
         apply(view, option.completion, result.from, result.to);
     return true;
@@ -24922,7 +25103,7 @@ class Snippet {
         let fields = [];
         let lines = [], positions = [], m;
         for (let line of template.split(/\r\n?|\n/)) {
-            while (m = /[#$]\{(?:(\d+)(?::([^}]*))?|((?:\\[{}]|[^}])*))\}/.exec(line)) {
+            while (m = /[#$]\{(?:(\d+)(?::([^{}]*))?|((?:\\[{}]|[^{}])*))\}/.exec(line)) {
                 let seq = m[1] ? +m[1] : null, rawName = m[2] || m[3] || "", found = -1;
                 let name = rawName.replace(/\\[{}]/g, m => m[1]);
                 for (let i = 0; i < fields.length; i++) {
@@ -24939,6 +25120,12 @@ class Snippet {
                         if (pos.field >= found)
                             pos.field++;
                 }
+                for (let pos of positions)
+                    if (pos.line == lines.length && pos.from > m.index) {
+                        let snip = m[2] ? 3 + (m[1] || "").length : 2;
+                        pos.from -= snip;
+                        pos.to -= snip;
+                    }
                 positions.push(new FieldPos(found, lines.length, m.index, m.index + name.length));
                 line = line.slice(0, m.index) + rawName + line.slice(m.index + m[0].length);
             }
@@ -24968,7 +25155,7 @@ class ActiveSnippet {
     constructor(ranges, active) {
         this.ranges = ranges;
         this.active = active;
-        this.deco = Decoration.set(ranges.map(r => (r.from == r.to ? fieldMarker : fieldRange).range(r.from, r.to)));
+        this.deco = Decoration.set(ranges.map(r => (r.from == r.to ? fieldMarker : fieldRange).range(r.from, r.to)), true);
     }
     map(changes) {
         let ranges = [];
@@ -25112,7 +25299,7 @@ properties from `completion`, plus an `apply` function that
 applies the snippet.
 */
 function snippetCompletion(template, completion) {
-    return Object.assign(Object.assign({}, completion), { apply: snippet(template) });
+    return { ...completion, apply: snippet(template) };
 }
 const snippetPointerHandler = /*@__PURE__*/EditorView.domEventHandlers({
     mousedown(event, view) {
@@ -25393,17 +25580,18 @@ function autocompletion(config = {}) {
 /**
 Basic keybindings for autocompletion.
 
- - Ctrl-Space (and Alt-\` on macOS): [`startCompletion`](https://codemirror.net/6/docs/ref/#autocomplete.startCompletion)
+ - Ctrl-Space (and Alt-\` or Alt-i on macOS): [`startCompletion`](https://codemirror.net/6/docs/ref/#autocomplete.startCompletion)
  - Escape: [`closeCompletion`](https://codemirror.net/6/docs/ref/#autocomplete.closeCompletion)
  - ArrowDown: [`moveCompletionSelection`](https://codemirror.net/6/docs/ref/#autocomplete.moveCompletionSelection)`(true)`
  - ArrowUp: [`moveCompletionSelection`](https://codemirror.net/6/docs/ref/#autocomplete.moveCompletionSelection)`(false)`
  - PageDown: [`moveCompletionSelection`](https://codemirror.net/6/docs/ref/#autocomplete.moveCompletionSelection)`(true, "page")`
- - PageDown: [`moveCompletionSelection`](https://codemirror.net/6/docs/ref/#autocomplete.moveCompletionSelection)`(true, "page")`
+ - PageUp: [`moveCompletionSelection`](https://codemirror.net/6/docs/ref/#autocomplete.moveCompletionSelection)`(false, "page")`
  - Enter: [`acceptCompletion`](https://codemirror.net/6/docs/ref/#autocomplete.acceptCompletion)
 */
 const completionKeymap = [
     { key: "Ctrl-Space", run: startCompletion },
     { mac: "Alt-`", run: startCompletion },
+    { mac: "Alt-i", run: startCompletion },
     { key: "Escape", run: closeCompletion },
     { key: "ArrowDown", run: /*@__PURE__*/moveCompletionSelection(true) },
     { key: "ArrowUp", run: /*@__PURE__*/moveCompletionSelection(false) },
@@ -25433,6 +25621,7 @@ class LintState {
             diagnostics = diagnosticFilter(diagnostics, state);
         let sorted = diagnostics.slice().sort((a, b) => a.from - b.from || a.to - b.to);
         let deco = new RangeSetBuilder(), active = [], pos = 0;
+        let scan = state.doc.iter(), scanPos = 0, docLen = state.doc.length;
         for (let i = 0;;) {
             let next = i == sorted.length ? null : sorted[i];
             if (!next && !active.length)
@@ -25444,6 +25633,8 @@ class LintState {
             }
             else {
                 from = next.from;
+                if (from > docLen)
+                    break;
                 to = next.to;
                 active.push(next);
                 i++;
@@ -25460,8 +25651,31 @@ class LintState {
                     break;
                 }
             }
+            to = Math.min(to, docLen);
+            let widget = false;
+            if (active.some(d => d.from == from && (d.to == to || to == docLen))) {
+                widget = from == to;
+                if (!widget && to - from < 10) {
+                    let behind = from - (scanPos + scan.value.length);
+                    if (behind > 0) {
+                        scan.next(behind);
+                        scanPos = from;
+                    }
+                    for (let check = from;;) {
+                        if (check >= to) {
+                            widget = true;
+                            break;
+                        }
+                        if (!scan.lineBreak && scanPos + scan.value.length > check)
+                            break;
+                        check = scanPos + scan.value.length;
+                        scanPos += scan.value.length;
+                        scan.next();
+                    }
+                }
+            }
             let sev = maxSeverity(active);
-            if (active.some(d => d.from == d.to || (d.from == d.to - 1 && state.doc.lineAt(d.from).to == d.from))) {
+            if (widget) {
                 deco.add(from, from, Decoration.widget({
                     widget: new DiagnosticWidget(sev),
                     diagnostics: active.slice()
@@ -25476,6 +25690,8 @@ class LintState {
                 }));
             }
             pos = to;
+            if (pos == docLen)
+                break;
             for (let i = 0; i < active.length; i++)
                 if (active[i].to <= pos)
                     active.splice(i--, 1);
@@ -25628,17 +25844,28 @@ const lintKeymap = [
 ];
 const lintConfig = /*@__PURE__*/Facet.define({
     combine(input) {
-        return Object.assign({ sources: input.map(i => i.source).filter(x => x != null) }, combineConfig(input.map(i => i.config), {
-            delay: 750,
-            markerFilter: null,
-            tooltipFilter: null,
-            needsRefresh: null,
-            hideOn: () => null,
-        }, {
-            needsRefresh: (a, b) => !a ? b : !b ? a : u => a(u) || b(u)
-        }));
+        return {
+            sources: input.map(i => i.source).filter(x => x != null),
+            ...combineConfig(input.map(i => i.config), {
+                delay: 750,
+                markerFilter: null,
+                tooltipFilter: null,
+                needsRefresh: null,
+                hideOn: () => null,
+            }, {
+                delay: Math.max,
+                markerFilter: combineFilter,
+                tooltipFilter: combineFilter,
+                needsRefresh: (a, b) => !a ? b : !b ? a : u => a(u) || b(u),
+                hideOn: (a, b) => !a ? b : !b ? a : (t, x, y) => a(t, x, y) || b(t, x, y),
+                autoPanel: (a, b) => a || b
+            })
+        };
     }
 });
+function combineFilter(a, b) {
+    return !a ? b : !b ? a : (d, s) => b(a(d, s), s);
+}
 function assignKeys(actions) {
     let assigned = [];
     if (actions)
@@ -25671,9 +25898,10 @@ function renderDiagnostic(view, diagnostic, inPanel) {
         let nameElt = keyIndex < 0 ? name : [name.slice(0, keyIndex),
             crelt("u", name.slice(keyIndex, keyIndex + 1)),
             name.slice(keyIndex + 1)];
+        let markClass = action.markClass ? " " + action.markClass : "";
         return crelt("button", {
             type: "button",
-            class: "cm-diagnosticAction",
+            class: "cm-diagnosticAction" + markClass,
             onclick: click,
             onmousedown: click,
             "aria-label": ` Action: ${name}${keyIndex < 0 ? "" : ` (access key "${keys[i]})"`}.`
@@ -26975,8 +27203,12 @@ class BlockContext {
             let cx = this.stack[line.depth], handler = this.parser.skipContextMarkup[cx.type];
             if (!handler)
                 throw new Error("Unhandled block context " + Type[cx.type]);
-            if (!handler(cx, this, line))
+            let marks = this.line.markers.length;
+            if (!handler(cx, this, line)) {
+                if (this.line.markers.length > marks)
+                    cx.end = this.line.markers[this.line.markers.length - 1].to;
                 break;
+            }
             line.forward();
         }
     }
@@ -27822,7 +28054,7 @@ class InlineContext {
     findOpeningDelimiter(type) {
         for (let i = this.parts.length - 1; i >= 0; i--) {
             let part = this.parts[i];
-            if (part instanceof InlineDelimiter && part.type == type)
+            if (part instanceof InlineDelimiter && part.type == type && (part.side & 1 /* Mark.Open */))
                 return i;
         }
         return null;
@@ -27840,6 +28072,16 @@ class InlineContext {
         return content;
     }
     /**
+    Return the delimiter at the given index. Mostly useful to get
+    additional info out of a delimiter index returned by
+    [`findOpeningDelimiter`](#InlineContext.findOpeningDelimiter).
+    Returns null if there is no delimiter at this index.
+    */
+    getDelimiterAt(index) {
+        let part = this.parts[index];
+        return part instanceof InlineDelimiter ? part : null;
+    }
+    /**
     Skip space after the given (document) position, returning either
     the position of the next non-space character or the end of the
     section.
@@ -27851,6 +28093,14 @@ class InlineContext {
         return new TreeElement(type, from);
     }
 }
+/**
+The opening delimiter type used by the standard link parser.
+*/
+InlineContext.linkStart = LinkStart;
+/**
+Opening delimiter type used for standard images.
+*/
+InlineContext.imageStart = ImageStart;
 function injectMarks(elements, marks) {
     if (!marks.length)
         return elements;
@@ -28489,9 +28739,7 @@ class Stack {
         var _a;
         let depth = action >> 19 /* Action.ReduceDepthShift */, type = action & 65535 /* Action.ValueMask */;
         let { parser } = this.p;
-        let lookaheadRecord = this.reducePos < this.pos - 25 /* Lookahead.Margin */;
-        if (lookaheadRecord)
-            this.setLookAhead(this.pos);
+        let lookaheadRecord = this.reducePos < this.pos - 25 /* Lookahead.Margin */ && this.setLookAhead(this.pos);
         let dPrec = parser.dynamicPrecedence(type);
         if (dPrec)
             this.score += dPrec;
@@ -28569,7 +28817,7 @@ class Stack {
         }
         else { // There may be skipped nodes that have to be moved forward
             let index = this.buffer.length;
-            if (index > 0 && this.buffer[index - 4] != 0 /* Term.Err */) {
+            if (index > 0 && (this.buffer[index - 4] != 0 /* Term.Err */ || this.buffer[index - 1] < 0)) {
                 let mustMove = false;
                 for (let scan = index; scan > 0 && this.buffer[scan - 2] > end; scan -= 4) {
                     if (this.buffer[scan - 1] >= 0) {
@@ -28882,10 +29130,11 @@ class Stack {
     @internal
     */
     setLookAhead(lookAhead) {
-        if (lookAhead > this.lookAhead) {
-            this.emitLookAhead();
-            this.lookAhead = lookAhead;
-        }
+        if (lookAhead <= this.lookAhead)
+            return false;
+        this.emitLookAhead();
+        this.lookAhead = lookAhead;
+        return true;
     }
     /**
     @internal
@@ -29846,7 +30095,7 @@ class Parse {
                     continue;
             }
             let force = stack.split(), forceBase = base;
-            for (let j = 0; force.forceReduce() && j < 10 /* Rec.ForceReduceLimit */; j++) {
+            for (let j = 0; j < 10 /* Rec.ForceReduceLimit */ && force.forceReduce(); j++) {
                 if (verbose)
                     console.log(forceBase + this.stackID(force) + " (via force-reduce)");
                 let done = this.advanceFully(force, newStacks);
@@ -30246,11 +30495,11 @@ function getSpecializer(spec) {
 }
 
 // This file was generated by lezer-generator. You probably shouldn't edit it.
-const scriptText = 54,
+const scriptText = 55,
   StartCloseScriptTag = 1,
-  styleText = 55,
+  styleText = 56,
   StartCloseStyleTag = 2,
-  textareaText = 56,
+  textareaText = 57,
   StartCloseTextareaTag = 3,
   EndTag = 4,
   SelfClosingEndTag = 5,
@@ -30262,20 +30511,21 @@ const scriptText = 54,
   StartCloseTag = 11,
   NoMatchStartCloseTag = 12,
   MismatchedStartCloseTag = 13,
-  missingCloseTag = 57,
-  IncompleteCloseTag = 14,
-  commentContent$1 = 58,
-  Element = 20,
-  TagName = 22,
-  Attribute = 23,
-  AttributeName = 24,
-  AttributeValue = 26,
-  UnquotedAttributeValue = 27,
-  ScriptText = 28,
-  StyleText = 31,
-  TextareaText = 34,
-  OpenTag = 36,
-  CloseTag = 37,
+  missingCloseTag = 58,
+  IncompleteTag = 14,
+  IncompleteCloseTag = 15,
+  commentContent$1 = 59,
+  Element = 21,
+  TagName = 23,
+  Attribute = 24,
+  AttributeName = 25,
+  AttributeValue = 27,
+  UnquotedAttributeValue = 28,
+  ScriptText = 29,
+  StyleText = 32,
+  TextareaText = 35,
+  OpenTag = 37,
+  CloseTag = 38,
   Dialect_noMatch = 0,
   Dialect_selfClosing = 1;
 
@@ -30321,17 +30571,11 @@ function nameChar(ch) {
   return ch == 45 || ch == 46 || ch == 58 || ch >= 65 && ch <= 90 || ch == 95 || ch >= 97 && ch <= 122 || ch >= 161
 }
 
-function isSpace(ch) {
-  return ch == 9 || ch == 10 || ch == 13 || ch == 32
-}
-
 let cachedName = null, cachedInput = null, cachedPos = 0;
 function tagNameAfter(input, offset) {
   let pos = input.pos + offset;
   if (cachedPos == pos && cachedInput == input) return cachedName
-  let next = input.peek(offset);
-  while (isSpace(next)) next = input.peek(++offset);
-  let name = "";
+  let next = input.peek(offset), name = "";
   for (;;) {
     if (!nameChar(next)) break
     name += String.fromCharCode(next);
@@ -30378,7 +30622,7 @@ const tagStart = new ExternalTokenizer((input, stack) => {
   if (close) input.advance();
   let name = tagNameAfter(input, 0);
   if (name === undefined) return
-  if (!name) return input.acceptToken(close ? IncompleteCloseTag : StartTag)
+  if (!name) return input.acceptToken(close ? IncompleteCloseTag : IncompleteTag)
 
   let parent = stack.context ? stack.context.name : null;
   if (close) {
@@ -30436,7 +30680,7 @@ function contentTokenizer(tag, textToken, endToken) {
     // state means:
     // - 0 nothing matched
     // - 1 '<' matched
-    // - 2 '</' + possibly whitespace matched
+    // - 2 '</'
     // - 3-(1+tag.length) part of the tag matched
     // - lastState whole tag + possibly whitespace matched
     for (let state = 0, matchedLen = 0, i = 0;; i++) {
@@ -30448,8 +30692,6 @@ function contentTokenizer(tag, textToken, endToken) {
           state == 1 && input.next == slash$1 ||
           state >= 2 && state < lastState && input.next == tag.charCodeAt(state - 2)) {
         state++;
-        matchedLen++;
-      } else if ((state == 2 || state == lastState) && isSpace(input.next)) {
         matchedLen++;
       } else if (state == lastState && input.next == greaterThan) {
         if (i > matchedLen)
@@ -30475,7 +30717,7 @@ const styleTokens = contentTokenizer("style", styleText, StartCloseStyleTag);
 const textareaTokens = contentTokenizer("textarea", textareaText, StartCloseTextareaTag);
 
 const htmlHighlighting = styleTags({
-  "Text RawText": tags$1.content,
+  "Text RawText IncompleteTag IncompleteCloseTag": tags$1.content,
   "StartTag StartCloseTag SelfClosingEndTag EndTag": tags$1.angleBracket,
   TagName: tags$1.tagName,
   "MismatchedCloseTag/TagName": [tags$1.tagName,  tags$1.invalid],
@@ -30491,26 +30733,26 @@ const htmlHighlighting = styleTags({
 // This file was generated by lezer-generator. You probably shouldn't edit it.
 const parser$2 = LRParser.deserialize({
   version: 14,
-  states: ",xOVO!rOOO!WQ#tO'#CqO!]Q#tO'#CzO!bQ#tO'#C}O!gQ#tO'#DQO!lQ#tO'#DSO!qOaO'#CpO!|ObO'#CpO#XOdO'#CpO$eO!rO'#CpOOO`'#Cp'#CpO$lO$fO'#DTO$tQ#tO'#DVO$yQ#tO'#DWOOO`'#Dk'#DkOOO`'#DY'#DYQVO!rOOO%OQ&rO,59]O%ZQ&rO,59fO%fQ&rO,59iO%qQ&rO,59lO%|Q&rO,59nOOOa'#D^'#D^O&XOaO'#CxO&dOaO,59[OOOb'#D_'#D_O&lObO'#C{O&wObO,59[OOOd'#D`'#D`O'POdO'#DOO'[OdO,59[OOO`'#Da'#DaO'dO!rO,59[O'kQ#tO'#DROOO`,59[,59[OOOp'#Db'#DbO'pO$fO,59oOOO`,59o,59oO'xQ#|O,59qO'}Q#|O,59rOOO`-E7W-E7WO(SQ&rO'#CsOOQW'#DZ'#DZO(bQ&rO1G.wOOOa1G.w1G.wOOO`1G/Y1G/YO(mQ&rO1G/QOOOb1G/Q1G/QO(xQ&rO1G/TOOOd1G/T1G/TO)TQ&rO1G/WOOO`1G/W1G/WO)`Q&rO1G/YOOOa-E7[-E7[O)kQ#tO'#CyOOO`1G.v1G.vOOOb-E7]-E7]O)pQ#tO'#C|OOOd-E7^-E7^O)uQ#tO'#DPOOO`-E7_-E7_O)zQ#|O,59mOOOp-E7`-E7`OOO`1G/Z1G/ZOOO`1G/]1G/]OOO`1G/^1G/^O*PQ,UO,59_OOQW-E7X-E7XOOOa7+$c7+$cOOO`7+$t7+$tOOOb7+$l7+$lOOOd7+$o7+$oOOO`7+$r7+$rO*[Q#|O,59eO*aQ#|O,59hO*fQ#|O,59kOOO`1G/X1G/XO*kO7[O'#CvO*|OMhO'#CvOOQW1G.y1G.yOOO`1G/P1G/POOO`1G/S1G/SOOO`1G/V1G/VOOOO'#D['#D[O+_O7[O,59bOOQW,59b,59bOOOO'#D]'#D]O+pOMhO,59bOOOO-E7Y-E7YOOQW1G.|1G.|OOOO-E7Z-E7Z",
-  stateData: ",]~O!^OS~OUSOVPOWQOXROYTO[]O][O^^O`^Oa^Ob^Oc^Ox^O{_O!dZO~OfaO~OfbO~OfcO~OfdO~OfeO~O!WfOPlP!ZlP~O!XiOQoP!ZoP~O!YlORrP!ZrP~OUSOVPOWQOXROYTOZqO[]O][O^^O`^Oa^Ob^Oc^Ox^O!dZO~O!ZrO~P#dO![sO!euO~OfvO~OfwO~OS|OT}OhyO~OS!POT}OhyO~OS!ROT}OhyO~OS!TOT}OhyO~OS}OT}OhyO~O!WfOPlX!ZlX~OP!WO!Z!XO~O!XiOQoX!ZoX~OQ!ZO!Z!XO~O!YlORrX!ZrX~OR!]O!Z!XO~O!Z!XO~P#dOf!_O~O![sO!e!aO~OS!bO~OS!cO~Oi!dOSgXTgXhgX~OS!fOT!gOhyO~OS!hOT!gOhyO~OS!iOT!gOhyO~OS!jOT!gOhyO~OS!gOT!gOhyO~Of!kO~Of!lO~Of!mO~OS!nO~Ok!qO!`!oO!b!pO~OS!rO~OS!sO~OS!tO~Oa!uOb!uOc!uO!`!wO!a!uO~Oa!xOb!xOc!xO!b!wO!c!xO~Oa!uOb!uOc!uO!`!{O!a!uO~Oa!xOb!xOc!xO!b!{O!c!xO~OT~bac!dx{!d~",
-  goto: "%p!`PPPPPPPPPPPPPPPPPPPP!a!gP!mPP!yP!|#P#S#Y#]#`#f#i#l#r#x!aP!a!aP$O$U$l$r$x%O%U%[%bPPPPPPPP%hX^OX`pXUOX`pezabcde{!O!Q!S!UR!q!dRhUR!XhXVOX`pRkVR!XkXWOX`pRnWR!XnXXOX`pQrXR!XpXYOX`pQ`ORx`Q{aQ!ObQ!QcQ!SdQ!UeZ!e{!O!Q!S!UQ!v!oR!z!vQ!y!pR!|!yQgUR!VgQjVR!YjQmWR![mQpXR!^pQtZR!`tS_O`ToXp",
-  nodeNames: "⚠ StartCloseTag StartCloseTag StartCloseTag EndTag SelfClosingEndTag StartTag StartTag StartTag StartTag StartTag StartCloseTag StartCloseTag StartCloseTag IncompleteCloseTag Document Text EntityReference CharacterReference InvalidEntity Element OpenTag TagName Attribute AttributeName Is AttributeValue UnquotedAttributeValue ScriptText CloseTag OpenTag StyleText CloseTag OpenTag TextareaText CloseTag OpenTag CloseTag SelfClosingTag Comment ProcessingInst MismatchedCloseTag CloseTag DoctypeDecl",
-  maxTerm: 67,
+  states: ",xOVO!rOOO!ZQ#tO'#CrO!`Q#tO'#C{O!eQ#tO'#DOO!jQ#tO'#DRO!oQ#tO'#DTO!tOaO'#CqO#PObO'#CqO#[OdO'#CqO$kO!rO'#CqOOO`'#Cq'#CqO$rO$fO'#DUO$zQ#tO'#DWO%PQ#tO'#DXOOO`'#Dl'#DlOOO`'#DZ'#DZQVO!rOOO%UQ&rO,59^O%aQ&rO,59gO%lQ&rO,59jO%wQ&rO,59mO&SQ&rO,59oOOOa'#D_'#D_O&_OaO'#CyO&jOaO,59]OOOb'#D`'#D`O&rObO'#C|O&}ObO,59]OOOd'#Da'#DaO'VOdO'#DPO'bOdO,59]OOO`'#Db'#DbO'jO!rO,59]O'qQ#tO'#DSOOO`,59],59]OOOp'#Dc'#DcO'vO$fO,59pOOO`,59p,59pO(OQ#|O,59rO(TQ#|O,59sOOO`-E7X-E7XO(YQ&rO'#CtOOQW'#D['#D[O(hQ&rO1G.xOOOa1G.x1G.xOOO`1G/Z1G/ZO(sQ&rO1G/ROOOb1G/R1G/RO)OQ&rO1G/UOOOd1G/U1G/UO)ZQ&rO1G/XOOO`1G/X1G/XO)fQ&rO1G/ZOOOa-E7]-E7]O)qQ#tO'#CzOOO`1G.w1G.wOOOb-E7^-E7^O)vQ#tO'#C}OOOd-E7_-E7_O){Q#tO'#DQOOO`-E7`-E7`O*QQ#|O,59nOOOp-E7a-E7aOOO`1G/[1G/[OOO`1G/^1G/^OOO`1G/_1G/_O*VQ,UO,59`OOQW-E7Y-E7YOOOa7+$d7+$dOOO`7+$u7+$uOOOb7+$m7+$mOOOd7+$p7+$pOOO`7+$s7+$sO*bQ#|O,59fO*gQ#|O,59iO*lQ#|O,59lOOO`1G/Y1G/YO*qO7[O'#CwO+SOMhO'#CwOOQW1G.z1G.zOOO`1G/Q1G/QOOO`1G/T1G/TOOO`1G/W1G/WOOOO'#D]'#D]O+eO7[O,59cOOQW,59c,59cOOOO'#D^'#D^O+vOMhO,59cOOOO-E7Z-E7ZOOQW1G.}1G.}OOOO-E7[-E7[",
+  stateData: ",c~O!_OS~OUSOVPOWQOXROYTO[]O][O^^O_^Oa^Ob^Oc^Od^Oy^O|_O!eZO~OgaO~OgbO~OgcO~OgdO~OgeO~O!XfOPmP![mP~O!YiOQpP![pP~O!ZlORsP![sP~OUSOVPOWQOXROYTOZqO[]O][O^^O_^Oa^Ob^Oc^Od^Oy^O!eZO~O![rO~P#gO!]sO!fuO~OgvO~OgwO~OS|OT}OiyO~OS!POT}OiyO~OS!ROT}OiyO~OS!TOT}OiyO~OS}OT}OiyO~O!XfOPmX![mX~OP!WO![!XO~O!YiOQpX![pX~OQ!ZO![!XO~O!ZlORsX![sX~OR!]O![!XO~O![!XO~P#gOg!_O~O!]sO!f!aO~OS!bO~OS!cO~Oj!dOShXThXihX~OS!fOT!gOiyO~OS!hOT!gOiyO~OS!iOT!gOiyO~OS!jOT!gOiyO~OS!gOT!gOiyO~Og!kO~Og!lO~Og!mO~OS!nO~Ol!qO!a!oO!c!pO~OS!rO~OS!sO~OS!tO~Ob!uOc!uOd!uO!a!wO!b!uO~Ob!xOc!xOd!xO!c!wO!d!xO~Ob!uOc!uOd!uO!a!{O!b!uO~Ob!xOc!xOd!xO!c!{O!d!xO~OT~cbd!ey|!e~",
+  goto: "%q!aPPPPPPPPPPPPPPPPPPPPP!b!hP!nPP!zP!}#Q#T#Z#^#a#g#j#m#s#y!bP!b!bP$P$V$m$s$y%P%V%]%cPPPPPPPP%iX^OX`pXUOX`pezabcde{!O!Q!S!UR!q!dRhUR!XhXVOX`pRkVR!XkXWOX`pRnWR!XnXXOX`pQrXR!XpXYOX`pQ`ORx`Q{aQ!ObQ!QcQ!SdQ!UeZ!e{!O!Q!S!UQ!v!oR!z!vQ!y!pR!|!yQgUR!VgQjVR!YjQmWR![mQpXR!^pQtZR!`tS_O`ToXp",
+  nodeNames: "⚠ StartCloseTag StartCloseTag StartCloseTag EndTag SelfClosingEndTag StartTag StartTag StartTag StartTag StartTag StartCloseTag StartCloseTag StartCloseTag IncompleteTag IncompleteCloseTag Document Text EntityReference CharacterReference InvalidEntity Element OpenTag TagName Attribute AttributeName Is AttributeValue UnquotedAttributeValue ScriptText CloseTag OpenTag StyleText CloseTag OpenTag TextareaText CloseTag OpenTag CloseTag SelfClosingTag Comment ProcessingInst MismatchedCloseTag CloseTag DoctypeDecl",
+  maxTerm: 68,
   context: elementContext,
   nodeProps: [
-    ["closedBy", -10,1,2,3,7,8,9,10,11,12,13,"EndTag",6,"EndTag SelfClosingEndTag",-4,21,30,33,36,"CloseTag"],
-    ["openedBy", 4,"StartTag StartCloseTag",5,"StartTag",-4,29,32,35,37,"OpenTag"],
-    ["group", -9,14,17,18,19,20,39,40,41,42,"Entity",16,"Entity TextContent",-3,28,31,34,"TextContent Entity"],
-    ["isolate", -11,21,29,30,32,33,35,36,37,38,41,42,"ltr",-3,26,27,39,""]
+    ["closedBy", -10,1,2,3,7,8,9,10,11,12,13,"EndTag",6,"EndTag SelfClosingEndTag",-4,22,31,34,37,"CloseTag"],
+    ["openedBy", 4,"StartTag StartCloseTag",5,"StartTag",-4,30,33,36,38,"OpenTag"],
+    ["group", -10,14,15,18,19,20,21,40,41,42,43,"Entity",17,"Entity TextContent",-3,29,32,35,"TextContent Entity"],
+    ["isolate", -11,22,30,31,33,34,36,37,38,39,42,43,"ltr",-3,27,28,40,""]
   ],
   propSources: [htmlHighlighting],
   skippedNodes: [0],
   repeatNodeCount: 9,
-  tokenData: "!<p!aR!YOX$qXY,QYZ,QZ[$q[]&X]^,Q^p$qpq,Qqr-_rs3_sv-_vw3}wxHYx}-_}!OH{!O!P-_!P!Q$q!Q![-_![!]Mz!]!^-_!^!_!$S!_!`!;x!`!a&X!a!c-_!c!}Mz!}#R-_#R#SMz#S#T1k#T#oMz#o#s-_#s$f$q$f%W-_%W%oMz%o%p-_%p&aMz&a&b-_&b1pMz1p4U-_4U4dMz4d4e-_4e$ISMz$IS$I`-_$I`$IbMz$Ib$Kh-_$Kh%#tMz%#t&/x-_&/x&EtMz&Et&FV-_&FV;'SMz;'S;:j!#|;:j;=`3X<%l?&r-_?&r?AhMz?Ah?BY$q?BY?MnMz?MnO$q!Z$|c`PkW!a`!cpOX$qXZ&XZ[$q[^&X^p$qpq&Xqr$qrs&}sv$qvw+Pwx(tx!^$q!^!_*V!_!a&X!a#S$q#S#T&X#T;'S$q;'S;=`+z<%lO$q!R&bX`P!a`!cpOr&Xrs&}sv&Xwx(tx!^&X!^!_*V!_;'S&X;'S;=`*y<%lO&Xq'UV`P!cpOv&}wx'kx!^&}!^!_(V!_;'S&};'S;=`(n<%lO&}P'pT`POv'kw!^'k!_;'S'k;'S;=`(P<%lO'kP(SP;=`<%l'kp([S!cpOv(Vx;'S(V;'S;=`(h<%lO(Vp(kP;=`<%l(Vq(qP;=`<%l&}a({W`P!a`Or(trs'ksv(tw!^(t!^!_)e!_;'S(t;'S;=`*P<%lO(t`)jT!a`Or)esv)ew;'S)e;'S;=`)y<%lO)e`)|P;=`<%l)ea*SP;=`<%l(t!Q*^V!a`!cpOr*Vrs(Vsv*Vwx)ex;'S*V;'S;=`*s<%lO*V!Q*vP;=`<%l*V!R*|P;=`<%l&XW+UYkWOX+PZ[+P^p+Pqr+Psw+Px!^+P!a#S+P#T;'S+P;'S;=`+t<%lO+PW+wP;=`<%l+P!Z+}P;=`<%l$q!a,]``P!a`!cp!^^OX&XXY,QYZ,QZ]&X]^,Q^p&Xpq,Qqr&Xrs&}sv&Xwx(tx!^&X!^!_*V!_;'S&X;'S;=`*y<%lO&X!_-ljhS`PkW!a`!cpOX$qXZ&XZ[$q[^&X^p$qpq&Xqr-_rs&}sv-_vw/^wx(tx!P-_!P!Q$q!Q!^-_!^!_*V!_!a&X!a#S-_#S#T1k#T#s-_#s$f$q$f;'S-_;'S;=`3X<%l?Ah-_?Ah?BY$q?BY?Mn-_?MnO$q[/ebhSkWOX+PZ[+P^p+Pqr/^sw/^x!P/^!P!Q+P!Q!^/^!a#S/^#S#T0m#T#s/^#s$f+P$f;'S/^;'S;=`1e<%l?Ah/^?Ah?BY+P?BY?Mn/^?MnO+PS0rXhSqr0msw0mx!P0m!Q!^0m!a#s0m$f;'S0m;'S;=`1_<%l?Ah0m?BY?Mn0mS1bP;=`<%l0m[1hP;=`<%l/^!V1vchS`P!a`!cpOq&Xqr1krs&}sv1kvw0mwx(tx!P1k!P!Q&X!Q!^1k!^!_*V!_!a&X!a#s1k#s$f&X$f;'S1k;'S;=`3R<%l?Ah1k?Ah?BY&X?BY?Mn1k?MnO&X!V3UP;=`<%l1k!_3[P;=`<%l-_!Z3hV!`h`P!cpOv&}wx'kx!^&}!^!_(V!_;'S&};'S;=`(n<%lO&}!_4WihSkWc!ROX5uXZ7SZ[5u[^7S^p5uqr8trs7Sst>]tw8twx7Sx!P8t!P!Q5u!Q!]8t!]!^/^!^!a7S!a#S8t#S#T;{#T#s8t#s$f5u$f;'S8t;'S;=`>V<%l?Ah8t?Ah?BY5u?BY?Mn8t?MnO5u!Z5zbkWOX5uXZ7SZ[5u[^7S^p5uqr5urs7Sst+Ptw5uwx7Sx!]5u!]!^7w!^!a7S!a#S5u#S#T7S#T;'S5u;'S;=`8n<%lO5u!R7VVOp7Sqs7St!]7S!]!^7l!^;'S7S;'S;=`7q<%lO7S!R7qOa!R!R7tP;=`<%l7S!Z8OYkWa!ROX+PZ[+P^p+Pqr+Psw+Px!^+P!a#S+P#T;'S+P;'S;=`+t<%lO+P!Z8qP;=`<%l5u!_8{ihSkWOX5uXZ7SZ[5u[^7S^p5uqr8trs7Sst/^tw8twx7Sx!P8t!P!Q5u!Q!]8t!]!^:j!^!a7S!a#S8t#S#T;{#T#s8t#s$f5u$f;'S8t;'S;=`>V<%l?Ah8t?Ah?BY5u?BY?Mn8t?MnO5u!_:sbhSkWa!ROX+PZ[+P^p+Pqr/^sw/^x!P/^!P!Q+P!Q!^/^!a#S/^#S#T0m#T#s/^#s$f+P$f;'S/^;'S;=`1e<%l?Ah/^?Ah?BY+P?BY?Mn/^?MnO+P!V<QchSOp7Sqr;{rs7Sst0mtw;{wx7Sx!P;{!P!Q7S!Q!];{!]!^=]!^!a7S!a#s;{#s$f7S$f;'S;{;'S;=`>P<%l?Ah;{?Ah?BY7S?BY?Mn;{?MnO7S!V=dXhSa!Rqr0msw0mx!P0m!Q!^0m!a#s0m$f;'S0m;'S;=`1_<%l?Ah0m?BY?Mn0m!V>SP;=`<%l;{!_>YP;=`<%l8t!_>dhhSkWOX@OXZAYZ[@O[^AY^p@OqrBwrsAYswBwwxAYx!PBw!P!Q@O!Q!]Bw!]!^/^!^!aAY!a#SBw#S#TE{#T#sBw#s$f@O$f;'SBw;'S;=`HS<%l?AhBw?Ah?BY@O?BY?MnBw?MnO@O!Z@TakWOX@OXZAYZ[@O[^AY^p@Oqr@OrsAYsw@OwxAYx!]@O!]!^Az!^!aAY!a#S@O#S#TAY#T;'S@O;'S;=`Bq<%lO@O!RA]UOpAYq!]AY!]!^Ao!^;'SAY;'S;=`At<%lOAY!RAtOb!R!RAwP;=`<%lAY!ZBRYkWb!ROX+PZ[+P^p+Pqr+Psw+Px!^+P!a#S+P#T;'S+P;'S;=`+t<%lO+P!ZBtP;=`<%l@O!_COhhSkWOX@OXZAYZ[@O[^AY^p@OqrBwrsAYswBwwxAYx!PBw!P!Q@O!Q!]Bw!]!^Dj!^!aAY!a#SBw#S#TE{#T#sBw#s$f@O$f;'SBw;'S;=`HS<%l?AhBw?Ah?BY@O?BY?MnBw?MnO@O!_DsbhSkWb!ROX+PZ[+P^p+Pqr/^sw/^x!P/^!P!Q+P!Q!^/^!a#S/^#S#T0m#T#s/^#s$f+P$f;'S/^;'S;=`1e<%l?Ah/^?Ah?BY+P?BY?Mn/^?MnO+P!VFQbhSOpAYqrE{rsAYswE{wxAYx!PE{!P!QAY!Q!]E{!]!^GY!^!aAY!a#sE{#s$fAY$f;'SE{;'S;=`G|<%l?AhE{?Ah?BYAY?BY?MnE{?MnOAY!VGaXhSb!Rqr0msw0mx!P0m!Q!^0m!a#s0m$f;'S0m;'S;=`1_<%l?Ah0m?BY?Mn0m!VHPP;=`<%lE{!_HVP;=`<%lBw!ZHcW!bx`P!a`Or(trs'ksv(tw!^(t!^!_)e!_;'S(t;'S;=`*P<%lO(t!aIYlhS`PkW!a`!cpOX$qXZ&XZ[$q[^&X^p$qpq&Xqr-_rs&}sv-_vw/^wx(tx}-_}!OKQ!O!P-_!P!Q$q!Q!^-_!^!_*V!_!a&X!a#S-_#S#T1k#T#s-_#s$f$q$f;'S-_;'S;=`3X<%l?Ah-_?Ah?BY$q?BY?Mn-_?MnO$q!aK_khS`PkW!a`!cpOX$qXZ&XZ[$q[^&X^p$qpq&Xqr-_rs&}sv-_vw/^wx(tx!P-_!P!Q$q!Q!^-_!^!_*V!_!`&X!`!aMS!a#S-_#S#T1k#T#s-_#s$f$q$f;'S-_;'S;=`3X<%l?Ah-_?Ah?BY$q?BY?Mn-_?MnO$q!TM_X`P!a`!cp!eQOr&Xrs&}sv&Xwx(tx!^&X!^!_*V!_;'S&X;'S;=`*y<%lO&X!aNZ!ZhSfQ`PkW!a`!cpOX$qXZ&XZ[$q[^&X^p$qpq&Xqr-_rs&}sv-_vw/^wx(tx}-_}!OMz!O!PMz!P!Q$q!Q![Mz![!]Mz!]!^-_!^!_*V!_!a&X!a!c-_!c!}Mz!}#R-_#R#SMz#S#T1k#T#oMz#o#s-_#s$f$q$f$}-_$}%OMz%O%W-_%W%oMz%o%p-_%p&aMz&a&b-_&b1pMz1p4UMz4U4dMz4d4e-_4e$ISMz$IS$I`-_$I`$IbMz$Ib$Je-_$Je$JgMz$Jg$Kh-_$Kh%#tMz%#t&/x-_&/x&EtMz&Et&FV-_&FV;'SMz;'S;:j!#|;:j;=`3X<%l?&r-_?&r?AhMz?Ah?BY$q?BY?MnMz?MnO$q!a!$PP;=`<%lMz!R!$ZY!a`!cpOq*Vqr!$yrs(Vsv*Vwx)ex!a*V!a!b!4t!b;'S*V;'S;=`*s<%lO*V!R!%Q]!a`!cpOr*Vrs(Vsv*Vwx)ex}*V}!O!%y!O!f*V!f!g!']!g#W*V#W#X!0`#X;'S*V;'S;=`*s<%lO*V!R!&QX!a`!cpOr*Vrs(Vsv*Vwx)ex}*V}!O!&m!O;'S*V;'S;=`*s<%lO*V!R!&vV!a`!cp!dPOr*Vrs(Vsv*Vwx)ex;'S*V;'S;=`*s<%lO*V!R!'dX!a`!cpOr*Vrs(Vsv*Vwx)ex!q*V!q!r!(P!r;'S*V;'S;=`*s<%lO*V!R!(WX!a`!cpOr*Vrs(Vsv*Vwx)ex!e*V!e!f!(s!f;'S*V;'S;=`*s<%lO*V!R!(zX!a`!cpOr*Vrs(Vsv*Vwx)ex!v*V!v!w!)g!w;'S*V;'S;=`*s<%lO*V!R!)nX!a`!cpOr*Vrs(Vsv*Vwx)ex!{*V!{!|!*Z!|;'S*V;'S;=`*s<%lO*V!R!*bX!a`!cpOr*Vrs(Vsv*Vwx)ex!r*V!r!s!*}!s;'S*V;'S;=`*s<%lO*V!R!+UX!a`!cpOr*Vrs(Vsv*Vwx)ex!g*V!g!h!+q!h;'S*V;'S;=`*s<%lO*V!R!+xY!a`!cpOr!+qrs!,hsv!+qvw!-Swx!.[x!`!+q!`!a!/j!a;'S!+q;'S;=`!0Y<%lO!+qq!,mV!cpOv!,hvx!-Sx!`!,h!`!a!-q!a;'S!,h;'S;=`!.U<%lO!,hP!-VTO!`!-S!`!a!-f!a;'S!-S;'S;=`!-k<%lO!-SP!-kO{PP!-nP;=`<%l!-Sq!-xS!cp{POv(Vx;'S(V;'S;=`(h<%lO(Vq!.XP;=`<%l!,ha!.aX!a`Or!.[rs!-Ssv!.[vw!-Sw!`!.[!`!a!.|!a;'S!.[;'S;=`!/d<%lO!.[a!/TT!a`{POr)esv)ew;'S)e;'S;=`)y<%lO)ea!/gP;=`<%l!.[!R!/sV!a`!cp{POr*Vrs(Vsv*Vwx)ex;'S*V;'S;=`*s<%lO*V!R!0]P;=`<%l!+q!R!0gX!a`!cpOr*Vrs(Vsv*Vwx)ex#c*V#c#d!1S#d;'S*V;'S;=`*s<%lO*V!R!1ZX!a`!cpOr*Vrs(Vsv*Vwx)ex#V*V#V#W!1v#W;'S*V;'S;=`*s<%lO*V!R!1}X!a`!cpOr*Vrs(Vsv*Vwx)ex#h*V#h#i!2j#i;'S*V;'S;=`*s<%lO*V!R!2qX!a`!cpOr*Vrs(Vsv*Vwx)ex#m*V#m#n!3^#n;'S*V;'S;=`*s<%lO*V!R!3eX!a`!cpOr*Vrs(Vsv*Vwx)ex#d*V#d#e!4Q#e;'S*V;'S;=`*s<%lO*V!R!4XX!a`!cpOr*Vrs(Vsv*Vwx)ex#X*V#X#Y!+q#Y;'S*V;'S;=`*s<%lO*V!R!4{Y!a`!cpOr!4trs!5ksv!4tvw!6Vwx!8]x!a!4t!a!b!:]!b;'S!4t;'S;=`!;r<%lO!4tq!5pV!cpOv!5kvx!6Vx!a!5k!a!b!7W!b;'S!5k;'S;=`!8V<%lO!5kP!6YTO!a!6V!a!b!6i!b;'S!6V;'S;=`!7Q<%lO!6VP!6lTO!`!6V!`!a!6{!a;'S!6V;'S;=`!7Q<%lO!6VP!7QOxPP!7TP;=`<%l!6Vq!7]V!cpOv!5kvx!6Vx!`!5k!`!a!7r!a;'S!5k;'S;=`!8V<%lO!5kq!7yS!cpxPOv(Vx;'S(V;'S;=`(h<%lO(Vq!8YP;=`<%l!5ka!8bX!a`Or!8]rs!6Vsv!8]vw!6Vw!a!8]!a!b!8}!b;'S!8];'S;=`!:V<%lO!8]a!9SX!a`Or!8]rs!6Vsv!8]vw!6Vw!`!8]!`!a!9o!a;'S!8];'S;=`!:V<%lO!8]a!9vT!a`xPOr)esv)ew;'S)e;'S;=`)y<%lO)ea!:YP;=`<%l!8]!R!:dY!a`!cpOr!4trs!5ksv!4tvw!6Vwx!8]x!`!4t!`!a!;S!a;'S!4t;'S;=`!;r<%lO!4t!R!;]V!a`!cpxPOr*Vrs(Vsv*Vwx)ex;'S*V;'S;=`*s<%lO*V!R!;uP;=`<%l!4t!V!<TXiS`P!a`!cpOr&Xrs&}sv&Xwx(tx!^&X!^!_*V!_;'S&X;'S;=`*y<%lO&X",
+  tokenData: "!<p!aR!YOX$qXY,QYZ,QZ[$q[]&X]^,Q^p$qpq,Qqr-_rs3_sv-_vw3}wxHYx}-_}!OH{!O!P-_!P!Q$q!Q![-_![!]Mz!]!^-_!^!_!$S!_!`!;x!`!a&X!a!c-_!c!}Mz!}#R-_#R#SMz#S#T1k#T#oMz#o#s-_#s$f$q$f%W-_%W%oMz%o%p-_%p&aMz&a&b-_&b1pMz1p4U-_4U4dMz4d4e-_4e$ISMz$IS$I`-_$I`$IbMz$Ib$Kh-_$Kh%#tMz%#t&/x-_&/x&EtMz&Et&FV-_&FV;'SMz;'S;:j!#|;:j;=`3X<%l?&r-_?&r?AhMz?Ah?BY$q?BY?MnMz?MnO$q!Z$|caPlW!b`!dpOX$qXZ&XZ[$q[^&X^p$qpq&Xqr$qrs&}sv$qvw+Pwx(tx!^$q!^!_*V!_!a&X!a#S$q#S#T&X#T;'S$q;'S;=`+z<%lO$q!R&bXaP!b`!dpOr&Xrs&}sv&Xwx(tx!^&X!^!_*V!_;'S&X;'S;=`*y<%lO&Xq'UVaP!dpOv&}wx'kx!^&}!^!_(V!_;'S&};'S;=`(n<%lO&}P'pTaPOv'kw!^'k!_;'S'k;'S;=`(P<%lO'kP(SP;=`<%l'kp([S!dpOv(Vx;'S(V;'S;=`(h<%lO(Vp(kP;=`<%l(Vq(qP;=`<%l&}a({WaP!b`Or(trs'ksv(tw!^(t!^!_)e!_;'S(t;'S;=`*P<%lO(t`)jT!b`Or)esv)ew;'S)e;'S;=`)y<%lO)e`)|P;=`<%l)ea*SP;=`<%l(t!Q*^V!b`!dpOr*Vrs(Vsv*Vwx)ex;'S*V;'S;=`*s<%lO*V!Q*vP;=`<%l*V!R*|P;=`<%l&XW+UYlWOX+PZ[+P^p+Pqr+Psw+Px!^+P!a#S+P#T;'S+P;'S;=`+t<%lO+PW+wP;=`<%l+P!Z+}P;=`<%l$q!a,]`aP!b`!dp!_^OX&XXY,QYZ,QZ]&X]^,Q^p&Xpq,Qqr&Xrs&}sv&Xwx(tx!^&X!^!_*V!_;'S&X;'S;=`*y<%lO&X!_-ljiSaPlW!b`!dpOX$qXZ&XZ[$q[^&X^p$qpq&Xqr-_rs&}sv-_vw/^wx(tx!P-_!P!Q$q!Q!^-_!^!_*V!_!a&X!a#S-_#S#T1k#T#s-_#s$f$q$f;'S-_;'S;=`3X<%l?Ah-_?Ah?BY$q?BY?Mn-_?MnO$q[/ebiSlWOX+PZ[+P^p+Pqr/^sw/^x!P/^!P!Q+P!Q!^/^!a#S/^#S#T0m#T#s/^#s$f+P$f;'S/^;'S;=`1e<%l?Ah/^?Ah?BY+P?BY?Mn/^?MnO+PS0rXiSqr0msw0mx!P0m!Q!^0m!a#s0m$f;'S0m;'S;=`1_<%l?Ah0m?BY?Mn0mS1bP;=`<%l0m[1hP;=`<%l/^!V1vciSaP!b`!dpOq&Xqr1krs&}sv1kvw0mwx(tx!P1k!P!Q&X!Q!^1k!^!_*V!_!a&X!a#s1k#s$f&X$f;'S1k;'S;=`3R<%l?Ah1k?Ah?BY&X?BY?Mn1k?MnO&X!V3UP;=`<%l1k!_3[P;=`<%l-_!Z3hV!ahaP!dpOv&}wx'kx!^&}!^!_(V!_;'S&};'S;=`(n<%lO&}!_4WiiSlWd!ROX5uXZ7SZ[5u[^7S^p5uqr8trs7Sst>]tw8twx7Sx!P8t!P!Q5u!Q!]8t!]!^/^!^!a7S!a#S8t#S#T;{#T#s8t#s$f5u$f;'S8t;'S;=`>V<%l?Ah8t?Ah?BY5u?BY?Mn8t?MnO5u!Z5zblWOX5uXZ7SZ[5u[^7S^p5uqr5urs7Sst+Ptw5uwx7Sx!]5u!]!^7w!^!a7S!a#S5u#S#T7S#T;'S5u;'S;=`8n<%lO5u!R7VVOp7Sqs7St!]7S!]!^7l!^;'S7S;'S;=`7q<%lO7S!R7qOb!R!R7tP;=`<%l7S!Z8OYlWb!ROX+PZ[+P^p+Pqr+Psw+Px!^+P!a#S+P#T;'S+P;'S;=`+t<%lO+P!Z8qP;=`<%l5u!_8{iiSlWOX5uXZ7SZ[5u[^7S^p5uqr8trs7Sst/^tw8twx7Sx!P8t!P!Q5u!Q!]8t!]!^:j!^!a7S!a#S8t#S#T;{#T#s8t#s$f5u$f;'S8t;'S;=`>V<%l?Ah8t?Ah?BY5u?BY?Mn8t?MnO5u!_:sbiSlWb!ROX+PZ[+P^p+Pqr/^sw/^x!P/^!P!Q+P!Q!^/^!a#S/^#S#T0m#T#s/^#s$f+P$f;'S/^;'S;=`1e<%l?Ah/^?Ah?BY+P?BY?Mn/^?MnO+P!V<QciSOp7Sqr;{rs7Sst0mtw;{wx7Sx!P;{!P!Q7S!Q!];{!]!^=]!^!a7S!a#s;{#s$f7S$f;'S;{;'S;=`>P<%l?Ah;{?Ah?BY7S?BY?Mn;{?MnO7S!V=dXiSb!Rqr0msw0mx!P0m!Q!^0m!a#s0m$f;'S0m;'S;=`1_<%l?Ah0m?BY?Mn0m!V>SP;=`<%l;{!_>YP;=`<%l8t!_>dhiSlWOX@OXZAYZ[@O[^AY^p@OqrBwrsAYswBwwxAYx!PBw!P!Q@O!Q!]Bw!]!^/^!^!aAY!a#SBw#S#TE{#T#sBw#s$f@O$f;'SBw;'S;=`HS<%l?AhBw?Ah?BY@O?BY?MnBw?MnO@O!Z@TalWOX@OXZAYZ[@O[^AY^p@Oqr@OrsAYsw@OwxAYx!]@O!]!^Az!^!aAY!a#S@O#S#TAY#T;'S@O;'S;=`Bq<%lO@O!RA]UOpAYq!]AY!]!^Ao!^;'SAY;'S;=`At<%lOAY!RAtOc!R!RAwP;=`<%lAY!ZBRYlWc!ROX+PZ[+P^p+Pqr+Psw+Px!^+P!a#S+P#T;'S+P;'S;=`+t<%lO+P!ZBtP;=`<%l@O!_COhiSlWOX@OXZAYZ[@O[^AY^p@OqrBwrsAYswBwwxAYx!PBw!P!Q@O!Q!]Bw!]!^Dj!^!aAY!a#SBw#S#TE{#T#sBw#s$f@O$f;'SBw;'S;=`HS<%l?AhBw?Ah?BY@O?BY?MnBw?MnO@O!_DsbiSlWc!ROX+PZ[+P^p+Pqr/^sw/^x!P/^!P!Q+P!Q!^/^!a#S/^#S#T0m#T#s/^#s$f+P$f;'S/^;'S;=`1e<%l?Ah/^?Ah?BY+P?BY?Mn/^?MnO+P!VFQbiSOpAYqrE{rsAYswE{wxAYx!PE{!P!QAY!Q!]E{!]!^GY!^!aAY!a#sE{#s$fAY$f;'SE{;'S;=`G|<%l?AhE{?Ah?BYAY?BY?MnE{?MnOAY!VGaXiSc!Rqr0msw0mx!P0m!Q!^0m!a#s0m$f;'S0m;'S;=`1_<%l?Ah0m?BY?Mn0m!VHPP;=`<%lE{!_HVP;=`<%lBw!ZHcW!cxaP!b`Or(trs'ksv(tw!^(t!^!_)e!_;'S(t;'S;=`*P<%lO(t!aIYliSaPlW!b`!dpOX$qXZ&XZ[$q[^&X^p$qpq&Xqr-_rs&}sv-_vw/^wx(tx}-_}!OKQ!O!P-_!P!Q$q!Q!^-_!^!_*V!_!a&X!a#S-_#S#T1k#T#s-_#s$f$q$f;'S-_;'S;=`3X<%l?Ah-_?Ah?BY$q?BY?Mn-_?MnO$q!aK_kiSaPlW!b`!dpOX$qXZ&XZ[$q[^&X^p$qpq&Xqr-_rs&}sv-_vw/^wx(tx!P-_!P!Q$q!Q!^-_!^!_*V!_!`&X!`!aMS!a#S-_#S#T1k#T#s-_#s$f$q$f;'S-_;'S;=`3X<%l?Ah-_?Ah?BY$q?BY?Mn-_?MnO$q!TM_XaP!b`!dp!fQOr&Xrs&}sv&Xwx(tx!^&X!^!_*V!_;'S&X;'S;=`*y<%lO&X!aNZ!ZiSgQaPlW!b`!dpOX$qXZ&XZ[$q[^&X^p$qpq&Xqr-_rs&}sv-_vw/^wx(tx}-_}!OMz!O!PMz!P!Q$q!Q![Mz![!]Mz!]!^-_!^!_*V!_!a&X!a!c-_!c!}Mz!}#R-_#R#SMz#S#T1k#T#oMz#o#s-_#s$f$q$f$}-_$}%OMz%O%W-_%W%oMz%o%p-_%p&aMz&a&b-_&b1pMz1p4UMz4U4dMz4d4e-_4e$ISMz$IS$I`-_$I`$IbMz$Ib$Je-_$Je$JgMz$Jg$Kh-_$Kh%#tMz%#t&/x-_&/x&EtMz&Et&FV-_&FV;'SMz;'S;:j!#|;:j;=`3X<%l?&r-_?&r?AhMz?Ah?BY$q?BY?MnMz?MnO$q!a!$PP;=`<%lMz!R!$ZY!b`!dpOq*Vqr!$yrs(Vsv*Vwx)ex!a*V!a!b!4t!b;'S*V;'S;=`*s<%lO*V!R!%Q]!b`!dpOr*Vrs(Vsv*Vwx)ex}*V}!O!%y!O!f*V!f!g!']!g#W*V#W#X!0`#X;'S*V;'S;=`*s<%lO*V!R!&QX!b`!dpOr*Vrs(Vsv*Vwx)ex}*V}!O!&m!O;'S*V;'S;=`*s<%lO*V!R!&vV!b`!dp!ePOr*Vrs(Vsv*Vwx)ex;'S*V;'S;=`*s<%lO*V!R!'dX!b`!dpOr*Vrs(Vsv*Vwx)ex!q*V!q!r!(P!r;'S*V;'S;=`*s<%lO*V!R!(WX!b`!dpOr*Vrs(Vsv*Vwx)ex!e*V!e!f!(s!f;'S*V;'S;=`*s<%lO*V!R!(zX!b`!dpOr*Vrs(Vsv*Vwx)ex!v*V!v!w!)g!w;'S*V;'S;=`*s<%lO*V!R!)nX!b`!dpOr*Vrs(Vsv*Vwx)ex!{*V!{!|!*Z!|;'S*V;'S;=`*s<%lO*V!R!*bX!b`!dpOr*Vrs(Vsv*Vwx)ex!r*V!r!s!*}!s;'S*V;'S;=`*s<%lO*V!R!+UX!b`!dpOr*Vrs(Vsv*Vwx)ex!g*V!g!h!+q!h;'S*V;'S;=`*s<%lO*V!R!+xY!b`!dpOr!+qrs!,hsv!+qvw!-Swx!.[x!`!+q!`!a!/j!a;'S!+q;'S;=`!0Y<%lO!+qq!,mV!dpOv!,hvx!-Sx!`!,h!`!a!-q!a;'S!,h;'S;=`!.U<%lO!,hP!-VTO!`!-S!`!a!-f!a;'S!-S;'S;=`!-k<%lO!-SP!-kO|PP!-nP;=`<%l!-Sq!-xS!dp|POv(Vx;'S(V;'S;=`(h<%lO(Vq!.XP;=`<%l!,ha!.aX!b`Or!.[rs!-Ssv!.[vw!-Sw!`!.[!`!a!.|!a;'S!.[;'S;=`!/d<%lO!.[a!/TT!b`|POr)esv)ew;'S)e;'S;=`)y<%lO)ea!/gP;=`<%l!.[!R!/sV!b`!dp|POr*Vrs(Vsv*Vwx)ex;'S*V;'S;=`*s<%lO*V!R!0]P;=`<%l!+q!R!0gX!b`!dpOr*Vrs(Vsv*Vwx)ex#c*V#c#d!1S#d;'S*V;'S;=`*s<%lO*V!R!1ZX!b`!dpOr*Vrs(Vsv*Vwx)ex#V*V#V#W!1v#W;'S*V;'S;=`*s<%lO*V!R!1}X!b`!dpOr*Vrs(Vsv*Vwx)ex#h*V#h#i!2j#i;'S*V;'S;=`*s<%lO*V!R!2qX!b`!dpOr*Vrs(Vsv*Vwx)ex#m*V#m#n!3^#n;'S*V;'S;=`*s<%lO*V!R!3eX!b`!dpOr*Vrs(Vsv*Vwx)ex#d*V#d#e!4Q#e;'S*V;'S;=`*s<%lO*V!R!4XX!b`!dpOr*Vrs(Vsv*Vwx)ex#X*V#X#Y!+q#Y;'S*V;'S;=`*s<%lO*V!R!4{Y!b`!dpOr!4trs!5ksv!4tvw!6Vwx!8]x!a!4t!a!b!:]!b;'S!4t;'S;=`!;r<%lO!4tq!5pV!dpOv!5kvx!6Vx!a!5k!a!b!7W!b;'S!5k;'S;=`!8V<%lO!5kP!6YTO!a!6V!a!b!6i!b;'S!6V;'S;=`!7Q<%lO!6VP!6lTO!`!6V!`!a!6{!a;'S!6V;'S;=`!7Q<%lO!6VP!7QOyPP!7TP;=`<%l!6Vq!7]V!dpOv!5kvx!6Vx!`!5k!`!a!7r!a;'S!5k;'S;=`!8V<%lO!5kq!7yS!dpyPOv(Vx;'S(V;'S;=`(h<%lO(Vq!8YP;=`<%l!5ka!8bX!b`Or!8]rs!6Vsv!8]vw!6Vw!a!8]!a!b!8}!b;'S!8];'S;=`!:V<%lO!8]a!9SX!b`Or!8]rs!6Vsv!8]vw!6Vw!`!8]!`!a!9o!a;'S!8];'S;=`!:V<%lO!8]a!9vT!b`yPOr)esv)ew;'S)e;'S;=`)y<%lO)ea!:YP;=`<%l!8]!R!:dY!b`!dpOr!4trs!5ksv!4tvw!6Vwx!8]x!`!4t!`!a!;S!a;'S!4t;'S;=`!;r<%lO!4t!R!;]V!b`!dpyPOr*Vrs(Vsv*Vwx)ex;'S*V;'S;=`*s<%lO*V!R!;uP;=`<%l!4t!V!<TXjSaP!b`!dpOr&Xrs&}sv&Xwx(tx!^&X!^!_*V!_;'S&X;'S;=`*y<%lO&X",
   tokenizers: [scriptTokens, styleTokens, textareaTokens, endTag, tagStart, commentContent, 0, 1, 2, 3, 4, 5],
-  topRules: {"Document":[0,15]},
-  dialects: {noMatch: 0, selfClosing: 509},
-  tokenPrec: 511
+  topRules: {"Document":[0,16]},
+  dialects: {noMatch: 0, selfClosing: 515},
+  tokenPrec: 517
 });
 
 function getAttrs(openTag, input) {
@@ -31004,15 +31246,15 @@ var index$3 = /*#__PURE__*/Object.freeze({
 });
 
 // This file was generated by lezer-generator. You probably shouldn't edit it.
-const noSemi = 315,
-  noSemiType = 316,
+const noSemi = 316,
+  noSemiType = 317,
   incdec = 1,
   incdecPrefix = 2,
   questionDot = 3,
   JSXStartTag = 4,
-  insertSemi = 317,
-  spaces = 319,
-  newline = 320,
+  insertSemi = 318,
+  spaces = 320,
+  newline = 321,
   LineComment = 5,
   BlockComment = 6,
   Dialect_jsx = 0;
@@ -31102,7 +31344,7 @@ const jsx = new ExternalTokenizer((input, stack) => {
 
 const jsHighlight = styleTags({
   "get set async static": tags$1.modifier,
-  "for while do if else switch try catch finally return throw break continue default case": tags$1.controlKeyword,
+  "for while do if else switch try catch finally return throw break continue default case defer": tags$1.controlKeyword,
   "in of await yield void typeof delete instanceof as satisfies": tags$1.operatorKeyword,
   "let var const using function class extends": tags$1.definitionKeyword,
   "import export from": tags$1.moduleKeyword,
@@ -31162,33 +31404,33 @@ const jsHighlight = styleTags({
 });
 
 // This file was generated by lezer-generator. You probably shouldn't edit it.
-const spec_identifier = {__proto__:null,export:20, as:25, from:33, default:36, async:41, function:42, in:52, out:55, const:56, extends:60, this:64, true:72, false:72, null:84, void:88, typeof:92, super:108, new:142, delete:154, yield:163, await:167, class:172, public:235, private:235, protected:235, readonly:237, instanceof:256, satisfies:259, import:292, keyof:349, unique:353, infer:359, asserts:395, is:397, abstract:417, implements:419, type:421, let:424, var:426, using:429, interface:435, enum:439, namespace:445, module:447, declare:451, global:455, for:474, of:483, while:486, with:490, do:494, if:498, else:500, switch:504, case:510, try:516, catch:520, finally:524, return:528, throw:532, break:536, continue:540, debugger:544};
+const spec_identifier = {__proto__:null,export:20, as:25, from:33, default:36, async:41, function:42, in:52, out:55, const:56, extends:60, this:64, true:72, false:72, null:84, void:88, typeof:92, super:108, new:142, delete:154, yield:163, await:167, class:172, public:235, private:235, protected:235, readonly:237, instanceof:256, satisfies:259, import:292, keyof:349, unique:353, infer:359, asserts:395, is:397, abstract:417, implements:419, type:421, let:424, var:426, using:429, interface:435, enum:439, namespace:445, module:447, declare:451, global:455, defer:471, for:476, of:485, while:488, with:492, do:496, if:500, else:502, switch:506, case:512, try:518, catch:522, finally:526, return:530, throw:534, break:538, continue:542, debugger:546};
 const spec_word = {__proto__:null,async:129, get:131, set:133, declare:195, public:197, private:197, protected:197, static:199, abstract:201, override:203, readonly:209, accessor:211, new:401};
 const spec_LessThan = {__proto__:null,"<":193};
 const parser = LRParser.deserialize({
   version: 14,
-  states: "$EOQ%TQlOOO%[QlOOO'_QpOOP(lO`OOO*zQ!0MxO'#CiO+RO#tO'#CjO+aO&jO'#CjO+oO#@ItO'#DaO.QQlO'#DgO.bQlO'#DrO%[QlO'#DzO0fQlO'#ESOOQ!0Lf'#E['#E[O1PQ`O'#EXOOQO'#Ep'#EpOOQO'#Ik'#IkO1XQ`O'#GsO1dQ`O'#EoO1iQ`O'#EoO3hQ!0MxO'#JqO6[Q!0MxO'#JrO6uQ`O'#F]O6zQ,UO'#FtOOQ!0Lf'#Ff'#FfO7VO7dO'#FfO7eQMhO'#F|O9[Q`O'#F{OOQ!0Lf'#Jr'#JrOOQ!0Lb'#Jq'#JqO9aQ`O'#GwOOQ['#K^'#K^O9lQ`O'#IXO9qQ!0LrO'#IYOOQ['#J_'#J_OOQ['#I^'#I^Q`QlOOQ`QlOOO9yQ!L^O'#DvO:QQlO'#EOO:XQlO'#EQO9gQ`O'#GsO:`QMhO'#CoO:nQ`O'#EnO:yQ`O'#EyO;OQMhO'#FeO;mQ`O'#GsOOQO'#K_'#K_O;rQ`O'#K_O<QQ`O'#G{O<QQ`O'#G|O<QQ`O'#HOO9gQ`O'#HRO<wQ`O'#HUO>`Q`O'#CeO>pQ`O'#HbO>xQ`O'#HhO>xQ`O'#HjO`QlO'#HlO>xQ`O'#HnO>xQ`O'#HqO>}Q`O'#HwO?SQ!0LsO'#H}O%[QlO'#IPO?_Q!0LsO'#IRO?jQ!0LsO'#ITO9qQ!0LrO'#IVO?uQ!0MxO'#CiO@wQpO'#DlQOQ`OOO%[QlO'#EQOA_Q`O'#ETO:`QMhO'#EnOAjQ`O'#EnOAuQ!bO'#FeOOQ['#Cg'#CgOOQ!0Lb'#Dq'#DqOOQ!0Lb'#Ju'#JuO%[QlO'#JuOOQO'#Jx'#JxOOQO'#Ig'#IgOBuQpO'#EgOOQ!0Lb'#Ef'#EfOOQ!0Lb'#J|'#J|OCqQ!0MSO'#EgOC{QpO'#EWOOQO'#Jw'#JwODaQpO'#JxOEnQpO'#EWOC{QpO'#EgPE{O&2DjO'#CbPOOO)CD|)CD|OOOO'#I_'#I_OFWO#tO,59UOOQ!0Lh,59U,59UOOOO'#I`'#I`OFfO&jO,59UOFtQ!L^O'#DcOOOO'#Ib'#IbOF{O#@ItO,59{OOQ!0Lf,59{,59{OGZQlO'#IcOGnQ`O'#JsOImQ!fO'#JsO+}QlO'#JsOItQ`O,5:ROJ[Q`O'#EpOJiQ`O'#KSOJtQ`O'#KROJtQ`O'#KROJ|Q`O,5;^OKRQ`O'#KQOOQ!0Ln,5:^,5:^OKYQlO,5:^OMWQ!0MxO,5:fOMwQ`O,5:nONbQ!0LrO'#KPONiQ`O'#KOO9aQ`O'#KOON}Q`O'#KOO! VQ`O,5;]O! [Q`O'#KOO!#aQ!fO'#JrOOQ!0Lh'#Ci'#CiO%[QlO'#ESO!$PQ!fO,5:sOOQS'#Jy'#JyOOQO-E<i-E<iO9gQ`O,5=_O!$gQ`O,5=_O!$lQlO,5;ZO!&oQMhO'#EkO!(YQ`O,5;ZO!(_QlO'#DyO!(iQpO,5;dO!(qQpO,5;dO%[QlO,5;dOOQ['#FT'#FTOOQ['#FV'#FVO%[QlO,5;eO%[QlO,5;eO%[QlO,5;eO%[QlO,5;eO%[QlO,5;eO%[QlO,5;eO%[QlO,5;eO%[QlO,5;eO%[QlO,5;eO%[QlO,5;eOOQ['#FZ'#FZO!)PQlO,5;tOOQ!0Lf,5;y,5;yOOQ!0Lf,5;z,5;zOOQ!0Lf,5;|,5;|O%[QlO'#IoO!+SQ!0LrO,5<iO%[QlO,5;eO!&oQMhO,5;eO!+qQMhO,5;eO!-cQMhO'#E^O%[QlO,5;wOOQ!0Lf,5;{,5;{O!-jQ,UO'#FjO!.gQ,UO'#KWO!.RQ,UO'#KWO!.nQ,UO'#KWOOQO'#KW'#KWO!/SQ,UO,5<SOOOW,5<`,5<`O!/eQlO'#FvOOOW'#In'#InO7VO7dO,5<QO!/lQ,UO'#FxOOQ!0Lf,5<Q,5<QO!0]Q$IUO'#CyOOQ!0Lh'#C}'#C}O!0pO#@ItO'#DRO!1^QMjO,5<eO!1eQ`O,5<hO!3QQ(CWO'#GXO!3_Q`O'#GYO!3dQ`O'#GYO!5SQ(CWO'#G^O!6XQpO'#GbOOQO'#Gn'#GnO!+xQMhO'#GmOOQO'#Gp'#GpO!+xQMhO'#GoO!6zQ$IUO'#JkOOQ!0Lh'#Jk'#JkO!7UQ`O'#JjO!7dQ`O'#JiO!7lQ`O'#CuOOQ!0Lh'#C{'#C{O!7}Q`O'#C}OOQ!0Lh'#DV'#DVOOQ!0Lh'#DX'#DXO1SQ`O'#DZO!+xQMhO'#GPO!+xQMhO'#GRO!8SQ`O'#GTO!8XQ`O'#GUO!3dQ`O'#G[O!+xQMhO'#GaO<QQ`O'#JjO!8^Q`O'#EqO!8{Q`O,5<gOOQ!0Lb'#Cr'#CrO!9TQ`O'#ErO!9}QpO'#EsOOQ!0Lb'#KQ'#KQO!:UQ!0LrO'#K`O9qQ!0LrO,5=cO`QlO,5>sOOQ['#Jg'#JgOOQ[,5>t,5>tOOQ[-E<[-E<[O!<TQ!0MxO,5:bO!9xQpO,5:`O!>nQ!0MxO,5:jO%[QlO,5:jO!AUQ!0MxO,5:lOOQO,5@y,5@yO!AuQMhO,5=_O!BTQ!0LrO'#JhO9[Q`O'#JhO!BfQ!0LrO,59ZO!BqQpO,59ZO!ByQMhO,59ZO:`QMhO,59ZO!CUQ`O,5;ZO!C^Q`O'#HaO!CrQ`O'#KcO%[QlO,5;}O!9xQpO,5<PO!CzQ`O,5=zO!DPQ`O,5=zO!DUQ`O,5=zO9qQ!0LrO,5=zO<QQ`O,5=jOOQO'#Cy'#CyO!DdQpO,5=gO!DlQMhO,5=hO!DwQ`O,5=jO!D|Q!bO,5=mO!EUQ`O'#K_O>}Q`O'#HWO9gQ`O'#HYO!EZQ`O'#HYO:`QMhO'#H[O!E`Q`O'#H[OOQ[,5=p,5=pO!EeQ`O'#H]O!EvQ`O'#CoO!E{Q`O,59PO!FVQ`O,59PO!H[QlO,59POOQ[,59P,59PO!HlQ!0LrO,59PO%[QlO,59PO!JwQlO'#HdOOQ['#He'#HeOOQ['#Hf'#HfO`QlO,5=|O!K_Q`O,5=|O`QlO,5>SO`QlO,5>UO!KdQ`O,5>WO`QlO,5>YO!KiQ`O,5>]O!KnQlO,5>cOOQ[,5>i,5>iO%[QlO,5>iO9qQ!0LrO,5>kOOQ[,5>m,5>mO# xQ`O,5>mOOQ[,5>o,5>oO# xQ`O,5>oOOQ[,5>q,5>qO#!fQpO'#D_O%[QlO'#JuO##XQpO'#JuO##cQpO'#DmO##tQpO'#DmO#&VQlO'#DmO#&^Q`O'#JtO#&fQ`O,5:WO#&kQ`O'#EtO#&yQ`O'#KTO#'RQ`O,5;_O#'WQpO'#DmO#'eQpO'#EVOOQ!0Lf,5:o,5:oO%[QlO,5:oO#'lQ`O,5:oO>}Q`O,5;YO!BqQpO,5;YO!ByQMhO,5;YO:`QMhO,5;YO#'tQ`O,5@aO#'yQ07dO,5:sOOQO-E<e-E<eO#)PQ!0MSO,5;ROC{QpO,5:rO#)ZQpO,5:rOC{QpO,5;RO!BfQ!0LrO,5:rOOQ!0Lb'#Ej'#EjOOQO,5;R,5;RO%[QlO,5;RO#)hQ!0LrO,5;RO#)sQ!0LrO,5;RO!BqQpO,5:rOOQO,5;X,5;XO#*RQ!0LrO,5;RPOOO'#I]'#I]P#*gO&2DjO,58|POOO,58|,58|OOOO-E<]-E<]OOQ!0Lh1G.p1G.pOOOO-E<^-E<^OOOO,59},59}O#*rQ!bO,59}OOOO-E<`-E<`OOQ!0Lf1G/g1G/gO#*wQ!fO,5>}O+}QlO,5>}OOQO,5?T,5?TO#+RQlO'#IcOOQO-E<a-E<aO#+`Q`O,5@_O#+hQ!fO,5@_O#+oQ`O,5@mOOQ!0Lf1G/m1G/mO%[QlO,5@nO#+wQ`O'#IiOOQO-E<g-E<gO#+oQ`O,5@mOOQ!0Lb1G0x1G0xOOQ!0Ln1G/x1G/xOOQ!0Ln1G0Y1G0YO%[QlO,5@kO#,]Q!0LrO,5@kO#,nQ!0LrO,5@kO#,uQ`O,5@jO9aQ`O,5@jO#,}Q`O,5@jO#-]Q`O'#IlO#,uQ`O,5@jOOQ!0Lb1G0w1G0wO!(iQpO,5:uO!(tQpO,5:uOOQS,5:w,5:wO#-}QdO,5:wO#.VQMhO1G2yO9gQ`O1G2yOOQ!0Lf1G0u1G0uO#.eQ!0MxO1G0uO#/jQ!0MvO,5;VOOQ!0Lh'#GW'#GWO#0WQ!0MzO'#JkO!$lQlO1G0uO#2cQ!fO'#JvO%[QlO'#JvO#2mQ`O,5:eOOQ!0Lh'#D_'#D_OOQ!0Lf1G1O1G1OO%[QlO1G1OOOQ!0Lf1G1f1G1fO#2rQ`O1G1OO#5WQ!0MxO1G1PO#5_Q!0MxO1G1PO#7uQ!0MxO1G1PO#7|Q!0MxO1G1PO#:dQ!0MxO1G1PO#<zQ!0MxO1G1PO#=RQ!0MxO1G1PO#=YQ!0MxO1G1PO#?pQ!0MxO1G1PO#?wQ!0MxO1G1PO#BUQ?MtO'#CiO#DPQ?MtO1G1`O#DWQ?MtO'#JrO#DkQ!0MxO,5?ZOOQ!0Lb-E<m-E<mO#FxQ!0MxO1G1PO#GuQ!0MzO1G1POOQ!0Lf1G1P1G1PO#HxQMjO'#J{O#ISQ`O,5:xO#IXQ!0MxO1G1cO#I{Q,UO,5<WO#JTQ,UO,5<XO#J]Q,UO'#FoO#JtQ`O'#FnOOQO'#KX'#KXOOQO'#Im'#ImO#JyQ,UO1G1nOOQ!0Lf1G1n1G1nOOOW1G1y1G1yO#K[Q?MtO'#JqO#KfQ`O,5<bO!)PQlO,5<bOOOW-E<l-E<lOOQ!0Lf1G1l1G1lO#KkQpO'#KWOOQ!0Lf,5<d,5<dO#KsQpO,5<dO#KxQMhO'#DTOOOO'#Ia'#IaO#LPO#@ItO,59mOOQ!0Lh,59m,59mO%[QlO1G2PO!8XQ`O'#IqO#L[Q`O,5<zOOQ!0Lh,5<w,5<wO!+xQMhO'#ItO#LxQMjO,5=XO!+xQMhO'#IvO#MkQMjO,5=ZO!&oQMhO,5=]OOQO1G2S1G2SO#MuQ!dO'#CrO#NYQ(CWO'#ErO$ _QpO'#GbO$ uQ!dO,5<sO$ |Q`O'#KZO9aQ`O'#KZO$![Q`O,5<uO!+xQMhO,5<tO$!aQ`O'#GZO$!rQ`O,5<tO$!wQ!dO'#GWO$#UQ!dO'#K[O$#`Q`O'#K[O!&oQMhO'#K[O$#eQ`O,5<xO$#jQlO'#JuO$#tQpO'#GcO##tQpO'#GcO$$VQ`O'#GgO!3dQ`O'#GkO$$[Q!0LrO'#IsO$$gQpO,5<|OOQ!0Lp,5<|,5<|O$$nQpO'#GcO$${QpO'#GdO$%^QpO'#GdO$%cQMjO,5=XO$%sQMjO,5=ZOOQ!0Lh,5=^,5=^O!+xQMhO,5@UO!+xQMhO,5@UO$&TQ`O'#IxO$&iQ`O,5@TO$&qQ`O,59aOOQ!0Lh,59i,59iO$'hQ$IYO,59uOOQ!0Lh'#Jo'#JoO$(ZQMjO,5<kO$(|QMjO,5<mO@oQ`O,5<oOOQ!0Lh,5<p,5<pO$)WQ`O,5<vO$)]QMjO,5<{O$)mQ`O,5@UO$){Q`O'#KOO!$lQlO1G2RO$*QQ`O1G2RO9aQ`O'#KRO9aQ`O'#EtO%[QlO'#EtO9aQ`O'#IzO$*VQ!0LrO,5@zOOQ[1G2}1G2}OOQ[1G4_1G4_OOQ!0Lf1G/|1G/|OOQ!0Lf1G/z1G/zO$,XQ!0MxO1G0UOOQ[1G2y1G2yO!&oQMhO1G2yO%[QlO1G2yO#.YQ`O1G2yO$.]QMhO'#EkOOQ!0Lb,5@S,5@SO$.jQ!0LrO,5@SOOQ[1G.u1G.uO!BfQ!0LrO1G.uO!BqQpO1G.uO!ByQMhO1G.uO$.{Q`O1G0uO$/QQ`O'#CiO$/]Q`O'#KdO$/eQ`O,5={O$/jQ`O'#KdO$/oQ`O'#KdO$/}Q`O'#JQO$0]Q`O,5@}O$0eQ!fO1G1iOOQ!0Lf1G1k1G1kO9gQ`O1G3fO@oQ`O1G3fO$0lQ`O1G3fO$0qQ`O1G3fOOQ[1G3f1G3fO!DwQ`O1G3UO!&oQMhO1G3RO$0vQ`O1G3ROOQ[1G3S1G3SO!&oQMhO1G3SO$0{Q`O1G3SO$1TQpO'#HQOOQ[1G3U1G3UO!6SQpO'#I|O!D|Q!bO1G3XOOQ[1G3X1G3XOOQ[,5=r,5=rO$1]QMhO,5=tO9gQ`O,5=tO$$VQ`O,5=vO9[Q`O,5=vO!BqQpO,5=vO!ByQMhO,5=vO:`QMhO,5=vO$1kQ`O'#KbO$1vQ`O,5=wOOQ[1G.k1G.kO$1{Q!0LrO1G.kO@oQ`O1G.kO$2WQ`O1G.kO9qQ!0LrO1G.kO$4`Q!fO,5APO$4mQ`O,5APO9aQ`O,5APO$4xQlO,5>OO$5PQ`O,5>OOOQ[1G3h1G3hO`QlO1G3hOOQ[1G3n1G3nOOQ[1G3p1G3pO>xQ`O1G3rO$5UQlO1G3tO$9YQlO'#HsOOQ[1G3w1G3wO$9gQ`O'#HyO>}Q`O'#H{OOQ[1G3}1G3}O$9oQlO1G3}O9qQ!0LrO1G4TOOQ[1G4V1G4VOOQ!0Lb'#G_'#G_O9qQ!0LrO1G4XO9qQ!0LrO1G4ZO$=vQ`O,5@aO!)PQlO,5;`O9aQ`O,5;`O>}Q`O,5:XO!)PQlO,5:XO!BqQpO,5:XO$={Q?MtO,5:XOOQO,5;`,5;`O$>VQpO'#IdO$>mQ`O,5@`OOQ!0Lf1G/r1G/rO$>uQpO'#IjO$?PQ`O,5@oOOQ!0Lb1G0y1G0yO##tQpO,5:XOOQO'#If'#IfO$?XQpO,5:qOOQ!0Ln,5:q,5:qO#'oQ`O1G0ZOOQ!0Lf1G0Z1G0ZO%[QlO1G0ZOOQ!0Lf1G0t1G0tO>}Q`O1G0tO!BqQpO1G0tO!ByQMhO1G0tOOQ!0Lb1G5{1G5{O!BfQ!0LrO1G0^OOQO1G0m1G0mO%[QlO1G0mO$?`Q!0LrO1G0mO$?kQ!0LrO1G0mO!BqQpO1G0^OC{QpO1G0^O$?yQ!0LrO1G0mOOQO1G0^1G0^O$@_Q!0MxO1G0mPOOO-E<Z-E<ZPOOO1G.h1G.hOOOO1G/i1G/iO$@iQ!bO,5<iO$@qQ!fO1G4iOOQO1G4o1G4oO%[QlO,5>}O$@{Q`O1G5yO$ATQ`O1G6XO$A]Q!fO1G6YO9aQ`O,5?TO$AgQ!0MxO1G6VO%[QlO1G6VO$AwQ!0LrO1G6VO$BYQ`O1G6UO$BYQ`O1G6UO9aQ`O1G6UO$BbQ`O,5?WO9aQ`O,5?WOOQO,5?W,5?WO$BvQ`O,5?WO$){Q`O,5?WOOQO-E<j-E<jOOQS1G0a1G0aOOQS1G0c1G0cO#.QQ`O1G0cOOQ[7+(e7+(eO!&oQMhO7+(eO%[QlO7+(eO$CUQ`O7+(eO$CaQMhO7+(eO$CoQ!0MzO,5=XO$EzQ!0MzO,5=ZO$HVQ!0MzO,5=XO$JhQ!0MzO,5=ZO$LyQ!0MzO,59uO% OQ!0MzO,5<kO%#ZQ!0MzO,5<mO%%fQ!0MzO,5<{OOQ!0Lf7+&a7+&aO%'wQ!0MxO7+&aO%(kQlO'#IeO%(xQ`O,5@bO%)QQ!fO,5@bOOQ!0Lf1G0P1G0PO%)[Q`O7+&jOOQ!0Lf7+&j7+&jO%)aQ?MtO,5:fO%[QlO7+&zO%)kQ?MtO,5:bO%)xQ?MtO,5:jO%*SQ?MtO,5:lO%*^QMhO'#IhO%*hQ`O,5@gOOQ!0Lh1G0d1G0dOOQO1G1r1G1rOOQO1G1s1G1sO%*pQ!jO,5<ZO!)PQlO,5<YOOQO-E<k-E<kOOQ!0Lf7+'Y7+'YOOOW7+'e7+'eOOOW1G1|1G1|O%*{Q`O1G1|OOQ!0Lf1G2O1G2OOOOO,59o,59oO%+QQ!dO,59oOOOO-E<_-E<_OOQ!0Lh1G/X1G/XO%+XQ!0MxO7+'kOOQ!0Lh,5?],5?]O%+{QMhO1G2fP%,SQ`O'#IqPOQ!0Lh-E<o-E<oO%,pQMjO,5?`OOQ!0Lh-E<r-E<rO%-cQMjO,5?bOOQ!0Lh-E<t-E<tO%-mQ!dO1G2wO%-tQ!dO'#CrO%.[QMhO'#KRO$#jQlO'#JuOOQ!0Lh1G2_1G2_O%.cQ`O'#IpO%.wQ`O,5@uO%.wQ`O,5@uO%/PQ`O,5@uO%/[Q`O,5@uOOQO1G2a1G2aO%/jQMjO1G2`O!+xQMhO1G2`O%/zQ(CWO'#IrO%0XQ`O,5@vO!&oQMhO,5@vO%0aQ!dO,5@vOOQ!0Lh1G2d1G2dO%2qQ!fO'#CiO%2{Q`O,5=POOQ!0Lb,5<},5<}O%3TQpO,5<}OOQ!0Lb,5=O,5=OOClQ`O,5<}O%3`QpO,5<}OOQ!0Lb,5=R,5=RO$){Q`O,5=VOOQO,5?_,5?_OOQO-E<q-E<qOOQ!0Lp1G2h1G2hO##tQpO,5<}O$#jQlO,5=PO%3nQ`O,5=OO%3yQpO,5=OO!+xQMhO'#ItO%4sQMjO1G2sO!+xQMhO'#IvO%5fQMjO1G2uO%5pQMjO1G5pO%5zQMjO1G5pOOQO,5?d,5?dOOQO-E<v-E<vOOQO1G.{1G.{O!9xQpO,59wO%[QlO,59wOOQ!0Lh,5<j,5<jO%6XQ`O1G2ZO!+xQMhO1G2bO!+xQMhO1G5pO!+xQMhO1G5pO%6^Q!0MxO7+'mOOQ!0Lf7+'m7+'mO!$lQlO7+'mO%7QQ`O,5;`OOQ!0Lb,5?f,5?fOOQ!0Lb-E<x-E<xO%7VQ!dO'#K]O#'oQ`O7+(eO4UQ!fO7+(eO$CXQ`O7+(eO%7aQ!0MvO'#CiO%7tQ!0MvO,5=SO%8fQ`O,5=SO%8nQ`O,5=SOOQ!0Lb1G5n1G5nOOQ[7+$a7+$aO!BfQ!0LrO7+$aO!BqQpO7+$aO!$lQlO7+&aO%8sQ`O'#JPO%9[Q`O,5AOOOQO1G3g1G3gO9gQ`O,5AOO%9[Q`O,5AOO%9dQ`O,5AOOOQO,5?l,5?lOOQO-E=O-E=OOOQ!0Lf7+'T7+'TO%9iQ`O7+)QO9qQ!0LrO7+)QO9gQ`O7+)QO@oQ`O7+)QOOQ[7+(p7+(pO%9nQ!0MvO7+(mO!&oQMhO7+(mO!DrQ`O7+(nOOQ[7+(n7+(nO!&oQMhO7+(nO%9xQ`O'#KaO%:TQ`O,5=lOOQO,5?h,5?hOOQO-E<z-E<zOOQ[7+(s7+(sO%;gQpO'#HZOOQ[1G3`1G3`O!&oQMhO1G3`O%[QlO1G3`O%;nQ`O1G3`O%;yQMhO1G3`O9qQ!0LrO1G3bO$$VQ`O1G3bO9[Q`O1G3bO!BqQpO1G3bO!ByQMhO1G3bO%<XQ`O'#JOO%<mQ`O,5@|O%<uQpO,5@|OOQ!0Lb1G3c1G3cOOQ[7+$V7+$VO@oQ`O7+$VO9qQ!0LrO7+$VO%=QQ`O7+$VO%[QlO1G6kO%[QlO1G6lO%=VQ!0LrO1G6kO%=aQlO1G3jO%=hQ`O1G3jO%=mQlO1G3jOOQ[7+)S7+)SO9qQ!0LrO7+)^O`QlO7+)`OOQ['#Kg'#KgOOQ['#JR'#JRO%=tQlO,5>_OOQ[,5>_,5>_O%[QlO'#HtO%>RQ`O'#HvOOQ[,5>e,5>eO9aQ`O,5>eOOQ[,5>g,5>gOOQ[7+)i7+)iOOQ[7+)o7+)oOOQ[7+)s7+)sOOQ[7+)u7+)uO%>WQpO1G5{O%>rQ?MtO1G0zO%>|Q`O1G0zOOQO1G/s1G/sO%?XQ?MtO1G/sO>}Q`O1G/sO!)PQlO'#DmOOQO,5?O,5?OOOQO-E<b-E<bOOQO,5?U,5?UOOQO-E<h-E<hO!BqQpO1G/sOOQO-E<d-E<dOOQ!0Ln1G0]1G0]OOQ!0Lf7+%u7+%uO#'oQ`O7+%uOOQ!0Lf7+&`7+&`O>}Q`O7+&`O!BqQpO7+&`OOQO7+%x7+%xO$@_Q!0MxO7+&XOOQO7+&X7+&XO%[QlO7+&XO%?cQ!0LrO7+&XO!BfQ!0LrO7+%xO!BqQpO7+%xO%?nQ!0LrO7+&XO%?|Q!0MxO7++qO%[QlO7++qO%@^Q`O7++pO%@^Q`O7++pOOQO1G4r1G4rO9aQ`O1G4rO%@fQ`O1G4rOOQS7+%}7+%}O#'oQ`O<<LPO4UQ!fO<<LPO%@tQ`O<<LPOOQ[<<LP<<LPO!&oQMhO<<LPO%[QlO<<LPO%@|Q`O<<LPO%AXQ!0MzO,5?`O%CdQ!0MzO,5?bO%EoQ!0MzO1G2`O%HQQ!0MzO1G2sO%J]Q!0MzO1G2uO%LhQ!fO,5?PO%[QlO,5?POOQO-E<c-E<cO%LrQ`O1G5|OOQ!0Lf<<JU<<JUO%LzQ?MtO1G0uO& RQ?MtO1G1PO& YQ?MtO1G1PO&#ZQ?MtO1G1PO&#bQ?MtO1G1PO&%cQ?MtO1G1PO&'dQ?MtO1G1PO&'kQ?MtO1G1PO&'rQ?MtO1G1PO&)sQ?MtO1G1PO&)zQ?MtO1G1PO&*RQ!0MxO<<JfO&+yQ?MtO1G1PO&,vQ?MvO1G1PO&-yQ?MvO'#JkO&0PQ?MtO1G1cO&0^Q?MtO1G0UO&0hQMjO,5?SOOQO-E<f-E<fO!)PQlO'#FqOOQO'#KY'#KYOOQO1G1u1G1uO&0rQ`O1G1tO&0wQ?MtO,5?ZOOOW7+'h7+'hOOOO1G/Z1G/ZO&1RQ!dO1G4wOOQ!0Lh7+(Q7+(QP!&oQMhO,5?]O!+xQMhO7+(cO&1YQ`O,5?[O9aQ`O,5?[OOQO-E<n-E<nO&1hQ`O1G6aO&1hQ`O1G6aO&1pQ`O1G6aO&1{QMjO7+'zO&2]Q!dO,5?^O&2gQ`O,5?^O!&oQMhO,5?^OOQO-E<p-E<pO&2lQ!dO1G6bO&2vQ`O1G6bO&3OQ`O1G2kO!&oQMhO1G2kOOQ!0Lb1G2i1G2iOOQ!0Lb1G2j1G2jO%3TQpO1G2iO!BqQpO1G2iOClQ`O1G2iOOQ!0Lb1G2q1G2qO&3TQpO1G2iO&3cQ`O1G2kO$){Q`O1G2jOClQ`O1G2jO$#jQlO1G2kO&3kQ`O1G2jO&4_QMjO,5?`OOQ!0Lh-E<s-E<sO&5QQMjO,5?bOOQ!0Lh-E<u-E<uO!+xQMhO7++[OOQ!0Lh1G/c1G/cO&5[Q`O1G/cOOQ!0Lh7+'u7+'uO&5aQMjO7+'|O&5qQMjO7++[O&5{QMjO7++[O&6YQ!0MxO<<KXOOQ!0Lf<<KX<<KXO&6|Q`O1G0zO!&oQMhO'#IyO&7RQ`O,5@wO&9TQ!fO<<LPO!&oQMhO1G2nO&9[Q!0LrO1G2nOOQ[<<G{<<G{O!BfQ!0LrO<<G{O&9mQ!0MxO<<I{OOQ!0Lf<<I{<<I{OOQO,5?k,5?kO&:aQ`O,5?kO&:fQ`O,5?kOOQO-E<}-E<}O&:tQ`O1G6jO&:tQ`O1G6jO9gQ`O1G6jO@oQ`O<<LlOOQ[<<Ll<<LlO&:|Q`O<<LlO9qQ!0LrO<<LlOOQ[<<LX<<LXO%9nQ!0MvO<<LXOOQ[<<LY<<LYO!DrQ`O<<LYO&;RQpO'#I{O&;^Q`O,5@{O!)PQlO,5@{OOQ[1G3W1G3WOOQO'#I}'#I}O9qQ!0LrO'#I}O&;fQpO,5=uOOQ[,5=u,5=uO&;mQpO'#EgO&;tQpO'#GeO&;yQ`O7+(zO&<OQ`O7+(zOOQ[7+(z7+(zO!&oQMhO7+(zO%[QlO7+(zO&<WQ`O7+(zOOQ[7+(|7+(|O9qQ!0LrO7+(|O$$VQ`O7+(|O9[Q`O7+(|O!BqQpO7+(|O&<cQ`O,5?jOOQO-E<|-E<|OOQO'#H^'#H^O&<nQ`O1G6hO9qQ!0LrO<<GqOOQ[<<Gq<<GqO@oQ`O<<GqO&<vQ`O7+,VO&<{Q`O7+,WO%[QlO7+,VO%[QlO7+,WOOQ[7+)U7+)UO&=QQ`O7+)UO&=VQlO7+)UO&=^Q`O7+)UOOQ[<<Lx<<LxOOQ[<<Lz<<LzOOQ[-E=P-E=POOQ[1G3y1G3yO&=cQ`O,5>`OOQ[,5>b,5>bO&=hQ`O1G4PO9aQ`O7+&fO!)PQlO7+&fOOQO7+%_7+%_O&=mQ?MtO1G6YO>}Q`O7+%_OOQ!0Lf<<Ia<<IaOOQ!0Lf<<Iz<<IzO>}Q`O<<IzOOQO<<Is<<IsO$@_Q!0MxO<<IsO%[QlO<<IsOOQO<<Id<<IdO!BfQ!0LrO<<IdO&=wQ!0LrO<<IsO&>SQ!0MxO<= ]O&>dQ`O<= [OOQO7+*^7+*^O9aQ`O7+*^OOQ[ANAkANAkO&>lQ!fOANAkO!&oQMhOANAkO#'oQ`OANAkO4UQ!fOANAkO&>sQ`OANAkO%[QlOANAkO&>{Q!0MzO7+'zO&A^Q!0MzO,5?`O&CiQ!0MzO,5?bO&EtQ!0MzO7+'|O&HVQ!fO1G4kO&HaQ?MtO7+&aO&JeQ?MvO,5=XO&LlQ?MvO,5=ZO&L|Q?MvO,5=XO&M^Q?MvO,5=ZO&MnQ?MvO,59uO' tQ?MvO,5<kO'#wQ?MvO,5<mO'&]Q?MvO,5<{O'(RQ?MtO7+'kO'(`Q?MtO7+'mO'(mQ`O,5<]OOQO7+'`7+'`OOQ!0Lh7+*c7+*cO'(rQMjO<<K}OOQO1G4v1G4vO'(yQ`O1G4vO')UQ`O1G4vO')dQ`O7++{O')dQ`O7++{O!&oQMhO1G4xO')lQ!dO1G4xO')vQ`O7++|O'*OQ`O7+(VO'*ZQ!dO7+(VOOQ!0Lb7+(T7+(TOOQ!0Lb7+(U7+(UO!BqQpO7+(TOClQ`O7+(TO'*eQ`O7+(VO!&oQMhO7+(VO$){Q`O7+(UO'*jQ`O7+(VOClQ`O7+(UO'*rQMjO<<NvOOQ!0Lh7+$}7+$}O!+xQMhO<<NvO'*|Q!dO,5?eOOQO-E<w-E<wO'+WQ!0MvO7+(YO!&oQMhO7+(YOOQ[AN=gAN=gO9gQ`O1G5VOOQO1G5V1G5VO'+hQ`O1G5VO'+mQ`O7+,UO'+mQ`O7+,UO9qQ!0LrOANBWO@oQ`OANBWOOQ[ANBWANBWOOQ[ANAsANAsOOQ[ANAtANAtO'+uQ`O,5?gOOQO-E<y-E<yO',QQ?MtO1G6gOOQO,5?i,5?iOOQO-E<{-E<{OOQ[1G3a1G3aO',[Q`O,5=POOQ[<<Lf<<LfO!&oQMhO<<LfO&;yQ`O<<LfO',aQ`O<<LfO%[QlO<<LfOOQ[<<Lh<<LhO9qQ!0LrO<<LhO$$VQ`O<<LhO9[Q`O<<LhO',iQpO1G5UO',tQ`O7+,SOOQ[AN=]AN=]O9qQ!0LrOAN=]OOQ[<= q<= qOOQ[<= r<= rO',|Q`O<= qO'-RQ`O<= rOOQ[<<Lp<<LpO'-WQ`O<<LpO'-]QlO<<LpOOQ[1G3z1G3zO>}Q`O7+)kO'-dQ`O<<JQO'-oQ?MtO<<JQOOQO<<Hy<<HyOOQ!0LfAN?fAN?fOOQOAN?_AN?_O$@_Q!0MxOAN?_OOQOAN?OAN?OO%[QlOAN?_OOQO<<Mx<<MxOOQ[G27VG27VO!&oQMhOG27VO#'oQ`OG27VO'-yQ!fOG27VO4UQ!fOG27VO'.QQ`OG27VO'.YQ?MtO<<JfO'.gQ?MvO1G2`O'0]Q?MvO,5?`O'2`Q?MvO,5?bO'4cQ?MvO1G2sO'6fQ?MvO1G2uO'8iQ?MtO<<KXO'8vQ?MtO<<I{OOQO1G1w1G1wO!+xQMhOANAiOOQO7+*b7+*bO'9TQ`O7+*bO'9`Q`O<= gO'9hQ!dO7+*dOOQ!0Lb<<Kq<<KqO$){Q`O<<KqOClQ`O<<KqO'9rQ`O<<KqO!&oQMhO<<KqOOQ!0Lb<<Ko<<KoO!BqQpO<<KoO'9}Q!dO<<KqOOQ!0Lb<<Kp<<KpO':XQ`O<<KqO!&oQMhO<<KqO$){Q`O<<KpO':^QMjOANDbO':hQ!0MvO<<KtOOQO7+*q7+*qO9gQ`O7+*qO':xQ`O<= pOOQ[G27rG27rO9qQ!0LrOG27rO!)PQlO1G5RO';QQ`O7+,RO';YQ`O1G2kO&;yQ`OANBQOOQ[ANBQANBQO!&oQMhOANBQO';_Q`OANBQOOQ[ANBSANBSO9qQ!0LrOANBSO$$VQ`OANBSOOQO'#H_'#H_OOQO7+*p7+*pOOQ[G22wG22wOOQ[ANE]ANE]OOQ[ANE^ANE^OOQ[ANB[ANB[O';gQ`OANB[OOQ[<<MV<<MVO!)PQlOAN?lOOQOG24yG24yO$@_Q!0MxOG24yO#'oQ`OLD,qOOQ[LD,qLD,qO!&oQMhOLD,qO';lQ!fOLD,qO';sQ?MvO7+'zO'=iQ?MvO,5?`O'?lQ?MvO,5?bO'AoQ?MvO7+'|O'CeQMjOG27TOOQO<<M|<<M|OOQ!0LbANA]ANA]O$){Q`OANA]OClQ`OANA]O'CuQ!dOANA]OOQ!0LbANAZANAZO'C|Q`OANA]O!&oQMhOANA]O'DXQ!dOANA]OOQ!0LbANA[ANA[OOQO<<N]<<N]OOQ[LD-^LD-^O'DcQ?MtO7+*mOOQO'#Gf'#GfOOQ[G27lG27lO&;yQ`OG27lO!&oQMhOG27lOOQ[G27nG27nO9qQ!0LrOG27nOOQ[G27vG27vO'DmQ?MtOG25WOOQOLD*eLD*eOOQ[!$(!]!$(!]O#'oQ`O!$(!]O!&oQMhO!$(!]O'DwQ!0MzOG27TOOQ!0LbG26wG26wO$){Q`OG26wO'GYQ`OG26wOClQ`OG26wO'GeQ!dOG26wO!&oQMhOG26wOOQ[LD-WLD-WO&;yQ`OLD-WOOQ[LD-YLD-YOOQ[!)9Ew!)9EwO#'oQ`O!)9EwOOQ!0LbLD,cLD,cO$){Q`OLD,cOClQ`OLD,cO'GlQ`OLD,cO'GwQ!dOLD,cOOQ[!$(!r!$(!rOOQ[!.K;c!.K;cO'HOQ?MvOG27TOOQ!0Lb!$( }!$( }O$){Q`O!$( }OClQ`O!$( }O'ItQ`O!$( }OOQ!0Lb!)9Ei!)9EiO$){Q`O!)9EiOClQ`O!)9EiOOQ!0Lb!.K;T!.K;TO$){Q`O!.K;TOOQ!0Lb!4/0o!4/0oO!)PQlO'#DzO1PQ`O'#EXO'JPQ!fO'#JqO'JWQ!L^O'#DvO'J_QlO'#EOO'JfQ!fO'#CiO'L|Q!fO'#CiO!)PQlO'#EQO'M^QlO,5;ZO!)PQlO,5;eO!)PQlO,5;eO!)PQlO,5;eO!)PQlO,5;eO!)PQlO,5;eO!)PQlO,5;eO!)PQlO,5;eO!)PQlO,5;eO!)PQlO,5;eO!)PQlO,5;eO!)PQlO'#IoO( aQ`O,5<iO!)PQlO,5;eO( iQMhO,5;eO(#SQMhO,5;eO!)PQlO,5;wO!&oQMhO'#GmO( iQMhO'#GmO!&oQMhO'#GoO( iQMhO'#GoO1SQ`O'#DZO1SQ`O'#DZO!&oQMhO'#GPO( iQMhO'#GPO!&oQMhO'#GRO( iQMhO'#GRO!&oQMhO'#GaO( iQMhO'#GaO!)PQlO,5:jO(#ZQpO'#D_O(#eQpO'#JuO!)PQlO,5@nO'M^QlO1G0uO(#oQ?MtO'#CiO!)PQlO1G2PO!&oQMhO'#ItO( iQMhO'#ItO!&oQMhO'#IvO( iQMhO'#IvO(#yQ!dO'#CrO!&oQMhO,5<tO( iQMhO,5<tO'M^QlO1G2RO!)PQlO7+&zO!&oQMhO1G2`O( iQMhO1G2`O!&oQMhO'#ItO( iQMhO'#ItO!&oQMhO'#IvO( iQMhO'#IvO!&oQMhO1G2bO( iQMhO1G2bO'M^QlO7+'mO'M^QlO7+&aO!&oQMhOANAiO( iQMhOANAiO($^Q`O'#EoO($cQ`O'#EoO($kQ`O'#F]O($pQ`O'#EyO($uQ`O'#KSO(%QQ`O'#KQO(%]Q`O,5;ZO(%bQMjO,5<eO(%iQ`O'#GYO(%nQ`O'#GYO(%sQ`O,5<gO(%{Q`O,5;ZO(&TQ?MtO1G1`O(&[Q`O,5<tO(&aQ`O,5<tO(&fQ`O,5<vO(&kQ`O,5<vO(&pQ`O1G2RO(&uQ`O1G0uO(&zQMjO<<K}O('RQMjO<<K}O7eQMhO'#F|O9[Q`O'#F{OAjQ`O'#EnO!)PQlO,5;tO!3dQ`O'#GYO!3dQ`O'#GYO!3dQ`O'#G[O!3dQ`O'#G[O!+xQMhO7+(cO!+xQMhO7+(cO%-mQ!dO1G2wO%-mQ!dO1G2wO!&oQMhO,5=]O!&oQMhO,5=]",
-  stateData: "((X~O'{OS'|OSTOS'}RQ~OPYOQYOSfOY!VOaqOdzOeyOl!POpkOrYOskOtkOzkO|YO!OYO!SWO!WkO!XkO!_XO!iuO!lZO!oYO!pYO!qYO!svO!uwO!xxO!|]O$W|O$niO%h}O%j!QO%l!OO%m!OO%n!OO%q!RO%s!SO%v!TO%w!TO%y!UO&V!WO&]!XO&_!YO&a!ZO&c![O&f!]O&l!^O&r!_O&t!`O&v!aO&x!bO&z!cO(SSO(UTO(XUO(`VO(n[O~OWtO~P`OPYOQYOSfOd!jOe!iOpkOrYOskOtkOzkO|YO!OYO!SWO!WkO!XkO!_!eO!iuO!lZO!oYO!pYO!qYO!svO!u!gO!x!hO$W!kO$niO(S!dO(UTO(XUO(`VO(n[O~Oa!wOs!nO!S!oO!b!yO!c!vO!d!vO!|;wO#T!pO#U!pO#V!xO#W!pO#X!pO#[!zO#]!zO(T!lO(UTO(XUO(d!mO(n!sO~O'}!{O~OP]XR]X[]Xa]Xj]Xr]X!Q]X!S]X!]]X!l]X!p]X#R]X#S]X#`]X#kfX#n]X#o]X#p]X#q]X#r]X#s]X#t]X#u]X#v]X#x]X#z]X#{]X$Q]X'y]X(`]X(q]X(x]X(y]X~O!g%RX~P(qO_!}O(U#PO(V!}O(W#PO~O_#QO(W#PO(X#PO(Y#QO~Ox#SO!U#TO(a#TO(b#VO~OPYOQYOSfOd!jOe!iOpkOrYOskOtkOzkO|YO!OYO!SWO!WkO!XkO!_!eO!iuO!lZO!oYO!pYO!qYO!svO!u!gO!x!hO$W!kO$niO(S;{O(UTO(XUO(`VO(n[O~O![#ZO!]#WO!Y(gP!Y(uP~P+}O!^#cO~P`OPYOQYOSfOd!jOe!iOrYOskOtkOzkO|YO!OYO!SWO!WkO!XkO!_!eO!iuO!lZO!oYO!pYO!qYO!svO!u!gO!x!hO$W!kO$niO(UTO(XUO(`VO(n[O~Op#mO![#iO!|]O#i#lO#j#iO(S;|O!k(rP~P.iO!l#oO(S#nO~O!x#sO!|]O%h#tO~O#k#uO~O!g#vO#k#uO~OP$[OR#zO[$cOj$ROr$aO!Q#yO!S#{O!]$_O!l#xO!p$[O#R$RO#n$OO#o$PO#p$PO#q$PO#r$QO#s$RO#t$RO#u$bO#v$SO#x$UO#z$WO#{$XO(`VO(q$YO(x#|O(y#}O~Oa(eX'y(eX'v(eX!k(eX!Y(eX!_(eX%i(eX!g(eX~P1qO#S$dO#`$eO$Q$eOP(fXR(fX[(fXj(fXr(fX!Q(fX!S(fX!](fX!l(fX!p(fX#R(fX#n(fX#o(fX#p(fX#q(fX#r(fX#s(fX#t(fX#u(fX#v(fX#x(fX#z(fX#{(fX(`(fX(q(fX(x(fX(y(fX!_(fX%i(fX~Oa(fX'y(fX'v(fX!Y(fX!k(fXv(fX!g(fX~P4UO#`$eO~O$]$hO$_$gO$f$mO~OSfO!_$nO$i$oO$k$qO~Oh%VOj%cOk%cOl%cOp%WOr%XOs$tOt$tOz%YO|%ZO!O%[O!S${O!_$|O!i%aO!l$xO#j%bO$W%_O$t%]O$v%^O$y%`O(S$sO(UTO(XUO(`$uO(x$}O(y%POg(]P~O!l%dO~O!S%gO!_%hO(S%fO~O!g%lO~Oa%mO'y%mO~O!Q%qO~P%[O(T!lO~P%[O%n%uO~P%[Oh%VO!l%dO(S%fO(T!lO~Oe%|O!l%dO(S%fO~Oj$RO~O!Q&RO!_&OO!l&QO%j&UO(S%fO(T!lO(UTO(XUO`)VP~O!x#sO~O%s&WO!S)RX!_)RX(S)RX~O(S&XO~Ol!PO!u&^O%j!QO%l!OO%m!OO%n!OO%q!RO%s!SO%v!TO%w!TO~Od&cOe&bO!x&`O%h&aO%{&_O~P<VOd&fOeyOl!PO!_&eO!u&^O!xxO!|]O%h}O%l!OO%m!OO%n!OO%q!RO%s!SO%v!TO%w!TO%y!UO~Ob&iO#`&lO%j&gO(T!lO~P=[O!l&mO!u&qO~O!l#oO~O!_XO~Oa%mO'w&yO'y%mO~Oa%mO'w&|O'y%mO~Oa%mO'w'OO'y%mO~O'v]X!Y]Xv]X!k]X&Z]X!_]X%i]X!g]X~P(qO!b']O!c'UO!d'UO(T!lO(UTO(XUO~Os'SO!S'RO!['VO(d'QO!^(hP!^(wP~P@cOn'`O!_'^O(S%fO~Oe'eO!l%dO(S%fO~O!Q&RO!l&QO~Os!nO!S!oO!|;wO#T!pO#U!pO#W!pO#X!pO(T!lO(UTO(XUO(d!mO(n!sO~O!b'kO!c'jO!d'jO#V!pO#['lO#]'lO~PA}Oa%mOh%VO!g#vO!l%dO'y%mO(q'nO~O!p'rO#`'pO~PC]Os!nO!S!oO(UTO(XUO(d!mO(n!sO~O!_XOs(lX!S(lX!b(lX!c(lX!d(lX!|(lX#T(lX#U(lX#V(lX#W(lX#X(lX#[(lX#](lX(T(lX(U(lX(X(lX(d(lX(n(lX~O!c'jO!d'jO(T!lO~PC{O(O'vO(P'vO(Q'xO~O_!}O(U'zO(V!}O(W'zO~O_#QO(W'zO(X'zO(Y#QO~Ov'|O~P%[Ox#SO!U#TO(a#TO(b(PO~O![(RO!Y'VX!Y']X!]'VX!]']X~P+}O!](TO!Y(gX~OP$[OR#zO[$cOj$ROr$aO!Q#yO!S#{O!](TO!l#xO!p$[O#R$RO#n$OO#o$PO#p$PO#q$PO#r$QO#s$RO#t$RO#u$bO#v$SO#x$UO#z$WO#{$XO(`VO(q$YO(x#|O(y#}O~O!Y(gX~PGvO!Y(YO~O!Y(tX!](tX!g(tX!k(tX(q(tX~O#`(tX#k#dX!^(tX~PIyO#`(ZO!Y(vX!](vX~O!]([O!Y(uX~O!Y(_O~O#`$eO~PIyO!^(`O~P`OR#zO!Q#yO!S#{O!l#xO(`VOP!na[!naj!nar!na!]!na!p!na#R!na#n!na#o!na#p!na#q!na#r!na#s!na#t!na#u!na#v!na#x!na#z!na#{!na(q!na(x!na(y!na~Oa!na'y!na'v!na!Y!na!k!nav!na!_!na%i!na!g!na~PKaO!k(aO~O!g#vO#`(bO(q'nO!](sXa(sX'y(sX~O!k(sX~PM|O!S%gO!_%hO!|]O#i(gO#j(fO(S%fO~O!](hO!k(rX~O!k(jO~O!S%gO!_%hO#j(fO(S%fO~OP(fXR(fX[(fXj(fXr(fX!Q(fX!S(fX!](fX!l(fX!p(fX#R(fX#n(fX#o(fX#p(fX#q(fX#r(fX#s(fX#t(fX#u(fX#v(fX#x(fX#z(fX#{(fX(`(fX(q(fX(x(fX(y(fX~O!g#vO!k(fX~P! jOR(lO!Q(kO!l#xO#S$dO!|!{a!S!{a~O!x!{a%h!{a!_!{a#i!{a#j!{a(S!{a~P!#kO!x(pO~OPYOQYOSfOd!jOe!iOpkOrYOskOtkOzkO|YO!OYO!SWO!WkO!XkO!_XO!iuO!lZO!oYO!pYO!qYO!svO!u!gO!x!hO$W!kO$niO(S!dO(UTO(XUO(`VO(n[O~Oh%VOp%WOr%XOs$tOt$tOz%YO|%ZO!O<eO!S${O!_$|O!i=vO!l$xO#j<kO$W%_O$t<gO$v<iO$y%`O(S(tO(UTO(XUO(`$uO(x$}O(y%PO~O#k(vO~O![(xO!k(jP~P%[O(d(zO(n[O~O!S(|O!l#xO(d(zO(n[O~OP;vOQ;vOSfOd=rOe!iOpkOr;vOskOtkOzkO|;vO!O;vO!SWO!WkO!XkO!_!eO!i;yO!lZO!o;vO!p;vO!q;vO!s;zO!u;}O!x!hO$W!kO$n=pO(S)ZO(UTO(XUO(`VO(n[O~O!]$_Oa$qa'y$qa'v$qa!k$qa!Y$qa!_$qa%i$qa!g$qa~Ol)bO~P!&oOh%VOp%WOr%XOs$tOt$tOz%YO|%ZO!O%[O!S${O!_$|O!i%aO!l$xO#j%bO$W%_O$t%]O$v%^O$y%`O(S(tO(UTO(XUO(`$uO(x$}O(y%PO~Og(oP~P!+xO!Q)gO!g)fO!_$^X$Z$^X$]$^X$_$^X$f$^X~O!g)fO!_(zX$Z(zX$](zX$_(zX$f(zX~O!Q)gO~P!.RO!Q)gO!_(zX$Z(zX$](zX$_(zX$f(zX~O!_)iO$Z)mO$])hO$_)hO$f)nO~O![)qO~P!)PO$]$hO$_$gO$f)uO~On$zX!Q$zX#S$zX'x$zX(x$zX(y$zX~OgmXg$zXnmX!]mX#`mX~P!/wOx)wO(a)xO(b)zO~On*TO!Q)|O'x)}O(x$}O(y%PO~Og){O~P!0{Og*UO~Oh%VOp%WOr%XOs$tOt$tOz%YO|%ZO!O<eO!S*WO!_*XO!i=vO!l$xO#j<kO$W%_O$t<gO$v<iO$y%`O(UTO(XUO(`$uO(x$}O(y%PO~O![*[O(S*VO!k(}P~P!1jO#k*^O~O!l*_O~Oh%VOp%WOr%XOs$tOt$tOz%YO|%ZO!O<eO!S${O!_$|O!i=vO!l$xO#j<kO$W%_O$t<gO$v<iO$y%`O(S*aO(UTO(XUO(`$uO(x$}O(y%PO~O![*dO!Y)OP~P!3iOr*pOs!nO!S*fO!b*nO!c*hO!d*hO!l*_O#[*oO%`*jO(T!lO(UTO(XUO(d!mO~O!^*mO~P!5^O#S$dOn(_X!Q(_X'x(_X(x(_X(y(_X!](_X#`(_X~Og(_X$O(_X~P!6`On*uO#`*tOg(^X!](^X~O!]*vOg(]X~Oj%cOk%cOl%cO(S&XOg(]P~Os*yO~O!l+OO~O(S(tO~Op+TO!S%gO![#iO!_%hO!|]O#i#lO#j#iO(S%fO!k(rP~O!g#vO#k+UO~O!S%gO![+WO!]([O!_%hO(S%fO!Y(uP~Os'YO!S+YO![+XO(UTO(XUO(d(zO~O!^(wP~P!9iO!]+ZOa)SX'y)SX~OP$[OR#zO[$cOj$ROr$aO!Q#yO!S#{O!l#xO!p$[O#R$RO#n$OO#o$PO#p$PO#q$PO#r$QO#s$RO#t$RO#u$bO#v$SO#x$UO#z$WO#{$XO(`VO(q$YO(x#|O(y#}O~Oa!ja!]!ja'y!ja'v!ja!Y!ja!k!jav!ja!_!ja%i!ja!g!ja~P!:aOR#zO!Q#yO!S#{O!l#xO(`VOP!ra[!raj!rar!ra!]!ra!p!ra#R!ra#n!ra#o!ra#p!ra#q!ra#r!ra#s!ra#t!ra#u!ra#v!ra#x!ra#z!ra#{!ra(q!ra(x!ra(y!ra~Oa!ra'y!ra'v!ra!Y!ra!k!rav!ra!_!ra%i!ra!g!ra~P!<wOR#zO!Q#yO!S#{O!l#xO(`VOP!ta[!taj!tar!ta!]!ta!p!ta#R!ta#n!ta#o!ta#p!ta#q!ta#r!ta#s!ta#t!ta#u!ta#v!ta#x!ta#z!ta#{!ta(q!ta(x!ta(y!ta~Oa!ta'y!ta'v!ta!Y!ta!k!tav!ta!_!ta%i!ta!g!ta~P!?_Oh%VOn+dO!_'^O%i+cO~O!g+fOa([X!_([X'y([X!]([X~Oa%mO!_XO'y%mO~Oh%VO!l%dO~Oh%VO!l%dO(S%fO~O!g#vO#k(vO~Ob+qO%j+rO(S+nO(UTO(XUO!^)WP~O!]+sO`)VX~O[+wO~O`+xO~O!_&OO(S%fO(T!lO`)VP~Oh%VO#`+}O~Oh%VOn,QO!_$|O~O!_,SO~O!Q,UO!_XO~O%n%uO~O!x,ZO~Oe,`O~Ob,aO(S#nO(UTO(XUO!^)UP~Oe%|O~O%j!QO(S&XO~P=[O[,fO`,eO~OPYOQYOSfOdzOeyOpkOrYOskOtkOzkO|YO!OYO!SWO!WkO!XkO!iuO!lZO!oYO!pYO!qYO!svO!xxO!|]O$niO%h}O(UTO(XUO(`VO(n[O~O!_!eO!u!gO$W!kO(S!dO~P!F_O`,eOa%mO'y%mO~OPYOQYOSfOd!jOe!iOpkOrYOskOtkOzkO|YO!OYO!SWO!WkO!XkO!_!eO!iuO!lZO!oYO!pYO!qYO!svO!x!hO$W!kO$niO(S!dO(UTO(XUO(`VO(n[O~Oa,kOl!OO!uwO%l!OO%m!OO%n!OO~P!HwO!l&mO~O&],qO~O!_,sO~O&n,uO&p,vOP&kaQ&kaS&kaY&kaa&kad&kae&kal&kap&kar&kas&kat&kaz&ka|&ka!O&ka!S&ka!W&ka!X&ka!_&ka!i&ka!l&ka!o&ka!p&ka!q&ka!s&ka!u&ka!x&ka!|&ka$W&ka$n&ka%h&ka%j&ka%l&ka%m&ka%n&ka%q&ka%s&ka%v&ka%w&ka%y&ka&V&ka&]&ka&_&ka&a&ka&c&ka&f&ka&l&ka&r&ka&t&ka&v&ka&x&ka&z&ka'v&ka(S&ka(U&ka(X&ka(`&ka(n&ka!^&ka&d&kab&ka&i&ka~O(S,{O~Oh!eX!]!RX!^!RX!g!RX!g!eX!l!eX#`!RX~O!]!eX!^!eX~P# }O!g-QO#`-POh(iX!]#hX!^#hX!g(iX!l(iX~O!](iX!^(iX~P#!pOh%VO!g-SO!l%dO!]!aX!^!aX~Os!nO!S!oO(UTO(XUO(d!mO~OP;vOQ;vOSfOd=rOe!iOpkOr;vOskOtkOzkO|;vO!O;vO!SWO!WkO!XkO!_!eO!i;yO!lZO!o;vO!p;vO!q;vO!s;zO!u;}O!x!hO$W!kO$n=pO(UTO(XUO(`VO(n[O~O(S<rO~P#$VO!]-WO!^(hX~O!^-YO~O!g-QO#`-PO!]#hX!^#hX~O!]-ZO!^(wX~O!^-]O~O!c-^O!d-^O(T!lO~P##tO!^-aO~P'_On-dO!_'^O~O!Y-iO~Os!{a!b!{a!c!{a!d!{a#T!{a#U!{a#V!{a#W!{a#X!{a#[!{a#]!{a(T!{a(U!{a(X!{a(d!{a(n!{a~P!#kO!p-nO#`-lO~PC]O!c-pO!d-pO(T!lO~PC{Oa%mO#`-lO'y%mO~Oa%mO!g#vO#`-lO'y%mO~Oa%mO!g#vO!p-nO#`-lO'y%mO(q'nO~O(O'vO(P'vO(Q-uO~Ov-vO~O!Y'Va!]'Va~P!:aO![-zO!Y'VX!]'VX~P%[O!](TO!Y(ga~O!Y(ga~PGvO!]([O!Y(ua~O!S%gO![.OO!_%hO(S%fO!Y']X!]']X~O#`.QO!](sa!k(saa(sa'y(sa~O!g#vO~P#,]O!](hO!k(ra~O!S%gO!_%hO#j.UO(S%fO~Op.ZO!S%gO![.WO!_%hO!|]O#i.YO#j.WO(S%fO!]'`X!k'`X~OR._O!l#xO~Oh%VOn.bO!_'^O%i.aO~Oa#ci!]#ci'y#ci'v#ci!Y#ci!k#civ#ci!_#ci%i#ci!g#ci~P!:aOn=|O!Q)|O'x)}O(x$}O(y%PO~O#k#_aa#_a#`#_a'y#_a!]#_a!k#_a!_#_a!Y#_a~P#/XO#k(_XP(_XR(_X[(_Xa(_Xj(_Xr(_X!S(_X!l(_X!p(_X#R(_X#n(_X#o(_X#p(_X#q(_X#r(_X#s(_X#t(_X#u(_X#v(_X#x(_X#z(_X#{(_X'y(_X(`(_X(q(_X!k(_X!Y(_X'v(_Xv(_X!_(_X%i(_X!g(_X~P!6`O!].oO!k(jX~P!:aO!k.rO~O!Y.tO~OP$[OR#zO!Q#yO!S#{O!l#xO!p$[O(`VO[#mia#mij#mir#mi!]#mi#R#mi#o#mi#p#mi#q#mi#r#mi#s#mi#t#mi#u#mi#v#mi#x#mi#z#mi#{#mi'y#mi(q#mi(x#mi(y#mi'v#mi!Y#mi!k#miv#mi!_#mi%i#mi!g#mi~O#n#mi~P#2wO#n$OO~P#2wOP$[OR#zOr$aO!Q#yO!S#{O!l#xO!p$[O#n$OO#o$PO#p$PO#q$PO(`VO[#mia#mij#mi!]#mi#R#mi#s#mi#t#mi#u#mi#v#mi#x#mi#z#mi#{#mi'y#mi(q#mi(x#mi(y#mi'v#mi!Y#mi!k#miv#mi!_#mi%i#mi!g#mi~O#r#mi~P#5fO#r$QO~P#5fOP$[OR#zO[$cOj$ROr$aO!Q#yO!S#{O!l#xO!p$[O#R$RO#n$OO#o$PO#p$PO#q$PO#r$QO#s$RO#t$RO#u$bO(`VOa#mi!]#mi#x#mi#z#mi#{#mi'y#mi(q#mi(x#mi(y#mi'v#mi!Y#mi!k#miv#mi!_#mi%i#mi!g#mi~O#v#mi~P#8TOP$[OR#zO[$cOj$ROr$aO!Q#yO!S#{O!l#xO!p$[O#R$RO#n$OO#o$PO#p$PO#q$PO#r$QO#s$RO#t$RO#u$bO#v$SO(`VO(y#}Oa#mi!]#mi#z#mi#{#mi'y#mi(q#mi(x#mi'v#mi!Y#mi!k#miv#mi!_#mi%i#mi!g#mi~O#x$UO~P#:kO#x#mi~P#:kO#v$SO~P#8TOP$[OR#zO[$cOj$ROr$aO!Q#yO!S#{O!l#xO!p$[O#R$RO#n$OO#o$PO#p$PO#q$PO#r$QO#s$RO#t$RO#u$bO#v$SO#x$UO(`VO(x#|O(y#}Oa#mi!]#mi#{#mi'y#mi(q#mi'v#mi!Y#mi!k#miv#mi!_#mi%i#mi!g#mi~O#z#mi~P#=aO#z$WO~P#=aOP]XR]X[]Xj]Xr]X!Q]X!S]X!l]X!p]X#R]X#S]X#`]X#kfX#n]X#o]X#p]X#q]X#r]X#s]X#t]X#u]X#v]X#x]X#z]X#{]X$Q]X(`]X(q]X(x]X(y]X!]]X!^]X~O$O]X~P#@OOP$[OR#zO[<_Oj<SOr<]O!Q#yO!S#{O!l#xO!p$[O#R<SO#n<PO#o<QO#p<QO#q<QO#r<RO#s<SO#t<SO#u<^O#v<TO#x<VO#z<XO#{<YO(`VO(q$YO(x#|O(y#}O~O$O.vO~P#B]O#S$dO#`<`O$Q<`O$O(fX!^(fX~P! jOa'ca!]'ca'y'ca'v'ca!k'ca!Y'cav'ca!_'ca%i'ca!g'ca~P!:aO[#mia#mij#mir#mi!]#mi#R#mi#r#mi#s#mi#t#mi#u#mi#v#mi#x#mi#z#mi#{#mi'y#mi(q#mi'v#mi!Y#mi!k#miv#mi!_#mi%i#mi!g#mi~OP$[OR#zO!Q#yO!S#{O!l#xO!p$[O#n$OO#o$PO#p$PO#q$PO(`VO(x#mi(y#mi~P#E_On=|O!Q)|O'x)}O(x$}O(y%POP#miR#mi!S#mi!l#mi!p#mi#n#mi#o#mi#p#mi#q#mi(`#mi~P#E_O!].zOg(oX~P!0{Og.|O~Oa$Pi!]$Pi'y$Pi'v$Pi!Y$Pi!k$Piv$Pi!_$Pi%i$Pi!g$Pi~P!:aO$].}O$_.}O~O$]/OO$_/OO~O!g)fO#`/PO!_$cX$Z$cX$]$cX$_$cX$f$cX~O![/QO~O!_)iO$Z/SO$])hO$_)hO$f/TO~O!]<ZO!^(eX~P#B]O!^/UO~O!g)fO$f(zX~O$f/WO~Ov/XO~P!&oOx)wO(a)xO(b/[O~O!S/_O~O(x$}On%aa!Q%aa'x%aa(y%aa!]%aa#`%aa~Og%aa$O%aa~P#LaO(y%POn%ca!Q%ca'x%ca(x%ca!]%ca#`%ca~Og%ca$O%ca~P#MSO!]fX!gfX!kfX!k$zX(qfX~P!/wO![/hO!]([O(S/gO!Y(uP!Y)OP~P!1jOr*pO!b*nO!c*hO!d*hO!l*_O#[*oO%`*jO(T!lO(UTO(XUO~Os<oO!S/iO![+XO!^*mO(d<nO!^(wP~P#NmO!k/jO~P#/XO!]/kO!g#vO(q'nO!k(}X~O!k/pO~O!S%gO![*[O!_%hO(S%fO!k(}P~O#k/rO~O!Y$zX!]$zX!g%RX~P!/wO!]/sO!Y)OX~P#/XO!g/uO~O!Y/wO~OpkO(S/xO~P.iOh%VOr/}O!g#vO!l%dO(q'nO~O!g+fO~Oa%mO!]0RO'y%mO~O!^0TO~P!5^O!c0UO!d0UO(T!lO~P##tOs!nO!S0VO(UTO(XUO(d!mO~O#[0XO~Og%aa!]%aa#`%aa$O%aa~P!0{Og%ca!]%ca#`%ca$O%ca~P!0{Oj%cOk%cOl%cO(S&XOg'lX!]'lX~O!]*vOg(]a~Og0bO~OR0cO!Q0cO!S0dO#S$dOn}a'x}a(x}a(y}a!]}a#`}a~Og}a$O}a~P$&vO!Q)|O'x)}On$sa(x$sa(y$sa!]$sa#`$sa~Og$sa$O$sa~P$'rO!Q)|O'x)}On$ua(x$ua(y$ua!]$ua#`$ua~Og$ua$O$ua~P$(eO#k0gO~Og%Ta!]%Ta#`%Ta$O%Ta~P!0{On0iO#`0hOg(^a!](^a~O!g#vO~O#k0lO~O!]+ZOa)Sa'y)Sa~OR#zO!Q#yO!S#{O!l#xO(`VOP!ri[!rij!rir!ri!]!ri!p!ri#R!ri#n!ri#o!ri#p!ri#q!ri#r!ri#s!ri#t!ri#u!ri#v!ri#x!ri#z!ri#{!ri(q!ri(x!ri(y!ri~Oa!ri'y!ri'v!ri!Y!ri!k!riv!ri!_!ri%i!ri!g!ri~P$*bOh%VOr%XOs$tOt$tOz%YO|%ZO!O<eO!S${O!_$|O!i=vO!l$xO#j<kO$W%_O$t<gO$v<iO$y%`O(UTO(XUO(`$uO(x$}O(y%PO~Op0uO%]0vO(S0tO~P$,xO!g+fOa([a!_([a'y([a!]([a~O#k0|O~O[]X!]fX!^fX~O!]0}O!^)WX~O!^1PO~O[1QO~Ob1SO(S+nO(UTO(XUO~O!_&OO(S%fO`'tX!]'tX~O!]+sO`)Va~O!k1VO~P!:aO[1YO~O`1ZO~O#`1^O~On1aO!_$|O~O(d(zO!^)TP~Oh%VOn1jO!_1gO%i1iO~O[1tO!]1rO!^)UX~O!^1uO~O`1wOa%mO'y%mO~O(S#nO(UTO(XUO~O#S$dO#`$eO$Q$eOP(fXR(fX[(fXr(fX!Q(fX!S(fX!](fX!l(fX!p(fX#R(fX#n(fX#o(fX#p(fX#q(fX#r(fX#s(fX#t(fX#u(fX#v(fX#x(fX#z(fX#{(fX(`(fX(q(fX(x(fX(y(fX~Oj1zO&Z1{Oa(fX~P$2cOj1zO#`$eO&Z1{O~Oa1}O~P%[Oa2PO~O&d2SOP&biQ&biS&biY&bia&bid&bie&bil&bip&bir&bis&bit&biz&bi|&bi!O&bi!S&bi!W&bi!X&bi!_&bi!i&bi!l&bi!o&bi!p&bi!q&bi!s&bi!u&bi!x&bi!|&bi$W&bi$n&bi%h&bi%j&bi%l&bi%m&bi%n&bi%q&bi%s&bi%v&bi%w&bi%y&bi&V&bi&]&bi&_&bi&a&bi&c&bi&f&bi&l&bi&r&bi&t&bi&v&bi&x&bi&z&bi'v&bi(S&bi(U&bi(X&bi(`&bi(n&bi!^&bib&bi&i&bi~Ob2YO!^2WO&i2XO~P`O!_XO!l2[O~O&p,vOP&kiQ&kiS&kiY&kia&kid&kie&kil&kip&kir&kis&kit&kiz&ki|&ki!O&ki!S&ki!W&ki!X&ki!_&ki!i&ki!l&ki!o&ki!p&ki!q&ki!s&ki!u&ki!x&ki!|&ki$W&ki$n&ki%h&ki%j&ki%l&ki%m&ki%n&ki%q&ki%s&ki%v&ki%w&ki%y&ki&V&ki&]&ki&_&ki&a&ki&c&ki&f&ki&l&ki&r&ki&t&ki&v&ki&x&ki&z&ki'v&ki(S&ki(U&ki(X&ki(`&ki(n&ki!^&ki&d&kib&ki&i&ki~O!Y2bO~O!]!aa!^!aa~P#B]Os!nO!S!oO![2hO(d!mO!]'WX!^'WX~P@cO!]-WO!^(ha~O!]'^X!^'^X~P!9iO!]-ZO!^(wa~O!^2oO~P'_Oa%mO#`2xO'y%mO~Oa%mO!g#vO#`2xO'y%mO~Oa%mO!g#vO!p2|O#`2xO'y%mO(q'nO~Oa%mO'y%mO~P!:aO!]$_Ov$qa~O!Y'Vi!]'Vi~P!:aO!](TO!Y(gi~O!]([O!Y(ui~O!Y(vi!](vi~P!:aO!](si!k(sia(si'y(si~P!:aO#`3OO!](si!k(sia(si'y(si~O!](hO!k(ri~O!S%gO!_%hO!|]O#i3TO#j3SO(S%fO~O!S%gO!_%hO#j3SO(S%fO~On3[O!_'^O%i3ZO~Oh%VOn3[O!_'^O%i3ZO~O#k%aaP%aaR%aa[%aaa%aaj%aar%aa!S%aa!l%aa!p%aa#R%aa#n%aa#o%aa#p%aa#q%aa#r%aa#s%aa#t%aa#u%aa#v%aa#x%aa#z%aa#{%aa'y%aa(`%aa(q%aa!k%aa!Y%aa'v%aav%aa!_%aa%i%aa!g%aa~P#LaO#k%caP%caR%ca[%caa%caj%car%ca!S%ca!l%ca!p%ca#R%ca#n%ca#o%ca#p%ca#q%ca#r%ca#s%ca#t%ca#u%ca#v%ca#x%ca#z%ca#{%ca'y%ca(`%ca(q%ca!k%ca!Y%ca'v%cav%ca!_%ca%i%ca!g%ca~P#MSO#k%aaP%aaR%aa[%aaa%aaj%aar%aa!S%aa!]%aa!l%aa!p%aa#R%aa#n%aa#o%aa#p%aa#q%aa#r%aa#s%aa#t%aa#u%aa#v%aa#x%aa#z%aa#{%aa'y%aa(`%aa(q%aa!k%aa!Y%aa'v%aa#`%aav%aa!_%aa%i%aa!g%aa~P#/XO#k%caP%caR%ca[%caa%caj%car%ca!S%ca!]%ca!l%ca!p%ca#R%ca#n%ca#o%ca#p%ca#q%ca#r%ca#s%ca#t%ca#u%ca#v%ca#x%ca#z%ca#{%ca'y%ca(`%ca(q%ca!k%ca!Y%ca'v%ca#`%cav%ca!_%ca%i%ca!g%ca~P#/XO#k}aP}a[}aa}aj}ar}a!l}a!p}a#R}a#n}a#o}a#p}a#q}a#r}a#s}a#t}a#u}a#v}a#x}a#z}a#{}a'y}a(`}a(q}a!k}a!Y}a'v}av}a!_}a%i}a!g}a~P$&vO#k$saP$saR$sa[$saa$saj$sar$sa!S$sa!l$sa!p$sa#R$sa#n$sa#o$sa#p$sa#q$sa#r$sa#s$sa#t$sa#u$sa#v$sa#x$sa#z$sa#{$sa'y$sa(`$sa(q$sa!k$sa!Y$sa'v$sav$sa!_$sa%i$sa!g$sa~P$'rO#k$uaP$uaR$ua[$uaa$uaj$uar$ua!S$ua!l$ua!p$ua#R$ua#n$ua#o$ua#p$ua#q$ua#r$ua#s$ua#t$ua#u$ua#v$ua#x$ua#z$ua#{$ua'y$ua(`$ua(q$ua!k$ua!Y$ua'v$uav$ua!_$ua%i$ua!g$ua~P$(eO#k%TaP%TaR%Ta[%Taa%Taj%Tar%Ta!S%Ta!]%Ta!l%Ta!p%Ta#R%Ta#n%Ta#o%Ta#p%Ta#q%Ta#r%Ta#s%Ta#t%Ta#u%Ta#v%Ta#x%Ta#z%Ta#{%Ta'y%Ta(`%Ta(q%Ta!k%Ta!Y%Ta'v%Ta#`%Tav%Ta!_%Ta%i%Ta!g%Ta~P#/XOa#cq!]#cq'y#cq'v#cq!Y#cq!k#cqv#cq!_#cq%i#cq!g#cq~P!:aO![3dO!]'XX!k'XX~P%[O!].oO!k(ja~O!].oO!k(ja~P!:aO!Y3gO~O$O!na!^!na~PKaO$O!ja!]!ja!^!ja~P#B]O$O!ra!^!ra~P!<wO$O!ta!^!ta~P!?_Og'[X!]'[X~P!+xO!].zOg(oa~OSfO!_3{O$d3|O~O!^4QO~Ov4RO~P#/XOa$mq!]$mq'y$mq'v$mq!Y$mq!k$mqv$mq!_$mq%i$mq!g$mq~P!:aO!Y4TO~P!&oO!S4UO~O!Q)|O'x)}O(y%POn'ha(x'ha!]'ha#`'ha~Og'ha$O'ha~P%,XO!Q)|O'x)}On'ja(x'ja(y'ja!]'ja#`'ja~Og'ja$O'ja~P%,zO(q$YO~P#/XO!YfX!Y$zX!]fX!]$zX!g%RX#`fX~P!/wO(S<xO~P!1jO!S%gO![4XO!_%hO(S%fO!]'dX!k'dX~O!]/kO!k(}a~O!]/kO!g#vO!k(}a~O!]/kO!g#vO(q'nO!k(}a~Og$|i!]$|i#`$|i$O$|i~P!0{O![4aO!Y'fX!]'fX~P!3iO!]/sO!Y)Oa~O!]/sO!Y)Oa~P#/XOP]XR]X[]Xj]Xr]X!Q]X!S]X!Y]X!]]X!l]X!p]X#R]X#S]X#`]X#kfX#n]X#o]X#p]X#q]X#r]X#s]X#t]X#u]X#v]X#x]X#z]X#{]X$Q]X(`]X(q]X(x]X(y]X~Oj%YX!g%YX~P%0kOj4fO!g#vO~Oh%VO!g#vO!l%dO~Oh%VOr4kO!l%dO(q'nO~Or4pO!g#vO(q'nO~Os!nO!S4qO(UTO(XUO(d!mO~O(x$}On%ai!Q%ai'x%ai(y%ai!]%ai#`%ai~Og%ai$O%ai~P%4[O(y%POn%ci!Q%ci'x%ci(x%ci!]%ci#`%ci~Og%ci$O%ci~P%4}Og(^i!](^i~P!0{O#`4wOg(^i!](^i~P!0{O!k4zO~Oa$oq!]$oq'y$oq'v$oq!Y$oq!k$oqv$oq!_$oq%i$oq!g$oq~P!:aO!Y5QO~O!]5RO!_)PX~P#/XOa$zX!_$zX%^]X'y$zX!]$zX~P!/wO%^5UOaoXnoX!QoX!_oX'xoX'yoX(xoX(yoX!]oX~Op5VO(S#nO~O%^5UO~Ob5]O%j5^O(S+nO(UTO(XUO!]'sX!^'sX~O!]0}O!^)Wa~O[5bO~O`5cO~Oa%mO'y%mO~P#/XO!]5kO#`5mO!^)TX~O!^5nO~Or5tOs!nO!S*fO!b!yO!c!vO!d!vO!|;wO#T!pO#U!pO#V!pO#W!pO#X!pO#[5sO#]!zO(T!lO(UTO(XUO(d!mO(n!sO~O!^5rO~P%:YOn5yO!_1gO%i5xO~Oh%VOn5yO!_1gO%i5xO~Ob6QO(S#nO(UTO(XUO!]'rX!^'rX~O!]1rO!^)Ua~O(UTO(XUO(d6SO~O`6WO~Oj6ZO&Z6[O~PM|O!k6]O~P%[Oa6_O~Oa6_O~P%[Ob2YO!^6dO&i2XO~P`O!g6fO~O!g6hOh(ii!](ii!^(ii!g(ii!l(iir(ii(q(ii~O!]#hi!^#hi~P#B]O#`6iO!]#hi!^#hi~O!]!ai!^!ai~P#B]Oa%mO#`6rO'y%mO~Oa%mO!g#vO#`6rO'y%mO~O!](sq!k(sqa(sq'y(sq~P!:aO!](hO!k(rq~O!S%gO!_%hO#j6yO(S%fO~O!_'^O%i6|O~On7QO!_'^O%i6|O~O#k'haP'haR'ha['haa'haj'har'ha!S'ha!l'ha!p'ha#R'ha#n'ha#o'ha#p'ha#q'ha#r'ha#s'ha#t'ha#u'ha#v'ha#x'ha#z'ha#{'ha'y'ha(`'ha(q'ha!k'ha!Y'ha'v'hav'ha!_'ha%i'ha!g'ha~P%,XO#k'jaP'jaR'ja['jaa'jaj'jar'ja!S'ja!l'ja!p'ja#R'ja#n'ja#o'ja#p'ja#q'ja#r'ja#s'ja#t'ja#u'ja#v'ja#x'ja#z'ja#{'ja'y'ja(`'ja(q'ja!k'ja!Y'ja'v'jav'ja!_'ja%i'ja!g'ja~P%,zO#k$|iP$|iR$|i[$|ia$|ij$|ir$|i!S$|i!]$|i!l$|i!p$|i#R$|i#n$|i#o$|i#p$|i#q$|i#r$|i#s$|i#t$|i#u$|i#v$|i#x$|i#z$|i#{$|i'y$|i(`$|i(q$|i!k$|i!Y$|i'v$|i#`$|iv$|i!_$|i%i$|i!g$|i~P#/XO#k%aiP%aiR%ai[%aia%aij%air%ai!S%ai!l%ai!p%ai#R%ai#n%ai#o%ai#p%ai#q%ai#r%ai#s%ai#t%ai#u%ai#v%ai#x%ai#z%ai#{%ai'y%ai(`%ai(q%ai!k%ai!Y%ai'v%aiv%ai!_%ai%i%ai!g%ai~P%4[O#k%ciP%ciR%ci[%cia%cij%cir%ci!S%ci!l%ci!p%ci#R%ci#n%ci#o%ci#p%ci#q%ci#r%ci#s%ci#t%ci#u%ci#v%ci#x%ci#z%ci#{%ci'y%ci(`%ci(q%ci!k%ci!Y%ci'v%civ%ci!_%ci%i%ci!g%ci~P%4}O!]'Xa!k'Xa~P!:aO!].oO!k(ji~O$O#ci!]#ci!^#ci~P#B]OP$[OR#zO!Q#yO!S#{O!l#xO!p$[O(`VO[#mij#mir#mi#R#mi#o#mi#p#mi#q#mi#r#mi#s#mi#t#mi#u#mi#v#mi#x#mi#z#mi#{#mi$O#mi(q#mi(x#mi(y#mi!]#mi!^#mi~O#n#mi~P%MXO#n<PO~P%MXOP$[OR#zOr<]O!Q#yO!S#{O!l#xO!p$[O#n<PO#o<QO#p<QO#q<QO(`VO[#mij#mi#R#mi#s#mi#t#mi#u#mi#v#mi#x#mi#z#mi#{#mi$O#mi(q#mi(x#mi(y#mi!]#mi!^#mi~O#r#mi~P& aO#r<RO~P& aOP$[OR#zO[<_Oj<SOr<]O!Q#yO!S#{O!l#xO!p$[O#R<SO#n<PO#o<QO#p<QO#q<QO#r<RO#s<SO#t<SO#u<^O(`VO#x#mi#z#mi#{#mi$O#mi(q#mi(x#mi(y#mi!]#mi!^#mi~O#v#mi~P&#iOP$[OR#zO[<_Oj<SOr<]O!Q#yO!S#{O!l#xO!p$[O#R<SO#n<PO#o<QO#p<QO#q<QO#r<RO#s<SO#t<SO#u<^O#v<TO(`VO(y#}O#z#mi#{#mi$O#mi(q#mi(x#mi!]#mi!^#mi~O#x<VO~P&%jO#x#mi~P&%jO#v<TO~P&#iOP$[OR#zO[<_Oj<SOr<]O!Q#yO!S#{O!l#xO!p$[O#R<SO#n<PO#o<QO#p<QO#q<QO#r<RO#s<SO#t<SO#u<^O#v<TO#x<VO(`VO(x#|O(y#}O#{#mi$O#mi(q#mi!]#mi!^#mi~O#z#mi~P&'yO#z<XO~P&'yOa#|y!]#|y'y#|y'v#|y!Y#|y!k#|yv#|y!_#|y%i#|y!g#|y~P!:aO[#mij#mir#mi#R#mi#r#mi#s#mi#t#mi#u#mi#v#mi#x#mi#z#mi#{#mi$O#mi(q#mi!]#mi!^#mi~OP$[OR#zO!Q#yO!S#{O!l#xO!p$[O#n<PO#o<QO#p<QO#q<QO(`VO(x#mi(y#mi~P&*uOn=}O!Q)|O'x)}O(x$}O(y%POP#miR#mi!S#mi!l#mi!p#mi#n#mi#o#mi#p#mi#q#mi(`#mi~P&*uO#S$dOP(_XR(_X[(_Xj(_Xn(_Xr(_X!Q(_X!S(_X!l(_X!p(_X#R(_X#n(_X#o(_X#p(_X#q(_X#r(_X#s(_X#t(_X#u(_X#v(_X#x(_X#z(_X#{(_X$O(_X'x(_X(`(_X(q(_X(x(_X(y(_X!](_X!^(_X~O$O$Pi!]$Pi!^$Pi~P#B]O$O!ri!^!ri~P$*bOg'[a!]'[a~P!0{O!^7dO~O!]'ca!^'ca~P#B]O!Y7eO~P#/XO!g#vO(q'nO!]'da!k'da~O!]/kO!k(}i~O!]/kO!g#vO!k(}i~Og$|q!]$|q#`$|q$O$|q~P!0{O!Y'fa!]'fa~P#/XO!g7lO~O!]/sO!Y)Oi~P#/XO!]/sO!Y)Oi~O!Y7oO~Oh%VOr7tO!l%dO(q'nO~Oj7vO!g#vO~Or7yO!g#vO(q'nO~O!Q)|O'x)}O(y%POn'ia(x'ia!]'ia#`'ia~Og'ia$O'ia~P&3vO!Q)|O'x)}On'ka(x'ka(y'ka!]'ka#`'ka~Og'ka$O'ka~P&4iO!Y7{O~Og%Oq!]%Oq#`%Oq$O%Oq~P!0{Og(^q!](^q~P!0{O#`7|Og(^q!](^q~P!0{Oa$oy!]$oy'y$oy'v$oy!Y$oy!k$oyv$oy!_$oy%i$oy!g$oy~P!:aO!g6hO~O!]5RO!_)Pa~O!_'^OP$TaR$Ta[$Taj$Tar$Ta!Q$Ta!S$Ta!]$Ta!l$Ta!p$Ta#R$Ta#n$Ta#o$Ta#p$Ta#q$Ta#r$Ta#s$Ta#t$Ta#u$Ta#v$Ta#x$Ta#z$Ta#{$Ta(`$Ta(q$Ta(x$Ta(y$Ta~O%i6|O~P&7ZO%^8QOa%[i!_%[i'y%[i!]%[i~Oa#cy!]#cy'y#cy'v#cy!Y#cy!k#cyv#cy!_#cy%i#cy!g#cy~P!:aO[8SO~Ob8UO(S+nO(UTO(XUO~O!]0}O!^)Wi~O`8YO~O(d(zO!]'oX!^'oX~O!]5kO!^)Ta~O!^8cO~P%:YO(n!sO~P$${O#[8dO~O!_1gO~O!_1gO%i8fO~On8iO!_1gO%i8fO~O[8nO!]'ra!^'ra~O!]1rO!^)Ui~O!k8rO~O!k8sO~O!k8vO~O!k8vO~P%[Oa8xO~O!g8yO~O!k8zO~O!](vi!^(vi~P#B]Oa%mO#`9SO'y%mO~O!](sy!k(sya(sy'y(sy~P!:aO!](hO!k(ry~O%i9VO~P&7ZO!_'^O%i9VO~O#k$|qP$|qR$|q[$|qa$|qj$|qr$|q!S$|q!]$|q!l$|q!p$|q#R$|q#n$|q#o$|q#p$|q#q$|q#r$|q#s$|q#t$|q#u$|q#v$|q#x$|q#z$|q#{$|q'y$|q(`$|q(q$|q!k$|q!Y$|q'v$|q#`$|qv$|q!_$|q%i$|q!g$|q~P#/XO#k'iaP'iaR'ia['iaa'iaj'iar'ia!S'ia!l'ia!p'ia#R'ia#n'ia#o'ia#p'ia#q'ia#r'ia#s'ia#t'ia#u'ia#v'ia#x'ia#z'ia#{'ia'y'ia(`'ia(q'ia!k'ia!Y'ia'v'iav'ia!_'ia%i'ia!g'ia~P&3vO#k'kaP'kaR'ka['kaa'kaj'kar'ka!S'ka!l'ka!p'ka#R'ka#n'ka#o'ka#p'ka#q'ka#r'ka#s'ka#t'ka#u'ka#v'ka#x'ka#z'ka#{'ka'y'ka(`'ka(q'ka!k'ka!Y'ka'v'kav'ka!_'ka%i'ka!g'ka~P&4iO#k%OqP%OqR%Oq[%Oqa%Oqj%Oqr%Oq!S%Oq!]%Oq!l%Oq!p%Oq#R%Oq#n%Oq#o%Oq#p%Oq#q%Oq#r%Oq#s%Oq#t%Oq#u%Oq#v%Oq#x%Oq#z%Oq#{%Oq'y%Oq(`%Oq(q%Oq!k%Oq!Y%Oq'v%Oq#`%Oqv%Oq!_%Oq%i%Oq!g%Oq~P#/XO!]'Xi!k'Xi~P!:aO$O#cq!]#cq!^#cq~P#B]O(x$}OP%aaR%aa[%aaj%aar%aa!S%aa!l%aa!p%aa#R%aa#n%aa#o%aa#p%aa#q%aa#r%aa#s%aa#t%aa#u%aa#v%aa#x%aa#z%aa#{%aa$O%aa(`%aa(q%aa!]%aa!^%aa~On%aa!Q%aa'x%aa(y%aa~P&HnO(y%POP%caR%ca[%caj%car%ca!S%ca!l%ca!p%ca#R%ca#n%ca#o%ca#p%ca#q%ca#r%ca#s%ca#t%ca#u%ca#v%ca#x%ca#z%ca#{%ca$O%ca(`%ca(q%ca!]%ca!^%ca~On%ca!Q%ca'x%ca(x%ca~P&JuOn=}O!Q)|O'x)}O(y%PO~P&HnOn=}O!Q)|O'x)}O(x$}O~P&JuOR0cO!Q0cO!S0dO#S$dOP}a[}aj}an}ar}a!l}a!p}a#R}a#n}a#o}a#p}a#q}a#r}a#s}a#t}a#u}a#v}a#x}a#z}a#{}a$O}a'x}a(`}a(q}a(x}a(y}a!]}a!^}a~O!Q)|O'x)}OP$saR$sa[$saj$san$sar$sa!S$sa!l$sa!p$sa#R$sa#n$sa#o$sa#p$sa#q$sa#r$sa#s$sa#t$sa#u$sa#v$sa#x$sa#z$sa#{$sa$O$sa(`$sa(q$sa(x$sa(y$sa!]$sa!^$sa~O!Q)|O'x)}OP$uaR$ua[$uaj$uan$uar$ua!S$ua!l$ua!p$ua#R$ua#n$ua#o$ua#p$ua#q$ua#r$ua#s$ua#t$ua#u$ua#v$ua#x$ua#z$ua#{$ua$O$ua(`$ua(q$ua(x$ua(y$ua!]$ua!^$ua~On=}O!Q)|O'x)}O(x$}O(y%PO~OP%TaR%Ta[%Taj%Tar%Ta!S%Ta!l%Ta!p%Ta#R%Ta#n%Ta#o%Ta#p%Ta#q%Ta#r%Ta#s%Ta#t%Ta#u%Ta#v%Ta#x%Ta#z%Ta#{%Ta$O%Ta(`%Ta(q%Ta!]%Ta!^%Ta~P'%zO$O$mq!]$mq!^$mq~P#B]O$O$oq!]$oq!^$oq~P#B]O!^9dO~O$O9eO~P!0{O!g#vO!]'di!k'di~O!g#vO(q'nO!]'di!k'di~O!]/kO!k(}q~O!Y'fi!]'fi~P#/XO!]/sO!Y)Oq~Or9lO!g#vO(q'nO~O[9nO!Y9mO~P#/XO!Y9mO~Oj9tO!g#vO~Og(^y!](^y~P!0{O!]'ma!_'ma~P#/XOa%[q!_%[q'y%[q!]%[q~P#/XO[9yO~O!]0}O!^)Wq~O#`9}O!]'oa!^'oa~O!]5kO!^)Ti~P#B]O!S:PO~O!_1gO%i:SO~O(UTO(XUO(d:XO~O!]1rO!^)Uq~O!k:[O~O!k:]O~O!k:^O~O!k:^O~P%[O#`:aO!]#hy!^#hy~O!]#hy!^#hy~P#B]O%i:fO~P&7ZO!_'^O%i:fO~O$O#|y!]#|y!^#|y~P#B]OP$|iR$|i[$|ij$|ir$|i!S$|i!l$|i!p$|i#R$|i#n$|i#o$|i#p$|i#q$|i#r$|i#s$|i#t$|i#u$|i#v$|i#x$|i#z$|i#{$|i$O$|i(`$|i(q$|i!]$|i!^$|i~P'%zO!Q)|O'x)}O(y%POP'haR'ha['haj'han'har'ha!S'ha!l'ha!p'ha#R'ha#n'ha#o'ha#p'ha#q'ha#r'ha#s'ha#t'ha#u'ha#v'ha#x'ha#z'ha#{'ha$O'ha(`'ha(q'ha(x'ha!]'ha!^'ha~O!Q)|O'x)}OP'jaR'ja['jaj'jan'jar'ja!S'ja!l'ja!p'ja#R'ja#n'ja#o'ja#p'ja#q'ja#r'ja#s'ja#t'ja#u'ja#v'ja#x'ja#z'ja#{'ja$O'ja(`'ja(q'ja(x'ja(y'ja!]'ja!^'ja~O(x$}OP%aiR%ai[%aij%ain%air%ai!Q%ai!S%ai!l%ai!p%ai#R%ai#n%ai#o%ai#p%ai#q%ai#r%ai#s%ai#t%ai#u%ai#v%ai#x%ai#z%ai#{%ai$O%ai'x%ai(`%ai(q%ai(y%ai!]%ai!^%ai~O(y%POP%ciR%ci[%cij%cin%cir%ci!Q%ci!S%ci!l%ci!p%ci#R%ci#n%ci#o%ci#p%ci#q%ci#r%ci#s%ci#t%ci#u%ci#v%ci#x%ci#z%ci#{%ci$O%ci'x%ci(`%ci(q%ci(x%ci!]%ci!^%ci~O$O$oy!]$oy!^$oy~P#B]O$O#cy!]#cy!^#cy~P#B]O!g#vO!]'dq!k'dq~O!]/kO!k(}y~O!Y'fq!]'fq~P#/XOr:pO!g#vO(q'nO~O[:tO!Y:sO~P#/XO!Y:sO~Og(^!R!](^!R~P!0{Oa%[y!_%[y'y%[y!]%[y~P#/XO!]0}O!^)Wy~O!]5kO!^)Tq~O(S:zO~O!_1gO%i:}O~O!k;QO~O%i;VO~P&7ZOP$|qR$|q[$|qj$|qr$|q!S$|q!l$|q!p$|q#R$|q#n$|q#o$|q#p$|q#q$|q#r$|q#s$|q#t$|q#u$|q#v$|q#x$|q#z$|q#{$|q$O$|q(`$|q(q$|q!]$|q!^$|q~P'%zO!Q)|O'x)}O(y%POP'iaR'ia['iaj'ian'iar'ia!S'ia!l'ia!p'ia#R'ia#n'ia#o'ia#p'ia#q'ia#r'ia#s'ia#t'ia#u'ia#v'ia#x'ia#z'ia#{'ia$O'ia(`'ia(q'ia(x'ia!]'ia!^'ia~O!Q)|O'x)}OP'kaR'ka['kaj'kan'kar'ka!S'ka!l'ka!p'ka#R'ka#n'ka#o'ka#p'ka#q'ka#r'ka#s'ka#t'ka#u'ka#v'ka#x'ka#z'ka#{'ka$O'ka(`'ka(q'ka(x'ka(y'ka!]'ka!^'ka~OP%OqR%Oq[%Oqj%Oqr%Oq!S%Oq!l%Oq!p%Oq#R%Oq#n%Oq#o%Oq#p%Oq#q%Oq#r%Oq#s%Oq#t%Oq#u%Oq#v%Oq#x%Oq#z%Oq#{%Oq$O%Oq(`%Oq(q%Oq!]%Oq!^%Oq~P'%zOg%e!Z!]%e!Z#`%e!Z$O%e!Z~P!0{O!Y;ZO~P#/XOr;[O!g#vO(q'nO~O[;^O!Y;ZO~P#/XO!]'oq!^'oq~P#B]O!]#h!Z!^#h!Z~P#B]O#k%e!ZP%e!ZR%e!Z[%e!Za%e!Zj%e!Zr%e!Z!S%e!Z!]%e!Z!l%e!Z!p%e!Z#R%e!Z#n%e!Z#o%e!Z#p%e!Z#q%e!Z#r%e!Z#s%e!Z#t%e!Z#u%e!Z#v%e!Z#x%e!Z#z%e!Z#{%e!Z'y%e!Z(`%e!Z(q%e!Z!k%e!Z!Y%e!Z'v%e!Z#`%e!Zv%e!Z!_%e!Z%i%e!Z!g%e!Z~P#/XOr;fO!g#vO(q'nO~O!Y;gO~P#/XOr;nO!g#vO(q'nO~O!Y;oO~P#/XOP%e!ZR%e!Z[%e!Zj%e!Zr%e!Z!S%e!Z!l%e!Z!p%e!Z#R%e!Z#n%e!Z#o%e!Z#p%e!Z#q%e!Z#r%e!Z#s%e!Z#t%e!Z#u%e!Z#v%e!Z#x%e!Z#z%e!Z#{%e!Z$O%e!Z(`%e!Z(q%e!Z!]%e!Z!^%e!Z~P'%zOr;rO!g#vO(q'nO~Ov(eX~P1qO!Q%qO~P!)PO(T!lO~P!)PO!YfX!]fX#`fX~P%0kOP]XR]X[]Xj]Xr]X!Q]X!S]X!]]X!]fX!l]X!p]X#R]X#S]X#`]X#`fX#kfX#n]X#o]X#p]X#q]X#r]X#s]X#t]X#u]X#v]X#x]X#z]X#{]X$Q]X(`]X(q]X(x]X(y]X~O!gfX!k]X!kfX(qfX~P'JsOP;vOQ;vOSfOd=rOe!iOpkOr;vOskOtkOzkO|;vO!O;vO!SWO!WkO!XkO!_XO!i;yO!lZO!o;vO!p;vO!q;vO!s;zO!u;}O!x!hO$W!kO$n=pO(S)ZO(UTO(XUO(`VO(n[O~O!]<ZO!^$qa~Oh%VOp%WOr%XOs$tOt$tOz%YO|%ZO!O<fO!S${O!_$|O!i=wO!l$xO#j<lO$W%_O$t<hO$v<jO$y%`O(S(tO(UTO(XUO(`$uO(x$}O(y%PO~Ol)bO~P( iOr!eX(q!eX~P# }Or(iX(q(iX~P#!pO!^]X!^fX~P'JsO!YfX!Y$zX!]fX!]$zX#`fX~P!/wO#k<OO~O!g#vO#k<OO~O#`<`O~Oj<SO~O#`<pO!](vX!^(vX~O#`<`O!](tX!^(tX~O#k<qO~Og<sO~P!0{O#k<yO~O#k<zO~O!g#vO#k<{O~O!g#vO#k<qO~O$O<|O~P#B]O#k<}O~O#k=OO~O#k=TO~O#k=UO~O#k=VO~O#k=WO~O$O=XO~P!0{O$O=YO~P!0{Ok#S#T#U#W#X#[#i#j#u$n$t$v$y%]%^%h%i%j%q%s%v%w%y%{~'}T#o!X'{(T#ps#n#qr!Q'|$]'|(S$_(d~",
-  goto: "$8g)[PPPPPP)]PP)`P)qP+R/WPPPP6bPP6xPP<pPPP@dP@zP@zPPP@zPCSP@zP@zP@zPCWPC]PCzPHtPPPHxPPPPHxK{PPPLRLsPHxPHxPP! RHxPPPHxPHxP!#YHxP!&p!'u!(OP!(r!(v!(r!,TPPPPPPP!,t!'uPP!-U!.vP!2SHxHx!2X!5e!:R!:R!>QPPP!>YHxPPPPPPPPP!AiP!BvPPHx!DXPHxPHxHxHxHxHxPHx!EkP!HuP!K{P!LP!LZ!L_!L_P!HrP!Lc!LcP# iP# mHxPHx# s#$xCW@zP@zP@z@zP#&V@z@z#(i@z#+a@z#-m@z@z#.]#0q#0q#0v#1P#0q#1[PP#0qP@z#1t@z#5s@z@z6bPPP#9xPPP#:c#:cP#:cP#:y#:cPP#;PP#:vP#:v#;d#:v#<O#<U#<X)`#<[)`P#<c#<c#<cP)`P)`P)`P)`PP)`P#<i#<lP#<l)`P#<pP#<sP)`P)`P)`P)`P)`P)`)`PP#<y#=P#=[#=b#=h#=n#=t#>S#>Y#>d#>j#>t#>z#?[#?b#@S#@f#@l#@r#AQ#Ag#C[#Cj#Cq#E]#Ek#G]#Gk#Gq#Gw#G}#HX#H_#He#Ho#IR#IXPPPPPPPPPPP#I_PPPPPPP#JS#MZ#Ns#Nz$ SPPP$&nP$&w$)p$0Z$0^$0a$1`$1c$1j$1rP$1x$1{P$2i$2m$3e$4s$4x$5`PP$5e$5k$5o$5r$5v$5z$6v$7_$7v$7z$7}$8Q$8W$8Z$8_$8cR!|RoqOXst!Z#d%l&p&r&s&u,n,s2S2VY!vQ'^-`1g5qQ%svQ%{yQ&S|Q&h!VS'U!e-WQ'd!iS'j!r!yU*h$|*X*lQ+l%|Q+y&UQ,_&bQ-^']Q-h'eQ-p'kQ0U*nQ1q,`R<m;z%SdOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$_$a$e%l%s&Q&i&l&p&r&s&u&y'R'`'p(R(T(Z(b(v(x(|){*f+U+Y,k,n,s-d-l-z.Q.o.v/i0V0d0l0|1j1z1{1}2P2S2V2X2x3O3d4q5y6Z6[6_6r8i8x9SS#q];w!r)]$Z$n'V)q-P-S/Q2h3{5m6i9}:a;v;y;z;}<O<P<Q<R<S<T<U<V<W<X<Y<Z<]<`<m<p<q<s<{<|=V=W=sU*{%[<e<fQ+q&OQ,a&eQ,h&mQ0r+dQ0w+fQ1S+rQ1y,fQ3W.bQ5V0vQ5]0}Q6Q1rQ7O3[Q8U5^R9Y7Q'QkOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$Z$_$a$e$n%l%s&Q&i&l&m&p&r&s&u&y'R'V'`'p(R(T(Z(b(v(x(|)q){*f+U+Y+d,k,n,s-P-S-d-l-z.Q.b.o.v/Q/i0V0d0l0|1j1z1{1}2P2S2V2X2h2x3O3[3d3{4q5m5y6Z6[6_6i6r7Q8i8x9S9}:a;v;y;z;}<O<P<Q<R<S<T<U<V<W<X<Y<Z<]<`<m<p<q<s<{<|=V=W=s!S!nQ!r!v!y!z$|'U']'^'j'k'l*h*l*n*o-W-^-`-p0U0X1g5q5s%[$ti#v$b$c$d$x${%O%Q%]%^%b)w*P*R*T*W*^*d*t*u+c+f+},Q.a.z/_/h/r/s/u0Y0[0g0h0i1^1a1i3Z4U4V4a4f4w5R5U5x6|7l7v7|8Q8f9V9e9n9t:S:f:t:};V;^<^<_<a<b<c<d<g<h<i<j<k<l<t<u<v<w<y<z<}=O=P=Q=R=S=T=U=X=Y=p=x=y=|=}Q&V|Q'S!eS'Y%h-ZQ+q&OQ,a&eQ0f+OQ1S+rQ1X+xQ1x,eQ1y,fQ5]0}Q5f1ZQ6Q1rQ6T1tQ6U1wQ8U5^Q8X5cQ8q6WQ9|8YQ:Y8nR<o*XrnOXst!V!Z#d%l&g&p&r&s&u,n,s2S2VR,c&i&z^OPXYstuvwz!Z!`!g!j!o#S#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$Z$_$a$e$n%l%s&Q&i&l&m&p&r&s&u&y'R'`'p(T(Z(b(v(x(|)q){*f+U+Y+d,k,n,s-P-S-d-l-z.Q.b.o.v/Q/i0V0d0l0|1j1z1{1}2P2S2V2X2h2x3O3[3d3{4q5m5y6Z6[6_6i6r7Q8i8x9S9}:a;v;y;z;}<O<P<Q<R<S<T<U<V<W<X<Y<Z<]<`<m<p<q<s<{<|=V=W=r=s[#]WZ#W#Z'V(R!b%im#h#i#l$x%d%g([(f(g(h*W*[*_+W+X+Z,j-Q.O.U.V.W.Y/h/k2[3S3T4X6h6yQ%vxQ%zyS&P|&UQ&]!TQ'a!hQ'c!iQ(o#sS+k%{%|Q+o&OQ,Y&`Q,^&bS-g'd'eQ.d(pQ0{+lQ1R+rQ1T+sQ1W+wQ1l,ZS1p,_,`Q2t-hQ5[0}Q5`1QQ5e1YQ6P1qQ8T5^Q8W5bQ9x8SR:w9y!U$zi$d%O%Q%]%^%b*P*R*^*t*u.z/r0Y0[0g0h0i4V4w7|9e=p=x=y!^%xy!i!u%z%{%|'T'c'd'e'i's*g+k+l-T-g-h-o/{0O0{2m2t2{4i4j4m7s9pQ+e%vQ,O&YQ,R&ZQ,]&bQ.c(oQ1k,YU1o,^,_,`Q3].dQ5z1lS6O1p1qQ8m6P#f=t#v$b$c$x${)w*T*W*d+c+f+},Q.a/_/h/s/u1^1a1i3Z4U4a4f5R5U5x6|7l7v8Q8f9V9n9t:S:f:t:};V;^<a<c<g<i<k<t<v<y<}=P=R=T=X=|=}o=u<^<_<b<d<h<j<l<u<w<z=O=Q=S=U=YW%Ti%V*v=pS&Y!Q&gQ&Z!RQ&[!SQ+S%cR+|&W%]%Si#v$b$c$d$x${%O%Q%]%^%b)w*P*R*T*W*^*d*t*u+c+f+},Q.a.z/_/h/r/s/u0Y0[0g0h0i1^1a1i3Z4U4V4a4f4w5R5U5x6|7l7v7|8Q8f9V9e9n9t:S:f:t:};V;^<^<_<a<b<c<d<g<h<i<j<k<l<t<u<v<w<y<z<}=O=P=Q=R=S=T=U=X=Y=p=x=y=|=}T)x$u)yV*{%[<e<fW'Y!e%h*X-ZS({#y#zQ+`%qQ+v&RS.](k(lQ1b,SQ4x0cR8^5k'QkOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$Z$_$a$e$n%l%s&Q&i&l&m&p&r&s&u&y'R'V'`'p(R(T(Z(b(v(x(|)q){*f+U+Y+d,k,n,s-P-S-d-l-z.Q.b.o.v/Q/i0V0d0l0|1j1z1{1}2P2S2V2X2h2x3O3[3d3{4q5m5y6Z6[6_6i6r7Q8i8x9S9}:a;v;y;z;}<O<P<Q<R<S<T<U<V<W<X<Y<Z<]<`<m<p<q<s<{<|=V=W=s$i$^c#Y#e%p%r%t(Q(W(r(w)P)Q)R)S)T)U)V)W)X)Y)[)^)`)e)o+a+u-U-s-x-}.P.n.q.u.w.x.y/]0j2c2f2v2}3c3h3i3j3k3l3m3n3o3p3q3r3s3t3w3x4P5O5Y6k6q6v7V7W7a7b8`8|9Q9[9b9c:c:y;R;x=gT#TV#U'RkOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$Z$_$a$e$n%l%s&Q&i&l&m&p&r&s&u&y'R'V'`'p(R(T(Z(b(v(x(|)q){*f+U+Y+d,k,n,s-P-S-d-l-z.Q.b.o.v/Q/i0V0d0l0|1j1z1{1}2P2S2V2X2h2x3O3[3d3{4q5m5y6Z6[6_6i6r7Q8i8x9S9}:a;v;y;z;}<O<P<Q<R<S<T<U<V<W<X<Y<Z<]<`<m<p<q<s<{<|=V=W=sQ'W!eR2i-W!W!nQ!e!r!v!y!z$|'U']'^'j'k'l*X*h*l*n*o-W-^-`-p0U0X1g5q5sR1d,UnqOXst!Z#d%l&p&r&s&u,n,s2S2VQ&w!^Q't!xS(q#u<OQ+i%yQ,W&]Q,X&_Q-e'bQ-r'mS.m(v<qS0k+U<{Q0y+jQ1f,VQ2Z,uQ2],vQ2e-RQ2r-fQ2u-jS5P0l=VQ5W0zS5Z0|=WQ6j2gQ6n2sQ6s2zQ8R5XQ8}6lQ9O6oQ9R6tR:`8z$d$]c#Y#e%r%t(Q(W(r(w)P)Q)R)S)T)U)V)W)X)Y)[)^)`)e)o+a+u-U-s-x-}.P.n.q.u.x.y/]0j2c2f2v2}3c3h3i3j3k3l3m3n3o3p3q3r3s3t3w3x4P5O5Y6k6q6v7V7W7a7b8`8|9Q9[9b9c:c:y;R;x=gS(m#p'gQ(}#zS+_%p.wS.^(l(nR3U._'QkOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$Z$_$a$e$n%l%s&Q&i&l&m&p&r&s&u&y'R'V'`'p(R(T(Z(b(v(x(|)q){*f+U+Y+d,k,n,s-P-S-d-l-z.Q.b.o.v/Q/i0V0d0l0|1j1z1{1}2P2S2V2X2h2x3O3[3d3{4q5m5y6Z6[6_6i6r7Q8i8x9S9}:a;v;y;z;}<O<P<Q<R<S<T<U<V<W<X<Y<Z<]<`<m<p<q<s<{<|=V=W=sS#q];wQ&r!XQ&s!YQ&u![Q&v!]R2R,qQ'_!hQ+b%vQ-c'aS.`(o+eQ2p-bW3Y.c.d0q0sQ6m2qW6z3V3X3]5TU9U6{6}7PU:e9W9X9ZS;T:d:gQ;b;UR;j;cU!wQ'^-`T5o1g5q!Q_OXZ`st!V!Z#d#h%d%l&g&i&p&r&s&u(h,n,s.V2S2V]!pQ!r'^-`1g5qT#q];w%^{OPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$_$a$e%l%s&Q&i&l&m&p&r&s&u&y'R'`'p(R(T(Z(b(v(x(|){*f+U+Y+d,k,n,s-d-l-z.Q.b.o.v/i0V0d0l0|1j1z1{1}2P2S2V2X2x3O3[3d4q5y6Z6[6_6r7Q8i8x9SS({#y#zS.](k(l!s=^$Z$n'V)q-P-S/Q2h3{5m6i9}:a;v;y;z;}<O<P<Q<R<S<T<U<V<W<X<Y<Z<]<`<m<p<q<s<{<|=V=W=sU$fd)],hS(n#p'gU*s%R(u3vU0e*z.i7]Q5T0rQ6{3WQ9X7OR:g9Ym!tQ!r!v!y!z'^'j'k'l-`-p1g5q5sQ'r!uS(d#g1|S-n'i'uQ/n*ZQ/{*gQ2|-qQ4]/oQ4i/}Q4j0OQ4o0WQ7h4WS7s4k4mS7w4p4rQ9g7iQ9k7oQ9p7tQ9u7yS:o9l9mS;Y:p:sS;e;Z;[S;m;f;gS;q;n;oR;t;rQ#wbQ'q!uS(c#g1|S(e#m+TQ+V%eQ+g%wQ+m%}U-m'i'r'uQ.R(dQ/m*ZQ/|*gQ0P*iQ0x+hQ1m,[S2y-n-qQ3R.ZS4[/n/oQ4e/yS4h/{0WQ4l0QQ5|1nQ6u2|Q7g4WQ7k4]U7r4i4o4rQ7u4nQ8k5}S9f7h7iQ9j7oQ9r7wQ9s7xQ:V8lQ:m9gS:n9k9mQ:v9uQ;P:WS;X:o:sS;d;Y;ZS;l;e;gS;p;m;oQ;s;qQ;u;tQ=a=[Q=l=eR=m=fV!wQ'^-`%^aOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$_$a$e%l%s&Q&i&l&m&p&r&s&u&y'R'`'p(R(T(Z(b(v(x(|){*f+U+Y+d,k,n,s-d-l-z.Q.b.o.v/i0V0d0l0|1j1z1{1}2P2S2V2X2x3O3[3d4q5y6Z6[6_6r7Q8i8x9SS#wz!j!r=Z$Z$n'V)q-P-S/Q2h3{5m6i9}:a;v;y;z;}<O<P<Q<R<S<T<U<V<W<X<Y<Z<]<`<m<p<q<s<{<|=V=W=sR=a=r%^bOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$_$a$e%l%s&Q&i&l&m&p&r&s&u&y'R'`'p(R(T(Z(b(v(x(|){*f+U+Y+d,k,n,s-d-l-z.Q.b.o.v/i0V0d0l0|1j1z1{1}2P2S2V2X2x3O3[3d4q5y6Z6[6_6r7Q8i8x9SQ%ej!^%wy!i!u%z%{%|'T'c'd'e'i's*g+k+l-T-g-h-o/{0O0{2m2t2{4i4j4m7s9pS%}z!jQ+h%xQ,[&bW1n,],^,_,`U5}1o1p1qS8l6O6PQ:W8m!r=[$Z$n'V)q-P-S/Q2h3{5m6i9}:a;v;y;z;}<O<P<Q<R<S<T<U<V<W<X<Y<Z<]<`<m<p<q<s<{<|=V=W=sQ=e=qR=f=r%QeOPXYstuvw!Z!`!g!o#S#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$_$a$e%l%s&Q&i&l&p&r&s&u&y'R'`'p(T(Z(b(v(x(|){*f+U+Y+d,k,n,s-d-l-z.Q.b.o.v/i0V0d0l0|1j1z1{1}2P2S2V2X2x3O3[3d4q5y6Z6[6_6r7Q8i8x9SY#bWZ#W#Z(R!b%im#h#i#l$x%d%g([(f(g(h*W*[*_+W+X+Z,j-Q.O.U.V.W.Y/h/k2[3S3T4X6h6yQ,i&m!p=]$Z$n)q-P-S/Q2h3{5m6i9}:a;v;y;z;}<O<P<Q<R<S<T<U<V<W<X<Y<Z<]<`<m<p<q<s<{<|=V=W=sR=`'VU'Z!e%h*XR2k-Z%SdOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$_$a$e%l%s&Q&i&l&p&r&s&u&y'R'`'p(R(T(Z(b(v(x(|){*f+U+Y,k,n,s-d-l-z.Q.o.v/i0V0d0l0|1j1z1{1}2P2S2V2X2x3O3d4q5y6Z6[6_6r8i8x9S!r)]$Z$n'V)q-P-S/Q2h3{5m6i9}:a;v;y;z;}<O<P<Q<R<S<T<U<V<W<X<Y<Z<]<`<m<p<q<s<{<|=V=W=sQ,h&mQ0r+dQ3W.bQ7O3[R9Y7Q!b$Tc#Y%p(Q(W(r(w)X)Y)^)e+u-s-x-}.P.n.q/]0j2v2}3c3s5O5Y6q6v7V9Q:c;x!P<U)[)o-U.w2c2f3h3q3r3w4P6k7W7a7b8`8|9[9b9c:y;R=g!f$Vc#Y%p(Q(W(r(w)U)V)X)Y)^)e+u-s-x-}.P.n.q/]0j2v2}3c3s5O5Y6q6v7V9Q:c;x!T<W)[)o-U.w2c2f3h3n3o3q3r3w4P6k7W7a7b8`8|9[9b9c:y;R=g!^$Zc#Y%p(Q(W(r(w)^)e+u-s-x-}.P.n.q/]0j2v2}3c3s5O5Y6q6v7V9Q:c;xQ4V/fz=s)[)o-U.w2c2f3h3w4P6k7W7a7b8`8|9[9b9c:y;R=gQ=x=zR=y={'QkOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$Z$_$a$e$n%l%s&Q&i&l&m&p&r&s&u&y'R'V'`'p(R(T(Z(b(v(x(|)q){*f+U+Y+d,k,n,s-P-S-d-l-z.Q.b.o.v/Q/i0V0d0l0|1j1z1{1}2P2S2V2X2h2x3O3[3d3{4q5m5y6Z6[6_6i6r7Q8i8x9S9}:a;v;y;z;}<O<P<Q<R<S<T<U<V<W<X<Y<Z<]<`<m<p<q<s<{<|=V=W=sS$oh$pR3|/P'XgOPWXYZhstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$Z$_$a$e$n$p%l%s&Q&i&l&m&p&r&s&u&y'R'V'`'p(R(T(Z(b(v(x(|)q){*f+U+Y+d,k,n,s-P-S-d-l-z.Q.b.o.v/P/Q/i0V0d0l0|1j1z1{1}2P2S2V2X2h2x3O3[3d3{4q5m5y6Z6[6_6i6r7Q8i8x9S9}:a;v;y;z;}<O<P<Q<R<S<T<U<V<W<X<Y<Z<]<`<m<p<q<s<{<|=V=W=sT$kf$qQ$ifS)h$l)lR)t$qT$jf$qT)j$l)l'XhOPWXYZhstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$Z$_$a$e$n$p%l%s&Q&i&l&m&p&r&s&u&y'R'V'`'p(R(T(Z(b(v(x(|)q){*f+U+Y+d,k,n,s-P-S-d-l-z.Q.b.o.v/P/Q/i0V0d0l0|1j1z1{1}2P2S2V2X2h2x3O3[3d3{4q5m5y6Z6[6_6i6r7Q8i8x9S9}:a;v;y;z;}<O<P<Q<R<S<T<U<V<W<X<Y<Z<]<`<m<p<q<s<{<|=V=W=sT$oh$pQ$rhR)s$p%^jOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$_$a$e%l%s&Q&i&l&m&p&r&s&u&y'R'`'p(R(T(Z(b(v(x(|){*f+U+Y+d,k,n,s-d-l-z.Q.b.o.v/i0V0d0l0|1j1z1{1}2P2S2V2X2x3O3[3d4q5y6Z6[6_6r7Q8i8x9S!s=q$Z$n'V)q-P-S/Q2h3{5m6i9}:a;v;y;z;}<O<P<Q<R<S<T<U<V<W<X<Y<Z<]<`<m<p<q<s<{<|=V=W=s#glOPXZst!Z!`!o#S#d#o#{$n%l&i&l&m&p&r&s&u&y'R'`(|)q*f+Y+d,k,n,s-d.b/Q/i0V0d1j1z1{1}2P2S2V2X3[3{4q5y6Z6[6_7Q8i8x!U%Ri$d%O%Q%]%^%b*P*R*^*t*u.z/r0Y0[0g0h0i4V4w7|9e=p=x=y#f(u#v$b$c$x${)w*T*W*d+c+f+},Q.a/_/h/s/u1^1a1i3Z4U4a4f5R5U5x6|7l7v8Q8f9V9n9t:S:f:t:};V;^<a<c<g<i<k<t<v<y<}=P=R=T=X=|=}Q+P%`Q/^)|o3v<^<_<b<d<h<j<l<u<w<z=O=Q=S=U=Y!U$yi$d%O%Q%]%^%b*P*R*^*t*u.z/r0Y0[0g0h0i4V4w7|9e=p=x=yQ*`$zU*i$|*X*lQ+Q%aQ0Q*j#f=c#v$b$c$x${)w*T*W*d+c+f+},Q.a/_/h/s/u1^1a1i3Z4U4a4f5R5U5x6|7l7v8Q8f9V9n9t:S:f:t:};V;^<a<c<g<i<k<t<v<y<}=P=R=T=X=|=}n=d<^<_<b<d<h<j<l<u<w<z=O=Q=S=U=YQ=h=tQ=i=uQ=j=vR=k=w!U%Ri$d%O%Q%]%^%b*P*R*^*t*u.z/r0Y0[0g0h0i4V4w7|9e=p=x=y#f(u#v$b$c$x${)w*T*W*d+c+f+},Q.a/_/h/s/u1^1a1i3Z4U4a4f5R5U5x6|7l7v8Q8f9V9n9t:S:f:t:};V;^<a<c<g<i<k<t<v<y<}=P=R=T=X=|=}o3v<^<_<b<d<h<j<l<u<w<z=O=Q=S=U=YnoOXst!Z#d%l&p&r&s&u,n,s2S2VS*c${*WQ,|&|Q,}'OR4`/s%[%Si#v$b$c$d$x${%O%Q%]%^%b)w*P*R*T*W*^*d*t*u+c+f+},Q.a.z/_/h/r/s/u0Y0[0g0h0i1^1a1i3Z4U4V4a4f4w5R5U5x6|7l7v7|8Q8f9V9e9n9t:S:f:t:};V;^<^<_<a<b<c<d<g<h<i<j<k<l<t<u<v<w<y<z<}=O=P=Q=R=S=T=U=X=Y=p=x=y=|=}Q,P&ZQ1`,RQ5i1_R8]5jV*k$|*X*lU*k$|*X*lT5p1g5qS/y*f/iQ4n0VT7x4q:PQ+g%wQ0P*iQ0x+hQ1m,[Q5|1nQ8k5}Q:V8lR;P:W!U%Oi$d%O%Q%]%^%b*P*R*^*t*u.z/r0Y0[0g0h0i4V4w7|9e=p=x=yx*P$v)c*Q*r+R/q0^0_3y4^4{4|4}7f7z9v:l=b=n=oS0Y*q0Z#f<a#v$b$c$x${)w*T*W*d+c+f+},Q.a/_/h/s/u1^1a1i3Z4U4a4f5R5U5x6|7l7v8Q8f9V9n9t:S:f:t:};V;^<a<c<g<i<k<t<v<y<}=P=R=T=X=|=}n<b<^<_<b<d<h<j<l<u<w<z=O=Q=S=U=Y!d<t(s)a*Y*b.e.h.l/Y/f/v0p1]3`4S4_4c5h7R7U7m7p7}8P9i9q9w:q:u;W;];h=z={`<u3u7X7[7`9]:h:k;kS=P.g3aT=Q7Z9`!U%Qi$d%O%Q%]%^%b*P*R*^*t*u.z/r0Y0[0g0h0i4V4w7|9e=p=x=y|*R$v)c*S*q+R/b/q0^0_3y4^4s4{4|4}7f7z9v:l=b=n=oS0[*r0]#f<c#v$b$c$x${)w*T*W*d+c+f+},Q.a/_/h/s/u1^1a1i3Z4U4a4f5R5U5x6|7l7v8Q8f9V9n9t:S:f:t:};V;^<a<c<g<i<k<t<v<y<}=P=R=T=X=|=}n<d<^<_<b<d<h<j<l<u<w<z=O=Q=S=U=Y!h<v(s)a*Y*b.f.g.l/Y/f/v0p1]3^3`4S4_4c5h7R7S7U7m7p7}8P9i9q9w:q:u;W;];h=z={d<w3u7Y7Z7`9]9^:h:i:k;kS=R.h3bT=S7[9arnOXst!V!Z#d%l&g&p&r&s&u,n,s2S2VQ&d!UR,k&mrnOXst!V!Z#d%l&g&p&r&s&u,n,s2S2VR&d!UQ,T&[R1[+|snOXst!V!Z#d%l&g&p&r&s&u,n,s2S2VQ1h,YS5w1k1lU8e5u5v5zS:R8g8hS:{:Q:TQ;_:|R;i;`Q&k!VR,d&gR6T1tR:Y8nS&P|&UR1T+sQ&p!WR,n&qR,t&vT2T,s2VR,x&wQ,w&wR2^,xQ'w!{R-t'wSsOtQ#dXT%os#dQ#OTR'y#OQ#RUR'{#RQ)y$uR/Z)yQ#UVR(O#UQ#XWU(U#X(V-{Q(V#YR-{(WQ-X'WR2j-XQ.p(wS3e.p3fR3f.qQ-`'^R2n-`Y!rQ'^-`1g5qR'h!rQ.{)cR3z.{U#_W%g*WU(]#_(^-|Q(^#`R-|(XQ-['ZR2l-[t`OXst!V!Z#d%l&g&i&p&r&s&u,n,s2S2VS#hZ%dU#r`#h.VR.V(hQ(i#jQ.S(eW.[(i.S3P6wQ3P.TR6w3QQ)l$lR/R)lQ$phR)r$pQ$`cU)_$`-w<[Q-w;xR<[)oQ/l*ZW4Y/l4Z7j9hU4Z/m/n/oS7j4[4]R9h7k$e*O$v(s)a)c*Y*b*q*r*|*}+R.g.h.j.k.l/Y/b/d/f/q/v0^0_0p1]3^3_3`3u3y4S4^4_4c4s4u4{4|4}5h7R7S7T7U7Z7[7^7_7`7f7m7p7z7}8P9]9^9_9i9q9v9w:h:i:j:k:l:q:u;W;];h;k=b=n=o=z={Q/t*bU4b/t4d7nQ4d/vR7n4cS*l$|*XR0S*lx*Q$v)c*q*r+R/q0^0_3y4^4{4|4}7f7z9v:l=b=n=o!d.e(s)a*Y*b.g.h.l/Y/f/v0p1]3`4S4_4c5h7R7U7m7p7}8P9i9q9w:q:u;W;];h=z={U/c*Q.e7Xa7X3u7Z7[7`9]:h:k;kQ0Z*qQ3a.gU4t0Z3a9`R9`7Z|*S$v)c*q*r+R/b/q0^0_3y4^4s4{4|4}7f7z9v:l=b=n=o!h.f(s)a*Y*b.g.h.l/Y/f/v0p1]3^3`4S4_4c5h7R7S7U7m7p7}8P9i9q9w:q:u;W;];h=z={U/e*S.f7Ye7Y3u7Z7[7`9]9^:h:i:k;kQ0]*rQ3b.hU4v0]3b9aR9a7[Q*w%UR0a*wQ5S0pR8O5SQ+[%jR0o+[Q5l1bS8_5l:OR:O8`Q,V&]R1e,VQ5q1gR8b5qQ1s,aS6R1s8oR8o6TQ1O+oW5_1O5a8V9zQ5a1RQ8V5`R9z8WQ+t&PR1U+tQ2V,sR6c2VYrOXst#dQ&t!ZQ+^%lQ,m&pQ,o&rQ,p&sQ,r&uQ2Q,nS2T,s2VR6b2SQ%npQ&x!_Q&{!aQ&}!bQ'P!cQ'o!uQ+]%kQ+i%yQ+{&VQ,c&kQ,z&zW-k'i'q'r'uQ-r'mQ0R*kQ0y+jS1v,d,gQ2_,yQ2`,|Q2a,}Q2u-jW2w-m-n-q-sQ5W0zQ5d1XQ5g1]Q5{1mQ6V1xQ6a2RU6p2v2y2|Q6s2zQ8R5XQ8Z5fQ8[5hQ8a5pQ8j5|Q8p6US9P6q6uQ9R6tQ9{8XQ:U8kQ:Z8qQ:b9QQ:x9|Q;O:VQ;S:cR;a;PQ%yyQ'b!iQ'm!uU+j%z%{%|Q-R'TU-f'c'd'eS-j'i'sQ/z*gS0z+k+lQ2g-TS2s-g-hQ2z-oS4g/{0OQ5X0{Q6l2mQ6o2tQ6t2{U7q4i4j4mQ9o7sR:r9pS$wi=pR*x%VU%Ui%V=pR0`*vQ$viS(s#v+fS)a$b$cQ)c$dQ*Y$xS*b${*WQ*q%OQ*r%QQ*|%]Q*}%^Q+R%bQ.g<aQ.h<cQ.j<gQ.k<iQ.l<kQ/Y)wQ/b*PQ/d*RQ/f*TQ/q*^S/v*d/hQ0^*tQ0_*ul0p+c,Q.a1a1i3Z5x6|8f9V:S:f:};VQ1]+}Q3^<tQ3_<vQ3`<yS3u<^<_Q3y.zS4S/_4UQ4^/rQ4_/sQ4c/uQ4s0YQ4u0[Q4{0gQ4|0hQ4}0iQ5h1^Q7R<}Q7S=PQ7T=RQ7U=TQ7Z<bQ7[<dQ7^<hQ7_<jQ7`<lQ7f4VQ7m4aQ7p4fQ7z4wQ7}5RQ8P5UQ9]<zQ9^<uQ9_<wQ9i7lQ9q7vQ9v7|Q9w8QQ:h=OQ:i=QQ:j=SQ:k=UQ:l9eQ:q9nQ:u9tQ;W=XQ;]:tQ;h;^Q;k=YQ=b=pQ=n=xQ=o=yQ=z=|R={=}Q*z%[Q.i<eR7]<fnpOXst!Z#d%l&p&r&s&u,n,s2S2VQ!fPS#fZ#oQ&z!`W'f!o*f0V4qQ'}#SQ)O#{Q)p$nS,g&i&lQ,l&mQ,y&yS-O'R/iQ-b'`Q.s(|Q/V)qQ0m+YQ0s+dQ2O,kQ2q-dQ3X.bQ4O/QQ4y0dQ5v1jQ6X1zQ6Y1{Q6^1}Q6`2PQ6e2XQ7P3[Q7c3{Q8h5yQ8t6ZQ8u6[Q8w6_Q9Z7QQ:T8iR:_8x#[cOPXZst!Z!`!o#d#o#{%l&i&l&m&p&r&s&u&y'R'`(|*f+Y+d,k,n,s-d.b/i0V0d1j1z1{1}2P2S2V2X3[4q5y6Z6[6_7Q8i8xQ#YWQ#eYQ%puQ%rvS%tw!gS(Q#W(TQ(W#ZQ(r#uQ(w#xQ)P$OQ)Q$PQ)R$QQ)S$RQ)T$SQ)U$TQ)V$UQ)W$VQ)X$WQ)Y$XQ)[$ZQ)^$_Q)`$aQ)e$eW)o$n)q/Q3{Q+a%sQ+u&QS-U'V2hQ-s'pS-x(R-zQ-}(ZQ.P(bQ.n(vQ.q(xQ.u;vQ.w;yQ.x;zQ.y;}Q/]){Q0j+UQ2c-PQ2f-SQ2v-lQ2}.QQ3c.oQ3h<OQ3i<PQ3j<QQ3k<RQ3l<SQ3m<TQ3n<UQ3o<VQ3p<WQ3q<XQ3r<YQ3s.vQ3t<]Q3w<`Q3x<mQ4P<ZQ5O0lQ5Y0|Q6k<pQ6q2xQ6v3OQ7V3dQ7W<qQ7a<sQ7b<{Q8`5mQ8|6iQ9Q6rQ9[<|Q9b=VQ9c=WQ:c9SQ:y9}Q;R:aQ;x#SR=g=sR#[WR'X!el!tQ!r!v!y!z'^'j'k'l-`-p1g5q5sS'T!e-WU*g$|*X*lS-T'U']S0O*h*nQ0W*oQ2m-^Q4m0UR4r0XR(y#xQ!fQT-_'^-`]!qQ!r'^-`1g5qQ#p]R'g;wR)d$dY!uQ'^-`1g5qQ'i!rS's!v!yS'u!z5sS-o'j'kQ-q'lR2{-pT#kZ%dS#jZ%dS%jm,jU(e#h#i#lS.T(f(gQ.X(hQ0n+ZQ3Q.UU3R.V.W.YS6x3S3TR9T6yd#^W#W#Z%g(R([*W+W.O/hr#gZm#h#i#l%d(f(g(h+Z.U.V.W.Y3S3T6yS*Z$x*_Q/o*[Q1|,jQ2d-QQ4W/kQ6g2[Q7i4XQ8{6hT=_'V+XV#aW%g*WU#`W%g*WS(S#W([U(X#Z+W/hS-V'V+XT-y(R.OV'[!e%h*XQ$lfR)v$qT)k$l)lR3}/PT*]$x*_T*e${*WQ0q+cQ1_,QQ3V.aQ5j1aQ5u1iQ6}3ZQ8g5xQ9W6|Q:Q8fQ:d9VQ:|:SQ;U:fQ;`:}R;c;VnqOXst!Z#d%l&p&r&s&u,n,s2S2VQ&j!VR,c&gtmOXst!U!V!Z#d%l&g&p&r&s&u,n,s2S2VR,j&mT%km,jR1c,SR,b&eQ&T|R+z&UR+p&OT&n!W&qT&o!W&qT2U,s2V",
-  nodeNames: "⚠ ArithOp ArithOp ?. JSXStartTag LineComment BlockComment Script Hashbang ExportDeclaration export Star as VariableName String Escape from ; default FunctionDeclaration async function VariableDefinition > < TypeParamList in out const TypeDefinition extends ThisType this LiteralType ArithOp Number BooleanLiteral TemplateType InterpolationEnd Interpolation InterpolationStart NullType null VoidType void TypeofType typeof MemberExpression . PropertyName [ TemplateString Escape Interpolation super RegExp ] ArrayExpression Spread , } { ObjectExpression Property async get set PropertyDefinition Block : NewTarget new NewExpression ) ( ArgList UnaryExpression delete LogicOp BitOp YieldExpression yield AwaitExpression await ParenthesizedExpression ClassExpression class ClassBody MethodDeclaration Decorator @ MemberExpression PrivatePropertyName CallExpression TypeArgList CompareOp < declare Privacy static abstract override PrivatePropertyDefinition PropertyDeclaration readonly accessor Optional TypeAnnotation Equals StaticBlock FunctionExpression ArrowFunction ParamList ParamList ArrayPattern ObjectPattern PatternProperty Privacy readonly Arrow MemberExpression BinaryExpression ArithOp ArithOp ArithOp ArithOp BitOp CompareOp instanceof satisfies CompareOp BitOp BitOp BitOp LogicOp LogicOp ConditionalExpression LogicOp LogicOp AssignmentExpression UpdateOp PostfixExpression CallExpression InstantiationExpression TaggedTemplateExpression DynamicImport import ImportMeta JSXElement JSXSelfCloseEndTag JSXSelfClosingTag JSXIdentifier JSXBuiltin JSXIdentifier JSXNamespacedName JSXMemberExpression JSXSpreadAttribute JSXAttribute JSXAttributeValue JSXEscape JSXEndTag JSXOpenTag JSXFragmentTag JSXText JSXEscape JSXStartCloseTag JSXCloseTag PrefixCast < ArrowFunction TypeParamList SequenceExpression InstantiationExpression KeyofType keyof UniqueType unique ImportType InferredType infer TypeName ParenthesizedType FunctionSignature ParamList NewSignature IndexedType TupleType Label ArrayType ReadonlyType ObjectType MethodType PropertyType IndexSignature PropertyDefinition CallSignature TypePredicate asserts is NewSignature new UnionType LogicOp IntersectionType LogicOp ConditionalType ParameterizedType ClassDeclaration abstract implements type VariableDeclaration let var using TypeAliasDeclaration InterfaceDeclaration interface EnumDeclaration enum EnumBody NamespaceDeclaration namespace module AmbientDeclaration declare GlobalDeclaration global ClassDeclaration ClassBody AmbientFunctionDeclaration ExportGroup VariableName VariableName ImportDeclaration ImportGroup ForStatement for ForSpec ForInSpec ForOfSpec of WhileStatement while WithStatement with DoStatement do IfStatement if else SwitchStatement switch SwitchBody CaseLabel case DefaultLabel TryStatement try CatchClause catch FinallyClause finally ReturnStatement return ThrowStatement throw BreakStatement break ContinueStatement continue DebuggerStatement debugger LabeledStatement ExpressionStatement SingleExpression SingleClassItem",
-  maxTerm: 379,
+  states: "$F|Q%TQlOOO%[QlOOO'_QpOOP(lO`OOO*zQ!0MxO'#CiO+RO#tO'#CjO+aO&jO'#CjO+oO#@ItO'#DaO.QQlO'#DgO.bQlO'#DrO%[QlO'#DzO0fQlO'#ESOOQ!0Lf'#E['#E[O1PQ`O'#EXOOQO'#Ep'#EpOOQO'#Il'#IlO1XQ`O'#GsO1dQ`O'#EoO1iQ`O'#EoO3hQ!0MxO'#JrO6[Q!0MxO'#JsO6uQ`O'#F]O6zQ,UO'#FtOOQ!0Lf'#Ff'#FfO7VO7dO'#FfO9XQMhO'#F|O9`Q`O'#F{OOQ!0Lf'#Js'#JsOOQ!0Lb'#Jr'#JrO9eQ`O'#GwOOQ['#K_'#K_O9pQ`O'#IYO9uQ!0LrO'#IZOOQ['#J`'#J`OOQ['#I_'#I_Q`QlOOQ`QlOOO9}Q!L^O'#DvO:UQlO'#EOO:]QlO'#EQO9kQ`O'#GsO:dQMhO'#CoO:rQ`O'#EnO:}Q`O'#EyO;hQMhO'#FeO;xQ`O'#GsOOQO'#K`'#K`O;}Q`O'#K`O<]Q`O'#G{O<]Q`O'#G|O<]Q`O'#HOO9kQ`O'#HRO=SQ`O'#HUO>kQ`O'#CeO>{Q`O'#HcO?TQ`O'#HiO?TQ`O'#HkO`QlO'#HmO?TQ`O'#HoO?TQ`O'#HrO?YQ`O'#HxO?_Q!0LsO'#IOO%[QlO'#IQO?jQ!0LsO'#ISO?uQ!0LsO'#IUO9uQ!0LrO'#IWO@QQ!0MxO'#CiOASQpO'#DlQOQ`OOO%[QlO'#EQOAjQ`O'#ETO:dQMhO'#EnOAuQ`O'#EnOBQQ!bO'#FeOOQ['#Cg'#CgOOQ!0Lb'#Dq'#DqOOQ!0Lb'#Jv'#JvO%[QlO'#JvOOQO'#Jy'#JyOOQO'#Ih'#IhOCQQpO'#EgOOQ!0Lb'#Ef'#EfOOQ!0Lb'#J}'#J}OC|Q!0MSO'#EgODWQpO'#EWOOQO'#Jx'#JxODlQpO'#JyOEyQpO'#EWODWQpO'#EgPFWO&2DjO'#CbPOOO)CD})CD}OOOO'#I`'#I`OFcO#tO,59UOOQ!0Lh,59U,59UOOOO'#Ia'#IaOFqO&jO,59UOGPQ!L^O'#DcOOOO'#Ic'#IcOGWO#@ItO,59{OOQ!0Lf,59{,59{OGfQlO'#IdOGyQ`O'#JtOIxQ!fO'#JtO+}QlO'#JtOJPQ`O,5:ROJgQ`O'#EpOJtQ`O'#KTOKPQ`O'#KSOKPQ`O'#KSOKXQ`O,5;^OK^Q`O'#KROOQ!0Ln,5:^,5:^OKeQlO,5:^OMcQ!0MxO,5:fONSQ`O,5:nONmQ!0LrO'#KQONtQ`O'#KPO9eQ`O'#KPO! YQ`O'#KPO! bQ`O,5;]O! gQ`O'#KPO!#lQ!fO'#JsOOQ!0Lh'#Ci'#CiO%[QlO'#ESO!$[Q!fO,5:sOOQS'#Jz'#JzOOQO-E<j-E<jO9kQ`O,5=_O!$rQ`O,5=_O!$wQlO,5;ZO!&zQMhO'#EkO!(eQ`O,5;ZO!(jQlO'#DyO!(tQpO,5;dO!(|QpO,5;dO%[QlO,5;dOOQ['#FT'#FTOOQ['#FV'#FVO%[QlO,5;eO%[QlO,5;eO%[QlO,5;eO%[QlO,5;eO%[QlO,5;eO%[QlO,5;eO%[QlO,5;eO%[QlO,5;eO%[QlO,5;eO%[QlO,5;eOOQ['#FZ'#FZO!)[QlO,5;tOOQ!0Lf,5;y,5;yOOQ!0Lf,5;z,5;zOOQ!0Lf,5;|,5;|O%[QlO'#IpO!+_Q!0LrO,5<iO%[QlO,5;eO!&zQMhO,5;eO!+|QMhO,5;eO!-nQMhO'#E^O%[QlO,5;wOOQ!0Lf,5;{,5;{O!-uQ,UO'#FjO!.rQ,UO'#KXO!.^Q,UO'#KXO!.yQ,UO'#KXOOQO'#KX'#KXO!/_Q,UO,5<SOOOW,5<`,5<`O!/pQlO'#FvOOOW'#Io'#IoO7VO7dO,5<QO!/wQ,UO'#FxOOQ!0Lf,5<Q,5<QO!0hQ$IUO'#CyOOQ!0Lh'#C}'#C}O!0{O#@ItO'#DRO!1iQMjO,5<eO!1pQ`O,5<hO!3YQ(CWO'#GXO!3jQ`O'#GYO!3oQ`O'#GYO!5_Q(CWO'#G^O!6dQpO'#GbOOQO'#Gn'#GnO!,TQMhO'#GmOOQO'#Gp'#GpO!,TQMhO'#GoO!7VQ$IUO'#JlOOQ!0Lh'#Jl'#JlO!7aQ`O'#JkO!7oQ`O'#JjO!7wQ`O'#CuOOQ!0Lh'#C{'#C{O!8YQ`O'#C}OOQ!0Lh'#DV'#DVOOQ!0Lh'#DX'#DXO!8_Q`O,5<eO1SQ`O'#DZO!,TQMhO'#GPO!,TQMhO'#GRO!8gQ`O'#GTO!8lQ`O'#GUO!3oQ`O'#G[O!,TQMhO'#GaO<]Q`O'#JkO!8qQ`O'#EqO!9`Q`O,5<gOOQ!0Lb'#Cr'#CrO!9hQ`O'#ErO!:bQpO'#EsOOQ!0Lb'#KR'#KRO!:iQ!0LrO'#KaO9uQ!0LrO,5=cO`QlO,5>tOOQ['#Jh'#JhOOQ[,5>u,5>uOOQ[-E<]-E<]O!<hQ!0MxO,5:bO!:]QpO,5:`O!?RQ!0MxO,5:jO%[QlO,5:jO!AiQ!0MxO,5:lOOQO,5@z,5@zO!BYQMhO,5=_O!BhQ!0LrO'#JiO9`Q`O'#JiO!ByQ!0LrO,59ZO!CUQpO,59ZO!C^QMhO,59ZO:dQMhO,59ZO!CiQ`O,5;ZO!CqQ`O'#HbO!DVQ`O'#KdO%[QlO,5;}O!:]QpO,5<PO!D_Q`O,5=zO!DdQ`O,5=zO!DiQ`O,5=zO!DwQ`O,5=zO9uQ!0LrO,5=zO<]Q`O,5=jOOQO'#Cy'#CyO!EOQpO,5=gO!EWQMhO,5=hO!EcQ`O,5=jO!EhQ!bO,5=mO!EpQ`O'#K`O?YQ`O'#HWO9kQ`O'#HYO!EuQ`O'#HYO:dQMhO'#H[O!EzQ`O'#H[OOQ[,5=p,5=pO!FPQ`O'#H]O!FbQ`O'#CoO!FgQ`O,59PO!FqQ`O,59PO!HvQlO,59POOQ[,59P,59PO!IWQ!0LrO,59PO%[QlO,59PO!KcQlO'#HeOOQ['#Hf'#HfOOQ['#Hg'#HgO`QlO,5=}O!KyQ`O,5=}O`QlO,5>TO`QlO,5>VO!LOQ`O,5>XO`QlO,5>ZO!LTQ`O,5>^O!LYQlO,5>dOOQ[,5>j,5>jO%[QlO,5>jO9uQ!0LrO,5>lOOQ[,5>n,5>nO#!dQ`O,5>nOOQ[,5>p,5>pO#!dQ`O,5>pOOQ[,5>r,5>rO##QQpO'#D_O%[QlO'#JvO##sQpO'#JvO##}QpO'#DmO#$`QpO'#DmO#&qQlO'#DmO#&xQ`O'#JuO#'QQ`O,5:WO#'VQ`O'#EtO#'eQ`O'#KUO#'mQ`O,5;_O#'rQpO'#DmO#(PQpO'#EVOOQ!0Lf,5:o,5:oO%[QlO,5:oO#(WQ`O,5:oO?YQ`O,5;YO!CUQpO,5;YO!C^QMhO,5;YO:dQMhO,5;YO#(`Q`O,5@bO#(eQ07dO,5:sOOQO-E<f-E<fO#)kQ!0MSO,5;RODWQpO,5:rO#)uQpO,5:rODWQpO,5;RO!ByQ!0LrO,5:rOOQ!0Lb'#Ej'#EjOOQO,5;R,5;RO%[QlO,5;RO#*SQ!0LrO,5;RO#*_Q!0LrO,5;RO!CUQpO,5:rOOQO,5;X,5;XO#*mQ!0LrO,5;RPOOO'#I^'#I^P#+RO&2DjO,58|POOO,58|,58|OOOO-E<^-E<^OOQ!0Lh1G.p1G.pOOOO-E<_-E<_OOOO,59},59}O#+^Q!bO,59}OOOO-E<a-E<aOOQ!0Lf1G/g1G/gO#+cQ!fO,5?OO+}QlO,5?OOOQO,5?U,5?UO#+mQlO'#IdOOQO-E<b-E<bO#+zQ`O,5@`O#,SQ!fO,5@`O#,ZQ`O,5@nOOQ!0Lf1G/m1G/mO%[QlO,5@oO#,cQ`O'#IjOOQO-E<h-E<hO#,ZQ`O,5@nOOQ!0Lb1G0x1G0xOOQ!0Ln1G/x1G/xOOQ!0Ln1G0Y1G0YO%[QlO,5@lO#,wQ!0LrO,5@lO#-YQ!0LrO,5@lO#-aQ`O,5@kO9eQ`O,5@kO#-iQ`O,5@kO#-wQ`O'#ImO#-aQ`O,5@kOOQ!0Lb1G0w1G0wO!(tQpO,5:uO!)PQpO,5:uOOQS,5:w,5:wO#.iQdO,5:wO#.qQMhO1G2yO9kQ`O1G2yOOQ!0Lf1G0u1G0uO#/PQ!0MxO1G0uO#0UQ!0MvO,5;VOOQ!0Lh'#GW'#GWO#0rQ!0MzO'#JlO!$wQlO1G0uO#2}Q!fO'#JwO%[QlO'#JwO#3XQ`O,5:eOOQ!0Lh'#D_'#D_OOQ!0Lf1G1O1G1OO%[QlO1G1OOOQ!0Lf1G1f1G1fO#3^Q`O1G1OO#5rQ!0MxO1G1PO#5yQ!0MxO1G1PO#8aQ!0MxO1G1PO#8hQ!0MxO1G1PO#;OQ!0MxO1G1PO#=fQ!0MxO1G1PO#=mQ!0MxO1G1PO#=tQ!0MxO1G1PO#@[Q!0MxO1G1PO#@cQ!0MxO1G1PO#BpQ?MtO'#CiO#DkQ?MtO1G1`O#DrQ?MtO'#JsO#EVQ!0MxO,5?[OOQ!0Lb-E<n-E<nO#GdQ!0MxO1G1PO#HaQ!0MzO1G1POOQ!0Lf1G1P1G1PO#IdQMjO'#J|O#InQ`O,5:xO#IsQ!0MxO1G1cO#JgQ,UO,5<WO#JoQ,UO,5<XO#JwQ,UO'#FoO#K`Q`O'#FnOOQO'#KY'#KYOOQO'#In'#InO#KeQ,UO1G1nOOQ!0Lf1G1n1G1nOOOW1G1y1G1yO#KvQ?MtO'#JrO#LQQ`O,5<bO!)[QlO,5<bOOOW-E<m-E<mOOQ!0Lf1G1l1G1lO#LVQpO'#KXOOQ!0Lf,5<d,5<dO#L_QpO,5<dO#LdQMhO'#DTOOOO'#Ib'#IbO#LkO#@ItO,59mOOQ!0Lh,59m,59mO%[QlO1G2PO!8lQ`O'#IrO#LvQ`O,5<zOOQ!0Lh,5<w,5<wO!,TQMhO'#IuO#MdQMjO,5=XO!,TQMhO'#IwO#NVQMjO,5=ZO!&zQMhO,5=]OOQO1G2S1G2SO#NaQ!dO'#CrO#NtQ(CWO'#ErO$ |QpO'#GbO$!dQ!dO,5<sO$!kQ`O'#K[O9eQ`O'#K[O$!yQ`O,5<uO$#aQ!dO'#C{O!,TQMhO,5<tO$#kQ`O'#GZO$$PQ`O,5<tO$$UQ!dO'#GWO$$cQ!dO'#K]O$$mQ`O'#K]O!&zQMhO'#K]O$$rQ`O,5<xO$$wQlO'#JvO$%RQpO'#GcO#$`QpO'#GcO$%dQ`O'#GgO!3oQ`O'#GkO$%iQ!0LrO'#ItO$%tQpO,5<|OOQ!0Lp,5<|,5<|O$%{QpO'#GcO$&YQpO'#GdO$&kQpO'#GdO$&pQMjO,5=XO$'QQMjO,5=ZOOQ!0Lh,5=^,5=^O!,TQMhO,5@VO!,TQMhO,5@VO$'bQ`O'#IyO$'vQ`O,5@UO$(OQ`O,59aOOQ!0Lh,59i,59iO$(TQ`O,5@VO$)TQ$IYO,59uOOQ!0Lh'#Jp'#JpO$)vQMjO,5<kO$*iQMjO,5<mO@zQ`O,5<oOOQ!0Lh,5<p,5<pO$*sQ`O,5<vO$*xQMjO,5<{O$+YQ`O'#KPO!$wQlO1G2RO$+_Q`O1G2RO9eQ`O'#KSO9eQ`O'#EtO%[QlO'#EtO9eQ`O'#I{O$+dQ!0LrO,5@{OOQ[1G2}1G2}OOQ[1G4`1G4`OOQ!0Lf1G/|1G/|OOQ!0Lf1G/z1G/zO$-fQ!0MxO1G0UOOQ[1G2y1G2yO!&zQMhO1G2yO%[QlO1G2yO#.tQ`O1G2yO$/jQMhO'#EkOOQ!0Lb,5@T,5@TO$/wQ!0LrO,5@TOOQ[1G.u1G.uO!ByQ!0LrO1G.uO!CUQpO1G.uO!C^QMhO1G.uO$0YQ`O1G0uO$0_Q`O'#CiO$0jQ`O'#KeO$0rQ`O,5=|O$0wQ`O'#KeO$0|Q`O'#KeO$1[Q`O'#JRO$1jQ`O,5AOO$1rQ!fO1G1iOOQ!0Lf1G1k1G1kO9kQ`O1G3fO@zQ`O1G3fO$1yQ`O1G3fO$2OQ`O1G3fO!DiQ`O1G3fO9uQ!0LrO1G3fOOQ[1G3f1G3fO!EcQ`O1G3UO!&zQMhO1G3RO$2TQ`O1G3ROOQ[1G3S1G3SO!&zQMhO1G3SO$2YQ`O1G3SO$2bQpO'#HQOOQ[1G3U1G3UO!6_QpO'#I}O!EhQ!bO1G3XOOQ[1G3X1G3XOOQ[,5=r,5=rO$2jQMhO,5=tO9kQ`O,5=tO$%dQ`O,5=vO9`Q`O,5=vO!CUQpO,5=vO!C^QMhO,5=vO:dQMhO,5=vO$2xQ`O'#KcO$3TQ`O,5=wOOQ[1G.k1G.kO$3YQ!0LrO1G.kO@zQ`O1G.kO$3eQ`O1G.kO9uQ!0LrO1G.kO$5mQ!fO,5AQO$5zQ`O,5AQO9eQ`O,5AQO$6VQlO,5>PO$6^Q`O,5>POOQ[1G3i1G3iO`QlO1G3iOOQ[1G3o1G3oOOQ[1G3q1G3qO?TQ`O1G3sO$6cQlO1G3uO$:gQlO'#HtOOQ[1G3x1G3xO$:tQ`O'#HzO?YQ`O'#H|OOQ[1G4O1G4OO$:|QlO1G4OO9uQ!0LrO1G4UOOQ[1G4W1G4WOOQ!0Lb'#G_'#G_O9uQ!0LrO1G4YO9uQ!0LrO1G4[O$?TQ`O,5@bO!)[QlO,5;`O9eQ`O,5;`O?YQ`O,5:XO!)[QlO,5:XO!CUQpO,5:XO$?YQ?MtO,5:XOOQO,5;`,5;`O$?dQpO'#IeO$?zQ`O,5@aOOQ!0Lf1G/r1G/rO$@SQpO'#IkO$@^Q`O,5@pOOQ!0Lb1G0y1G0yO#$`QpO,5:XOOQO'#Ig'#IgO$@fQpO,5:qOOQ!0Ln,5:q,5:qO#(ZQ`O1G0ZOOQ!0Lf1G0Z1G0ZO%[QlO1G0ZOOQ!0Lf1G0t1G0tO?YQ`O1G0tO!CUQpO1G0tO!C^QMhO1G0tOOQ!0Lb1G5|1G5|O!ByQ!0LrO1G0^OOQO1G0m1G0mO%[QlO1G0mO$@mQ!0LrO1G0mO$@xQ!0LrO1G0mO!CUQpO1G0^ODWQpO1G0^O$AWQ!0LrO1G0mOOQO1G0^1G0^O$AlQ!0MxO1G0mPOOO-E<[-E<[POOO1G.h1G.hOOOO1G/i1G/iO$AvQ!bO,5<iO$BOQ!fO1G4jOOQO1G4p1G4pO%[QlO,5?OO$BYQ`O1G5zO$BbQ`O1G6YO$BjQ!fO1G6ZO9eQ`O,5?UO$BtQ!0MxO1G6WO%[QlO1G6WO$CUQ!0LrO1G6WO$CgQ`O1G6VO$CgQ`O1G6VO9eQ`O1G6VO$CoQ`O,5?XO9eQ`O,5?XOOQO,5?X,5?XO$DTQ`O,5?XO$+YQ`O,5?XOOQO-E<k-E<kOOQS1G0a1G0aOOQS1G0c1G0cO#.lQ`O1G0cOOQ[7+(e7+(eO!&zQMhO7+(eO%[QlO7+(eO$DcQ`O7+(eO$DnQMhO7+(eO$D|Q!0MzO,5=XO$GXQ!0MzO,5=ZO$IdQ!0MzO,5=XO$KuQ!0MzO,5=ZO$NWQ!0MzO,59uO%!]Q!0MzO,5<kO%$hQ!0MzO,5<mO%&sQ!0MzO,5<{OOQ!0Lf7+&a7+&aO%)UQ!0MxO7+&aO%)xQlO'#IfO%*VQ`O,5@cO%*_Q!fO,5@cOOQ!0Lf1G0P1G0PO%*iQ`O7+&jOOQ!0Lf7+&j7+&jO%*nQ?MtO,5:fO%[QlO7+&zO%*xQ?MtO,5:bO%+VQ?MtO,5:jO%+aQ?MtO,5:lO%+kQMhO'#IiO%+uQ`O,5@hOOQ!0Lh1G0d1G0dOOQO1G1r1G1rOOQO1G1s1G1sO%+}Q!jO,5<ZO!)[QlO,5<YOOQO-E<l-E<lOOQ!0Lf7+'Y7+'YOOOW7+'e7+'eOOOW1G1|1G1|O%,YQ`O1G1|OOQ!0Lf1G2O1G2OOOOO,59o,59oO%,_Q!dO,59oOOOO-E<`-E<`OOQ!0Lh1G/X1G/XO%,fQ!0MxO7+'kOOQ!0Lh,5?^,5?^O%-YQMhO1G2fP%-aQ`O'#IrPOQ!0Lh-E<p-E<pO%-}QMjO,5?aOOQ!0Lh-E<s-E<sO%.pQMjO,5?cOOQ!0Lh-E<u-E<uO%.zQ!dO1G2wO%/RQ!dO'#CrO%/iQMhO'#KSO$$wQlO'#JvOOQ!0Lh1G2_1G2_O%/sQ`O'#IqO%0[Q`O,5@vO%0[Q`O,5@vO%0dQ`O,5@vO%0oQ`O,5@vOOQO1G2a1G2aO%0}QMjO1G2`O$+YQ`O'#K[O!,TQMhO1G2`O%1_Q(CWO'#IsO%1lQ`O,5@wO!&zQMhO,5@wO%1tQ!dO,5@wOOQ!0Lh1G2d1G2dO%4UQ!fO'#CiO%4`Q`O,5=POOQ!0Lb,5<},5<}O%4hQpO,5<}OOQ!0Lb,5=O,5=OOCwQ`O,5<}O%4sQpO,5<}OOQ!0Lb,5=R,5=RO$+YQ`O,5=VOOQO,5?`,5?`OOQO-E<r-E<rOOQ!0Lp1G2h1G2hO#$`QpO,5<}O$$wQlO,5=PO%5RQ`O,5=OO%5^QpO,5=OO!,TQMhO'#IuO%6WQMjO1G2sO!,TQMhO'#IwO%6yQMjO1G2uO%7TQMjO1G5qO%7_QMjO1G5qOOQO,5?e,5?eOOQO-E<w-E<wOOQO1G.{1G.{O!,TQMhO1G5qO!,TQMhO1G5qO!:]QpO,59wO%[QlO,59wOOQ!0Lh,5<j,5<jO%7lQ`O1G2ZO!,TQMhO1G2bO%7qQ!0MxO7+'mOOQ!0Lf7+'m7+'mO!$wQlO7+'mO%8eQ`O,5;`OOQ!0Lb,5?g,5?gOOQ!0Lb-E<y-E<yO%8jQ!dO'#K^O#(ZQ`O7+(eO4UQ!fO7+(eO$DfQ`O7+(eO%8tQ!0MvO'#CiO%9XQ!0MvO,5=SO%9lQ`O,5=SO%9tQ`O,5=SOOQ!0Lb1G5o1G5oOOQ[7+$a7+$aO!ByQ!0LrO7+$aO!CUQpO7+$aO!$wQlO7+&aO%9yQ`O'#JQO%:bQ`O,5APOOQO1G3h1G3hO9kQ`O,5APO%:bQ`O,5APO%:jQ`O,5APOOQO,5?m,5?mOOQO-E=P-E=POOQ!0Lf7+'T7+'TO%:oQ`O7+)QO9uQ!0LrO7+)QO9kQ`O7+)QO@zQ`O7+)QO%:tQ`O7+)QOOQ[7+)Q7+)QOOQ[7+(p7+(pO%:yQ!0MvO7+(mO!&zQMhO7+(mO!E^Q`O7+(nOOQ[7+(n7+(nO!&zQMhO7+(nO%;TQ`O'#KbO%;`Q`O,5=lOOQO,5?i,5?iOOQO-E<{-E<{OOQ[7+(s7+(sO%<rQpO'#HZOOQ[1G3`1G3`O!&zQMhO1G3`O%[QlO1G3`O%<yQ`O1G3`O%=UQMhO1G3`O9uQ!0LrO1G3bO$%dQ`O1G3bO9`Q`O1G3bO!CUQpO1G3bO!C^QMhO1G3bO%=dQ`O'#JPO%=xQ`O,5@}O%>QQpO,5@}OOQ!0Lb1G3c1G3cOOQ[7+$V7+$VO@zQ`O7+$VO9uQ!0LrO7+$VO%>]Q`O7+$VO%[QlO1G6lO%[QlO1G6mO%>bQ!0LrO1G6lO%>lQlO1G3kO%>sQ`O1G3kO%>xQlO1G3kOOQ[7+)T7+)TO9uQ!0LrO7+)_O`QlO7+)aOOQ['#Kh'#KhOOQ['#JS'#JSO%?PQlO,5>`OOQ[,5>`,5>`O%[QlO'#HuO%?^Q`O'#HwOOQ[,5>f,5>fO9eQ`O,5>fOOQ[,5>h,5>hOOQ[7+)j7+)jOOQ[7+)p7+)pOOQ[7+)t7+)tOOQ[7+)v7+)vO%?cQpO1G5|O%?}Q?MtO1G0zO%@XQ`O1G0zOOQO1G/s1G/sO%@dQ?MtO1G/sO?YQ`O1G/sO!)[QlO'#DmOOQO,5?P,5?POOQO-E<c-E<cOOQO,5?V,5?VOOQO-E<i-E<iO!CUQpO1G/sOOQO-E<e-E<eOOQ!0Ln1G0]1G0]OOQ!0Lf7+%u7+%uO#(ZQ`O7+%uOOQ!0Lf7+&`7+&`O?YQ`O7+&`O!CUQpO7+&`OOQO7+%x7+%xO$AlQ!0MxO7+&XOOQO7+&X7+&XO%[QlO7+&XO%@nQ!0LrO7+&XO!ByQ!0LrO7+%xO!CUQpO7+%xO%@yQ!0LrO7+&XO%AXQ!0MxO7++rO%[QlO7++rO%AiQ`O7++qO%AiQ`O7++qOOQO1G4s1G4sO9eQ`O1G4sO%AqQ`O1G4sOOQS7+%}7+%}O#(ZQ`O<<LPO4UQ!fO<<LPO%BPQ`O<<LPOOQ[<<LP<<LPO!&zQMhO<<LPO%[QlO<<LPO%BXQ`O<<LPO%BdQ!0MzO,5?aO%DoQ!0MzO,5?cO%FzQ!0MzO1G2`O%I]Q!0MzO1G2sO%KhQ!0MzO1G2uO%MsQ!fO,5?QO%[QlO,5?QOOQO-E<d-E<dO%M}Q`O1G5}OOQ!0Lf<<JU<<JUO%NVQ?MtO1G0uO&!^Q?MtO1G1PO&!eQ?MtO1G1PO&$fQ?MtO1G1PO&$mQ?MtO1G1PO&&nQ?MtO1G1PO&(oQ?MtO1G1PO&(vQ?MtO1G1PO&(}Q?MtO1G1PO&+OQ?MtO1G1PO&+VQ?MtO1G1PO&+^Q!0MxO<<JfO&-UQ?MtO1G1PO&.RQ?MvO1G1PO&/UQ?MvO'#JlO&1[Q?MtO1G1cO&1iQ?MtO1G0UO&1sQMjO,5?TOOQO-E<g-E<gO!)[QlO'#FqOOQO'#KZ'#KZOOQO1G1u1G1uO&1}Q`O1G1tO&2SQ?MtO,5?[OOOW7+'h7+'hOOOO1G/Z1G/ZO&2^Q!dO1G4xOOQ!0Lh7+(Q7+(QP!&zQMhO,5?^O!,TQMhO7+(cO&2eQ`O,5?]O9eQ`O,5?]O$+YQ`O,5?]OOQO-E<o-E<oO&2sQ`O1G6bO&2sQ`O1G6bO&2{Q`O1G6bO&3WQMjO7+'zO&3hQ!dO,5?_O&3rQ`O,5?_O!&zQMhO,5?_OOQO-E<q-E<qO&3wQ!dO1G6cO&4RQ`O1G6cO&4ZQ`O1G2kO!&zQMhO1G2kOOQ!0Lb1G2i1G2iOOQ!0Lb1G2j1G2jO%4hQpO1G2iO!CUQpO1G2iOCwQ`O1G2iOOQ!0Lb1G2q1G2qO&4`QpO1G2iO&4nQ`O1G2kO$+YQ`O1G2jOCwQ`O1G2jO$$wQlO1G2kO&4vQ`O1G2jO&5jQMjO,5?aOOQ!0Lh-E<t-E<tO&6]QMjO,5?cOOQ!0Lh-E<v-E<vO!,TQMhO7++]O&6gQMjO7++]O&6qQMjO7++]OOQ!0Lh1G/c1G/cO&7OQ`O1G/cOOQ!0Lh7+'u7+'uO&7TQMjO7+'|O&7eQ!0MxO<<KXOOQ!0Lf<<KX<<KXO&8XQ`O1G0zO!&zQMhO'#IzO&8^Q`O,5@xO&:`Q!fO<<LPO!&zQMhO1G2nO&:gQ!0LrO1G2nOOQ[<<G{<<G{O!ByQ!0LrO<<G{O&:xQ!0MxO<<I{OOQ!0Lf<<I{<<I{OOQO,5?l,5?lO&;lQ`O,5?lO&;qQ`O,5?lOOQO-E=O-E=OO&<PQ`O1G6kO&<PQ`O1G6kO9kQ`O1G6kO@zQ`O<<LlOOQ[<<Ll<<LlO&<XQ`O<<LlO9uQ!0LrO<<LlO9kQ`O<<LlOOQ[<<LX<<LXO%:yQ!0MvO<<LXOOQ[<<LY<<LYO!E^Q`O<<LYO&<^QpO'#I|O&<iQ`O,5@|O!)[QlO,5@|OOQ[1G3W1G3WOOQO'#JO'#JOO9uQ!0LrO'#JOO&<qQpO,5=uOOQ[,5=u,5=uO&<xQpO'#EgO&=PQpO'#GeO&=UQ`O7+(zO&=ZQ`O7+(zOOQ[7+(z7+(zO!&zQMhO7+(zO%[QlO7+(zO&=cQ`O7+(zOOQ[7+(|7+(|O9uQ!0LrO7+(|O$%dQ`O7+(|O9`Q`O7+(|O!CUQpO7+(|O&=nQ`O,5?kOOQO-E<}-E<}OOQO'#H^'#H^O&=yQ`O1G6iO9uQ!0LrO<<GqOOQ[<<Gq<<GqO@zQ`O<<GqO&>RQ`O7+,WO&>WQ`O7+,XO%[QlO7+,WO%[QlO7+,XOOQ[7+)V7+)VO&>]Q`O7+)VO&>bQlO7+)VO&>iQ`O7+)VOOQ[<<Ly<<LyOOQ[<<L{<<L{OOQ[-E=Q-E=QOOQ[1G3z1G3zO&>nQ`O,5>aOOQ[,5>c,5>cO&>sQ`O1G4QO9eQ`O7+&fO!)[QlO7+&fOOQO7+%_7+%_O&>xQ?MtO1G6ZO?YQ`O7+%_OOQ!0Lf<<Ia<<IaOOQ!0Lf<<Iz<<IzO?YQ`O<<IzOOQO<<Is<<IsO$AlQ!0MxO<<IsO%[QlO<<IsOOQO<<Id<<IdO!ByQ!0LrO<<IdO&?SQ!0LrO<<IsO&?_Q!0MxO<= ^O&?oQ`O<= ]OOQO7+*_7+*_O9eQ`O7+*_OOQ[ANAkANAkO&?wQ!fOANAkO!&zQMhOANAkO#(ZQ`OANAkO4UQ!fOANAkO&@OQ`OANAkO%[QlOANAkO&@WQ!0MzO7+'zO&BiQ!0MzO,5?aO&DtQ!0MzO,5?cO&GPQ!0MzO7+'|O&IbQ!fO1G4lO&IlQ?MtO7+&aO&KpQ?MvO,5=XO&MwQ?MvO,5=ZO&NXQ?MvO,5=XO&NiQ?MvO,5=ZO&NyQ?MvO,59uO'#PQ?MvO,5<kO'%SQ?MvO,5<mO''hQ?MvO,5<{O')^Q?MtO7+'kO')kQ?MtO7+'mO')xQ`O,5<]OOQO7+'`7+'`OOQ!0Lh7+*d7+*dO')}QMjO<<K}OOQO1G4w1G4wO'*UQ`O1G4wO'*aQ`O1G4wO'*oQ`O7++|O'*oQ`O7++|O!&zQMhO1G4yO'*wQ!dO1G4yO'+RQ`O7++}O'+ZQ`O7+(VO'+fQ!dO7+(VOOQ!0Lb7+(T7+(TOOQ!0Lb7+(U7+(UO!CUQpO7+(TOCwQ`O7+(TO'+pQ`O7+(VO!&zQMhO7+(VO$+YQ`O7+(UO'+uQ`O7+(VOCwQ`O7+(UO'+}QMjO<<NwO!,TQMhO<<NwOOQ!0Lh7+$}7+$}O',XQ!dO,5?fOOQO-E<x-E<xO',cQ!0MvO7+(YO!&zQMhO7+(YOOQ[AN=gAN=gO9kQ`O1G5WOOQO1G5W1G5WO',sQ`O1G5WO',xQ`O7+,VO',xQ`O7+,VO9uQ!0LrOANBWO@zQ`OANBWOOQ[ANBWANBWO'-QQ`OANBWOOQ[ANAsANAsOOQ[ANAtANAtO'-VQ`O,5?hOOQO-E<z-E<zO'-bQ?MtO1G6hOOQO,5?j,5?jOOQO-E<|-E<|OOQ[1G3a1G3aO'-lQ`O,5=POOQ[<<Lf<<LfO!&zQMhO<<LfO&=UQ`O<<LfO'-qQ`O<<LfO%[QlO<<LfOOQ[<<Lh<<LhO9uQ!0LrO<<LhO$%dQ`O<<LhO9`Q`O<<LhO'-yQpO1G5VO'.UQ`O7+,TOOQ[AN=]AN=]O9uQ!0LrOAN=]OOQ[<= r<= rOOQ[<= s<= sO'.^Q`O<= rO'.cQ`O<= sOOQ[<<Lq<<LqO'.hQ`O<<LqO'.mQlO<<LqOOQ[1G3{1G3{O?YQ`O7+)lO'.tQ`O<<JQO'/PQ?MtO<<JQOOQO<<Hy<<HyOOQ!0LfAN?fAN?fOOQOAN?_AN?_O$AlQ!0MxOAN?_OOQOAN?OAN?OO%[QlOAN?_OOQO<<My<<MyOOQ[G27VG27VO!&zQMhOG27VO#(ZQ`OG27VO'/ZQ!fOG27VO4UQ!fOG27VO'/bQ`OG27VO'/jQ?MtO<<JfO'/wQ?MvO1G2`O'1mQ?MvO,5?aO'3pQ?MvO,5?cO'5sQ?MvO1G2sO'7vQ?MvO1G2uO'9yQ?MtO<<KXO':WQ?MtO<<I{OOQO1G1w1G1wO!,TQMhOANAiOOQO7+*c7+*cO':eQ`O7+*cO':pQ`O<= hO':xQ!dO7+*eOOQ!0Lb<<Kq<<KqO$+YQ`O<<KqOCwQ`O<<KqO';SQ`O<<KqO!&zQMhO<<KqOOQ!0Lb<<Ko<<KoO!CUQpO<<KoO';_Q!dO<<KqOOQ!0Lb<<Kp<<KpO';iQ`O<<KqO!&zQMhO<<KqO$+YQ`O<<KpO';nQMjOANDcO';xQ!0MvO<<KtOOQO7+*r7+*rO9kQ`O7+*rO'<YQ`O<= qOOQ[G27rG27rO9uQ!0LrOG27rO@zQ`OG27rO!)[QlO1G5SO'<bQ`O7+,SO'<jQ`O1G2kO&=UQ`OANBQOOQ[ANBQANBQO!&zQMhOANBQO'<oQ`OANBQOOQ[ANBSANBSO9uQ!0LrOANBSO$%dQ`OANBSOOQO'#H_'#H_OOQO7+*q7+*qOOQ[G22wG22wOOQ[ANE^ANE^OOQ[ANE_ANE_OOQ[ANB]ANB]O'<wQ`OANB]OOQ[<<MW<<MWO!)[QlOAN?lOOQOG24yG24yO$AlQ!0MxOG24yO#(ZQ`OLD,qOOQ[LD,qLD,qO!&zQMhOLD,qO'<|Q!fOLD,qO'=TQ?MvO7+'zO'>yQ?MvO,5?aO'@|Q?MvO,5?cO'CPQ?MvO7+'|O'DuQMjOG27TOOQO<<M}<<M}OOQ!0LbANA]ANA]O$+YQ`OANA]OCwQ`OANA]O'EVQ!dOANA]OOQ!0LbANAZANAZO'E^Q`OANA]O!&zQMhOANA]O'EiQ!dOANA]OOQ!0LbANA[ANA[OOQO<<N^<<N^OOQ[LD-^LD-^O9uQ!0LrOLD-^O'EsQ?MtO7+*nOOQO'#Gf'#GfOOQ[G27lG27lO&=UQ`OG27lO!&zQMhOG27lOOQ[G27nG27nO9uQ!0LrOG27nOOQ[G27wG27wO'E}Q?MtOG25WOOQOLD*eLD*eOOQ[!$(!]!$(!]O#(ZQ`O!$(!]O!&zQMhO!$(!]O'FXQ!0MzOG27TOOQ!0LbG26wG26wO$+YQ`OG26wO'HjQ`OG26wOCwQ`OG26wO'HuQ!dOG26wO!&zQMhOG26wOOQ[!$(!x!$(!xOOQ[LD-WLD-WO&=UQ`OLD-WOOQ[LD-YLD-YOOQ[!)9Ew!)9EwO#(ZQ`O!)9EwOOQ!0LbLD,cLD,cO$+YQ`OLD,cOCwQ`OLD,cO'H|Q`OLD,cO'IXQ!dOLD,cOOQ[!$(!r!$(!rOOQ[!.K;c!.K;cO'I`Q?MvOG27TOOQ!0Lb!$( }!$( }O$+YQ`O!$( }OCwQ`O!$( }O'KUQ`O!$( }OOQ!0Lb!)9Ei!)9EiO$+YQ`O!)9EiOCwQ`O!)9EiOOQ!0Lb!.K;T!.K;TO$+YQ`O!.K;TOOQ!0Lb!4/0o!4/0oO!)[QlO'#DzO1PQ`O'#EXO'KaQ!fO'#JrO'KhQ!L^O'#DvO'KoQlO'#EOO'KvQ!fO'#CiO'N^Q!fO'#CiO!)[QlO'#EQO'NnQlO,5;ZO!)[QlO,5;eO!)[QlO,5;eO!)[QlO,5;eO!)[QlO,5;eO!)[QlO,5;eO!)[QlO,5;eO!)[QlO,5;eO!)[QlO,5;eO!)[QlO,5;eO!)[QlO,5;eO!)[QlO'#IpO(!qQ`O,5<iO!)[QlO,5;eO(!yQMhO,5;eO($dQMhO,5;eO!)[QlO,5;wO!&zQMhO'#GmO(!yQMhO'#GmO!&zQMhO'#GoO(!yQMhO'#GoO1SQ`O'#DZO1SQ`O'#DZO!&zQMhO'#GPO(!yQMhO'#GPO!&zQMhO'#GRO(!yQMhO'#GRO!&zQMhO'#GaO(!yQMhO'#GaO!)[QlO,5:jO($kQpO'#D_O($uQpO'#JvO!)[QlO,5@oO'NnQlO1G0uO(%PQ?MtO'#CiO!)[QlO1G2PO!&zQMhO'#IuO(!yQMhO'#IuO!&zQMhO'#IwO(!yQMhO'#IwO(%ZQ!dO'#CrO!&zQMhO,5<tO(!yQMhO,5<tO'NnQlO1G2RO!)[QlO7+&zO!&zQMhO1G2`O(!yQMhO1G2`O!&zQMhO'#IuO(!yQMhO'#IuO!&zQMhO'#IwO(!yQMhO'#IwO!&zQMhO1G2bO(!yQMhO1G2bO'NnQlO7+'mO'NnQlO7+&aO!&zQMhOANAiO(!yQMhOANAiO(%nQ`O'#EoO(%sQ`O'#EoO(%{Q`O'#F]O(&QQ`O'#EyO(&VQ`O'#KTO(&bQ`O'#KRO(&mQ`O,5;ZO(&rQMjO,5<eO(&yQ`O'#GYO('OQ`O'#GYO('TQ`O,5<eO(']Q`O,5<gO('eQ`O,5;ZO('mQ?MtO1G1`O('tQ`O,5<tO('yQ`O,5<tO((OQ`O,5<vO((TQ`O,5<vO((YQ`O1G2RO((_Q`O1G0uO((dQMjO<<K}O((kQMjO<<K}O((rQMhO'#F|O9`Q`O'#F{OAuQ`O'#EnO!)[QlO,5;tO!3oQ`O'#GYO!3oQ`O'#GYO!3oQ`O'#G[O!3oQ`O'#G[O!,TQMhO7+(cO!,TQMhO7+(cO%.zQ!dO1G2wO%.zQ!dO1G2wO!&zQMhO,5=]O!&zQMhO,5=]",
+  stateData: "()x~O'|OS'}OSTOS(ORQ~OPYOQYOSfOY!VOaqOdzOeyOl!POpkOrYOskOtkOzkO|YO!OYO!SWO!WkO!XkO!_XO!iuO!lZO!oYO!pYO!qYO!svO!uwO!xxO!|]O$W|O$niO%h}O%j!QO%l!OO%m!OO%n!OO%q!RO%s!SO%v!TO%w!TO%y!UO&W!WO&^!XO&`!YO&b!ZO&d![O&g!]O&m!^O&s!_O&u!`O&w!aO&y!bO&{!cO(TSO(VTO(YUO(aVO(o[O~OWtO~P`OPYOQYOSfOd!jOe!iOpkOrYOskOtkOzkO|YO!OYO!SWO!WkO!XkO!_!eO!iuO!lZO!oYO!pYO!qYO!svO!u!gO!x!hO$W!kO$niO(T!dO(VTO(YUO(aVO(o[O~Oa!wOs!nO!S!oO!b!yO!c!vO!d!vO!|<VO#T!pO#U!pO#V!xO#W!pO#X!pO#[!zO#]!zO(U!lO(VTO(YUO(e!mO(o!sO~O(O!{O~OP]XR]X[]Xa]Xj]Xr]X!Q]X!S]X!]]X!l]X!p]X#R]X#S]X#`]X#kfX#n]X#o]X#p]X#q]X#r]X#s]X#t]X#u]X#v]X#x]X#z]X#{]X$Q]X'z]X(a]X(r]X(y]X(z]X~O!g%RX~P(qO_!}O(V#PO(W!}O(X#PO~O_#QO(X#PO(Y#PO(Z#QO~Ox#SO!U#TO(b#TO(c#VO~OPYOQYOSfOd!jOe!iOpkOrYOskOtkOzkO|YO!OYO!SWO!WkO!XkO!_!eO!iuO!lZO!oYO!pYO!qYO!svO!u!gO!x!hO$W!kO$niO(T<ZO(VTO(YUO(aVO(o[O~O![#ZO!]#WO!Y(hP!Y(vP~P+}O!^#cO~P`OPYOQYOSfOd!jOe!iOrYOskOtkOzkO|YO!OYO!SWO!WkO!XkO!_!eO!iuO!lZO!oYO!pYO!qYO!svO!u!gO!x!hO$W!kO$niO(VTO(YUO(aVO(o[O~Op#mO![#iO!|]O#i#lO#j#iO(T<[O!k(sP~P.iO!l#oO(T#nO~O!x#sO!|]O%h#tO~O#k#uO~O!g#vO#k#uO~OP$[OR#zO[$cOj$ROr$aO!Q#yO!S#{O!]$_O!l#xO!p$[O#R$RO#n$OO#o$PO#p$PO#q$PO#r$QO#s$RO#t$RO#u$bO#v$SO#x$UO#z$WO#{$XO(aVO(r$YO(y#|O(z#}O~Oa(fX'z(fX'w(fX!k(fX!Y(fX!_(fX%i(fX!g(fX~P1qO#S$dO#`$eO$Q$eOP(gXR(gX[(gXj(gXr(gX!Q(gX!S(gX!](gX!l(gX!p(gX#R(gX#n(gX#o(gX#p(gX#q(gX#r(gX#s(gX#t(gX#u(gX#v(gX#x(gX#z(gX#{(gX(a(gX(r(gX(y(gX(z(gX!_(gX%i(gX~Oa(gX'z(gX'w(gX!Y(gX!k(gXv(gX!g(gX~P4UO#`$eO~O$]$hO$_$gO$f$mO~OSfO!_$nO$i$oO$k$qO~Oh%VOj%dOk%dOp%WOr%XOs$tOt$tOz%YO|%ZO!O%]O!S${O!_$|O!i%bO!l$xO#j%cO$W%`O$t%^O$v%_O$y%aO(T$sO(VTO(YUO(a$uO(y$}O(z%POg(^P~Ol%[O~P7eO!l%eO~O!S%hO!_%iO(T%gO~O!g%mO~Oa%nO'z%nO~O!Q%rO~P%[O(U!lO~P%[O%n%vO~P%[Oh%VO!l%eO(T%gO(U!lO~Oe%}O!l%eO(T%gO~Oj$RO~O!_&PO(T%gO(U!lO(VTO(YUO`)WP~O!Q&SO!l&RO%j&VO&T&WO~P;SO!x#sO~O%s&YO!S)SX!_)SX(T)SX~O(T&ZO~Ol!PO!u&`O%j!QO%l!OO%m!OO%n!OO%q!RO%s!SO%v!TO%w!TO~Od&eOe&dO!x&bO%h&cO%{&aO~P<bOd&hOeyOl!PO!_&gO!u&`O!xxO!|]O%h}O%l!OO%m!OO%n!OO%q!RO%s!SO%v!TO%w!TO%y!UO~Ob&kO#`&nO%j&iO(U!lO~P=gO!l&oO!u&sO~O!l#oO~O!_XO~Oa%nO'x&{O'z%nO~Oa%nO'x'OO'z%nO~Oa%nO'x'QO'z%nO~O'w]X!Y]Xv]X!k]X&[]X!_]X%i]X!g]X~P(qO!b'_O!c'WO!d'WO(U!lO(VTO(YUO~Os'UO!S'TO!['XO(e'SO!^(iP!^(xP~P@nOn'bO!_'`O(T%gO~Oe'gO!l%eO(T%gO~O!Q&SO!l&RO~Os!nO!S!oO!|<VO#T!pO#U!pO#W!pO#X!pO(U!lO(VTO(YUO(e!mO(o!sO~O!b'mO!c'lO!d'lO#V!pO#['nO#]'nO~PBYOa%nOh%VO!g#vO!l%eO'z%nO(r'pO~O!p'tO#`'rO~PChOs!nO!S!oO(VTO(YUO(e!mO(o!sO~O!_XOs(mX!S(mX!b(mX!c(mX!d(mX!|(mX#T(mX#U(mX#V(mX#W(mX#X(mX#[(mX#](mX(U(mX(V(mX(Y(mX(e(mX(o(mX~O!c'lO!d'lO(U!lO~PDWO(P'xO(Q'xO(R'zO~O_!}O(V'|O(W!}O(X'|O~O_#QO(X'|O(Y'|O(Z#QO~Ov(OO~P%[Ox#SO!U#TO(b#TO(c(RO~O![(TO!Y'WX!Y'^X!]'WX!]'^X~P+}O!](VO!Y(hX~OP$[OR#zO[$cOj$ROr$aO!Q#yO!S#{O!](VO!l#xO!p$[O#R$RO#n$OO#o$PO#p$PO#q$PO#r$QO#s$RO#t$RO#u$bO#v$SO#x$UO#z$WO#{$XO(aVO(r$YO(y#|O(z#}O~O!Y(hX~PHRO!Y([O~O!Y(uX!](uX!g(uX!k(uX(r(uX~O#`(uX#k#dX!^(uX~PJUO#`(]O!Y(wX!](wX~O!](^O!Y(vX~O!Y(aO~O#`$eO~PJUO!^(bO~P`OR#zO!Q#yO!S#{O!l#xO(aVOP!na[!naj!nar!na!]!na!p!na#R!na#n!na#o!na#p!na#q!na#r!na#s!na#t!na#u!na#v!na#x!na#z!na#{!na(r!na(y!na(z!na~Oa!na'z!na'w!na!Y!na!k!nav!na!_!na%i!na!g!na~PKlO!k(cO~O!g#vO#`(dO(r'pO!](tXa(tX'z(tX~O!k(tX~PNXO!S%hO!_%iO!|]O#i(iO#j(hO(T%gO~O!](jO!k(sX~O!k(lO~O!S%hO!_%iO#j(hO(T%gO~OP(gXR(gX[(gXj(gXr(gX!Q(gX!S(gX!](gX!l(gX!p(gX#R(gX#n(gX#o(gX#p(gX#q(gX#r(gX#s(gX#t(gX#u(gX#v(gX#x(gX#z(gX#{(gX(a(gX(r(gX(y(gX(z(gX~O!g#vO!k(gX~P! uOR(nO!Q(mO!l#xO#S$dO!|!{a!S!{a~O!x!{a%h!{a!_!{a#i!{a#j!{a(T!{a~P!#vO!x(rO~OPYOQYOSfOd!jOe!iOpkOrYOskOtkOzkO|YO!OYO!SWO!WkO!XkO!_XO!iuO!lZO!oYO!pYO!qYO!svO!u!gO!x!hO$W!kO$niO(T!dO(VTO(YUO(aVO(o[O~Oh%VOp%WOr%XOs$tOt$tOz%YO|%ZO!O<sO!S${O!_$|O!i>VO!l$xO#j<yO$W%`O$t<uO$v<wO$y%aO(T(vO(VTO(YUO(a$uO(y$}O(z%PO~O#k(xO~O![(zO!k(kP~P%[O(e(|O(o[O~O!S)OO!l#xO(e(|O(o[O~OP<UOQ<UOSfOd>ROe!iOpkOr<UOskOtkOzkO|<UO!O<UO!SWO!WkO!XkO!_!eO!i<XO!lZO!o<UO!p<UO!q<UO!s<YO!u<]O!x!hO$W!kO$n>PO(T)]O(VTO(YUO(aVO(o[O~O!]$_Oa$qa'z$qa'w$qa!k$qa!Y$qa!_$qa%i$qa!g$qa~Ol)dO~P!&zOh%VOp%WOr%XOs$tOt$tOz%YO|%ZO!O%]O!S${O!_$|O!i%bO!l$xO#j%cO$W%`O$t%^O$v%_O$y%aO(T(vO(VTO(YUO(a$uO(y$}O(z%PO~Og(pP~P!,TO!Q)iO!g)hO!_$^X$Z$^X$]$^X$_$^X$f$^X~O!g)hO!_({X$Z({X$]({X$_({X$f({X~O!Q)iO~P!.^O!Q)iO!_({X$Z({X$]({X$_({X$f({X~O!_)kO$Z)oO$])jO$_)jO$f)pO~O![)sO~P!)[O$]$hO$_$gO$f)wO~On$zX!Q$zX#S$zX'y$zX(y$zX(z$zX~OgmXg$zXnmX!]mX#`mX~P!0SOx)yO(b)zO(c)|O~On*VO!Q*OO'y*PO(y$}O(z%PO~Og)}O~P!1WOg*WO~Oh%VOr%XOs$tOt$tOz%YO|%ZO!O<sO!S*YO!_*ZO!i>VO!l$xO#j<yO$W%`O$t<uO$v<wO$y%aO(VTO(YUO(a$uO(y$}O(z%PO~Op*`O![*^O(T*XO!k)OP~P!1uO#k*aO~O!l*bO~Oh%VOp%WOr%XOs$tOt$tOz%YO|%ZO!O<sO!S${O!_$|O!i>VO!l$xO#j<yO$W%`O$t<uO$v<wO$y%aO(T*dO(VTO(YUO(a$uO(y$}O(z%PO~O![*gO!Y)PP~P!3tOr*sOs!nO!S*iO!b*qO!c*kO!d*kO!l*bO#[*rO%`*mO(U!lO(VTO(YUO(e!mO~O!^*pO~P!5iO#S$dOn(`X!Q(`X'y(`X(y(`X(z(`X!](`X#`(`X~Og(`X$O(`X~P!6kOn*xO#`*wOg(_X!](_X~O!]*yOg(^X~Oj%dOk%dOl%dO(T&ZOg(^P~Os*|O~Og)}O(T&ZO~O!l+SO~O(T(vO~Op+WO!S%hO![#iO!_%iO!|]O#i#lO#j#iO(T%gO!k(sP~O!g#vO#k+XO~O!S%hO![+ZO!](^O!_%iO(T%gO!Y(vP~Os'[O!S+]O![+[O(VTO(YUO(e(|O~O!^(xP~P!9|O!]+^Oa)TX'z)TX~OP$[OR#zO[$cOj$ROr$aO!Q#yO!S#{O!l#xO!p$[O#R$RO#n$OO#o$PO#p$PO#q$PO#r$QO#s$RO#t$RO#u$bO#v$SO#x$UO#z$WO#{$XO(aVO(r$YO(y#|O(z#}O~Oa!ja!]!ja'z!ja'w!ja!Y!ja!k!jav!ja!_!ja%i!ja!g!ja~P!:tOR#zO!Q#yO!S#{O!l#xO(aVOP!ra[!raj!rar!ra!]!ra!p!ra#R!ra#n!ra#o!ra#p!ra#q!ra#r!ra#s!ra#t!ra#u!ra#v!ra#x!ra#z!ra#{!ra(r!ra(y!ra(z!ra~Oa!ra'z!ra'w!ra!Y!ra!k!rav!ra!_!ra%i!ra!g!ra~P!=[OR#zO!Q#yO!S#{O!l#xO(aVOP!ta[!taj!tar!ta!]!ta!p!ta#R!ta#n!ta#o!ta#p!ta#q!ta#r!ta#s!ta#t!ta#u!ta#v!ta#x!ta#z!ta#{!ta(r!ta(y!ta(z!ta~Oa!ta'z!ta'w!ta!Y!ta!k!tav!ta!_!ta%i!ta!g!ta~P!?rOh%VOn+gO!_'`O%i+fO~O!g+iOa(]X!_(]X'z(]X!](]X~Oa%nO!_XO'z%nO~Oh%VO!l%eO~Oh%VO!l%eO(T%gO~O!g#vO#k(xO~Ob+tO%j+uO(T+qO(VTO(YUO!^)XP~O!]+vO`)WX~O[+zO~O`+{O~O!_&PO(T%gO(U!lO`)WP~O%j,OO~P;SOh%VO#`,SO~Oh%VOn,VO!_$|O~O!_,XO~O!Q,ZO!_XO~O%n%vO~O!x,`O~Oe,eO~Ob,fO(T#nO(VTO(YUO!^)VP~Oe%}O~O%j!QO(T&ZO~P=gO[,kO`,jO~OPYOQYOSfOdzOeyOpkOrYOskOtkOzkO|YO!OYO!SWO!WkO!XkO!iuO!lZO!oYO!pYO!qYO!svO!xxO!|]O$niO%h}O(VTO(YUO(aVO(o[O~O!_!eO!u!gO$W!kO(T!dO~P!FyO`,jOa%nO'z%nO~OPYOQYOSfOd!jOe!iOpkOrYOskOtkOzkO|YO!OYO!SWO!WkO!XkO!_!eO!iuO!lZO!oYO!pYO!qYO!svO!x!hO$W!kO$niO(T!dO(VTO(YUO(aVO(o[O~Oa,pOl!OO!uwO%l!OO%m!OO%n!OO~P!IcO!l&oO~O&^,vO~O!_,xO~O&o,zO&q,{OP&laQ&laS&laY&laa&lad&lae&lal&lap&lar&las&lat&laz&la|&la!O&la!S&la!W&la!X&la!_&la!i&la!l&la!o&la!p&la!q&la!s&la!u&la!x&la!|&la$W&la$n&la%h&la%j&la%l&la%m&la%n&la%q&la%s&la%v&la%w&la%y&la&W&la&^&la&`&la&b&la&d&la&g&la&m&la&s&la&u&la&w&la&y&la&{&la'w&la(T&la(V&la(Y&la(a&la(o&la!^&la&e&lab&la&j&la~O(T-QO~Oh!eX!]!RX!^!RX!g!RX!g!eX!l!eX#`!RX~O!]!eX!^!eX~P#!iO!g-VO#`-UOh(jX!]#hX!^#hX!g(jX!l(jX~O!](jX!^(jX~P##[Oh%VO!g-XO!l%eO!]!aX!^!aX~Os!nO!S!oO(VTO(YUO(e!mO~OP<UOQ<UOSfOd>ROe!iOpkOr<UOskOtkOzkO|<UO!O<UO!SWO!WkO!XkO!_!eO!i<XO!lZO!o<UO!p<UO!q<UO!s<YO!u<]O!x!hO$W!kO$n>PO(VTO(YUO(aVO(o[O~O(T=QO~P#$qO!]-]O!^(iX~O!^-_O~O!g-VO#`-UO!]#hX!^#hX~O!]-`O!^(xX~O!^-bO~O!c-cO!d-cO(U!lO~P#$`O!^-fO~P'_On-iO!_'`O~O!Y-nO~Os!{a!b!{a!c!{a!d!{a#T!{a#U!{a#V!{a#W!{a#X!{a#[!{a#]!{a(U!{a(V!{a(Y!{a(e!{a(o!{a~P!#vO!p-sO#`-qO~PChO!c-uO!d-uO(U!lO~PDWOa%nO#`-qO'z%nO~Oa%nO!g#vO#`-qO'z%nO~Oa%nO!g#vO!p-sO#`-qO'z%nO(r'pO~O(P'xO(Q'xO(R-zO~Ov-{O~O!Y'Wa!]'Wa~P!:tO![.PO!Y'WX!]'WX~P%[O!](VO!Y(ha~O!Y(ha~PHRO!](^O!Y(va~O!S%hO![.TO!_%iO(T%gO!Y'^X!]'^X~O#`.VO!](ta!k(taa(ta'z(ta~O!g#vO~P#,wO!](jO!k(sa~O!S%hO!_%iO#j.ZO(T%gO~Op.`O!S%hO![.]O!_%iO!|]O#i._O#j.]O(T%gO!]'aX!k'aX~OR.dO!l#xO~Oh%VOn.gO!_'`O%i.fO~Oa#ci!]#ci'z#ci'w#ci!Y#ci!k#civ#ci!_#ci%i#ci!g#ci~P!:tOn>]O!Q*OO'y*PO(y$}O(z%PO~O#k#_aa#_a#`#_a'z#_a!]#_a!k#_a!_#_a!Y#_a~P#/sO#k(`XP(`XR(`X[(`Xa(`Xj(`Xr(`X!S(`X!l(`X!p(`X#R(`X#n(`X#o(`X#p(`X#q(`X#r(`X#s(`X#t(`X#u(`X#v(`X#x(`X#z(`X#{(`X'z(`X(a(`X(r(`X!k(`X!Y(`X'w(`Xv(`X!_(`X%i(`X!g(`X~P!6kO!].tO!k(kX~P!:tO!k.wO~O!Y.yO~OP$[OR#zO!Q#yO!S#{O!l#xO!p$[O(aVO[#mia#mij#mir#mi!]#mi#R#mi#o#mi#p#mi#q#mi#r#mi#s#mi#t#mi#u#mi#v#mi#x#mi#z#mi#{#mi'z#mi(r#mi(y#mi(z#mi'w#mi!Y#mi!k#miv#mi!_#mi%i#mi!g#mi~O#n#mi~P#3cO#n$OO~P#3cOP$[OR#zOr$aO!Q#yO!S#{O!l#xO!p$[O#n$OO#o$PO#p$PO#q$PO(aVO[#mia#mij#mi!]#mi#R#mi#s#mi#t#mi#u#mi#v#mi#x#mi#z#mi#{#mi'z#mi(r#mi(y#mi(z#mi'w#mi!Y#mi!k#miv#mi!_#mi%i#mi!g#mi~O#r#mi~P#6QO#r$QO~P#6QOP$[OR#zO[$cOj$ROr$aO!Q#yO!S#{O!l#xO!p$[O#R$RO#n$OO#o$PO#p$PO#q$PO#r$QO#s$RO#t$RO#u$bO(aVOa#mi!]#mi#x#mi#z#mi#{#mi'z#mi(r#mi(y#mi(z#mi'w#mi!Y#mi!k#miv#mi!_#mi%i#mi!g#mi~O#v#mi~P#8oOP$[OR#zO[$cOj$ROr$aO!Q#yO!S#{O!l#xO!p$[O#R$RO#n$OO#o$PO#p$PO#q$PO#r$QO#s$RO#t$RO#u$bO#v$SO(aVO(z#}Oa#mi!]#mi#z#mi#{#mi'z#mi(r#mi(y#mi'w#mi!Y#mi!k#miv#mi!_#mi%i#mi!g#mi~O#x$UO~P#;VO#x#mi~P#;VO#v$SO~P#8oOP$[OR#zO[$cOj$ROr$aO!Q#yO!S#{O!l#xO!p$[O#R$RO#n$OO#o$PO#p$PO#q$PO#r$QO#s$RO#t$RO#u$bO#v$SO#x$UO(aVO(y#|O(z#}Oa#mi!]#mi#{#mi'z#mi(r#mi'w#mi!Y#mi!k#miv#mi!_#mi%i#mi!g#mi~O#z#mi~P#={O#z$WO~P#={OP]XR]X[]Xj]Xr]X!Q]X!S]X!l]X!p]X#R]X#S]X#`]X#kfX#n]X#o]X#p]X#q]X#r]X#s]X#t]X#u]X#v]X#x]X#z]X#{]X$Q]X(a]X(r]X(y]X(z]X!]]X!^]X~O$O]X~P#@jOP$[OR#zO[<mOj<bOr<kO!Q#yO!S#{O!l#xO!p$[O#R<bO#n<_O#o<`O#p<`O#q<`O#r<aO#s<bO#t<bO#u<lO#v<cO#x<eO#z<gO#{<hO(aVO(r$YO(y#|O(z#}O~O$O.{O~P#BwO#S$dO#`<nO$Q<nO$O(gX!^(gX~P! uOa'da!]'da'z'da'w'da!k'da!Y'dav'da!_'da%i'da!g'da~P!:tO[#mia#mij#mir#mi!]#mi#R#mi#r#mi#s#mi#t#mi#u#mi#v#mi#x#mi#z#mi#{#mi'z#mi(r#mi'w#mi!Y#mi!k#miv#mi!_#mi%i#mi!g#mi~OP$[OR#zO!Q#yO!S#{O!l#xO!p$[O#n$OO#o$PO#p$PO#q$PO(aVO(y#mi(z#mi~P#EyOn>]O!Q*OO'y*PO(y$}O(z%POP#miR#mi!S#mi!l#mi!p#mi#n#mi#o#mi#p#mi#q#mi(a#mi~P#EyO!]/POg(pX~P!1WOg/RO~Oa$Pi!]$Pi'z$Pi'w$Pi!Y$Pi!k$Piv$Pi!_$Pi%i$Pi!g$Pi~P!:tO$]/SO$_/SO~O$]/TO$_/TO~O!g)hO#`/UO!_$cX$Z$cX$]$cX$_$cX$f$cX~O![/VO~O!_)kO$Z/XO$])jO$_)jO$f/YO~O!]<iO!^(fX~P#BwO!^/ZO~O!g)hO$f({X~O$f/]O~Ov/^O~P!&zOx)yO(b)zO(c/aO~O!S/dO~O(y$}On%aa!Q%aa'y%aa(z%aa!]%aa#`%aa~Og%aa$O%aa~P#L{O(z%POn%ca!Q%ca'y%ca(y%ca!]%ca#`%ca~Og%ca$O%ca~P#MnO!]fX!gfX!kfX!k$zX(rfX~P!0SOp%WO![/mO!](^O(T/lO!Y(vP!Y)PP~P!1uOr*sO!b*qO!c*kO!d*kO!l*bO#[*rO%`*mO(U!lO(VTO(YUO~Os<}O!S/nO![+[O!^*pO(e<|O!^(xP~P$ [O!k/oO~P#/sO!]/pO!g#vO(r'pO!k)OX~O!k/uO~OnoX!QoX'yoX(yoX(zoX~O!g#vO!koX~P$#OOp/wO!S%hO![*^O!_%iO(T%gO!k)OP~O#k/xO~O!Y$zX!]$zX!g%RX~P!0SO!]/yO!Y)PX~P#/sO!g/{O~O!Y/}O~OpkO(T0OO~P.iOh%VOr0TO!g#vO!l%eO(r'pO~O!g+iO~Oa%nO!]0XO'z%nO~O!^0ZO~P!5iO!c0[O!d0[O(U!lO~P#$`Os!nO!S0]O(VTO(YUO(e!mO~O#[0_O~Og%aa!]%aa#`%aa$O%aa~P!1WOg%ca!]%ca#`%ca$O%ca~P!1WOj%dOk%dOl%dO(T&ZOg'mX!]'mX~O!]*yOg(^a~Og0hO~On0jO#`0iOg(_a!](_a~OR0kO!Q0kO!S0lO#S$dOn}a'y}a(y}a(z}a!]}a#`}a~Og}a$O}a~P$(cO!Q*OO'y*POn$sa(y$sa(z$sa!]$sa#`$sa~Og$sa$O$sa~P$)_O!Q*OO'y*POn$ua(y$ua(z$ua!]$ua#`$ua~Og$ua$O$ua~P$*QO#k0oO~Og%Ta!]%Ta#`%Ta$O%Ta~P!1WO!g#vO~O#k0rO~O!]+^Oa)Ta'z)Ta~OR#zO!Q#yO!S#{O!l#xO(aVOP!ri[!rij!rir!ri!]!ri!p!ri#R!ri#n!ri#o!ri#p!ri#q!ri#r!ri#s!ri#t!ri#u!ri#v!ri#x!ri#z!ri#{!ri(r!ri(y!ri(z!ri~Oa!ri'z!ri'w!ri!Y!ri!k!riv!ri!_!ri%i!ri!g!ri~P$+oOh%VOr%XOs$tOt$tOz%YO|%ZO!O<sO!S${O!_$|O!i>VO!l$xO#j<yO$W%`O$t<uO$v<wO$y%aO(VTO(YUO(a$uO(y$}O(z%PO~Op0{O%]0|O(T0zO~P$.VO!g+iOa(]a!_(]a'z(]a!](]a~O#k1SO~O[]X!]fX!^fX~O!]1TO!^)XX~O!^1VO~O[1WO~Ob1YO(T+qO(VTO(YUO~O!_&PO(T%gO`'uX!]'uX~O!]+vO`)Wa~O!k1]O~P!:tO[1`O~O`1aO~O#`1fO~On1iO!_$|O~O(e(|O!^)UP~Oh%VOn1rO!_1oO%i1qO~O[1|O!]1zO!^)VX~O!^1}O~O`2POa%nO'z%nO~O(T#nO(VTO(YUO~O#S$dO#`$eO$Q$eOP(gXR(gX[(gXr(gX!Q(gX!S(gX!](gX!l(gX!p(gX#R(gX#n(gX#o(gX#p(gX#q(gX#r(gX#s(gX#t(gX#u(gX#v(gX#x(gX#z(gX#{(gX(a(gX(r(gX(y(gX(z(gX~Oj2SO&[2TOa(gX~P$3pOj2SO#`$eO&[2TO~Oa2VO~P%[Oa2XO~O&e2[OP&ciQ&ciS&ciY&cia&cid&cie&cil&cip&cir&cis&cit&ciz&ci|&ci!O&ci!S&ci!W&ci!X&ci!_&ci!i&ci!l&ci!o&ci!p&ci!q&ci!s&ci!u&ci!x&ci!|&ci$W&ci$n&ci%h&ci%j&ci%l&ci%m&ci%n&ci%q&ci%s&ci%v&ci%w&ci%y&ci&W&ci&^&ci&`&ci&b&ci&d&ci&g&ci&m&ci&s&ci&u&ci&w&ci&y&ci&{&ci'w&ci(T&ci(V&ci(Y&ci(a&ci(o&ci!^&cib&ci&j&ci~Ob2bO!^2`O&j2aO~P`O!_XO!l2dO~O&q,{OP&liQ&liS&liY&lia&lid&lie&lil&lip&lir&lis&lit&liz&li|&li!O&li!S&li!W&li!X&li!_&li!i&li!l&li!o&li!p&li!q&li!s&li!u&li!x&li!|&li$W&li$n&li%h&li%j&li%l&li%m&li%n&li%q&li%s&li%v&li%w&li%y&li&W&li&^&li&`&li&b&li&d&li&g&li&m&li&s&li&u&li&w&li&y&li&{&li'w&li(T&li(V&li(Y&li(a&li(o&li!^&li&e&lib&li&j&li~O!Y2jO~O!]!aa!^!aa~P#BwOs!nO!S!oO![2pO(e!mO!]'XX!^'XX~P@nO!]-]O!^(ia~O!]'_X!^'_X~P!9|O!]-`O!^(xa~O!^2wO~P'_Oa%nO#`3QO'z%nO~Oa%nO!g#vO#`3QO'z%nO~Oa%nO!g#vO!p3UO#`3QO'z%nO(r'pO~Oa%nO'z%nO~P!:tO!]$_Ov$qa~O!Y'Wi!]'Wi~P!:tO!](VO!Y(hi~O!](^O!Y(vi~O!Y(wi!](wi~P!:tO!](ti!k(tia(ti'z(ti~P!:tO#`3WO!](ti!k(tia(ti'z(ti~O!](jO!k(si~O!S%hO!_%iO!|]O#i3]O#j3[O(T%gO~O!S%hO!_%iO#j3[O(T%gO~On3dO!_'`O%i3cO~Oh%VOn3dO!_'`O%i3cO~O#k%aaP%aaR%aa[%aaa%aaj%aar%aa!S%aa!l%aa!p%aa#R%aa#n%aa#o%aa#p%aa#q%aa#r%aa#s%aa#t%aa#u%aa#v%aa#x%aa#z%aa#{%aa'z%aa(a%aa(r%aa!k%aa!Y%aa'w%aav%aa!_%aa%i%aa!g%aa~P#L{O#k%caP%caR%ca[%caa%caj%car%ca!S%ca!l%ca!p%ca#R%ca#n%ca#o%ca#p%ca#q%ca#r%ca#s%ca#t%ca#u%ca#v%ca#x%ca#z%ca#{%ca'z%ca(a%ca(r%ca!k%ca!Y%ca'w%cav%ca!_%ca%i%ca!g%ca~P#MnO#k%aaP%aaR%aa[%aaa%aaj%aar%aa!S%aa!]%aa!l%aa!p%aa#R%aa#n%aa#o%aa#p%aa#q%aa#r%aa#s%aa#t%aa#u%aa#v%aa#x%aa#z%aa#{%aa'z%aa(a%aa(r%aa!k%aa!Y%aa'w%aa#`%aav%aa!_%aa%i%aa!g%aa~P#/sO#k%caP%caR%ca[%caa%caj%car%ca!S%ca!]%ca!l%ca!p%ca#R%ca#n%ca#o%ca#p%ca#q%ca#r%ca#s%ca#t%ca#u%ca#v%ca#x%ca#z%ca#{%ca'z%ca(a%ca(r%ca!k%ca!Y%ca'w%ca#`%cav%ca!_%ca%i%ca!g%ca~P#/sO#k}aP}a[}aa}aj}ar}a!l}a!p}a#R}a#n}a#o}a#p}a#q}a#r}a#s}a#t}a#u}a#v}a#x}a#z}a#{}a'z}a(a}a(r}a!k}a!Y}a'w}av}a!_}a%i}a!g}a~P$(cO#k$saP$saR$sa[$saa$saj$sar$sa!S$sa!l$sa!p$sa#R$sa#n$sa#o$sa#p$sa#q$sa#r$sa#s$sa#t$sa#u$sa#v$sa#x$sa#z$sa#{$sa'z$sa(a$sa(r$sa!k$sa!Y$sa'w$sav$sa!_$sa%i$sa!g$sa~P$)_O#k$uaP$uaR$ua[$uaa$uaj$uar$ua!S$ua!l$ua!p$ua#R$ua#n$ua#o$ua#p$ua#q$ua#r$ua#s$ua#t$ua#u$ua#v$ua#x$ua#z$ua#{$ua'z$ua(a$ua(r$ua!k$ua!Y$ua'w$uav$ua!_$ua%i$ua!g$ua~P$*QO#k%TaP%TaR%Ta[%Taa%Taj%Tar%Ta!S%Ta!]%Ta!l%Ta!p%Ta#R%Ta#n%Ta#o%Ta#p%Ta#q%Ta#r%Ta#s%Ta#t%Ta#u%Ta#v%Ta#x%Ta#z%Ta#{%Ta'z%Ta(a%Ta(r%Ta!k%Ta!Y%Ta'w%Ta#`%Tav%Ta!_%Ta%i%Ta!g%Ta~P#/sOa#cq!]#cq'z#cq'w#cq!Y#cq!k#cqv#cq!_#cq%i#cq!g#cq~P!:tO![3lO!]'YX!k'YX~P%[O!].tO!k(ka~O!].tO!k(ka~P!:tO!Y3oO~O$O!na!^!na~PKlO$O!ja!]!ja!^!ja~P#BwO$O!ra!^!ra~P!=[O$O!ta!^!ta~P!?rOg']X!]']X~P!,TO!]/POg(pa~OSfO!_4TO$d4UO~O!^4YO~Ov4ZO~P#/sOa$mq!]$mq'z$mq'w$mq!Y$mq!k$mqv$mq!_$mq%i$mq!g$mq~P!:tO!Y4]O~P!&zO!S4^O~O!Q*OO'y*PO(z%POn'ia(y'ia!]'ia#`'ia~Og'ia$O'ia~P%-fO!Q*OO'y*POn'ka(y'ka(z'ka!]'ka#`'ka~Og'ka$O'ka~P%.XO(r$YO~P#/sO!YfX!Y$zX!]fX!]$zX!g%RX#`fX~P!0SOp%WO(T=WO~P!1uOp4bO!S%hO![4aO!_%iO(T%gO!]'eX!k'eX~O!]/pO!k)Oa~O!]/pO!g#vO!k)Oa~O!]/pO!g#vO(r'pO!k)Oa~Og$|i!]$|i#`$|i$O$|i~P!1WO![4jO!Y'gX!]'gX~P!3tO!]/yO!Y)Pa~O!]/yO!Y)Pa~P#/sOP]XR]X[]Xj]Xr]X!Q]X!S]X!Y]X!]]X!l]X!p]X#R]X#S]X#`]X#kfX#n]X#o]X#p]X#q]X#r]X#s]X#t]X#u]X#v]X#x]X#z]X#{]X$Q]X(a]X(r]X(y]X(z]X~Oj%YX!g%YX~P%2OOj4oO!g#vO~Oh%VO!g#vO!l%eO~Oh%VOr4tO!l%eO(r'pO~Or4yO!g#vO(r'pO~Os!nO!S4zO(VTO(YUO(e!mO~O(y$}On%ai!Q%ai'y%ai(z%ai!]%ai#`%ai~Og%ai$O%ai~P%5oO(z%POn%ci!Q%ci'y%ci(y%ci!]%ci#`%ci~Og%ci$O%ci~P%6bOg(_i!](_i~P!1WO#`5QOg(_i!](_i~P!1WO!k5VO~Oa$oq!]$oq'z$oq'w$oq!Y$oq!k$oqv$oq!_$oq%i$oq!g$oq~P!:tO!Y5ZO~O!]5[O!_)QX~P#/sOa$zX!_$zX%^]X'z$zX!]$zX~P!0SO%^5_OaoX!_oX'zoX!]oX~P$#OOp5`O(T#nO~O%^5_O~Ob5fO%j5gO(T+qO(VTO(YUO!]'tX!^'tX~O!]1TO!^)Xa~O[5kO~O`5lO~O[5pO~Oa%nO'z%nO~P#/sO!]5uO#`5wO!^)UX~O!^5xO~Or6OOs!nO!S*iO!b!yO!c!vO!d!vO!|<VO#T!pO#U!pO#V!pO#W!pO#X!pO#[5}O#]!zO(U!lO(VTO(YUO(e!mO(o!sO~O!^5|O~P%;eOn6TO!_1oO%i6SO~Oh%VOn6TO!_1oO%i6SO~Ob6[O(T#nO(VTO(YUO!]'sX!^'sX~O!]1zO!^)Va~O(VTO(YUO(e6^O~O`6bO~Oj6eO&[6fO~PNXO!k6gO~P%[Oa6iO~Oa6iO~P%[Ob2bO!^6nO&j2aO~P`O!g6pO~O!g6rOh(ji!](ji!^(ji!g(ji!l(jir(ji(r(ji~O!]#hi!^#hi~P#BwO#`6sO!]#hi!^#hi~O!]!ai!^!ai~P#BwOa%nO#`6|O'z%nO~Oa%nO!g#vO#`6|O'z%nO~O!](tq!k(tqa(tq'z(tq~P!:tO!](jO!k(sq~O!S%hO!_%iO#j7TO(T%gO~O!_'`O%i7WO~On7[O!_'`O%i7WO~O#k'iaP'iaR'ia['iaa'iaj'iar'ia!S'ia!l'ia!p'ia#R'ia#n'ia#o'ia#p'ia#q'ia#r'ia#s'ia#t'ia#u'ia#v'ia#x'ia#z'ia#{'ia'z'ia(a'ia(r'ia!k'ia!Y'ia'w'iav'ia!_'ia%i'ia!g'ia~P%-fO#k'kaP'kaR'ka['kaa'kaj'kar'ka!S'ka!l'ka!p'ka#R'ka#n'ka#o'ka#p'ka#q'ka#r'ka#s'ka#t'ka#u'ka#v'ka#x'ka#z'ka#{'ka'z'ka(a'ka(r'ka!k'ka!Y'ka'w'kav'ka!_'ka%i'ka!g'ka~P%.XO#k$|iP$|iR$|i[$|ia$|ij$|ir$|i!S$|i!]$|i!l$|i!p$|i#R$|i#n$|i#o$|i#p$|i#q$|i#r$|i#s$|i#t$|i#u$|i#v$|i#x$|i#z$|i#{$|i'z$|i(a$|i(r$|i!k$|i!Y$|i'w$|i#`$|iv$|i!_$|i%i$|i!g$|i~P#/sO#k%aiP%aiR%ai[%aia%aij%air%ai!S%ai!l%ai!p%ai#R%ai#n%ai#o%ai#p%ai#q%ai#r%ai#s%ai#t%ai#u%ai#v%ai#x%ai#z%ai#{%ai'z%ai(a%ai(r%ai!k%ai!Y%ai'w%aiv%ai!_%ai%i%ai!g%ai~P%5oO#k%ciP%ciR%ci[%cia%cij%cir%ci!S%ci!l%ci!p%ci#R%ci#n%ci#o%ci#p%ci#q%ci#r%ci#s%ci#t%ci#u%ci#v%ci#x%ci#z%ci#{%ci'z%ci(a%ci(r%ci!k%ci!Y%ci'w%civ%ci!_%ci%i%ci!g%ci~P%6bO!]'Ya!k'Ya~P!:tO!].tO!k(ki~O$O#ci!]#ci!^#ci~P#BwOP$[OR#zO!Q#yO!S#{O!l#xO!p$[O(aVO[#mij#mir#mi#R#mi#o#mi#p#mi#q#mi#r#mi#s#mi#t#mi#u#mi#v#mi#x#mi#z#mi#{#mi$O#mi(r#mi(y#mi(z#mi!]#mi!^#mi~O#n#mi~P%NdO#n<_O~P%NdOP$[OR#zOr<kO!Q#yO!S#{O!l#xO!p$[O#n<_O#o<`O#p<`O#q<`O(aVO[#mij#mi#R#mi#s#mi#t#mi#u#mi#v#mi#x#mi#z#mi#{#mi$O#mi(r#mi(y#mi(z#mi!]#mi!^#mi~O#r#mi~P&!lO#r<aO~P&!lOP$[OR#zO[<mOj<bOr<kO!Q#yO!S#{O!l#xO!p$[O#R<bO#n<_O#o<`O#p<`O#q<`O#r<aO#s<bO#t<bO#u<lO(aVO#x#mi#z#mi#{#mi$O#mi(r#mi(y#mi(z#mi!]#mi!^#mi~O#v#mi~P&$tOP$[OR#zO[<mOj<bOr<kO!Q#yO!S#{O!l#xO!p$[O#R<bO#n<_O#o<`O#p<`O#q<`O#r<aO#s<bO#t<bO#u<lO#v<cO(aVO(z#}O#z#mi#{#mi$O#mi(r#mi(y#mi!]#mi!^#mi~O#x<eO~P&&uO#x#mi~P&&uO#v<cO~P&$tOP$[OR#zO[<mOj<bOr<kO!Q#yO!S#{O!l#xO!p$[O#R<bO#n<_O#o<`O#p<`O#q<`O#r<aO#s<bO#t<bO#u<lO#v<cO#x<eO(aVO(y#|O(z#}O#{#mi$O#mi(r#mi!]#mi!^#mi~O#z#mi~P&)UO#z<gO~P&)UOa#|y!]#|y'z#|y'w#|y!Y#|y!k#|yv#|y!_#|y%i#|y!g#|y~P!:tO[#mij#mir#mi#R#mi#r#mi#s#mi#t#mi#u#mi#v#mi#x#mi#z#mi#{#mi$O#mi(r#mi!]#mi!^#mi~OP$[OR#zO!Q#yO!S#{O!l#xO!p$[O#n<_O#o<`O#p<`O#q<`O(aVO(y#mi(z#mi~P&,QOn>^O!Q*OO'y*PO(y$}O(z%POP#miR#mi!S#mi!l#mi!p#mi#n#mi#o#mi#p#mi#q#mi(a#mi~P&,QO#S$dOP(`XR(`X[(`Xj(`Xn(`Xr(`X!Q(`X!S(`X!l(`X!p(`X#R(`X#n(`X#o(`X#p(`X#q(`X#r(`X#s(`X#t(`X#u(`X#v(`X#x(`X#z(`X#{(`X$O(`X'y(`X(a(`X(r(`X(y(`X(z(`X!](`X!^(`X~O$O$Pi!]$Pi!^$Pi~P#BwO$O!ri!^!ri~P$+oOg']a!]']a~P!1WO!^7nO~O!]'da!^'da~P#BwO!Y7oO~P#/sO!g#vO(r'pO!]'ea!k'ea~O!]/pO!k)Oi~O!]/pO!g#vO!k)Oi~Og$|q!]$|q#`$|q$O$|q~P!1WO!Y'ga!]'ga~P#/sO!g7vO~O!]/yO!Y)Pi~P#/sO!]/yO!Y)Pi~O!Y7yO~Oh%VOr8OO!l%eO(r'pO~Oj8QO!g#vO~Or8TO!g#vO(r'pO~O!Q*OO'y*PO(z%POn'ja(y'ja!]'ja#`'ja~Og'ja$O'ja~P&5RO!Q*OO'y*POn'la(y'la(z'la!]'la#`'la~Og'la$O'la~P&5tOg(_q!](_q~P!1WO#`8VOg(_q!](_q~P!1WO!Y8WO~Og%Oq!]%Oq#`%Oq$O%Oq~P!1WOa$oy!]$oy'z$oy'w$oy!Y$oy!k$oyv$oy!_$oy%i$oy!g$oy~P!:tO!g6rO~O!]5[O!_)Qa~O!_'`OP$TaR$Ta[$Taj$Tar$Ta!Q$Ta!S$Ta!]$Ta!l$Ta!p$Ta#R$Ta#n$Ta#o$Ta#p$Ta#q$Ta#r$Ta#s$Ta#t$Ta#u$Ta#v$Ta#x$Ta#z$Ta#{$Ta(a$Ta(r$Ta(y$Ta(z$Ta~O%i7WO~P&8fO%^8[Oa%[i!_%[i'z%[i!]%[i~Oa#cy!]#cy'z#cy'w#cy!Y#cy!k#cyv#cy!_#cy%i#cy!g#cy~P!:tO[8^O~Ob8`O(T+qO(VTO(YUO~O!]1TO!^)Xi~O`8dO~O(e(|O!]'pX!^'pX~O!]5uO!^)Ua~O!^8nO~P%;eO(o!sO~P$&YO#[8oO~O!_1oO~O!_1oO%i8qO~On8tO!_1oO%i8qO~O[8yO!]'sa!^'sa~O!]1zO!^)Vi~O!k8}O~O!k9OO~O!k9RO~O!k9RO~P%[Oa9TO~O!g9UO~O!k9VO~O!](wi!^(wi~P#BwOa%nO#`9_O'z%nO~O!](ty!k(tya(ty'z(ty~P!:tO!](jO!k(sy~O%i9bO~P&8fO!_'`O%i9bO~O#k$|qP$|qR$|q[$|qa$|qj$|qr$|q!S$|q!]$|q!l$|q!p$|q#R$|q#n$|q#o$|q#p$|q#q$|q#r$|q#s$|q#t$|q#u$|q#v$|q#x$|q#z$|q#{$|q'z$|q(a$|q(r$|q!k$|q!Y$|q'w$|q#`$|qv$|q!_$|q%i$|q!g$|q~P#/sO#k'jaP'jaR'ja['jaa'jaj'jar'ja!S'ja!l'ja!p'ja#R'ja#n'ja#o'ja#p'ja#q'ja#r'ja#s'ja#t'ja#u'ja#v'ja#x'ja#z'ja#{'ja'z'ja(a'ja(r'ja!k'ja!Y'ja'w'jav'ja!_'ja%i'ja!g'ja~P&5RO#k'laP'laR'la['laa'laj'lar'la!S'la!l'la!p'la#R'la#n'la#o'la#p'la#q'la#r'la#s'la#t'la#u'la#v'la#x'la#z'la#{'la'z'la(a'la(r'la!k'la!Y'la'w'lav'la!_'la%i'la!g'la~P&5tO#k%OqP%OqR%Oq[%Oqa%Oqj%Oqr%Oq!S%Oq!]%Oq!l%Oq!p%Oq#R%Oq#n%Oq#o%Oq#p%Oq#q%Oq#r%Oq#s%Oq#t%Oq#u%Oq#v%Oq#x%Oq#z%Oq#{%Oq'z%Oq(a%Oq(r%Oq!k%Oq!Y%Oq'w%Oq#`%Oqv%Oq!_%Oq%i%Oq!g%Oq~P#/sO!]'Yi!k'Yi~P!:tO$O#cq!]#cq!^#cq~P#BwO(y$}OP%aaR%aa[%aaj%aar%aa!S%aa!l%aa!p%aa#R%aa#n%aa#o%aa#p%aa#q%aa#r%aa#s%aa#t%aa#u%aa#v%aa#x%aa#z%aa#{%aa$O%aa(a%aa(r%aa!]%aa!^%aa~On%aa!Q%aa'y%aa(z%aa~P&IyO(z%POP%caR%ca[%caj%car%ca!S%ca!l%ca!p%ca#R%ca#n%ca#o%ca#p%ca#q%ca#r%ca#s%ca#t%ca#u%ca#v%ca#x%ca#z%ca#{%ca$O%ca(a%ca(r%ca!]%ca!^%ca~On%ca!Q%ca'y%ca(y%ca~P&LQOn>^O!Q*OO'y*PO(z%PO~P&IyOn>^O!Q*OO'y*PO(y$}O~P&LQOR0kO!Q0kO!S0lO#S$dOP}a[}aj}an}ar}a!l}a!p}a#R}a#n}a#o}a#p}a#q}a#r}a#s}a#t}a#u}a#v}a#x}a#z}a#{}a$O}a'y}a(a}a(r}a(y}a(z}a!]}a!^}a~O!Q*OO'y*POP$saR$sa[$saj$san$sar$sa!S$sa!l$sa!p$sa#R$sa#n$sa#o$sa#p$sa#q$sa#r$sa#s$sa#t$sa#u$sa#v$sa#x$sa#z$sa#{$sa$O$sa(a$sa(r$sa(y$sa(z$sa!]$sa!^$sa~O!Q*OO'y*POP$uaR$ua[$uaj$uan$uar$ua!S$ua!l$ua!p$ua#R$ua#n$ua#o$ua#p$ua#q$ua#r$ua#s$ua#t$ua#u$ua#v$ua#x$ua#z$ua#{$ua$O$ua(a$ua(r$ua(y$ua(z$ua!]$ua!^$ua~On>^O!Q*OO'y*PO(y$}O(z%PO~OP%TaR%Ta[%Taj%Tar%Ta!S%Ta!l%Ta!p%Ta#R%Ta#n%Ta#o%Ta#p%Ta#q%Ta#r%Ta#s%Ta#t%Ta#u%Ta#v%Ta#x%Ta#z%Ta#{%Ta$O%Ta(a%Ta(r%Ta!]%Ta!^%Ta~P''VO$O$mq!]$mq!^$mq~P#BwO$O$oq!]$oq!^$oq~P#BwO!^9oO~O$O9pO~P!1WO!g#vO!]'ei!k'ei~O!g#vO(r'pO!]'ei!k'ei~O!]/pO!k)Oq~O!Y'gi!]'gi~P#/sO!]/yO!Y)Pq~Or9wO!g#vO(r'pO~O[9yO!Y9xO~P#/sO!Y9xO~Oj:PO!g#vO~Og(_y!](_y~P!1WO!]'na!_'na~P#/sOa%[q!_%[q'z%[q!]%[q~P#/sO[:UO~O!]1TO!^)Xq~O`:YO~O#`:ZO!]'pa!^'pa~O!]5uO!^)Ui~P#BwO!S:]O~O!_1oO%i:`O~O(VTO(YUO(e:eO~O!]1zO!^)Vq~O!k:hO~O!k:iO~O!k:jO~O!k:jO~P%[O#`:mO!]#hy!^#hy~O!]#hy!^#hy~P#BwO%i:rO~P&8fO!_'`O%i:rO~O$O#|y!]#|y!^#|y~P#BwOP$|iR$|i[$|ij$|ir$|i!S$|i!l$|i!p$|i#R$|i#n$|i#o$|i#p$|i#q$|i#r$|i#s$|i#t$|i#u$|i#v$|i#x$|i#z$|i#{$|i$O$|i(a$|i(r$|i!]$|i!^$|i~P''VO!Q*OO'y*PO(z%POP'iaR'ia['iaj'ian'iar'ia!S'ia!l'ia!p'ia#R'ia#n'ia#o'ia#p'ia#q'ia#r'ia#s'ia#t'ia#u'ia#v'ia#x'ia#z'ia#{'ia$O'ia(a'ia(r'ia(y'ia!]'ia!^'ia~O!Q*OO'y*POP'kaR'ka['kaj'kan'kar'ka!S'ka!l'ka!p'ka#R'ka#n'ka#o'ka#p'ka#q'ka#r'ka#s'ka#t'ka#u'ka#v'ka#x'ka#z'ka#{'ka$O'ka(a'ka(r'ka(y'ka(z'ka!]'ka!^'ka~O(y$}OP%aiR%ai[%aij%ain%air%ai!Q%ai!S%ai!l%ai!p%ai#R%ai#n%ai#o%ai#p%ai#q%ai#r%ai#s%ai#t%ai#u%ai#v%ai#x%ai#z%ai#{%ai$O%ai'y%ai(a%ai(r%ai(z%ai!]%ai!^%ai~O(z%POP%ciR%ci[%cij%cin%cir%ci!Q%ci!S%ci!l%ci!p%ci#R%ci#n%ci#o%ci#p%ci#q%ci#r%ci#s%ci#t%ci#u%ci#v%ci#x%ci#z%ci#{%ci$O%ci'y%ci(a%ci(r%ci(y%ci!]%ci!^%ci~O$O$oy!]$oy!^$oy~P#BwO$O#cy!]#cy!^#cy~P#BwO!g#vO!]'eq!k'eq~O!]/pO!k)Oy~O!Y'gq!]'gq~P#/sOr:|O!g#vO(r'pO~O[;QO!Y;PO~P#/sO!Y;PO~Og(_!R!](_!R~P!1WOa%[y!_%[y'z%[y!]%[y~P#/sO!]1TO!^)Xy~O!]5uO!^)Uq~O(T;XO~O!_1oO%i;[O~O!k;_O~O%i;dO~P&8fOP$|qR$|q[$|qj$|qr$|q!S$|q!l$|q!p$|q#R$|q#n$|q#o$|q#p$|q#q$|q#r$|q#s$|q#t$|q#u$|q#v$|q#x$|q#z$|q#{$|q$O$|q(a$|q(r$|q!]$|q!^$|q~P''VO!Q*OO'y*PO(z%POP'jaR'ja['jaj'jan'jar'ja!S'ja!l'ja!p'ja#R'ja#n'ja#o'ja#p'ja#q'ja#r'ja#s'ja#t'ja#u'ja#v'ja#x'ja#z'ja#{'ja$O'ja(a'ja(r'ja(y'ja!]'ja!^'ja~O!Q*OO'y*POP'laR'la['laj'lan'lar'la!S'la!l'la!p'la#R'la#n'la#o'la#p'la#q'la#r'la#s'la#t'la#u'la#v'la#x'la#z'la#{'la$O'la(a'la(r'la(y'la(z'la!]'la!^'la~OP%OqR%Oq[%Oqj%Oqr%Oq!S%Oq!l%Oq!p%Oq#R%Oq#n%Oq#o%Oq#p%Oq#q%Oq#r%Oq#s%Oq#t%Oq#u%Oq#v%Oq#x%Oq#z%Oq#{%Oq$O%Oq(a%Oq(r%Oq!]%Oq!^%Oq~P''VOg%e!Z!]%e!Z#`%e!Z$O%e!Z~P!1WO!Y;hO~P#/sOr;iO!g#vO(r'pO~O[;kO!Y;hO~P#/sO!]'pq!^'pq~P#BwO!]#h!Z!^#h!Z~P#BwO#k%e!ZP%e!ZR%e!Z[%e!Za%e!Zj%e!Zr%e!Z!S%e!Z!]%e!Z!l%e!Z!p%e!Z#R%e!Z#n%e!Z#o%e!Z#p%e!Z#q%e!Z#r%e!Z#s%e!Z#t%e!Z#u%e!Z#v%e!Z#x%e!Z#z%e!Z#{%e!Z'z%e!Z(a%e!Z(r%e!Z!k%e!Z!Y%e!Z'w%e!Z#`%e!Zv%e!Z!_%e!Z%i%e!Z!g%e!Z~P#/sOr;tO!g#vO(r'pO~O!Y;uO~P#/sOr;|O!g#vO(r'pO~O!Y;}O~P#/sOP%e!ZR%e!Z[%e!Zj%e!Zr%e!Z!S%e!Z!l%e!Z!p%e!Z#R%e!Z#n%e!Z#o%e!Z#p%e!Z#q%e!Z#r%e!Z#s%e!Z#t%e!Z#u%e!Z#v%e!Z#x%e!Z#z%e!Z#{%e!Z$O%e!Z(a%e!Z(r%e!Z!]%e!Z!^%e!Z~P''VOr<QO!g#vO(r'pO~Ov(fX~P1qO!Q%rO~P!)[O(U!lO~P!)[O!YfX!]fX#`fX~P%2OOP]XR]X[]Xj]Xr]X!Q]X!S]X!]]X!]fX!l]X!p]X#R]X#S]X#`]X#`fX#kfX#n]X#o]X#p]X#q]X#r]X#s]X#t]X#u]X#v]X#x]X#z]X#{]X$Q]X(a]X(r]X(y]X(z]X~O!gfX!k]X!kfX(rfX~P'LTOP<UOQ<UOSfOd>ROe!iOpkOr<UOskOtkOzkO|<UO!O<UO!SWO!WkO!XkO!_XO!i<XO!lZO!o<UO!p<UO!q<UO!s<YO!u<]O!x!hO$W!kO$n>PO(T)]O(VTO(YUO(aVO(o[O~O!]<iO!^$qa~Oh%VOp%WOr%XOs$tOt$tOz%YO|%ZO!O<tO!S${O!_$|O!i>WO!l$xO#j<zO$W%`O$t<vO$v<xO$y%aO(T(vO(VTO(YUO(a$uO(y$}O(z%PO~Ol)dO~P(!yOr!eX(r!eX~P#!iOr(jX(r(jX~P##[O!^]X!^fX~P'LTO!YfX!Y$zX!]fX!]$zX#`fX~P!0SO#k<^O~O!g#vO#k<^O~O#`<nO~Oj<bO~O#`=OO!](wX!^(wX~O#`<nO!](uX!^(uX~O#k=PO~Og=RO~P!1WO#k=XO~O#k=YO~Og=RO(T&ZO~O!g#vO#k=ZO~O!g#vO#k=PO~O$O=[O~P#BwO#k=]O~O#k=^O~O#k=cO~O#k=dO~O#k=eO~O#k=fO~O$O=gO~P!1WO$O=hO~P!1WOl=sO~P7eOk#S#T#U#W#X#[#i#j#u$n$t$v$y%]%^%h%i%j%q%s%v%w%y%{~(OT#o!X'|(U#ps#n#qr!Q'}$]'}(T$_(e~",
+  goto: "$9Y)]PPPPPP)^PP)aP)rP+W/]PPPP6mPP7TPP=QPPP@tPA^PA^PPPA^PCfPA^PA^PA^PCjPCoPD^PIWPPPI[PPPPI[L_PPPLeMVPI[PI[PP! eI[PPPI[PI[P!#lI[P!'S!(X!(bP!)U!)Y!)U!,gPPPPPPP!-W!(XPP!-h!/YP!2iI[I[!2n!5z!:h!:h!>gPPP!>oI[PPPPPPPPP!BOP!C]PPI[!DnPI[PI[I[I[I[I[PI[!FQP!I[P!LbP!Lf!Lp!Lt!LtP!IXP!Lx!LxP#!OP#!SI[PI[#!Y#%_CjA^PA^PA^A^P#&lA^A^#)OA^#+vA^#.SA^A^#.r#1W#1W#1]#1f#1W#1qPP#1WPA^#2ZA^#6YA^A^6mPPP#:_PPP#:x#:xP#:xP#;`#:xPP#;fP#;]P#;]#;y#;]#<e#<k#<n)aP#<q)aP#<z#<z#<zP)aP)aP)aP)aPP)aP#=Q#=TP#=T)aP#=XP#=[P)aP)aP)aP)aP)aP)a)aPP#=b#=h#=s#=y#>P#>V#>]#>k#>q#>{#?R#?]#?c#?s#?y#@k#@}#AT#AZ#Ai#BO#Cs#DR#DY#Et#FS#Gt#HS#HY#H`#Hf#Hp#Hv#H|#IW#Ij#IpPPPPPPPPPPP#IvPPPPPPP#Jk#Mx$ b$ i$ qPPP$']P$'f$*_$0x$0{$1O$1}$2Q$2X$2aP$2g$2jP$3W$3[$4S$5b$5g$5}PP$6S$6Y$6^$6a$6e$6i$7e$7|$8e$8i$8l$8o$8y$8|$9Q$9UR!|RoqOXst!Z#d%m&r&t&u&w,s,x2[2_Y!vQ'`-e1o5{Q%tvQ%|yQ&T|Q&j!VS'W!e-]Q'f!iS'l!r!yU*k$|*Z*oQ+o%}S+|&V&WQ,d&dQ-c'_Q-m'gQ-u'mQ0[*qQ1b,OQ1y,eR<{<Y%SdOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$_$a$e%m%t&R&k&n&r&t&u&w&{'T'b'r(T(V(](d(x(z)O)}*i+X+],p,s,x-i-q.P.V.t.{/n0]0l0r1S1r2S2T2V2X2[2_2a3Q3W3l4z6T6e6f6i6|8t9T9_S#q]<V!r)_$Z$n'X)s-U-X/V2p4T5w6s:Z:m<U<X<Y<]<^<_<`<a<b<c<d<e<f<g<h<i<k<n<{=O=P=R=Z=[=e=f>SU+P%]<s<tQ+t&PQ,f&gQ,m&oQ0x+gQ0}+iQ1Y+uQ2R,kQ3`.gQ5`0|Q5f1TQ6[1zQ7Y3dQ8`5gR9e7['QkOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$Z$_$a$e$n%m%t&R&k&n&o&r&t&u&w&{'T'X'b'r(T(V(](d(x(z)O)s)}*i+X+]+g,p,s,x-U-X-i-q.P.V.g.t.{/V/n0]0l0r1S1r2S2T2V2X2[2_2a2p3Q3W3d3l4T4z5w6T6e6f6i6s6|7[8t9T9_:Z:m<U<X<Y<]<^<_<`<a<b<c<d<e<f<g<h<i<k<n<{=O=P=R=Z=[=e=f>S!S!nQ!r!v!y!z$|'W'_'`'l'm'n*k*o*q*r-]-c-e-u0[0_1o5{5}%[$ti#v$b$c$d$x${%O%Q%^%_%c)y*R*T*V*Y*a*g*w*x+f+i,S,V.f/P/d/m/x/y/{0`0b0i0j0o1f1i1q3c4^4_4j4o5Q5[5_6S7W7v8Q8V8[8q9b9p9y:P:`:r;Q;[;d;k<l<m<o<p<q<r<u<v<w<x<y<z=S=T=U=V=X=Y=]=^=_=`=a=b=c=d=g=h>P>X>Y>]>^Q&X|Q'U!eS'[%i-`Q+t&PQ,P&WQ,f&gQ0n+SQ1Y+uQ1_+{Q2Q,jQ2R,kQ5f1TQ5o1aQ6[1zQ6_1|Q6`2PQ8`5gQ8c5lQ8|6bQ:X8dQ:f8yQ;V:YR<}*ZrnOXst!V!Z#d%m&i&r&t&u&w,s,x2[2_R,h&k&z^OPXYstuvwz!Z!`!g!j!o#S#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$Z$_$a$e$n%m%t&R&k&n&o&r&t&u&w&{'T'b'r(V(](d(x(z)O)s)}*i+X+]+g,p,s,x-U-X-i-q.P.V.g.t.{/V/n0]0l0r1S1r2S2T2V2X2[2_2a2p3Q3W3d3l4T4z5w6T6e6f6i6s6|7[8t9T9_:Z:m<U<X<Y<]<^<_<`<a<b<c<d<e<f<g<h<i<k<n<{=O=P=R=Z=[=e=f>R>S[#]WZ#W#Z'X(T!b%jm#h#i#l$x%e%h(^(h(i(j*Y*^*b+Z+[+^,o-V.T.Z.[.]._/m/p2d3[3]4a6r7TQ%wxQ%{yW&Q|&V&W,OQ&_!TQ'c!hQ'e!iQ(q#sS+n%|%}Q+r&PQ,_&bQ,c&dS-l'f'gQ.i(rQ1R+oQ1X+uQ1Z+vQ1^+zQ1t,`S1x,d,eQ2|-mQ5e1TQ5i1WQ5n1`Q6Z1yQ8_5gQ8b5kQ8f5pQ:T8^R;T:U!U$zi$d%O%Q%^%_%c*R*T*a*w*x/P/x0`0b0i0j0o4_5Q8V9p>P>X>Y!^%yy!i!u%{%|%}'V'e'f'g'k'u*j+n+o-Y-l-m-t0R0U1R2u2|3T4r4s4v7}9{Q+h%wQ,T&[Q,W&]Q,b&dQ.h(qQ1s,_U1w,c,d,eQ3e.iQ6U1tS6Y1x1yQ8x6Z#f>T#v$b$c$x${)y*V*Y*g+f+i,S,V.f/d/m/y/{1f1i1q3c4^4j4o5[5_6S7W7v8Q8[8q9b9y:P:`:r;Q;[;d;k<o<q<u<w<y=S=U=X=]=_=a=c=g>]>^o>U<l<m<p<r<v<x<z=T=V=Y=^=`=b=d=hW%Ti%V*y>PS&[!Q&iQ&]!RQ&^!SU*}%[%d=sR,R&Y%]%Si#v$b$c$d$x${%O%Q%^%_%c)y*R*T*V*Y*a*g*w*x+f+i,S,V.f/P/d/m/x/y/{0`0b0i0j0o1f1i1q3c4^4_4j4o5Q5[5_6S7W7v8Q8V8[8q9b9p9y:P:`:r;Q;[;d;k<l<m<o<p<q<r<u<v<w<x<y<z=S=T=U=V=X=Y=]=^=_=`=a=b=c=d=g=h>P>X>Y>]>^T)z$u){V+P%]<s<tW'[!e%i*Z-`S(}#y#zQ+c%rQ+y&SS.b(m(nQ1j,XQ5T0kR8i5u'QkOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$Z$_$a$e$n%m%t&R&k&n&o&r&t&u&w&{'T'X'b'r(T(V(](d(x(z)O)s)}*i+X+]+g,p,s,x-U-X-i-q.P.V.g.t.{/V/n0]0l0r1S1r2S2T2V2X2[2_2a2p3Q3W3d3l4T4z5w6T6e6f6i6s6|7[8t9T9_:Z:m<U<X<Y<]<^<_<`<a<b<c<d<e<f<g<h<i<k<n<{=O=P=R=Z=[=e=f>S$i$^c#Y#e%q%s%u(S(Y(t(y)R)S)T)U)V)W)X)Y)Z)[)^)`)b)g)q+d+x-Z-x-}.S.U.s.v.z.|.}/O/b0p2k2n3O3V3k3p3q3r3s3t3u3v3w3x3y3z3{3|4P4Q4X5X5c6u6{7Q7a7b7k7l8k9X9]9g9m9n:o;W;`<W=vT#TV#U'RkOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$Z$_$a$e$n%m%t&R&k&n&o&r&t&u&w&{'T'X'b'r(T(V(](d(x(z)O)s)}*i+X+]+g,p,s,x-U-X-i-q.P.V.g.t.{/V/n0]0l0r1S1r2S2T2V2X2[2_2a2p3Q3W3d3l4T4z5w6T6e6f6i6s6|7[8t9T9_:Z:m<U<X<Y<]<^<_<`<a<b<c<d<e<f<g<h<i<k<n<{=O=P=R=Z=[=e=f>SQ'Y!eR2q-]!W!nQ!e!r!v!y!z$|'W'_'`'l'm'n*Z*k*o*q*r-]-c-e-u0[0_1o5{5}R1l,ZnqOXst!Z#d%m&r&t&u&w,s,x2[2_Q&y!^Q'v!xS(s#u<^Q+l%zQ,]&_Q,^&aQ-j'dQ-w'oS.r(x=PS0q+X=ZQ1P+mQ1n,[Q2c,zQ2e,{Q2m-WQ2z-kQ2}-oS5Y0r=eQ5a1QS5d1S=fQ6t2oQ6x2{Q6}3SQ8]5bQ9Y6vQ9Z6yQ9^7OR:l9V$d$]c#Y#e%s%u(S(Y(t(y)R)S)T)U)V)W)X)Y)Z)[)^)`)b)g)q+d+x-Z-x-}.S.U.s.v.z.}/O/b0p2k2n3O3V3k3p3q3r3s3t3u3v3w3x3y3z3{3|4P4Q4X5X5c6u6{7Q7a7b7k7l8k9X9]9g9m9n:o;W;`<W=vS(o#p'iQ)P#zS+b%q.|S.c(n(pR3^.d'QkOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$Z$_$a$e$n%m%t&R&k&n&o&r&t&u&w&{'T'X'b'r(T(V(](d(x(z)O)s)}*i+X+]+g,p,s,x-U-X-i-q.P.V.g.t.{/V/n0]0l0r1S1r2S2T2V2X2[2_2a2p3Q3W3d3l4T4z5w6T6e6f6i6s6|7[8t9T9_:Z:m<U<X<Y<]<^<_<`<a<b<c<d<e<f<g<h<i<k<n<{=O=P=R=Z=[=e=f>SS#q]<VQ&t!XQ&u!YQ&w![Q&x!]R2Z,vQ'a!hQ+e%wQ-h'cS.e(q+hQ2x-gW3b.h.i0w0yQ6w2yW7U3_3a3e5^U9a7V7X7ZU:q9c9d9fS;b:p:sQ;p;cR;x;qU!wQ'`-eT5y1o5{!Q_OXZ`st!V!Z#d#h%e%m&i&k&r&t&u&w(j,s,x.[2[2_]!pQ!r'`-e1o5{T#q]<V%^{OPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$_$a$e%m%t&R&k&n&o&r&t&u&w&{'T'b'r(T(V(](d(x(z)O)}*i+X+]+g,p,s,x-i-q.P.V.g.t.{/n0]0l0r1S1r2S2T2V2X2[2_2a3Q3W3d3l4z6T6e6f6i6|7[8t9T9_S(}#y#zS.b(m(n!s=l$Z$n'X)s-U-X/V2p4T5w6s:Z:m<U<X<Y<]<^<_<`<a<b<c<d<e<f<g<h<i<k<n<{=O=P=R=Z=[=e=f>SU$fd)_,mS(p#p'iU*v%R(w4OU0m+O.n7gQ5^0xQ7V3`Q9d7YR:s9em!tQ!r!v!y!z'`'l'm'n-e-u1o5{5}Q't!uS(f#g2US-s'k'wQ/s*]Q0R*jQ3U-vQ4f/tQ4r0TQ4s0UQ4x0^Q7r4`S7}4t4vS8R4y4{Q9r7sQ9v7yQ9{8OQ:Q8TS:{9w9xS;g:|;PS;s;h;iS;{;t;uS<P;|;}R<S<QQ#wbQ's!uS(e#g2US(g#m+WQ+Y%fQ+j%xQ+p&OU-r'k't'wQ.W(fU/r*]*`/wQ0S*jQ0V*lQ1O+kQ1u,aS3R-s-vQ3Z.`S4e/s/tQ4n0PS4q0R0^Q4u0WQ6W1vQ7P3US7q4`4bQ7u4fU7|4r4x4{Q8P4wQ8v6XS9q7r7sQ9u7yQ9}8RQ:O8SQ:c8wQ:y9rS:z9v9xQ;S:QQ;^:dS;f:{;PS;r;g;hS;z;s;uS<O;{;}Q<R<PQ<T<SQ=o=jQ={=tR=|=uV!wQ'`-e%^aOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$_$a$e%m%t&R&k&n&o&r&t&u&w&{'T'b'r(T(V(](d(x(z)O)}*i+X+]+g,p,s,x-i-q.P.V.g.t.{/n0]0l0r1S1r2S2T2V2X2[2_2a3Q3W3d3l4z6T6e6f6i6|7[8t9T9_S#wz!j!r=i$Z$n'X)s-U-X/V2p4T5w6s:Z:m<U<X<Y<]<^<_<`<a<b<c<d<e<f<g<h<i<k<n<{=O=P=R=Z=[=e=f>SR=o>R%^bOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$_$a$e%m%t&R&k&n&o&r&t&u&w&{'T'b'r(T(V(](d(x(z)O)}*i+X+]+g,p,s,x-i-q.P.V.g.t.{/n0]0l0r1S1r2S2T2V2X2[2_2a3Q3W3d3l4z6T6e6f6i6|7[8t9T9_Q%fj!^%xy!i!u%{%|%}'V'e'f'g'k'u*j+n+o-Y-l-m-t0R0U1R2u2|3T4r4s4v7}9{S&Oz!jQ+k%yQ,a&dW1v,b,c,d,eU6X1w1x1yS8w6Y6ZQ:d8x!r=j$Z$n'X)s-U-X/V2p4T5w6s:Z:m<U<X<Y<]<^<_<`<a<b<c<d<e<f<g<h<i<k<n<{=O=P=R=Z=[=e=f>SQ=t>QR=u>R%QeOPXYstuvw!Z!`!g!o#S#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$_$a$e%m%t&R&k&n&r&t&u&w&{'T'b'r(V(](d(x(z)O)}*i+X+]+g,p,s,x-i-q.P.V.g.t.{/n0]0l0r1S1r2S2T2V2X2[2_2a3Q3W3d3l4z6T6e6f6i6|7[8t9T9_Y#bWZ#W#Z(T!b%jm#h#i#l$x%e%h(^(h(i(j*Y*^*b+Z+[+^,o-V.T.Z.[.]._/m/p2d3[3]4a6r7TQ,n&o!p=k$Z$n)s-U-X/V2p4T5w6s:Z:m<U<X<Y<]<^<_<`<a<b<c<d<e<f<g<h<i<k<n<{=O=P=R=Z=[=e=f>SR=n'XU']!e%i*ZR2s-`%SdOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$_$a$e%m%t&R&k&n&r&t&u&w&{'T'b'r(T(V(](d(x(z)O)}*i+X+],p,s,x-i-q.P.V.t.{/n0]0l0r1S1r2S2T2V2X2[2_2a3Q3W3l4z6T6e6f6i6|8t9T9_!r)_$Z$n'X)s-U-X/V2p4T5w6s:Z:m<U<X<Y<]<^<_<`<a<b<c<d<e<f<g<h<i<k<n<{=O=P=R=Z=[=e=f>SQ,m&oQ0x+gQ3`.gQ7Y3dR9e7[!b$Tc#Y%q(S(Y(t(y)Z)[)`)g+x-x-}.S.U.s.v/b0p3O3V3k3{5X5c6{7Q7a9]:o<W!P<d)^)q-Z.|2k2n3p3y3z4P4X6u7b7k7l8k9X9g9m9n;W;`=v!f$Vc#Y%q(S(Y(t(y)W)X)Z)[)`)g+x-x-}.S.U.s.v/b0p3O3V3k3{5X5c6{7Q7a9]:o<W!T<f)^)q-Z.|2k2n3p3v3w3y3z4P4X6u7b7k7l8k9X9g9m9n;W;`=v!^$Zc#Y%q(S(Y(t(y)`)g+x-x-}.S.U.s.v/b0p3O3V3k3{5X5c6{7Q7a9]:o<WQ4_/kz>S)^)q-Z.|2k2n3p4P4X6u7b7k7l8k9X9g9m9n;W;`=vQ>X>ZR>Y>['QkOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$Z$_$a$e$n%m%t&R&k&n&o&r&t&u&w&{'T'X'b'r(T(V(](d(x(z)O)s)}*i+X+]+g,p,s,x-U-X-i-q.P.V.g.t.{/V/n0]0l0r1S1r2S2T2V2X2[2_2a2p3Q3W3d3l4T4z5w6T6e6f6i6s6|7[8t9T9_:Z:m<U<X<Y<]<^<_<`<a<b<c<d<e<f<g<h<i<k<n<{=O=P=R=Z=[=e=f>SS$oh$pR4U/U'XgOPWXYZhstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$Z$_$a$e$n$p%m%t&R&k&n&o&r&t&u&w&{'T'X'b'r(T(V(](d(x(z)O)s)}*i+X+]+g,p,s,x-U-X-i-q.P.V.g.t.{/U/V/n0]0l0r1S1r2S2T2V2X2[2_2a2p3Q3W3d3l4T4z5w6T6e6f6i6s6|7[8t9T9_:Z:m<U<X<Y<]<^<_<`<a<b<c<d<e<f<g<h<i<k<n<{=O=P=R=Z=[=e=f>ST$kf$qQ$ifS)j$l)nR)v$qT$jf$qT)l$l)n'XhOPWXYZhstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$Z$_$a$e$n$p%m%t&R&k&n&o&r&t&u&w&{'T'X'b'r(T(V(](d(x(z)O)s)}*i+X+]+g,p,s,x-U-X-i-q.P.V.g.t.{/U/V/n0]0l0r1S1r2S2T2V2X2[2_2a2p3Q3W3d3l4T4z5w6T6e6f6i6s6|7[8t9T9_:Z:m<U<X<Y<]<^<_<`<a<b<c<d<e<f<g<h<i<k<n<{=O=P=R=Z=[=e=f>ST$oh$pQ$rhR)u$p%^jOPWXYZstuvw!Z!`!g!o#S#W#Z#d#o#u#x#{$O$P$Q$R$S$T$U$V$W$X$_$a$e%m%t&R&k&n&o&r&t&u&w&{'T'b'r(T(V(](d(x(z)O)}*i+X+]+g,p,s,x-i-q.P.V.g.t.{/n0]0l0r1S1r2S2T2V2X2[2_2a3Q3W3d3l4z6T6e6f6i6|7[8t9T9_!s>Q$Z$n'X)s-U-X/V2p4T5w6s:Z:m<U<X<Y<]<^<_<`<a<b<c<d<e<f<g<h<i<k<n<{=O=P=R=Z=[=e=f>S#glOPXZst!Z!`!o#S#d#o#{$n%m&k&n&o&r&t&u&w&{'T'b)O)s*i+]+g,p,s,x-i.g/V/n0]0l1r2S2T2V2X2[2_2a3d4T4z6T6e6f6i7[8t9T!U%Ri$d%O%Q%^%_%c*R*T*a*w*x/P/x0`0b0i0j0o4_5Q8V9p>P>X>Y#f(w#v$b$c$x${)y*V*Y*g+f+i,S,V.f/d/m/y/{1f1i1q3c4^4j4o5[5_6S7W7v8Q8[8q9b9y:P:`:r;Q;[;d;k<o<q<u<w<y=S=U=X=]=_=a=c=g>]>^Q+T%aQ/c*Oo4O<l<m<p<r<v<x<z=T=V=Y=^=`=b=d=h!U$yi$d%O%Q%^%_%c*R*T*a*w*x/P/x0`0b0i0j0o4_5Q8V9p>P>X>YQ*c$zU*l$|*Z*oQ+U%bQ0W*m#f=q#v$b$c$x${)y*V*Y*g+f+i,S,V.f/d/m/y/{1f1i1q3c4^4j4o5[5_6S7W7v8Q8[8q9b9y:P:`:r;Q;[;d;k<o<q<u<w<y=S=U=X=]=_=a=c=g>]>^n=r<l<m<p<r<v<x<z=T=V=Y=^=`=b=d=hQ=w>TQ=x>UQ=y>VR=z>W!U%Ri$d%O%Q%^%_%c*R*T*a*w*x/P/x0`0b0i0j0o4_5Q8V9p>P>X>Y#f(w#v$b$c$x${)y*V*Y*g+f+i,S,V.f/d/m/y/{1f1i1q3c4^4j4o5[5_6S7W7v8Q8[8q9b9y:P:`:r;Q;[;d;k<o<q<u<w<y=S=U=X=]=_=a=c=g>]>^o4O<l<m<p<r<v<x<z=T=V=Y=^=`=b=d=hnoOXst!Z#d%m&r&t&u&w,s,x2[2_S*f${*YQ-R'OQ-S'QR4i/y%[%Si#v$b$c$d$x${%O%Q%^%_%c)y*R*T*V*Y*a*g*w*x+f+i,S,V.f/P/d/m/x/y/{0`0b0i0j0o1f1i1q3c4^4_4j4o5Q5[5_6S7W7v8Q8V8[8q9b9p9y:P:`:r;Q;[;d;k<l<m<o<p<q<r<u<v<w<x<y<z=S=T=U=V=X=Y=]=^=_=`=a=b=c=d=g=h>P>X>Y>]>^Q,U&]Q1h,WQ5s1gR8h5tV*n$|*Z*oU*n$|*Z*oT5z1o5{S0P*i/nQ4w0]T8S4z:]Q+j%xQ0V*lQ1O+kQ1u,aQ6W1vQ8v6XQ:c8wR;^:d!U%Oi$d%O%Q%^%_%c*R*T*a*w*x/P/x0`0b0i0j0o4_5Q8V9p>P>X>Yx*R$v)e*S*u+V/v0d0e4R4g5R5S5W7p8U:R:x=p=}>OS0`*t0a#f<o#v$b$c$x${)y*V*Y*g+f+i,S,V.f/d/m/y/{1f1i1q3c4^4j4o5[5_6S7W7v8Q8[8q9b9y:P:`:r;Q;[;d;k<o<q<u<w<y=S=U=X=]=_=a=c=g>]>^n<p<l<m<p<r<v<x<z=T=V=Y=^=`=b=d=h!d=S(u)c*[*e.j.m.q/_/k/|0v1e3h4[4h4l5r7]7`7w7z8X8Z9t9|:S:};R;e;j;v>Z>[`=T3}7c7f7j9h:t:w;yS=_.l3iT=`7e9k!U%Qi$d%O%Q%^%_%c*R*T*a*w*x/P/x0`0b0i0j0o4_5Q8V9p>P>X>Y|*T$v)e*U*t+V/g/v0d0e4R4g4|5R5S5W7p8U:R:x=p=}>OS0b*u0c#f<q#v$b$c$x${)y*V*Y*g+f+i,S,V.f/d/m/y/{1f1i1q3c4^4j4o5[5_6S7W7v8Q8[8q9b9y:P:`:r;Q;[;d;k<o<q<u<w<y=S=U=X=]=_=a=c=g>]>^n<r<l<m<p<r<v<x<z=T=V=Y=^=`=b=d=h!h=U(u)c*[*e.k.l.q/_/k/|0v1e3f3h4[4h4l5r7]7^7`7w7z8X8Z9t9|:S:};R;e;j;v>Z>[d=V3}7d7e7j9h9i:t:u:w;yS=a.m3jT=b7f9lrnOXst!V!Z#d%m&i&r&t&u&w,s,x2[2_Q&f!UR,p&ornOXst!V!Z#d%m&i&r&t&u&w,s,x2[2_R&f!UQ,Y&^R1d,RsnOXst!V!Z#d%m&i&r&t&u&w,s,x2[2_Q1p,_S6R1s1tU8p6P6Q6US:_8r8sS;Y:^:aQ;m;ZR;w;nQ&m!VR,i&iR6_1|R:f8yW&Q|&V&W,OR1Z+vQ&r!WR,s&sR,y&xT2],x2_R,}&yQ,|&yR2f,}Q'y!{R-y'ySsOtQ#dXT%ps#dQ#OTR'{#OQ#RUR'}#RQ){$uR/`){Q#UVR(Q#UQ#XWU(W#X(X.QQ(X#YR.Q(YQ-^'YR2r-^Q.u(yS3m.u3nR3n.vQ-e'`R2v-eY!rQ'`-e1o5{R'j!rQ/Q)eR4S/QU#_W%h*YU(_#_(`.RQ(`#`R.R(ZQ-a']R2t-at`OXst!V!Z#d%m&i&k&r&t&u&w,s,x2[2_S#hZ%eU#r`#h.[R.[(jQ(k#jQ.X(gW.a(k.X3X7RQ3X.YR7R3YQ)n$lR/W)nQ$phR)t$pQ$`cU)a$`-|<jQ-|<WR<j)qQ/q*]W4c/q4d7t9sU4d/r/s/tS7t4e4fR9s7u$e*Q$v(u)c)e*[*e*t*u+Q+R+V.l.m.o.p.q/_/g/i/k/v/|0d0e0v1e3f3g3h3}4R4[4g4h4l4|5O5R5S5W5r7]7^7_7`7e7f7h7i7j7p7w7z8U8X8Z9h9i9j9t9|:R:S:t:u:v:w:x:};R;e;j;v;y=p=}>O>Z>[Q/z*eU4k/z4m7xQ4m/|R7x4lS*o$|*ZR0Y*ox*S$v)e*t*u+V/v0d0e4R4g5R5S5W7p8U:R:x=p=}>O!d.j(u)c*[*e.l.m.q/_/k/|0v1e3h4[4h4l5r7]7`7w7z8X8Z9t9|:S:};R;e;j;v>Z>[U/h*S.j7ca7c3}7e7f7j9h:t:w;yQ0a*tQ3i.lU4}0a3i9kR9k7e|*U$v)e*t*u+V/g/v0d0e4R4g4|5R5S5W7p8U:R:x=p=}>O!h.k(u)c*[*e.l.m.q/_/k/|0v1e3f3h4[4h4l5r7]7^7`7w7z8X8Z9t9|:S:};R;e;j;v>Z>[U/j*U.k7de7d3}7e7f7j9h9i:t:u:w;yQ0c*uQ3j.mU5P0c3j9lR9l7fQ*z%UR0g*zQ5]0vR8Y5]Q+_%kR0u+_Q5v1jS8j5v:[R:[8kQ,[&_R1m,[Q5{1oR8m5{Q1{,fS6]1{8zR8z6_Q1U+rW5h1U5j8a:VQ5j1XQ8a5iR:V8bQ+w&QR1[+wQ2_,xR6m2_YrOXst#dQ&v!ZQ+a%mQ,r&rQ,t&tQ,u&uQ,w&wQ2Y,sS2],x2_R6l2[Q%opQ&z!_Q&}!aQ'P!bQ'R!cQ'q!uQ+`%lQ+l%zQ,Q&XQ,h&mQ-P&|W-p'k's't'wQ-w'oQ0X*nQ1P+mQ1c,PS2O,i,lQ2g-OQ2h-RQ2i-SQ2}-oW3P-r-s-v-xQ5a1QQ5m1_Q5q1eQ6V1uQ6a2QQ6k2ZU6z3O3R3UQ6}3SQ8]5bQ8e5oQ8g5rQ8l5zQ8u6WQ8{6`S9[6{7PQ9^7OQ:W8cQ:b8vQ:g8|Q:n9]Q;U:XQ;]:cQ;a:oQ;l;VR;o;^Q%zyQ'd!iQ'o!uU+m%{%|%}Q-W'VU-k'e'f'gS-o'k'uQ0Q*jS1Q+n+oQ2o-YS2{-l-mQ3S-tS4p0R0UQ5b1RQ6v2uQ6y2|Q7O3TU7{4r4s4vQ9z7}R;O9{S$wi>PR*{%VU%Ui%V>PR0f*yQ$viS(u#v+iS)c$b$cQ)e$dQ*[$xS*e${*YQ*t%OQ*u%QQ+Q%^Q+R%_Q+V%cQ.l<oQ.m<qQ.o<uQ.p<wQ.q<yQ/_)yQ/g*RQ/i*TQ/k*VQ/v*aS/|*g/mQ0d*wQ0e*xl0v+f,V.f1i1q3c6S7W8q9b:`:r;[;dQ1e,SQ3f=SQ3g=UQ3h=XS3}<l<mQ4R/PS4[/d4^Q4g/xQ4h/yQ4l/{Q4|0`Q5O0bQ5R0iQ5S0jQ5W0oQ5r1fQ7]=]Q7^=_Q7_=aQ7`=cQ7e<pQ7f<rQ7h<vQ7i<xQ7j<zQ7p4_Q7w4jQ7z4oQ8U5QQ8X5[Q8Z5_Q9h=YQ9i=TQ9j=VQ9t7vQ9|8QQ:R8VQ:S8[Q:t=^Q:u=`Q:v=bQ:w=dQ:x9pQ:}9yQ;R:PQ;e=gQ;j;QQ;v;kQ;y=hQ=p>PQ=}>XQ>O>YQ>Z>]R>[>^Q+O%]Q.n<sR7g<tnpOXst!Z#d%m&r&t&u&w,s,x2[2_Q!fPS#fZ#oQ&|!`W'h!o*i0]4zQ(P#SQ)Q#{Q)r$nS,l&k&nQ,q&oQ-O&{S-T'T/nQ-g'bQ.x)OQ/[)sQ0s+]Q0y+gQ2W,pQ2y-iQ3a.gQ4W/VQ5U0lQ6Q1rQ6c2SQ6d2TQ6h2VQ6j2XQ6o2aQ7Z3dQ7m4TQ8s6TQ9P6eQ9Q6fQ9S6iQ9f7[Q:a8tR:k9T#[cOPXZst!Z!`!o#d#o#{%m&k&n&o&r&t&u&w&{'T'b)O*i+]+g,p,s,x-i.g/n0]0l1r2S2T2V2X2[2_2a3d4z6T6e6f6i7[8t9TQ#YWQ#eYQ%quQ%svS%uw!gS(S#W(VQ(Y#ZQ(t#uQ(y#xQ)R$OQ)S$PQ)T$QQ)U$RQ)V$SQ)W$TQ)X$UQ)Y$VQ)Z$WQ)[$XQ)^$ZQ)`$_Q)b$aQ)g$eW)q$n)s/V4TQ+d%tQ+x&RS-Z'X2pQ-x'rS-}(T.PQ.S(]Q.U(dQ.s(xQ.v(zQ.z<UQ.|<XQ.}<YQ/O<]Q/b)}Q0p+XQ2k-UQ2n-XQ3O-qQ3V.VQ3k.tQ3p<^Q3q<_Q3r<`Q3s<aQ3t<bQ3u<cQ3v<dQ3w<eQ3x<fQ3y<gQ3z<hQ3{.{Q3|<kQ4P<nQ4Q<{Q4X<iQ5X0rQ5c1SQ6u=OQ6{3QQ7Q3WQ7a3lQ7b=PQ7k=RQ7l=ZQ8k5wQ9X6sQ9]6|Q9g=[Q9m=eQ9n=fQ:o9_Q;W:ZQ;`:mQ<W#SR=v>SR#[WR'Z!el!tQ!r!v!y!z'`'l'm'n-e-u1o5{5}S'V!e-]U*j$|*Z*oS-Y'W'_S0U*k*qQ0^*rQ2u-cQ4v0[R4{0_R({#xQ!fQT-d'`-e]!qQ!r'`-e1o5{Q#p]R'i<VR)f$dY!uQ'`-e1o5{Q'k!rS'u!v!yS'w!z5}S-t'l'mQ-v'nR3T-uT#kZ%eS#jZ%eS%km,oU(g#h#i#lS.Y(h(iQ.^(jQ0t+^Q3Y.ZU3Z.[.]._S7S3[3]R9`7Td#^W#W#Z%h(T(^*Y+Z.T/mr#gZm#h#i#l%e(h(i(j+^.Z.[.]._3[3]7TS*]$x*bQ/t*^Q2U,oQ2l-VQ4`/pQ6q2dQ7s4aQ9W6rT=m'X+[V#aW%h*YU#`W%h*YS(U#W(^U(Z#Z+Z/mS-['X+[T.O(T.TV'^!e%i*ZQ$lfR)x$qT)m$l)nR4V/UT*_$x*bT*h${*YQ0w+fQ1g,VQ3_.fQ5t1iQ6P1qQ7X3cQ8r6SQ9c7WQ:^8qQ:p9bQ;Z:`Q;c:rQ;n;[R;q;dnqOXst!Z#d%m&r&t&u&w,s,x2[2_Q&l!VR,h&itmOXst!U!V!Z#d%m&i&r&t&u&w,s,x2[2_R,o&oT%lm,oR1k,XR,g&gQ&U|S+}&V&WR1^,OR+s&PT&p!W&sT&q!W&sT2^,x2_",
+  nodeNames: "⚠ ArithOp ArithOp ?. JSXStartTag LineComment BlockComment Script Hashbang ExportDeclaration export Star as VariableName String Escape from ; default FunctionDeclaration async function VariableDefinition > < TypeParamList in out const TypeDefinition extends ThisType this LiteralType ArithOp Number BooleanLiteral TemplateType InterpolationEnd Interpolation InterpolationStart NullType null VoidType void TypeofType typeof MemberExpression . PropertyName [ TemplateString Escape Interpolation super RegExp ] ArrayExpression Spread , } { ObjectExpression Property async get set PropertyDefinition Block : NewTarget new NewExpression ) ( ArgList UnaryExpression delete LogicOp BitOp YieldExpression yield AwaitExpression await ParenthesizedExpression ClassExpression class ClassBody MethodDeclaration Decorator @ MemberExpression PrivatePropertyName CallExpression TypeArgList CompareOp < declare Privacy static abstract override PrivatePropertyDefinition PropertyDeclaration readonly accessor Optional TypeAnnotation Equals StaticBlock FunctionExpression ArrowFunction ParamList ParamList ArrayPattern ObjectPattern PatternProperty Privacy readonly Arrow MemberExpression BinaryExpression ArithOp ArithOp ArithOp ArithOp BitOp CompareOp instanceof satisfies CompareOp BitOp BitOp BitOp LogicOp LogicOp ConditionalExpression LogicOp LogicOp AssignmentExpression UpdateOp PostfixExpression CallExpression InstantiationExpression TaggedTemplateExpression DynamicImport import ImportMeta JSXElement JSXSelfCloseEndTag JSXSelfClosingTag JSXIdentifier JSXBuiltin JSXIdentifier JSXNamespacedName JSXMemberExpression JSXSpreadAttribute JSXAttribute JSXAttributeValue JSXEscape JSXEndTag JSXOpenTag JSXFragmentTag JSXText JSXEscape JSXStartCloseTag JSXCloseTag PrefixCast < ArrowFunction TypeParamList SequenceExpression InstantiationExpression KeyofType keyof UniqueType unique ImportType InferredType infer TypeName ParenthesizedType FunctionSignature ParamList NewSignature IndexedType TupleType Label ArrayType ReadonlyType ObjectType MethodType PropertyType IndexSignature PropertyDefinition CallSignature TypePredicate asserts is NewSignature new UnionType LogicOp IntersectionType LogicOp ConditionalType ParameterizedType ClassDeclaration abstract implements type VariableDeclaration let var using TypeAliasDeclaration InterfaceDeclaration interface EnumDeclaration enum EnumBody NamespaceDeclaration namespace module AmbientDeclaration declare GlobalDeclaration global ClassDeclaration ClassBody AmbientFunctionDeclaration ExportGroup VariableName VariableName ImportDeclaration defer ImportGroup ForStatement for ForSpec ForInSpec ForOfSpec of WhileStatement while WithStatement with DoStatement do IfStatement if else SwitchStatement switch SwitchBody CaseLabel case DefaultLabel TryStatement try CatchClause catch FinallyClause finally ReturnStatement return ThrowStatement throw BreakStatement break ContinueStatement continue DebuggerStatement debugger LabeledStatement ExpressionStatement SingleExpression SingleClassItem",
+  maxTerm: 380,
   context: trackNewline,
   nodeProps: [
     ["isolate", -8,5,6,14,37,39,51,53,55,""],
-    ["group", -26,9,17,19,68,207,211,215,216,218,221,224,234,236,242,244,246,248,251,257,263,265,267,269,271,273,274,"Statement",-34,13,14,32,35,36,42,51,54,55,57,62,70,72,76,80,82,84,85,110,111,120,121,136,139,141,142,143,144,145,147,148,167,169,171,"Expression",-23,31,33,37,41,43,45,173,175,177,178,180,181,182,184,185,186,188,189,190,201,203,205,206,"Type",-3,88,103,109,"ClassItem"],
+    ["group", -26,9,17,19,68,207,211,215,216,218,221,224,234,237,243,245,247,249,252,258,264,266,268,270,272,274,275,"Statement",-34,13,14,32,35,36,42,51,54,55,57,62,70,72,76,80,82,84,85,110,111,120,121,136,139,141,142,143,144,145,147,148,167,169,171,"Expression",-23,31,33,37,41,43,45,173,175,177,178,180,181,182,184,185,186,188,189,190,201,203,205,206,"Type",-3,88,103,109,"ClassItem"],
     ["openedBy", 23,"<",38,"InterpolationStart",56,"[",60,"{",73,"(",160,"JSXStartCloseTag"],
     ["closedBy", -2,24,168,">",40,"InterpolationEnd",50,"]",61,"}",74,")",165,"JSXEndTag"]
   ],
   propSources: [jsHighlight],
-  skippedNodes: [0,5,6,277],
+  skippedNodes: [0,5,6,278],
   repeatNodeCount: 37,
-  tokenData: "$Fq07[R!bOX%ZXY+gYZ-yZ[+g[]%Z]^.c^p%Zpq+gqr/mrs3cst:_tuEruvJSvwLkwx! Yxy!'iyz!(sz{!)}{|!,q|}!.O}!O!,q!O!P!/Y!P!Q!9j!Q!R#:O!R![#<_![!]#I_!]!^#Jk!^!_#Ku!_!`$![!`!a$$v!a!b$*T!b!c$,r!c!}Er!}#O$-|#O#P$/W#P#Q$4o#Q#R$5y#R#SEr#S#T$7W#T#o$8b#o#p$<r#p#q$=h#q#r$>x#r#s$@U#s$f%Z$f$g+g$g#BYEr#BY#BZ$A`#BZ$ISEr$IS$I_$A`$I_$I|Er$I|$I}$Dk$I}$JO$Dk$JO$JTEr$JT$JU$A`$JU$KVEr$KV$KW$A`$KW&FUEr&FU&FV$A`&FV;'SEr;'S;=`I|<%l?HTEr?HT?HU$A`?HUOEr(n%d_$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z&j&hT$i&jO!^&c!_#o&c#p;'S&c;'S;=`&w<%lO&c&j&zP;=`<%l&c'|'U]$i&j(Y!bOY&}YZ&cZw&}wx&cx!^&}!^!_'}!_#O&}#O#P&c#P#o&}#o#p'}#p;'S&};'S;=`(l<%lO&}!b(SU(Y!bOY'}Zw'}x#O'}#P;'S'};'S;=`(f<%lO'}!b(iP;=`<%l'}'|(oP;=`<%l&}'[(y]$i&j(VpOY(rYZ&cZr(rrs&cs!^(r!^!_)r!_#O(r#O#P&c#P#o(r#o#p)r#p;'S(r;'S;=`*a<%lO(rp)wU(VpOY)rZr)rs#O)r#P;'S)r;'S;=`*Z<%lO)rp*^P;=`<%l)r'[*dP;=`<%l(r#S*nX(Vp(Y!bOY*gZr*grs'}sw*gwx)rx#O*g#P;'S*g;'S;=`+Z<%lO*g#S+^P;=`<%l*g(n+dP;=`<%l%Z07[+rq$i&j(Vp(Y!b'{0/lOX%ZXY+gYZ&cZ[+g[p%Zpq+gqr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p$f%Z$f$g+g$g#BY%Z#BY#BZ+g#BZ$IS%Z$IS$I_+g$I_$JT%Z$JT$JU+g$JU$KV%Z$KV$KW+g$KW&FU%Z&FU&FV+g&FV;'S%Z;'S;=`+a<%l?HT%Z?HT?HU+g?HUO%Z07[.ST(W#S$i&j'|0/lO!^&c!_#o&c#p;'S&c;'S;=`&w<%lO&c07[.n_$i&j(Vp(Y!b'|0/lOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z)3p/x`$i&j!p),Q(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`0z!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KW1V`#v(Ch$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`2X!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KW2d_#v(Ch$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'At3l_(U':f$i&j(Y!bOY4kYZ5qZr4krs7nsw4kwx5qx!^4k!^!_8p!_#O4k#O#P5q#P#o4k#o#p8p#p;'S4k;'S;=`:X<%lO4k(^4r_$i&j(Y!bOY4kYZ5qZr4krs7nsw4kwx5qx!^4k!^!_8p!_#O4k#O#P5q#P#o4k#o#p8p#p;'S4k;'S;=`:X<%lO4k&z5vX$i&jOr5qrs6cs!^5q!^!_6y!_#o5q#o#p6y#p;'S5q;'S;=`7h<%lO5q&z6jT$d`$i&jO!^&c!_#o&c#p;'S&c;'S;=`&w<%lO&c`6|TOr6yrs7]s;'S6y;'S;=`7b<%lO6y`7bO$d``7eP;=`<%l6y&z7kP;=`<%l5q(^7w]$d`$i&j(Y!bOY&}YZ&cZw&}wx&cx!^&}!^!_'}!_#O&}#O#P&c#P#o&}#o#p'}#p;'S&};'S;=`(l<%lO&}!r8uZ(Y!bOY8pYZ6yZr8prs9hsw8pwx6yx#O8p#O#P6y#P;'S8p;'S;=`:R<%lO8p!r9oU$d`(Y!bOY'}Zw'}x#O'}#P;'S'};'S;=`(f<%lO'}!r:UP;=`<%l8p(^:[P;=`<%l4k%9[:hh$i&j(Vp(Y!bOY%ZYZ&cZq%Zqr<Srs&}st%ZtuCruw%Zwx(rx!^%Z!^!_*g!_!c%Z!c!}Cr!}#O%Z#O#P&c#P#R%Z#R#SCr#S#T%Z#T#oCr#o#p*g#p$g%Z$g;'SCr;'S;=`El<%lOCr(r<__WS$i&j(Vp(Y!bOY<SYZ&cZr<Srs=^sw<Swx@nx!^<S!^!_Bm!_#O<S#O#P>`#P#o<S#o#pBm#p;'S<S;'S;=`Cl<%lO<S(Q=g]WS$i&j(Y!bOY=^YZ&cZw=^wx>`x!^=^!^!_?q!_#O=^#O#P>`#P#o=^#o#p?q#p;'S=^;'S;=`@h<%lO=^&n>gXWS$i&jOY>`YZ&cZ!^>`!^!_?S!_#o>`#o#p?S#p;'S>`;'S;=`?k<%lO>`S?XSWSOY?SZ;'S?S;'S;=`?e<%lO?SS?hP;=`<%l?S&n?nP;=`<%l>`!f?xWWS(Y!bOY?qZw?qwx?Sx#O?q#O#P?S#P;'S?q;'S;=`@b<%lO?q!f@eP;=`<%l?q(Q@kP;=`<%l=^'`@w]WS$i&j(VpOY@nYZ&cZr@nrs>`s!^@n!^!_Ap!_#O@n#O#P>`#P#o@n#o#pAp#p;'S@n;'S;=`Bg<%lO@ntAwWWS(VpOYApZrAprs?Ss#OAp#O#P?S#P;'SAp;'S;=`Ba<%lOAptBdP;=`<%lAp'`BjP;=`<%l@n#WBvYWS(Vp(Y!bOYBmZrBmrs?qswBmwxApx#OBm#O#P?S#P;'SBm;'S;=`Cf<%lOBm#WCiP;=`<%lBm(rCoP;=`<%l<S%9[C}i$i&j(n%1l(Vp(Y!bOY%ZYZ&cZr%Zrs&}st%ZtuCruw%Zwx(rx!Q%Z!Q![Cr![!^%Z!^!_*g!_!c%Z!c!}Cr!}#O%Z#O#P&c#P#R%Z#R#SCr#S#T%Z#T#oCr#o#p*g#p$g%Z$g;'SCr;'S;=`El<%lOCr%9[EoP;=`<%lCr07[FRk$i&j(Vp(Y!b$]#t(S,2j(d$I[OY%ZYZ&cZr%Zrs&}st%ZtuEruw%Zwx(rx}%Z}!OGv!O!Q%Z!Q![Er![!^%Z!^!_*g!_!c%Z!c!}Er!}#O%Z#O#P&c#P#R%Z#R#SEr#S#T%Z#T#oEr#o#p*g#p$g%Z$g;'SEr;'S;=`I|<%lOEr+dHRk$i&j(Vp(Y!b$]#tOY%ZYZ&cZr%Zrs&}st%ZtuGvuw%Zwx(rx}%Z}!OGv!O!Q%Z!Q![Gv![!^%Z!^!_*g!_!c%Z!c!}Gv!}#O%Z#O#P&c#P#R%Z#R#SGv#S#T%Z#T#oGv#o#p*g#p$g%Z$g;'SGv;'S;=`Iv<%lOGv+dIyP;=`<%lGv07[JPP;=`<%lEr(KWJ_`$i&j(Vp(Y!b#p(ChOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KWKl_$i&j$Q(Ch(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z,#xLva(y+JY$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sv%ZvwM{wx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KWNW`$i&j#z(Ch(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'At! c_(X';W$i&j(VpOY!!bYZ!#hZr!!brs!#hsw!!bwx!$xx!^!!b!^!_!%z!_#O!!b#O#P!#h#P#o!!b#o#p!%z#p;'S!!b;'S;=`!'c<%lO!!b'l!!i_$i&j(VpOY!!bYZ!#hZr!!brs!#hsw!!bwx!$xx!^!!b!^!_!%z!_#O!!b#O#P!#h#P#o!!b#o#p!%z#p;'S!!b;'S;=`!'c<%lO!!b&z!#mX$i&jOw!#hwx6cx!^!#h!^!_!$Y!_#o!#h#o#p!$Y#p;'S!#h;'S;=`!$r<%lO!#h`!$]TOw!$Ywx7]x;'S!$Y;'S;=`!$l<%lO!$Y`!$oP;=`<%l!$Y&z!$uP;=`<%l!#h'l!%R]$d`$i&j(VpOY(rYZ&cZr(rrs&cs!^(r!^!_)r!_#O(r#O#P&c#P#o(r#o#p)r#p;'S(r;'S;=`*a<%lO(r!Q!&PZ(VpOY!%zYZ!$YZr!%zrs!$Ysw!%zwx!&rx#O!%z#O#P!$Y#P;'S!%z;'S;=`!']<%lO!%z!Q!&yU$d`(VpOY)rZr)rs#O)r#P;'S)r;'S;=`*Z<%lO)r!Q!'`P;=`<%l!%z'l!'fP;=`<%l!!b/5|!'t_!l/.^$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z#&U!)O_!k!Lf$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z-!n!*[b$i&j(Vp(Y!b(T%&f#q(ChOY%ZYZ&cZr%Zrs&}sw%Zwx(rxz%Zz{!+d{!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KW!+o`$i&j(Vp(Y!b#n(ChOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z+;x!,|`$i&j(Vp(Y!br+4YOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z,$U!.Z_!]+Jf$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z07[!/ec$i&j(Vp(Y!b!Q.2^OY%ZYZ&cZr%Zrs&}sw%Zwx(rx!O%Z!O!P!0p!P!Q%Z!Q![!3Y![!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z#%|!0ya$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!O%Z!O!P!2O!P!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z#%|!2Z_![!L^$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad!3eg$i&j(Vp(Y!bs'9tOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q![!3Y![!^%Z!^!_*g!_!g%Z!g!h!4|!h#O%Z#O#P&c#P#R%Z#R#S!3Y#S#X%Z#X#Y!4|#Y#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad!5Vg$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx{%Z{|!6n|}%Z}!O!6n!O!Q%Z!Q![!8S![!^%Z!^!_*g!_#O%Z#O#P&c#P#R%Z#R#S!8S#S#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad!6wc$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q![!8S![!^%Z!^!_*g!_#O%Z#O#P&c#P#R%Z#R#S!8S#S#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad!8_c$i&j(Vp(Y!bs'9tOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q![!8S![!^%Z!^!_*g!_#O%Z#O#P&c#P#R%Z#R#S!8S#S#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z07[!9uf$i&j(Vp(Y!b#o(ChOY!;ZYZ&cZr!;Zrs!<nsw!;Zwx!Lcxz!;Zz{#-}{!P!;Z!P!Q#/d!Q!^!;Z!^!_#(i!_!`#7S!`!a#8i!a!}!;Z!}#O#,f#O#P!Dy#P#o!;Z#o#p#(i#p;'S!;Z;'S;=`#-w<%lO!;Z?O!;fb$i&j(Vp(Y!b!X7`OY!;ZYZ&cZr!;Zrs!<nsw!;Zwx!Lcx!P!;Z!P!Q#&`!Q!^!;Z!^!_#(i!_!}!;Z!}#O#,f#O#P!Dy#P#o!;Z#o#p#(i#p;'S!;Z;'S;=`#-w<%lO!;Z>^!<w`$i&j(Y!b!X7`OY!<nYZ&cZw!<nwx!=yx!P!<n!P!Q!Eq!Q!^!<n!^!_!Gr!_!}!<n!}#O!KS#O#P!Dy#P#o!<n#o#p!Gr#p;'S!<n;'S;=`!L]<%lO!<n<z!>Q^$i&j!X7`OY!=yYZ&cZ!P!=y!P!Q!>|!Q!^!=y!^!_!@c!_!}!=y!}#O!CW#O#P!Dy#P#o!=y#o#p!@c#p;'S!=y;'S;=`!Ek<%lO!=y<z!?Td$i&j!X7`O!^&c!_#W&c#W#X!>|#X#Z&c#Z#[!>|#[#]&c#]#^!>|#^#a&c#a#b!>|#b#g&c#g#h!>|#h#i&c#i#j!>|#j#k!>|#k#m&c#m#n!>|#n#o&c#p;'S&c;'S;=`&w<%lO&c7`!@hX!X7`OY!@cZ!P!@c!P!Q!AT!Q!}!@c!}#O!Ar#O#P!Bq#P;'S!@c;'S;=`!CQ<%lO!@c7`!AYW!X7`#W#X!AT#Z#[!AT#]#^!AT#a#b!AT#g#h!AT#i#j!AT#j#k!AT#m#n!AT7`!AuVOY!ArZ#O!Ar#O#P!B[#P#Q!@c#Q;'S!Ar;'S;=`!Bk<%lO!Ar7`!B_SOY!ArZ;'S!Ar;'S;=`!Bk<%lO!Ar7`!BnP;=`<%l!Ar7`!BtSOY!@cZ;'S!@c;'S;=`!CQ<%lO!@c7`!CTP;=`<%l!@c<z!C][$i&jOY!CWYZ&cZ!^!CW!^!_!Ar!_#O!CW#O#P!DR#P#Q!=y#Q#o!CW#o#p!Ar#p;'S!CW;'S;=`!Ds<%lO!CW<z!DWX$i&jOY!CWYZ&cZ!^!CW!^!_!Ar!_#o!CW#o#p!Ar#p;'S!CW;'S;=`!Ds<%lO!CW<z!DvP;=`<%l!CW<z!EOX$i&jOY!=yYZ&cZ!^!=y!^!_!@c!_#o!=y#o#p!@c#p;'S!=y;'S;=`!Ek<%lO!=y<z!EnP;=`<%l!=y>^!Ezl$i&j(Y!b!X7`OY&}YZ&cZw&}wx&cx!^&}!^!_'}!_#O&}#O#P&c#P#W&}#W#X!Eq#X#Z&}#Z#[!Eq#[#]&}#]#^!Eq#^#a&}#a#b!Eq#b#g&}#g#h!Eq#h#i&}#i#j!Eq#j#k!Eq#k#m&}#m#n!Eq#n#o&}#o#p'}#p;'S&};'S;=`(l<%lO&}8r!GyZ(Y!b!X7`OY!GrZw!Grwx!@cx!P!Gr!P!Q!Hl!Q!}!Gr!}#O!JU#O#P!Bq#P;'S!Gr;'S;=`!J|<%lO!Gr8r!Hse(Y!b!X7`OY'}Zw'}x#O'}#P#W'}#W#X!Hl#X#Z'}#Z#[!Hl#[#]'}#]#^!Hl#^#a'}#a#b!Hl#b#g'}#g#h!Hl#h#i'}#i#j!Hl#j#k!Hl#k#m'}#m#n!Hl#n;'S'};'S;=`(f<%lO'}8r!JZX(Y!bOY!JUZw!JUwx!Arx#O!JU#O#P!B[#P#Q!Gr#Q;'S!JU;'S;=`!Jv<%lO!JU8r!JyP;=`<%l!JU8r!KPP;=`<%l!Gr>^!KZ^$i&j(Y!bOY!KSYZ&cZw!KSwx!CWx!^!KS!^!_!JU!_#O!KS#O#P!DR#P#Q!<n#Q#o!KS#o#p!JU#p;'S!KS;'S;=`!LV<%lO!KS>^!LYP;=`<%l!KS>^!L`P;=`<%l!<n=l!Ll`$i&j(Vp!X7`OY!LcYZ&cZr!Lcrs!=ys!P!Lc!P!Q!Mn!Q!^!Lc!^!_# o!_!}!Lc!}#O#%P#O#P!Dy#P#o!Lc#o#p# o#p;'S!Lc;'S;=`#&Y<%lO!Lc=l!Mwl$i&j(Vp!X7`OY(rYZ&cZr(rrs&cs!^(r!^!_)r!_#O(r#O#P&c#P#W(r#W#X!Mn#X#Z(r#Z#[!Mn#[#](r#]#^!Mn#^#a(r#a#b!Mn#b#g(r#g#h!Mn#h#i(r#i#j!Mn#j#k!Mn#k#m(r#m#n!Mn#n#o(r#o#p)r#p;'S(r;'S;=`*a<%lO(r8Q# vZ(Vp!X7`OY# oZr# ors!@cs!P# o!P!Q#!i!Q!}# o!}#O#$R#O#P!Bq#P;'S# o;'S;=`#$y<%lO# o8Q#!pe(Vp!X7`OY)rZr)rs#O)r#P#W)r#W#X#!i#X#Z)r#Z#[#!i#[#])r#]#^#!i#^#a)r#a#b#!i#b#g)r#g#h#!i#h#i)r#i#j#!i#j#k#!i#k#m)r#m#n#!i#n;'S)r;'S;=`*Z<%lO)r8Q#$WX(VpOY#$RZr#$Rrs!Ars#O#$R#O#P!B[#P#Q# o#Q;'S#$R;'S;=`#$s<%lO#$R8Q#$vP;=`<%l#$R8Q#$|P;=`<%l# o=l#%W^$i&j(VpOY#%PYZ&cZr#%Prs!CWs!^#%P!^!_#$R!_#O#%P#O#P!DR#P#Q!Lc#Q#o#%P#o#p#$R#p;'S#%P;'S;=`#&S<%lO#%P=l#&VP;=`<%l#%P=l#&]P;=`<%l!Lc?O#&kn$i&j(Vp(Y!b!X7`OY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#W%Z#W#X#&`#X#Z%Z#Z#[#&`#[#]%Z#]#^#&`#^#a%Z#a#b#&`#b#g%Z#g#h#&`#h#i%Z#i#j#&`#j#k#&`#k#m%Z#m#n#&`#n#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z9d#(r](Vp(Y!b!X7`OY#(iZr#(irs!Grsw#(iwx# ox!P#(i!P!Q#)k!Q!}#(i!}#O#+`#O#P!Bq#P;'S#(i;'S;=`#,`<%lO#(i9d#)th(Vp(Y!b!X7`OY*gZr*grs'}sw*gwx)rx#O*g#P#W*g#W#X#)k#X#Z*g#Z#[#)k#[#]*g#]#^#)k#^#a*g#a#b#)k#b#g*g#g#h#)k#h#i*g#i#j#)k#j#k#)k#k#m*g#m#n#)k#n;'S*g;'S;=`+Z<%lO*g9d#+gZ(Vp(Y!bOY#+`Zr#+`rs!JUsw#+`wx#$Rx#O#+`#O#P!B[#P#Q#(i#Q;'S#+`;'S;=`#,Y<%lO#+`9d#,]P;=`<%l#+`9d#,cP;=`<%l#(i?O#,o`$i&j(Vp(Y!bOY#,fYZ&cZr#,frs!KSsw#,fwx#%Px!^#,f!^!_#+`!_#O#,f#O#P!DR#P#Q!;Z#Q#o#,f#o#p#+`#p;'S#,f;'S;=`#-q<%lO#,f?O#-tP;=`<%l#,f?O#-zP;=`<%l!;Z07[#.[b$i&j(Vp(Y!b'}0/l!X7`OY!;ZYZ&cZr!;Zrs!<nsw!;Zwx!Lcx!P!;Z!P!Q#&`!Q!^!;Z!^!_#(i!_!}!;Z!}#O#,f#O#P!Dy#P#o!;Z#o#p#(i#p;'S!;Z;'S;=`#-w<%lO!;Z07[#/o_$i&j(Vp(Y!bT0/lOY#/dYZ&cZr#/drs#0nsw#/dwx#4Ox!^#/d!^!_#5}!_#O#/d#O#P#1p#P#o#/d#o#p#5}#p;'S#/d;'S;=`#6|<%lO#/d06j#0w]$i&j(Y!bT0/lOY#0nYZ&cZw#0nwx#1px!^#0n!^!_#3R!_#O#0n#O#P#1p#P#o#0n#o#p#3R#p;'S#0n;'S;=`#3x<%lO#0n05W#1wX$i&jT0/lOY#1pYZ&cZ!^#1p!^!_#2d!_#o#1p#o#p#2d#p;'S#1p;'S;=`#2{<%lO#1p0/l#2iST0/lOY#2dZ;'S#2d;'S;=`#2u<%lO#2d0/l#2xP;=`<%l#2d05W#3OP;=`<%l#1p01O#3YW(Y!bT0/lOY#3RZw#3Rwx#2dx#O#3R#O#P#2d#P;'S#3R;'S;=`#3r<%lO#3R01O#3uP;=`<%l#3R06j#3{P;=`<%l#0n05x#4X]$i&j(VpT0/lOY#4OYZ&cZr#4Ors#1ps!^#4O!^!_#5Q!_#O#4O#O#P#1p#P#o#4O#o#p#5Q#p;'S#4O;'S;=`#5w<%lO#4O00^#5XW(VpT0/lOY#5QZr#5Qrs#2ds#O#5Q#O#P#2d#P;'S#5Q;'S;=`#5q<%lO#5Q00^#5tP;=`<%l#5Q05x#5zP;=`<%l#4O01p#6WY(Vp(Y!bT0/lOY#5}Zr#5}rs#3Rsw#5}wx#5Qx#O#5}#O#P#2d#P;'S#5};'S;=`#6v<%lO#5}01p#6yP;=`<%l#5}07[#7PP;=`<%l#/d)3h#7ab$i&j$Q(Ch(Vp(Y!b!X7`OY!;ZYZ&cZr!;Zrs!<nsw!;Zwx!Lcx!P!;Z!P!Q#&`!Q!^!;Z!^!_#(i!_!}!;Z!}#O#,f#O#P!Dy#P#o!;Z#o#p#(i#p;'S!;Z;'S;=`#-w<%lO!;ZAt#8vb$Z#t$i&j(Vp(Y!b!X7`OY!;ZYZ&cZr!;Zrs!<nsw!;Zwx!Lcx!P!;Z!P!Q#&`!Q!^!;Z!^!_#(i!_!}!;Z!}#O#,f#O#P!Dy#P#o!;Z#o#p#(i#p;'S!;Z;'S;=`#-w<%lO!;Z'Ad#:Zp$i&j(Vp(Y!bs'9tOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!O%Z!O!P!3Y!P!Q%Z!Q![#<_![!^%Z!^!_*g!_!g%Z!g!h!4|!h#O%Z#O#P&c#P#R%Z#R#S#<_#S#U%Z#U#V#?i#V#X%Z#X#Y!4|#Y#b%Z#b#c#>_#c#d#Bq#d#l%Z#l#m#Es#m#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad#<jk$i&j(Vp(Y!bs'9tOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!O%Z!O!P!3Y!P!Q%Z!Q![#<_![!^%Z!^!_*g!_!g%Z!g!h!4|!h#O%Z#O#P&c#P#R%Z#R#S#<_#S#X%Z#X#Y!4|#Y#b%Z#b#c#>_#c#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad#>j_$i&j(Vp(Y!bs'9tOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad#?rd$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q!R#AQ!R!S#AQ!S!^%Z!^!_*g!_#O%Z#O#P&c#P#R%Z#R#S#AQ#S#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad#A]f$i&j(Vp(Y!bs'9tOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q!R#AQ!R!S#AQ!S!^%Z!^!_*g!_#O%Z#O#P&c#P#R%Z#R#S#AQ#S#b%Z#b#c#>_#c#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad#Bzc$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q!Y#DV!Y!^%Z!^!_*g!_#O%Z#O#P&c#P#R%Z#R#S#DV#S#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad#Dbe$i&j(Vp(Y!bs'9tOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q!Y#DV!Y!^%Z!^!_*g!_#O%Z#O#P&c#P#R%Z#R#S#DV#S#b%Z#b#c#>_#c#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad#E|g$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q![#Ge![!^%Z!^!_*g!_!c%Z!c!i#Ge!i#O%Z#O#P&c#P#R%Z#R#S#Ge#S#T%Z#T#Z#Ge#Z#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad#Gpi$i&j(Vp(Y!bs'9tOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q![#Ge![!^%Z!^!_*g!_!c%Z!c!i#Ge!i#O%Z#O#P&c#P#R%Z#R#S#Ge#S#T%Z#T#Z#Ge#Z#b%Z#b#c#>_#c#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z*)x#Il_!g$b$i&j$O)Lv(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z)[#Jv_al$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z04f#LS^h#)`#R-<U(Vp(Y!b$n7`OY*gZr*grs'}sw*gwx)rx!P*g!P!Q#MO!Q!^*g!^!_#Mt!_!`$ f!`#O*g#P;'S*g;'S;=`+Z<%lO*g(n#MXX$k&j(Vp(Y!bOY*gZr*grs'}sw*gwx)rx#O*g#P;'S*g;'S;=`+Z<%lO*g(El#M}Z#r(Ch(Vp(Y!bOY*gZr*grs'}sw*gwx)rx!_*g!_!`#Np!`#O*g#P;'S*g;'S;=`+Z<%lO*g(El#NyX$Q(Ch(Vp(Y!bOY*gZr*grs'}sw*gwx)rx#O*g#P;'S*g;'S;=`+Z<%lO*g(El$ oX#s(Ch(Vp(Y!bOY*gZr*grs'}sw*gwx)rx#O*g#P;'S*g;'S;=`+Z<%lO*g*)x$!ga#`*!Y$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`0z!`!a$#l!a#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(K[$#w_#k(Cl$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z*)x$%Vag!*r#s(Ch$f#|$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`$&[!`!a$'f!a#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KW$&g_#s(Ch$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KW$'qa#r(Ch$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`!a$(v!a#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KW$)R`#r(Ch$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(Kd$*`a(q(Ct$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!a%Z!a!b$+e!b#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KW$+p`$i&j#{(Ch(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z%#`$,}_!|$Ip$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z04f$.X_!S0,v$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(n$/]Z$i&jO!^$0O!^!_$0f!_#i$0O#i#j$0k#j#l$0O#l#m$2^#m#o$0O#o#p$0f#p;'S$0O;'S;=`$4i<%lO$0O(n$0VT_#S$i&jO!^&c!_#o&c#p;'S&c;'S;=`&w<%lO&c#S$0kO_#S(n$0p[$i&jO!Q&c!Q![$1f![!^&c!_!c&c!c!i$1f!i#T&c#T#Z$1f#Z#o&c#o#p$3|#p;'S&c;'S;=`&w<%lO&c(n$1kZ$i&jO!Q&c!Q![$2^![!^&c!_!c&c!c!i$2^!i#T&c#T#Z$2^#Z#o&c#p;'S&c;'S;=`&w<%lO&c(n$2cZ$i&jO!Q&c!Q![$3U![!^&c!_!c&c!c!i$3U!i#T&c#T#Z$3U#Z#o&c#p;'S&c;'S;=`&w<%lO&c(n$3ZZ$i&jO!Q&c!Q![$0O![!^&c!_!c&c!c!i$0O!i#T&c#T#Z$0O#Z#o&c#p;'S&c;'S;=`&w<%lO&c#S$4PR!Q![$4Y!c!i$4Y#T#Z$4Y#S$4]S!Q![$4Y!c!i$4Y#T#Z$4Y#q#r$0f(n$4lP;=`<%l$0O#1[$4z_!Y#)l$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KW$6U`#x(Ch$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z+;p$7c_$i&j(Vp(Y!b(`+4QOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z07[$8qk$i&j(Vp(Y!b(S,2j$_#t(d$I[OY%ZYZ&cZr%Zrs&}st%Ztu$8buw%Zwx(rx}%Z}!O$:f!O!Q%Z!Q![$8b![!^%Z!^!_*g!_!c%Z!c!}$8b!}#O%Z#O#P&c#P#R%Z#R#S$8b#S#T%Z#T#o$8b#o#p*g#p$g%Z$g;'S$8b;'S;=`$<l<%lO$8b+d$:qk$i&j(Vp(Y!b$_#tOY%ZYZ&cZr%Zrs&}st%Ztu$:fuw%Zwx(rx}%Z}!O$:f!O!Q%Z!Q![$:f![!^%Z!^!_*g!_!c%Z!c!}$:f!}#O%Z#O#P&c#P#R%Z#R#S$:f#S#T%Z#T#o$:f#o#p*g#p$g%Z$g;'S$:f;'S;=`$<f<%lO$:f+d$<iP;=`<%l$:f07[$<oP;=`<%l$8b#Jf$<{X!_#Hb(Vp(Y!bOY*gZr*grs'}sw*gwx)rx#O*g#P;'S*g;'S;=`+Z<%lO*g,#x$=sa(x+JY$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p#q$+e#q;'S%Z;'S;=`+a<%lO%Z)>v$?V_!^(CdvBr$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z?O$@a_!q7`$i&j(Vp(Y!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z07[$Aq|$i&j(Vp(Y!b'{0/l$]#t(S,2j(d$I[OX%ZXY+gYZ&cZ[+g[p%Zpq+gqr%Zrs&}st%ZtuEruw%Zwx(rx}%Z}!OGv!O!Q%Z!Q![Er![!^%Z!^!_*g!_!c%Z!c!}Er!}#O%Z#O#P&c#P#R%Z#R#SEr#S#T%Z#T#oEr#o#p*g#p$f%Z$f$g+g$g#BYEr#BY#BZ$A`#BZ$ISEr$IS$I_$A`$I_$JTEr$JT$JU$A`$JU$KVEr$KV$KW$A`$KW&FUEr&FU&FV$A`&FV;'SEr;'S;=`I|<%l?HTEr?HT?HU$A`?HUOEr07[$D|k$i&j(Vp(Y!b'|0/l$]#t(S,2j(d$I[OY%ZYZ&cZr%Zrs&}st%ZtuEruw%Zwx(rx}%Z}!OGv!O!Q%Z!Q![Er![!^%Z!^!_*g!_!c%Z!c!}Er!}#O%Z#O#P&c#P#R%Z#R#SEr#S#T%Z#T#oEr#o#p*g#p$g%Z$g;'SEr;'S;=`I|<%lOEr",
-  tokenizers: [noSemicolon, noSemicolonType, operatorToken, jsx, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, insertSemicolon, new LocalTokenGroup("$S~RRtu[#O#Pg#S#T#|~_P#o#pb~gOx~~jVO#i!P#i#j!U#j#l!P#l#m!q#m;'S!P;'S;=`#v<%lO!P~!UO!U~~!XS!Q![!e!c!i!e#T#Z!e#o#p#Z~!hR!Q![!q!c!i!q#T#Z!q~!tR!Q![!}!c!i!}#T#Z!}~#QR!Q![!P!c!i!P#T#Z!P~#^R!Q![#g!c!i#g#T#Z#g~#jS!Q![#g!c!i#g#T#Z#g#q#r!P~#yP;=`<%l!P~$RO(b~~", 141, 339), new LocalTokenGroup("j~RQYZXz{^~^O(P~~aP!P!Qd~iO(Q~~", 25, 322)],
-  topRules: {"Script":[0,7],"SingleExpression":[1,275],"SingleClassItem":[2,276]},
-  dialects: {jsx: 0, ts: 15098},
+  tokenData: "$Fq07[R!bOX%ZXY+gYZ-yZ[+g[]%Z]^.c^p%Zpq+gqr/mrs3cst:_tuEruvJSvwLkwx! Yxy!'iyz!(sz{!)}{|!,q|}!.O}!O!,q!O!P!/Y!P!Q!9j!Q!R#:O!R![#<_![!]#I_!]!^#Jk!^!_#Ku!_!`$![!`!a$$v!a!b$*T!b!c$,r!c!}Er!}#O$-|#O#P$/W#P#Q$4o#Q#R$5y#R#SEr#S#T$7W#T#o$8b#o#p$<r#p#q$=h#q#r$>x#r#s$@U#s$f%Z$f$g+g$g#BYEr#BY#BZ$A`#BZ$ISEr$IS$I_$A`$I_$I|Er$I|$I}$Dk$I}$JO$Dk$JO$JTEr$JT$JU$A`$JU$KVEr$KV$KW$A`$KW&FUEr&FU&FV$A`&FV;'SEr;'S;=`I|<%l?HTEr?HT?HU$A`?HUOEr(n%d_$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z&j&hT$i&jO!^&c!_#o&c#p;'S&c;'S;=`&w<%lO&c&j&zP;=`<%l&c'|'U]$i&j(Z!bOY&}YZ&cZw&}wx&cx!^&}!^!_'}!_#O&}#O#P&c#P#o&}#o#p'}#p;'S&};'S;=`(l<%lO&}!b(SU(Z!bOY'}Zw'}x#O'}#P;'S'};'S;=`(f<%lO'}!b(iP;=`<%l'}'|(oP;=`<%l&}'[(y]$i&j(WpOY(rYZ&cZr(rrs&cs!^(r!^!_)r!_#O(r#O#P&c#P#o(r#o#p)r#p;'S(r;'S;=`*a<%lO(rp)wU(WpOY)rZr)rs#O)r#P;'S)r;'S;=`*Z<%lO)rp*^P;=`<%l)r'[*dP;=`<%l(r#S*nX(Wp(Z!bOY*gZr*grs'}sw*gwx)rx#O*g#P;'S*g;'S;=`+Z<%lO*g#S+^P;=`<%l*g(n+dP;=`<%l%Z07[+rq$i&j(Wp(Z!b'|0/lOX%ZXY+gYZ&cZ[+g[p%Zpq+gqr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p$f%Z$f$g+g$g#BY%Z#BY#BZ+g#BZ$IS%Z$IS$I_+g$I_$JT%Z$JT$JU+g$JU$KV%Z$KV$KW+g$KW&FU%Z&FU&FV+g&FV;'S%Z;'S;=`+a<%l?HT%Z?HT?HU+g?HUO%Z07[.ST(X#S$i&j'}0/lO!^&c!_#o&c#p;'S&c;'S;=`&w<%lO&c07[.n_$i&j(Wp(Z!b'}0/lOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z)3p/x`$i&j!p),Q(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`0z!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KW1V`#v(Ch$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`2X!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KW2d_#v(Ch$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'At3l_(V':f$i&j(Z!bOY4kYZ5qZr4krs7nsw4kwx5qx!^4k!^!_8p!_#O4k#O#P5q#P#o4k#o#p8p#p;'S4k;'S;=`:X<%lO4k(^4r_$i&j(Z!bOY4kYZ5qZr4krs7nsw4kwx5qx!^4k!^!_8p!_#O4k#O#P5q#P#o4k#o#p8p#p;'S4k;'S;=`:X<%lO4k&z5vX$i&jOr5qrs6cs!^5q!^!_6y!_#o5q#o#p6y#p;'S5q;'S;=`7h<%lO5q&z6jT$d`$i&jO!^&c!_#o&c#p;'S&c;'S;=`&w<%lO&c`6|TOr6yrs7]s;'S6y;'S;=`7b<%lO6y`7bO$d``7eP;=`<%l6y&z7kP;=`<%l5q(^7w]$d`$i&j(Z!bOY&}YZ&cZw&}wx&cx!^&}!^!_'}!_#O&}#O#P&c#P#o&}#o#p'}#p;'S&};'S;=`(l<%lO&}!r8uZ(Z!bOY8pYZ6yZr8prs9hsw8pwx6yx#O8p#O#P6y#P;'S8p;'S;=`:R<%lO8p!r9oU$d`(Z!bOY'}Zw'}x#O'}#P;'S'};'S;=`(f<%lO'}!r:UP;=`<%l8p(^:[P;=`<%l4k%9[:hh$i&j(Wp(Z!bOY%ZYZ&cZq%Zqr<Srs&}st%ZtuCruw%Zwx(rx!^%Z!^!_*g!_!c%Z!c!}Cr!}#O%Z#O#P&c#P#R%Z#R#SCr#S#T%Z#T#oCr#o#p*g#p$g%Z$g;'SCr;'S;=`El<%lOCr(r<__WS$i&j(Wp(Z!bOY<SYZ&cZr<Srs=^sw<Swx@nx!^<S!^!_Bm!_#O<S#O#P>`#P#o<S#o#pBm#p;'S<S;'S;=`Cl<%lO<S(Q=g]WS$i&j(Z!bOY=^YZ&cZw=^wx>`x!^=^!^!_?q!_#O=^#O#P>`#P#o=^#o#p?q#p;'S=^;'S;=`@h<%lO=^&n>gXWS$i&jOY>`YZ&cZ!^>`!^!_?S!_#o>`#o#p?S#p;'S>`;'S;=`?k<%lO>`S?XSWSOY?SZ;'S?S;'S;=`?e<%lO?SS?hP;=`<%l?S&n?nP;=`<%l>`!f?xWWS(Z!bOY?qZw?qwx?Sx#O?q#O#P?S#P;'S?q;'S;=`@b<%lO?q!f@eP;=`<%l?q(Q@kP;=`<%l=^'`@w]WS$i&j(WpOY@nYZ&cZr@nrs>`s!^@n!^!_Ap!_#O@n#O#P>`#P#o@n#o#pAp#p;'S@n;'S;=`Bg<%lO@ntAwWWS(WpOYApZrAprs?Ss#OAp#O#P?S#P;'SAp;'S;=`Ba<%lOAptBdP;=`<%lAp'`BjP;=`<%l@n#WBvYWS(Wp(Z!bOYBmZrBmrs?qswBmwxApx#OBm#O#P?S#P;'SBm;'S;=`Cf<%lOBm#WCiP;=`<%lBm(rCoP;=`<%l<S%9[C}i$i&j(o%1l(Wp(Z!bOY%ZYZ&cZr%Zrs&}st%ZtuCruw%Zwx(rx!Q%Z!Q![Cr![!^%Z!^!_*g!_!c%Z!c!}Cr!}#O%Z#O#P&c#P#R%Z#R#SCr#S#T%Z#T#oCr#o#p*g#p$g%Z$g;'SCr;'S;=`El<%lOCr%9[EoP;=`<%lCr07[FRk$i&j(Wp(Z!b$]#t(T,2j(e$I[OY%ZYZ&cZr%Zrs&}st%ZtuEruw%Zwx(rx}%Z}!OGv!O!Q%Z!Q![Er![!^%Z!^!_*g!_!c%Z!c!}Er!}#O%Z#O#P&c#P#R%Z#R#SEr#S#T%Z#T#oEr#o#p*g#p$g%Z$g;'SEr;'S;=`I|<%lOEr+dHRk$i&j(Wp(Z!b$]#tOY%ZYZ&cZr%Zrs&}st%ZtuGvuw%Zwx(rx}%Z}!OGv!O!Q%Z!Q![Gv![!^%Z!^!_*g!_!c%Z!c!}Gv!}#O%Z#O#P&c#P#R%Z#R#SGv#S#T%Z#T#oGv#o#p*g#p$g%Z$g;'SGv;'S;=`Iv<%lOGv+dIyP;=`<%lGv07[JPP;=`<%lEr(KWJ_`$i&j(Wp(Z!b#p(ChOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KWKl_$i&j$Q(Ch(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z,#xLva(z+JY$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sv%ZvwM{wx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KWNW`$i&j#z(Ch(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'At! c_(Y';W$i&j(WpOY!!bYZ!#hZr!!brs!#hsw!!bwx!$xx!^!!b!^!_!%z!_#O!!b#O#P!#h#P#o!!b#o#p!%z#p;'S!!b;'S;=`!'c<%lO!!b'l!!i_$i&j(WpOY!!bYZ!#hZr!!brs!#hsw!!bwx!$xx!^!!b!^!_!%z!_#O!!b#O#P!#h#P#o!!b#o#p!%z#p;'S!!b;'S;=`!'c<%lO!!b&z!#mX$i&jOw!#hwx6cx!^!#h!^!_!$Y!_#o!#h#o#p!$Y#p;'S!#h;'S;=`!$r<%lO!#h`!$]TOw!$Ywx7]x;'S!$Y;'S;=`!$l<%lO!$Y`!$oP;=`<%l!$Y&z!$uP;=`<%l!#h'l!%R]$d`$i&j(WpOY(rYZ&cZr(rrs&cs!^(r!^!_)r!_#O(r#O#P&c#P#o(r#o#p)r#p;'S(r;'S;=`*a<%lO(r!Q!&PZ(WpOY!%zYZ!$YZr!%zrs!$Ysw!%zwx!&rx#O!%z#O#P!$Y#P;'S!%z;'S;=`!']<%lO!%z!Q!&yU$d`(WpOY)rZr)rs#O)r#P;'S)r;'S;=`*Z<%lO)r!Q!'`P;=`<%l!%z'l!'fP;=`<%l!!b/5|!'t_!l/.^$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z#&U!)O_!k!Lf$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z-!n!*[b$i&j(Wp(Z!b(U%&f#q(ChOY%ZYZ&cZr%Zrs&}sw%Zwx(rxz%Zz{!+d{!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KW!+o`$i&j(Wp(Z!b#n(ChOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z+;x!,|`$i&j(Wp(Z!br+4YOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z,$U!.Z_!]+Jf$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z07[!/ec$i&j(Wp(Z!b!Q.2^OY%ZYZ&cZr%Zrs&}sw%Zwx(rx!O%Z!O!P!0p!P!Q%Z!Q![!3Y![!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z#%|!0ya$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!O%Z!O!P!2O!P!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z#%|!2Z_![!L^$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad!3eg$i&j(Wp(Z!bs'9tOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q![!3Y![!^%Z!^!_*g!_!g%Z!g!h!4|!h#O%Z#O#P&c#P#R%Z#R#S!3Y#S#X%Z#X#Y!4|#Y#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad!5Vg$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx{%Z{|!6n|}%Z}!O!6n!O!Q%Z!Q![!8S![!^%Z!^!_*g!_#O%Z#O#P&c#P#R%Z#R#S!8S#S#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad!6wc$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q![!8S![!^%Z!^!_*g!_#O%Z#O#P&c#P#R%Z#R#S!8S#S#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad!8_c$i&j(Wp(Z!bs'9tOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q![!8S![!^%Z!^!_*g!_#O%Z#O#P&c#P#R%Z#R#S!8S#S#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z07[!9uf$i&j(Wp(Z!b#o(ChOY!;ZYZ&cZr!;Zrs!<nsw!;Zwx!Lcxz!;Zz{#-}{!P!;Z!P!Q#/d!Q!^!;Z!^!_#(i!_!`#7S!`!a#8i!a!}!;Z!}#O#,f#O#P!Dy#P#o!;Z#o#p#(i#p;'S!;Z;'S;=`#-w<%lO!;Z?O!;fb$i&j(Wp(Z!b!X7`OY!;ZYZ&cZr!;Zrs!<nsw!;Zwx!Lcx!P!;Z!P!Q#&`!Q!^!;Z!^!_#(i!_!}!;Z!}#O#,f#O#P!Dy#P#o!;Z#o#p#(i#p;'S!;Z;'S;=`#-w<%lO!;Z>^!<w`$i&j(Z!b!X7`OY!<nYZ&cZw!<nwx!=yx!P!<n!P!Q!Eq!Q!^!<n!^!_!Gr!_!}!<n!}#O!KS#O#P!Dy#P#o!<n#o#p!Gr#p;'S!<n;'S;=`!L]<%lO!<n<z!>Q^$i&j!X7`OY!=yYZ&cZ!P!=y!P!Q!>|!Q!^!=y!^!_!@c!_!}!=y!}#O!CW#O#P!Dy#P#o!=y#o#p!@c#p;'S!=y;'S;=`!Ek<%lO!=y<z!?Td$i&j!X7`O!^&c!_#W&c#W#X!>|#X#Z&c#Z#[!>|#[#]&c#]#^!>|#^#a&c#a#b!>|#b#g&c#g#h!>|#h#i&c#i#j!>|#j#k!>|#k#m&c#m#n!>|#n#o&c#p;'S&c;'S;=`&w<%lO&c7`!@hX!X7`OY!@cZ!P!@c!P!Q!AT!Q!}!@c!}#O!Ar#O#P!Bq#P;'S!@c;'S;=`!CQ<%lO!@c7`!AYW!X7`#W#X!AT#Z#[!AT#]#^!AT#a#b!AT#g#h!AT#i#j!AT#j#k!AT#m#n!AT7`!AuVOY!ArZ#O!Ar#O#P!B[#P#Q!@c#Q;'S!Ar;'S;=`!Bk<%lO!Ar7`!B_SOY!ArZ;'S!Ar;'S;=`!Bk<%lO!Ar7`!BnP;=`<%l!Ar7`!BtSOY!@cZ;'S!@c;'S;=`!CQ<%lO!@c7`!CTP;=`<%l!@c<z!C][$i&jOY!CWYZ&cZ!^!CW!^!_!Ar!_#O!CW#O#P!DR#P#Q!=y#Q#o!CW#o#p!Ar#p;'S!CW;'S;=`!Ds<%lO!CW<z!DWX$i&jOY!CWYZ&cZ!^!CW!^!_!Ar!_#o!CW#o#p!Ar#p;'S!CW;'S;=`!Ds<%lO!CW<z!DvP;=`<%l!CW<z!EOX$i&jOY!=yYZ&cZ!^!=y!^!_!@c!_#o!=y#o#p!@c#p;'S!=y;'S;=`!Ek<%lO!=y<z!EnP;=`<%l!=y>^!Ezl$i&j(Z!b!X7`OY&}YZ&cZw&}wx&cx!^&}!^!_'}!_#O&}#O#P&c#P#W&}#W#X!Eq#X#Z&}#Z#[!Eq#[#]&}#]#^!Eq#^#a&}#a#b!Eq#b#g&}#g#h!Eq#h#i&}#i#j!Eq#j#k!Eq#k#m&}#m#n!Eq#n#o&}#o#p'}#p;'S&};'S;=`(l<%lO&}8r!GyZ(Z!b!X7`OY!GrZw!Grwx!@cx!P!Gr!P!Q!Hl!Q!}!Gr!}#O!JU#O#P!Bq#P;'S!Gr;'S;=`!J|<%lO!Gr8r!Hse(Z!b!X7`OY'}Zw'}x#O'}#P#W'}#W#X!Hl#X#Z'}#Z#[!Hl#[#]'}#]#^!Hl#^#a'}#a#b!Hl#b#g'}#g#h!Hl#h#i'}#i#j!Hl#j#k!Hl#k#m'}#m#n!Hl#n;'S'};'S;=`(f<%lO'}8r!JZX(Z!bOY!JUZw!JUwx!Arx#O!JU#O#P!B[#P#Q!Gr#Q;'S!JU;'S;=`!Jv<%lO!JU8r!JyP;=`<%l!JU8r!KPP;=`<%l!Gr>^!KZ^$i&j(Z!bOY!KSYZ&cZw!KSwx!CWx!^!KS!^!_!JU!_#O!KS#O#P!DR#P#Q!<n#Q#o!KS#o#p!JU#p;'S!KS;'S;=`!LV<%lO!KS>^!LYP;=`<%l!KS>^!L`P;=`<%l!<n=l!Ll`$i&j(Wp!X7`OY!LcYZ&cZr!Lcrs!=ys!P!Lc!P!Q!Mn!Q!^!Lc!^!_# o!_!}!Lc!}#O#%P#O#P!Dy#P#o!Lc#o#p# o#p;'S!Lc;'S;=`#&Y<%lO!Lc=l!Mwl$i&j(Wp!X7`OY(rYZ&cZr(rrs&cs!^(r!^!_)r!_#O(r#O#P&c#P#W(r#W#X!Mn#X#Z(r#Z#[!Mn#[#](r#]#^!Mn#^#a(r#a#b!Mn#b#g(r#g#h!Mn#h#i(r#i#j!Mn#j#k!Mn#k#m(r#m#n!Mn#n#o(r#o#p)r#p;'S(r;'S;=`*a<%lO(r8Q# vZ(Wp!X7`OY# oZr# ors!@cs!P# o!P!Q#!i!Q!}# o!}#O#$R#O#P!Bq#P;'S# o;'S;=`#$y<%lO# o8Q#!pe(Wp!X7`OY)rZr)rs#O)r#P#W)r#W#X#!i#X#Z)r#Z#[#!i#[#])r#]#^#!i#^#a)r#a#b#!i#b#g)r#g#h#!i#h#i)r#i#j#!i#j#k#!i#k#m)r#m#n#!i#n;'S)r;'S;=`*Z<%lO)r8Q#$WX(WpOY#$RZr#$Rrs!Ars#O#$R#O#P!B[#P#Q# o#Q;'S#$R;'S;=`#$s<%lO#$R8Q#$vP;=`<%l#$R8Q#$|P;=`<%l# o=l#%W^$i&j(WpOY#%PYZ&cZr#%Prs!CWs!^#%P!^!_#$R!_#O#%P#O#P!DR#P#Q!Lc#Q#o#%P#o#p#$R#p;'S#%P;'S;=`#&S<%lO#%P=l#&VP;=`<%l#%P=l#&]P;=`<%l!Lc?O#&kn$i&j(Wp(Z!b!X7`OY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#W%Z#W#X#&`#X#Z%Z#Z#[#&`#[#]%Z#]#^#&`#^#a%Z#a#b#&`#b#g%Z#g#h#&`#h#i%Z#i#j#&`#j#k#&`#k#m%Z#m#n#&`#n#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z9d#(r](Wp(Z!b!X7`OY#(iZr#(irs!Grsw#(iwx# ox!P#(i!P!Q#)k!Q!}#(i!}#O#+`#O#P!Bq#P;'S#(i;'S;=`#,`<%lO#(i9d#)th(Wp(Z!b!X7`OY*gZr*grs'}sw*gwx)rx#O*g#P#W*g#W#X#)k#X#Z*g#Z#[#)k#[#]*g#]#^#)k#^#a*g#a#b#)k#b#g*g#g#h#)k#h#i*g#i#j#)k#j#k#)k#k#m*g#m#n#)k#n;'S*g;'S;=`+Z<%lO*g9d#+gZ(Wp(Z!bOY#+`Zr#+`rs!JUsw#+`wx#$Rx#O#+`#O#P!B[#P#Q#(i#Q;'S#+`;'S;=`#,Y<%lO#+`9d#,]P;=`<%l#+`9d#,cP;=`<%l#(i?O#,o`$i&j(Wp(Z!bOY#,fYZ&cZr#,frs!KSsw#,fwx#%Px!^#,f!^!_#+`!_#O#,f#O#P!DR#P#Q!;Z#Q#o#,f#o#p#+`#p;'S#,f;'S;=`#-q<%lO#,f?O#-tP;=`<%l#,f?O#-zP;=`<%l!;Z07[#.[b$i&j(Wp(Z!b(O0/l!X7`OY!;ZYZ&cZr!;Zrs!<nsw!;Zwx!Lcx!P!;Z!P!Q#&`!Q!^!;Z!^!_#(i!_!}!;Z!}#O#,f#O#P!Dy#P#o!;Z#o#p#(i#p;'S!;Z;'S;=`#-w<%lO!;Z07[#/o_$i&j(Wp(Z!bT0/lOY#/dYZ&cZr#/drs#0nsw#/dwx#4Ox!^#/d!^!_#5}!_#O#/d#O#P#1p#P#o#/d#o#p#5}#p;'S#/d;'S;=`#6|<%lO#/d06j#0w]$i&j(Z!bT0/lOY#0nYZ&cZw#0nwx#1px!^#0n!^!_#3R!_#O#0n#O#P#1p#P#o#0n#o#p#3R#p;'S#0n;'S;=`#3x<%lO#0n05W#1wX$i&jT0/lOY#1pYZ&cZ!^#1p!^!_#2d!_#o#1p#o#p#2d#p;'S#1p;'S;=`#2{<%lO#1p0/l#2iST0/lOY#2dZ;'S#2d;'S;=`#2u<%lO#2d0/l#2xP;=`<%l#2d05W#3OP;=`<%l#1p01O#3YW(Z!bT0/lOY#3RZw#3Rwx#2dx#O#3R#O#P#2d#P;'S#3R;'S;=`#3r<%lO#3R01O#3uP;=`<%l#3R06j#3{P;=`<%l#0n05x#4X]$i&j(WpT0/lOY#4OYZ&cZr#4Ors#1ps!^#4O!^!_#5Q!_#O#4O#O#P#1p#P#o#4O#o#p#5Q#p;'S#4O;'S;=`#5w<%lO#4O00^#5XW(WpT0/lOY#5QZr#5Qrs#2ds#O#5Q#O#P#2d#P;'S#5Q;'S;=`#5q<%lO#5Q00^#5tP;=`<%l#5Q05x#5zP;=`<%l#4O01p#6WY(Wp(Z!bT0/lOY#5}Zr#5}rs#3Rsw#5}wx#5Qx#O#5}#O#P#2d#P;'S#5};'S;=`#6v<%lO#5}01p#6yP;=`<%l#5}07[#7PP;=`<%l#/d)3h#7ab$i&j$Q(Ch(Wp(Z!b!X7`OY!;ZYZ&cZr!;Zrs!<nsw!;Zwx!Lcx!P!;Z!P!Q#&`!Q!^!;Z!^!_#(i!_!}!;Z!}#O#,f#O#P!Dy#P#o!;Z#o#p#(i#p;'S!;Z;'S;=`#-w<%lO!;ZAt#8vb$Z#t$i&j(Wp(Z!b!X7`OY!;ZYZ&cZr!;Zrs!<nsw!;Zwx!Lcx!P!;Z!P!Q#&`!Q!^!;Z!^!_#(i!_!}!;Z!}#O#,f#O#P!Dy#P#o!;Z#o#p#(i#p;'S!;Z;'S;=`#-w<%lO!;Z'Ad#:Zp$i&j(Wp(Z!bs'9tOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!O%Z!O!P!3Y!P!Q%Z!Q![#<_![!^%Z!^!_*g!_!g%Z!g!h!4|!h#O%Z#O#P&c#P#R%Z#R#S#<_#S#U%Z#U#V#?i#V#X%Z#X#Y!4|#Y#b%Z#b#c#>_#c#d#Bq#d#l%Z#l#m#Es#m#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad#<jk$i&j(Wp(Z!bs'9tOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!O%Z!O!P!3Y!P!Q%Z!Q![#<_![!^%Z!^!_*g!_!g%Z!g!h!4|!h#O%Z#O#P&c#P#R%Z#R#S#<_#S#X%Z#X#Y!4|#Y#b%Z#b#c#>_#c#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad#>j_$i&j(Wp(Z!bs'9tOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad#?rd$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q!R#AQ!R!S#AQ!S!^%Z!^!_*g!_#O%Z#O#P&c#P#R%Z#R#S#AQ#S#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad#A]f$i&j(Wp(Z!bs'9tOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q!R#AQ!R!S#AQ!S!^%Z!^!_*g!_#O%Z#O#P&c#P#R%Z#R#S#AQ#S#b%Z#b#c#>_#c#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad#Bzc$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q!Y#DV!Y!^%Z!^!_*g!_#O%Z#O#P&c#P#R%Z#R#S#DV#S#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad#Dbe$i&j(Wp(Z!bs'9tOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q!Y#DV!Y!^%Z!^!_*g!_#O%Z#O#P&c#P#R%Z#R#S#DV#S#b%Z#b#c#>_#c#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad#E|g$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q![#Ge![!^%Z!^!_*g!_!c%Z!c!i#Ge!i#O%Z#O#P&c#P#R%Z#R#S#Ge#S#T%Z#T#Z#Ge#Z#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z'Ad#Gpi$i&j(Wp(Z!bs'9tOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!Q%Z!Q![#Ge![!^%Z!^!_*g!_!c%Z!c!i#Ge!i#O%Z#O#P&c#P#R%Z#R#S#Ge#S#T%Z#T#Z#Ge#Z#b%Z#b#c#>_#c#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z*)x#Il_!g$b$i&j$O)Lv(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z)[#Jv_al$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z04f#LS^h#)`#R-<U(Wp(Z!b$n7`OY*gZr*grs'}sw*gwx)rx!P*g!P!Q#MO!Q!^*g!^!_#Mt!_!`$ f!`#O*g#P;'S*g;'S;=`+Z<%lO*g(n#MXX$k&j(Wp(Z!bOY*gZr*grs'}sw*gwx)rx#O*g#P;'S*g;'S;=`+Z<%lO*g(El#M}Z#r(Ch(Wp(Z!bOY*gZr*grs'}sw*gwx)rx!_*g!_!`#Np!`#O*g#P;'S*g;'S;=`+Z<%lO*g(El#NyX$Q(Ch(Wp(Z!bOY*gZr*grs'}sw*gwx)rx#O*g#P;'S*g;'S;=`+Z<%lO*g(El$ oX#s(Ch(Wp(Z!bOY*gZr*grs'}sw*gwx)rx#O*g#P;'S*g;'S;=`+Z<%lO*g*)x$!ga#`*!Y$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`0z!`!a$#l!a#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(K[$#w_#k(Cl$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z*)x$%Vag!*r#s(Ch$f#|$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`$&[!`!a$'f!a#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KW$&g_#s(Ch$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KW$'qa#r(Ch$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`!a$(v!a#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KW$)R`#r(Ch$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(Kd$*`a(r(Ct$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!a%Z!a!b$+e!b#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KW$+p`$i&j#{(Ch(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z%#`$,}_!|$Ip$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z04f$.X_!S0,v$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(n$/]Z$i&jO!^$0O!^!_$0f!_#i$0O#i#j$0k#j#l$0O#l#m$2^#m#o$0O#o#p$0f#p;'S$0O;'S;=`$4i<%lO$0O(n$0VT_#S$i&jO!^&c!_#o&c#p;'S&c;'S;=`&w<%lO&c#S$0kO_#S(n$0p[$i&jO!Q&c!Q![$1f![!^&c!_!c&c!c!i$1f!i#T&c#T#Z$1f#Z#o&c#o#p$3|#p;'S&c;'S;=`&w<%lO&c(n$1kZ$i&jO!Q&c!Q![$2^![!^&c!_!c&c!c!i$2^!i#T&c#T#Z$2^#Z#o&c#p;'S&c;'S;=`&w<%lO&c(n$2cZ$i&jO!Q&c!Q![$3U![!^&c!_!c&c!c!i$3U!i#T&c#T#Z$3U#Z#o&c#p;'S&c;'S;=`&w<%lO&c(n$3ZZ$i&jO!Q&c!Q![$0O![!^&c!_!c&c!c!i$0O!i#T&c#T#Z$0O#Z#o&c#p;'S&c;'S;=`&w<%lO&c#S$4PR!Q![$4Y!c!i$4Y#T#Z$4Y#S$4]S!Q![$4Y!c!i$4Y#T#Z$4Y#q#r$0f(n$4lP;=`<%l$0O#1[$4z_!Y#)l$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z(KW$6U`#x(Ch$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z+;p$7c_$i&j(Wp(Z!b(a+4QOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z07[$8qk$i&j(Wp(Z!b(T,2j$_#t(e$I[OY%ZYZ&cZr%Zrs&}st%Ztu$8buw%Zwx(rx}%Z}!O$:f!O!Q%Z!Q![$8b![!^%Z!^!_*g!_!c%Z!c!}$8b!}#O%Z#O#P&c#P#R%Z#R#S$8b#S#T%Z#T#o$8b#o#p*g#p$g%Z$g;'S$8b;'S;=`$<l<%lO$8b+d$:qk$i&j(Wp(Z!b$_#tOY%ZYZ&cZr%Zrs&}st%Ztu$:fuw%Zwx(rx}%Z}!O$:f!O!Q%Z!Q![$:f![!^%Z!^!_*g!_!c%Z!c!}$:f!}#O%Z#O#P&c#P#R%Z#R#S$:f#S#T%Z#T#o$:f#o#p*g#p$g%Z$g;'S$:f;'S;=`$<f<%lO$:f+d$<iP;=`<%l$:f07[$<oP;=`<%l$8b#Jf$<{X!_#Hb(Wp(Z!bOY*gZr*grs'}sw*gwx)rx#O*g#P;'S*g;'S;=`+Z<%lO*g,#x$=sa(y+JY$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_!`Ka!`#O%Z#O#P&c#P#o%Z#o#p*g#p#q$+e#q;'S%Z;'S;=`+a<%lO%Z)>v$?V_!^(CdvBr$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z?O$@a_!q7`$i&j(Wp(Z!bOY%ZYZ&cZr%Zrs&}sw%Zwx(rx!^%Z!^!_*g!_#O%Z#O#P&c#P#o%Z#o#p*g#p;'S%Z;'S;=`+a<%lO%Z07[$Aq|$i&j(Wp(Z!b'|0/l$]#t(T,2j(e$I[OX%ZXY+gYZ&cZ[+g[p%Zpq+gqr%Zrs&}st%ZtuEruw%Zwx(rx}%Z}!OGv!O!Q%Z!Q![Er![!^%Z!^!_*g!_!c%Z!c!}Er!}#O%Z#O#P&c#P#R%Z#R#SEr#S#T%Z#T#oEr#o#p*g#p$f%Z$f$g+g$g#BYEr#BY#BZ$A`#BZ$ISEr$IS$I_$A`$I_$JTEr$JT$JU$A`$JU$KVEr$KV$KW$A`$KW&FUEr&FU&FV$A`&FV;'SEr;'S;=`I|<%l?HTEr?HT?HU$A`?HUOEr07[$D|k$i&j(Wp(Z!b'}0/l$]#t(T,2j(e$I[OY%ZYZ&cZr%Zrs&}st%ZtuEruw%Zwx(rx}%Z}!OGv!O!Q%Z!Q![Er![!^%Z!^!_*g!_!c%Z!c!}Er!}#O%Z#O#P&c#P#R%Z#R#SEr#S#T%Z#T#oEr#o#p*g#p$g%Z$g;'SEr;'S;=`I|<%lOEr",
+  tokenizers: [noSemicolon, noSemicolonType, operatorToken, jsx, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, insertSemicolon, new LocalTokenGroup("$S~RRtu[#O#Pg#S#T#|~_P#o#pb~gOx~~jVO#i!P#i#j!U#j#l!P#l#m!q#m;'S!P;'S;=`#v<%lO!P~!UO!U~~!XS!Q![!e!c!i!e#T#Z!e#o#p#Z~!hR!Q![!q!c!i!q#T#Z!q~!tR!Q![!}!c!i!}#T#Z!}~#QR!Q![!P!c!i!P#T#Z!P~#^R!Q![#g!c!i#g#T#Z#g~#jS!Q![#g!c!i#g#T#Z#g#q#r!P~#yP;=`<%l!P~$RO(c~~", 141, 340), new LocalTokenGroup("j~RQYZXz{^~^O(Q~~aP!P!Qd~iO(R~~", 25, 323)],
+  topRules: {"Script":[0,7],"SingleExpression":[1,276],"SingleClassItem":[2,277]},
+  dialects: {jsx: 0, ts: 15175},
   dynamicPrecedences: {"80":1,"82":1,"94":1,"169":1,"199":1},
-  specialized: [{term: 326, get: (value) => spec_identifier[value] || -1},{term: 342, get: (value) => spec_word[value] || -1},{term: 95, get: (value) => spec_LessThan[value] || -1}],
-  tokenPrec: 15124
+  specialized: [{term: 327, get: (value) => spec_identifier[value] || -1},{term: 343, get: (value) => spec_word[value] || -1},{term: 95, get: (value) => spec_LessThan[value] || -1}],
+  tokenPrec: 15201
 });
 
 /**
@@ -32041,8 +32283,8 @@ for (let a of eventAttributes)
     GlobalAttrs[a] = null;
 class Schema {
     constructor(extraTags, extraAttrs) {
-        this.tags = Object.assign(Object.assign({}, Tags), extraTags);
-        this.globalAttrs = Object.assign(Object.assign({}, GlobalAttrs), extraAttrs);
+        this.tags = { ...Tags, ...extraTags };
+        this.globalAttrs = { ...GlobalAttrs, ...extraAttrs };
         this.allTags = Object.keys(this.tags);
         this.globalAttrNames = Object.keys(this.globalAttrs);
     }
@@ -32083,7 +32325,7 @@ function openTags(doc, tree) {
 const identifier = /^[:\-\.\w\u00b7-\uffff]*$/;
 function completeTag(state, schema, tree, from, to) {
     let end = /\s*>/.test(state.sliceDoc(to, to + 5)) ? "" : ">";
-    let parent = findParentElement(tree, true);
+    let parent = findParentElement(tree, tree.name == "StartTag" || tree.name == "TagName");
     return { from, to,
         options: allowedChildren(state.doc, parent, schema).map(tagName => ({ label: tagName, type: "type" })).concat(openTags(state.doc, tree).map((tag, i) => ({ label: "/" + tag, apply: "/" + tag + end,
             type: "type", boost: 99 - i }))),
@@ -32154,7 +32396,7 @@ function htmlCompletionFor(schema, context) {
         return tree.parent && /CloseTag$/.test(tree.parent.name) ? completeCloseTag(state, tree, tree.from, pos)
             : completeTag(state, schema, tree, tree.from, pos);
     }
-    else if (tree.name == "StartTag") {
+    else if (tree.name == "StartTag" || tree.name == "IncompleteTag") {
         return completeTag(state, schema, tree, pos, pos);
     }
     else if (tree.name == "StartCloseTag" || tree.name == "IncompleteCloseTag") {
@@ -32221,12 +32463,6 @@ const defaultAttrs = /*@__PURE__*/[
     { name: "style",
         parser: /*@__PURE__*/cssLanguage.parser.configure({ top: "Styles" }) }
 ].concat(/*@__PURE__*/eventAttributes.map(name => ({ name, parser: javascriptLanguage.parser })));
-/**
-A language provider based on the [Lezer HTML
-parser](https://github.com/lezer-parser/html), extended with the
-JavaScript and CSS parsers to parse the content of `<script>` and
-`<style>` tags.
-*/
 const htmlPlain = /*@__PURE__*/LRLanguage.define({
     name: "html",
     parser: /*@__PURE__*/parser$2.configure({
@@ -32272,7 +32508,7 @@ const htmlPlain = /*@__PURE__*/LRLanguage.define({
     languageData: {
         commentTokens: { block: { open: "<!--", close: "-->" } },
         indentOnInput: /^\s*<\/\w+\W$/,
-        wordChars: "-._"
+        wordChars: "-_"
     }
 });
 /**
@@ -32362,8 +32598,7 @@ var index$1 = /*#__PURE__*/Object.freeze({
   html: html,
   htmlCompletionSource: htmlCompletionSource,
   htmlCompletionSourceWith: htmlCompletionSourceWith,
-  htmlLanguage: htmlLanguage,
-  htmlPlain: htmlPlain
+  htmlLanguage: htmlLanguage
 });
 
 const data = /*@__PURE__*/defineLanguageFacet({ commentTokens: { block: { open: "<!--", close: "-->" } } });
@@ -32557,17 +32792,11 @@ function normalizeIndent(content, state) {
     return space + content.slice(blank);
 }
 /**
-This command, when invoked in Markdown context with cursor
-selection(s), will create a new line with the markup for
-blockquotes and lists that were active on the old line. If the
-cursor was directly after the end of the markup for the old line,
-trailing whitespace and list markers are removed from that line.
-
-The command does nothing in non-Markdown context, so it should
-not be used as the only binding for Enter (even in a Markdown
-document, HTML and code regions might use a different language).
+Returns a command like
+[`insertNewlineContinueMarkup`](https://codemirror.net/6/docs/ref/#lang-markdown.insertNewlineContinueMarkup),
+allowing further configuration.
 */
-const insertNewlineContinueMarkup = ({ state, dispatch }) => {
+const insertNewlineContinueMarkupCommand = (config = {}) => ({ state, dispatch }) => {
     let tree = syntaxTree(state), { doc } = state;
     let dont = null, changes = state.changeByRange(range => {
         if (!range.empty || !markdownLanguage.isActiveAt(state, range.from, -1) && !markdownLanguage.isActiveAt(state, range.from, 1))
@@ -32587,7 +32816,8 @@ const insertNewlineContinueMarkup = ({ state, dispatch }) => {
             let first = inner.node.firstChild, second = inner.node.getChild("ListItem", "ListItem");
             // Not second item or blank line before: delete a level of markup
             if (first.to >= pos || second && second.to < pos ||
-                line.from > 0 && !/[^\s>]/.test(doc.lineAt(line.from - 1).text)) {
+                line.from > 0 && !/[^\s>]/.test(doc.lineAt(line.from - 1).text) ||
+                config.nonTightLists === false) {
                 let next = context.length > 1 ? context[context.length - 2] : null;
                 let delTo, insert = "";
                 if (next && next.item) { // Re-add marker for the list at the next level
@@ -32645,6 +32875,18 @@ const insertNewlineContinueMarkup = ({ state, dispatch }) => {
     dispatch(state.update(changes, { scrollIntoView: true, userEvent: "input" }));
     return true;
 };
+/**
+This command, when invoked in Markdown context with cursor
+selection(s), will create a new line with the markup for
+blockquotes and lists that were active on the old line. If the
+cursor was directly after the end of the markup for the old line,
+trailing whitespace and list markers are removed from that line.
+
+The command does nothing in non-Markdown context, so it should
+not be used as the only binding for Enter (even in a Markdown
+document, HTML and code regions might use a different language).
+*/
+const insertNewlineContinueMarkup = /*@__PURE__*/insertNewlineContinueMarkupCommand();
 function isMark(node) {
     return node.name == "QuoteMark" || node.name == "ListMark";
 }
@@ -32755,11 +32997,13 @@ const htmlNoMatch = /*@__PURE__*/html({ matchClosingTags: false });
 Markdown language support.
 */
 function markdown(config = {}) {
-    let { codeLanguages, defaultCodeLanguage, addKeymap = true, base: { parser } = commonmarkLanguage, completeHTMLTags = true, htmlTagLanguage = htmlNoMatch } = config;
+    let { codeLanguages, defaultCodeLanguage, addKeymap = true, base: { parser } = commonmarkLanguage, completeHTMLTags = true, pasteURLAsLink: pasteURL = true, htmlTagLanguage = htmlNoMatch } = config;
     if (!(parser instanceof MarkdownParser))
         throw new RangeError("Base parser provided to `markdown` should be a Markdown parser");
     let extensions = config.extensions ? [config.extensions] : [];
     let support = [htmlTagLanguage.support, headerIndent], defaultCode;
+    if (pasteURL)
+        support.push(pasteURLAsLink);
     if (defaultCodeLanguage instanceof LanguageSupport) {
         support.push(defaultCodeLanguage.support);
         defaultCode = defaultCodeLanguage.language;
@@ -32800,22 +33044,63 @@ function htmlTagCompletions() {
     let result = htmlCompletionSource(new CompletionContext(EditorState.create({ extensions: htmlNoMatch }), 0, true));
     return _tagCompletions = result ? result.options : [];
 }
+const nonPlainText = /code|horizontalrule|html|link|comment|processing|escape|entity|image|mark|url/i;
+/**
+An extension that intercepts pastes when the pasted content looks
+like a URL and the selection is non-empty and selects regular
+text, making the selection a link with the pasted URL as target.
+*/
+const pasteURLAsLink = /*@__PURE__*/EditorView.domEventHandlers({
+    paste: (event, view) => {
+        var _a;
+        let { main } = view.state.selection;
+        if (main.empty)
+            return false;
+        let link = (_a = event.clipboardData) === null || _a === void 0 ? void 0 : _a.getData("text/plain");
+        if (!link || !/^(https?:\/\/|mailto:|xmpp:|www\.)/.test(link))
+            return false;
+        if (/^www\./.test(link))
+            link = "https://" + link;
+        if (!markdownLanguage.isActiveAt(view.state, main.from, 1))
+            return false;
+        let tree = syntaxTree(view.state), crossesNode = false;
+        // Verify that no nodes are started/ended between the selection
+        // points, and we're not inside any non-plain-text construct.
+        tree.iterate({
+            from: main.from, to: main.to,
+            enter: node => { if (node.from > main.from || nonPlainText.test(node.name))
+                crossesNode = true; },
+            leave: node => { if (node.to < main.to)
+                crossesNode = true; }
+        });
+        if (crossesNode)
+            return false;
+        view.dispatch({
+            changes: [{ from: main.from, insert: "[" }, { from: main.to, insert: `](${link})` }],
+            userEvent: "input.paste",
+            scrollIntoView: true
+        });
+        return true;
+    }
+});
 
 var index = /*#__PURE__*/Object.freeze({
   __proto__: null,
   commonmarkLanguage: commonmarkLanguage,
   deleteMarkupBackward: deleteMarkupBackward,
   insertNewlineContinueMarkup: insertNewlineContinueMarkup,
+  insertNewlineContinueMarkupCommand: insertNewlineContinueMarkupCommand,
   markdown: markdown,
   markdownKeymap: markdownKeymap,
-  markdownLanguage: markdownLanguage
+  markdownLanguage: markdownLanguage,
+  pasteURLAsLink: pasteURLAsLink
 });
 
 function legacy(parser) {
     return new LanguageSupport(StreamLanguage.define(parser));
 }
 function sql(dialectName) {
-    return import('./index-B_1xmUtX.js').then(m => m.sql({ dialect: m[dialectName] }));
+    return import('./index-BqXtEIdV.js').then(m => m.sql({ dialect: m[dialectName] }));
 }
 /**
 An array of language descriptions for known language packages.
@@ -32826,7 +33111,7 @@ const languages = [
         name: "C",
         extensions: ["c", "h", "ino"],
         load() {
-            return import('./index-mpANyKnY.js').then(m => m.cpp());
+            return import('./index-BSuTjBN0.js').then(m => m.cpp());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -32834,7 +33119,7 @@ const languages = [
         alias: ["cpp"],
         extensions: ["cpp", "c++", "cc", "cxx", "hpp", "h++", "hh", "hxx"],
         load() {
-            return import('./index-mpANyKnY.js').then(m => m.cpp());
+            return import('./index-BSuTjBN0.js').then(m => m.cpp());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -32854,7 +33139,7 @@ const languages = [
         name: "Go",
         extensions: ["go"],
         load() {
-            return import('./index-g7rHvElj.js').then(m => m.go());
+            return import('./index-BQyIiIXt.js').then(m => m.go());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -32869,7 +33154,7 @@ const languages = [
         name: "Java",
         extensions: ["java"],
         load() {
-            return import('./index-BSx9cZJa.js').then(m => m.java());
+            return import('./index-Ck52Yiai.js').then(m => m.java());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -32881,11 +33166,18 @@ const languages = [
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
+        name: "Jinja",
+        extensions: ["j2", "jinja", "jinja2"],
+        load() {
+            return import('./index-DzHaHdrb.js').then(m => m.jinja());
+        }
+    }),
+    /*@__PURE__*/LanguageDescription.of({
         name: "JSON",
         alias: ["json5"],
         extensions: ["json", "map"],
         load() {
-            return import('./index-BTRSvrly.js').then(m => m.json());
+            return import('./index-BVZBrSyu.js').then(m => m.json());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -32899,14 +33191,14 @@ const languages = [
         name: "LESS",
         extensions: ["less"],
         load() {
-            return import('./index-BLRVdi98.js').then(m => m.less());
+            return import('./index-BpfCVsjW.js').then(m => m.less());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "Liquid",
         extensions: ["liquid"],
         load() {
-            return import('./index-ChpamVog.js').then(m => m.liquid());
+            return import('./index-CUSgFBzP.js').then(m => m.liquid());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -32932,7 +33224,7 @@ const languages = [
         name: "PHP",
         extensions: ["php", "php3", "php4", "php5", "php7", "phtml"],
         load() {
-            return import('./index-COyRQME9.js').then(m => m.php());
+            return import('./index-DIxujqQj.js').then(m => m.php());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -32949,28 +33241,28 @@ const languages = [
         extensions: ["BUILD", "bzl", "py", "pyw"],
         filename: /^(BUCK|BUILD)$/,
         load() {
-            return import('./index-BeOZF8J5.js').then(m => m.python());
+            return import('./index-894AjRni.js').then(m => m.python());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "Rust",
         extensions: ["rs"],
         load() {
-            return import('./index-C916aBIe.js').then(m => m.rust());
+            return import('./index-DpX6alfm.js').then(m => m.rust());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "Sass",
         extensions: ["sass"],
         load() {
-            return import('./index-BD9Ing3_.js').then(m => m.sass({ indented: true }));
+            return import('./index-Bijzs1zO.js').then(m => m.sass({ indented: true }));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "SCSS",
         extensions: ["scss"],
         load() {
-            return import('./index-BD9Ing3_.js').then(m => m.sass());
+            return import('./index-Bijzs1zO.js').then(m => m.sass());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33001,7 +33293,7 @@ const languages = [
         name: "WebAssembly",
         extensions: ["wat", "wast"],
         load() {
-            return import('./index-DQKEsrVp.js').then(m => m.wast());
+            return import('./index-HTwdFDl4.js').then(m => m.wast());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33009,7 +33301,7 @@ const languages = [
         alias: ["rss", "wsdl", "xsd"],
         extensions: ["xml", "xsl", "xsd", "svg"],
         load() {
-            return import('./index-wyhnyTSW.js').then(m => m.xml());
+            return import('./index-BAaqOvHY.js').then(m => m.xml());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33017,7 +33309,7 @@ const languages = [
         alias: ["yml"],
         extensions: ["yaml", "yml"],
         load() {
-            return import('./index-CGpgRw_e.js').then(m => m.yaml());
+            return import('./index-CLIarfrW.js').then(m => m.yaml());
         }
     }),
     // Legacy modes ported from CodeMirror 5
@@ -33069,7 +33361,7 @@ const languages = [
         alias: ["csharp", "cs"],
         extensions: ["cs"],
         load() {
-            return import('./clike-BDEm5Ptv.js').then(m => legacy(m.csharp));
+            return import('./clike-DuTEPolo.js').then(m => legacy(m.csharp));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33149,7 +33441,7 @@ const languages = [
         name: "Dart",
         extensions: ["dart"],
         load() {
-            return import('./clike-BDEm5Ptv.js').then(m => legacy(m.dart));
+            return import('./clike-DuTEPolo.js').then(m => legacy(m.dart));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33163,7 +33455,7 @@ const languages = [
         name: "Dockerfile",
         filename: /^Dockerfile$/,
         load() {
-            return import('./dockerfile-D0MivFIF.js').then(m => legacy(m.dockerFile));
+            return import('./dockerfile-Bc2C4Ut8.js').then(m => legacy(m.dockerFile));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33231,7 +33523,7 @@ const languages = [
         name: "Factor",
         extensions: ["factor"],
         load() {
-            return import('./factor-BVWHwYpu.js').then(m => legacy(m.factor));
+            return import('./factor-3HKrNxCe.js').then(m => legacy(m.factor));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33327,13 +33619,6 @@ const languages = [
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
-        name: "Jinja2",
-        extensions: ["j2", "jinja", "jinja2"],
-        load() {
-            return import('./jinja2-D9k5QrXv.js').then(m => legacy(m.jinja2));
-        }
-    }),
-    /*@__PURE__*/LanguageDescription.of({
         name: "Julia",
         extensions: ["jl"],
         load() {
@@ -33344,7 +33629,7 @@ const languages = [
         name: "Kotlin",
         extensions: ["kt", "kts"],
         load() {
-            return import('./clike-BDEm5Ptv.js').then(m => legacy(m.kotlin));
+            return import('./clike-DuTEPolo.js').then(m => legacy(m.kotlin));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33408,7 +33693,7 @@ const languages = [
         name: "NSIS",
         extensions: ["nsh", "nsi"],
         load() {
-            return import('./nsis-B5ggMLQ9.js').then(m => legacy(m.nsis));
+            return import('./nsis-C_lWXakX.js').then(m => legacy(m.nsis));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33423,7 +33708,7 @@ const languages = [
         alias: ["objective-c", "objc"],
         extensions: ["m"],
         load() {
-            return import('./clike-BDEm5Ptv.js').then(m => legacy(m.objectiveC));
+            return import('./clike-DuTEPolo.js').then(m => legacy(m.objectiveC));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33431,7 +33716,7 @@ const languages = [
         alias: ["objective-c++", "objc++"],
         extensions: ["mm"],
         load() {
-            return import('./clike-BDEm5Ptv.js').then(m => legacy(m.objectiveCpp));
+            return import('./clike-DuTEPolo.js').then(m => legacy(m.objectiveCpp));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33517,7 +33802,7 @@ const languages = [
         name: "Q",
         extensions: ["q"],
         load() {
-            return import('./q-D2Hjhl2C.js').then(m => legacy(m.q));
+            return import('./q-kdDZprHD.js').then(m => legacy(m.q));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33561,7 +33846,7 @@ const languages = [
         name: "Scala",
         extensions: ["scala"],
         load() {
-            return import('./clike-BDEm5Ptv.js').then(m => legacy(m.scala));
+            return import('./clike-DuTEPolo.js').then(m => legacy(m.scala));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33626,7 +33911,7 @@ const languages = [
         name: "Squirrel",
         extensions: ["nut"],
         load() {
-            return import('./clike-BDEm5Ptv.js').then(m => legacy(m.squirrel));
+            return import('./clike-DuTEPolo.js').then(m => legacy(m.squirrel));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33694,7 +33979,7 @@ const languages = [
         name: "TOML",
         extensions: ["toml"],
         load() {
-            return import('./toml-t_IhJu83.js').then(m => legacy(m.toml));
+            return import('./toml-D3FQuihs.js').then(m => legacy(m.toml));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33769,7 +34054,7 @@ const languages = [
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "XQuery",
-        extensions: ["xy", "xquery"],
+        extensions: ["xy", "xquery", "xq", "xqm", "xqy"],
         load() {
             return import('./xquery-Dd4TBzXv.js').then(m => legacy(m.xQuery));
         }
@@ -33813,13 +34098,13 @@ const languages = [
         name: "Vue",
         extensions: ["vue"],
         load() {
-            return import('./index-CAongLIp.js').then(m => m.vue());
+            return import('./index-CqsFpoQO.js').then(m => m.vue());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "Angular Template",
         load() {
-            return import('./index-D9LLx0D_.js').then(m => m.angular());
+            return import('./index-DRK8ox9q.js').then(m => m.angular());
         }
     })
 ];
@@ -34002,51 +34287,52 @@ This line is only separated by a single newline, so it's a separate line in the 
 `;
 
 // Helper module for styling options
-const generalContent$n = {
+const generalContent$r = {
     fontSize: '14px',
     fontFamily: 'JetBrains Mono, Consolas, monospace',
     lineHeight: '1.6',
 };
-const generalCursor$n = {
+const generalCursor$p = {
     borderLeftWidth: '2px',
 };
-const generalDiff$n = {
+const generalDiff$r = {
     insertedTextDecoration: 'none',
     deletedTextDecoration: 'line-through',
     insertedLinePadding: '1px 3px',
     borderRadious: '3px'};
-const generalGutter$n = {
+const generalGutter$r = {
     border: 'none',
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
-const generalPanel$n = {
+const generalPanel$r = {
     border: 'none',
     borderRadius: '4px',
     padding: '2px 10px',
 };
-const generalLine$n = {
+const generalLine$r = {
     borderRadius: '2px',
 };
-const generalMatching$n = {
+const generalMatching$r = {
     borderRadius: '2px',
 };
-const generalPlaceholder$n = {
+const generalPlaceholder$r = {
     borderRadius: '4px',
     padding: '0 5px',
     margin: '0 2px',
 };
-const generalScroller$n = {
+const generalScroller$r = {
     width: '12px',
     height: '12px',
     borderRadius: '6px',
 };
-const generalSearchField$n = {
+const generalSearchField$r = {
     borderRadius: '4px',
     padding: '2px 6px',
 };
-const generalTooltip$n = {
+const generalTooltip$r = {
     borderRadius: '4px',
     borderRadiusSelected: '3px',
     lineHeight: '1.3',
@@ -34103,12 +34389,12 @@ function applyMergeRevertStyles(styles) {
 }
 
 // Enhanced Abcdef theme colors with improved contrast and harmony
-const base00$m = '#0a0e14', // Background (slightly deeper for better contrast)
-base01$l = '#e0edff', // Foreground (slightly bluer tint for better readability)
-base02$l = '#3a4a5f', // Selection (richer blue tone)
-base03$m = '#242936', // Gutter background (distinguished from selection)
-base04$m = '#d8e1f0', // Gutter foreground (softer white)
-base05$m = '#4fc1ff', // Caret (bright cyan blue for visibility)
+const base00$q = '#0a0e14', // Background (slightly deeper for better contrast)
+base01$p = '#e0edff', // Foreground (slightly bluer tint for better readability)
+base02$p = '#3a4a5f', // Selection (richer blue tone)
+base03$q = '#242936', // Gutter background (distinguished from selection)
+base04$q = '#d8e1f0', // Gutter foreground (softer white)
+base05$p = '#4fc1ff', // Caret (bright cyan blue for visibility)
 base06$m = '#3a4a5f40', // Line highlight with balanced opacity
 base07$m = '#1a2030', // Dark background for panels
 base08$l = '#efbb24', // Keyword (warm gold instead of darkgoldenrod)
@@ -34120,49 +34406,49 @@ base0D$k = '#abcdef', // Variable (keeping the theme's signature color)
 base0E$i = '#ffcc44', // Type Name (warmer yellow)
 base0F$f = '#99c2ff', // Tag Name (light blue)
 // UI elements
-invalid$m = '#ff5370', // Invalid color (more visible red)
-darkBackground$i = base07$m, highlightBackground$m = base06$m, tooltipBackground$m = '#0f1521', // Darker tooltip for better contrast
-cursor$n = base05$m, selection$k = base02$l, selectionForeground$2 = '#ffffff', // Selection text color
-activeBracketBg$m = '#3a4a5f60', // Active bracket background
-activeBracketBorder$m = '#abcdef', // Active bracket border (signature color);
+invalid$q = '#ff5370', // Invalid color (more visible red)
+darkBackground$l = base07$m, highlightBackground$n = base06$m, tooltipBackground$q = '#0f1521', // Darker tooltip for better contrast
+cursor$r = base05$p, selection$n = base02$p, selectionForeground$2 = '#ffffff', // Selection text color
+activeBracketBg$q = '#3a4a5f60', // Active bracket background
+activeBracketBorder$q = '#abcdef', // Active bracket border (signature color);
 // Diff/merge specific colors
-addedBackground$n = '#1d391d4d', // Dark green for insertions
-removedBackground$n = '#391d1d08', // Dark red for deletions
-addedText$n = '#7aecb3', // Bright mint green for added text
-removedText$n = '#ff8a80'; // Soft red for removed text
+addedBackground$r = '#1d391d4d', // Dark green for insertions
+removedBackground$r = '#391d1d08', // Dark red for deletions
+addedText$r = '#7aecb3', // Bright mint green for added text
+removedText$r = '#ff8a80'; // Soft red for removed text
 /**
  * Enhanced editor theme styles for Abcdef
  */
 const abcdefTheme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base01$l,
-        backgroundColor: base00$m,
-        fontSize: generalContent$n.fontSize,
-        fontFamily: generalContent$n.fontFamily,
+        color: base01$p,
+        backgroundColor: base00$q,
+        fontSize: generalContent$r.fontSize,
+        fontFamily: generalContent$r.fontFamily,
     },
     // Content and cursor
     '.cm-content': {
-        caretColor: cursor$n,
-        lineHeight: generalContent$n.lineHeight,
+        caretColor: cursor$r,
+        lineHeight: generalContent$r.lineHeight,
     },
     '.cm-cursor, .cm-dropCursor': {
-        borderLeftColor: cursor$n,
-        borderLeftWidth: generalCursor$n.borderLeftWidth,
+        borderLeftColor: cursor$r,
+        borderLeftWidth: generalCursor$p.borderLeftWidth,
     },
     '.cm-fat-cursor': {
-        backgroundColor: `${cursor$n}99`,
-        color: base00$m,
+        backgroundColor: `${cursor$r}99`,
+        color: base00$q,
     },
     // Selection
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-        backgroundColor: selection$k,
+        backgroundColor: selection$n,
     },
     // Search functionality
     '.cm-searchMatch': {
         backgroundColor: `${base0F$f}40`,
         outline: `1px solid ${base0F$f}`,
-        borderRadius: generalSearchField$n.borderRadius,
+        borderRadius: generalSearchField$r.borderRadius,
         '& span': {
             color: selectionForeground$2,
         },
@@ -34170,20 +34456,20 @@ const abcdefTheme = /*@__PURE__*/EditorView.theme({
     '.cm-searchMatch.cm-searchMatch-selected': {
         backgroundColor: '#38465b63',
         outline: `3px solid ${base0F$f}`,
-        padding: generalSearchField$n.padding,
+        padding: generalSearchField$r.padding,
         '& span': {
             color: selectionForeground$2,
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
-        color: base04$m,
-        borderRadius: generalSearchField$n.borderRadius,
-        padding: generalSearchField$n.padding,
+        color: base04$q,
+        borderRadius: generalSearchField$r.borderRadius,
+        padding: generalSearchField$r.padding,
     },
     // Panels
     '.cm-panels': {
-        backgroundColor: darkBackground$i,
-        color: base04$m,
+        backgroundColor: darkBackground$l,
+        color: base04$q,
     },
     '.cm-panels.cm-panels-top': {
         borderBottom: '2px solid #1c2838',
@@ -34192,40 +34478,42 @@ const abcdefTheme = /*@__PURE__*/EditorView.theme({
         borderTop: '2px solid #1c2838',
     },
     '.cm-panel button': {
-        backgroundColor: base02$l,
-        color: base01$l,
-        border: generalPanel$n.border,
-        borderRadius: generalPanel$n.borderRadius,
-        padding: generalPanel$n.padding,
+        backgroundColor: base02$p,
+        color: base01$p,
+        border: generalPanel$r.border,
+        borderRadius: generalPanel$r.borderRadius,
+        padding: generalPanel$r.padding,
     },
     '.cm-panel button:hover': {
         backgroundColor: '#4a5a6f',
     },
     // Line highlighting
     '.cm-activeLine': {
-        backgroundColor: highlightBackground$m,
-        borderRadius: generalLine$n.borderRadius,
+        backgroundColor: highlightBackground$n,
+        borderRadius: generalLine$r.borderRadius,
     },
     // Gutters
     '.cm-gutters': {
-        backgroundColor: base03$m,
-        color: base04$m,
-        border: generalGutter$n.border,
-        paddingRight: generalGutter$n.paddingRight,
+        backgroundColor: base03$q,
+        color: base04$q,
+        border: generalGutter$r.border,
+        paddingRight: generalGutter$r.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: highlightBackground$m,
+        backgroundColor: highlightBackground$n,
         color: '#ffffff',
-        fontWeight: generalGutter$n.fontWeight,
+        fontWeight: generalGutter$r.fontWeight,
     },
     '.cm-lineNumbers': {
-        fontSize: generalGutter$n.fontSize,
+        fontSize: generalGutter$r.fontSize,
+        lineHeight: generalGutter$r.lineHeight,
     },
     '.cm-foldGutter': {
-        fontSize: generalGutter$n.fontSize,
+        fontSize: generalGutter$r.fontSize,
+        lineHeight: generalGutter$r.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
-        color: base04$m,
+        color: base04$q,
         cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
@@ -34234,63 +34522,63 @@ const abcdefTheme = /*@__PURE__*/EditorView.theme({
     // Diff/Merge View Styles
     // Inserted/Added Content
     '.cm-insertedLine': {
-        textDecoration: generalDiff$n.insertedTextDecoration,
-        backgroundColor: addedBackground$n,
-        color: addedText$n,
-        padding: generalDiff$n.insertedLinePadding,
-        borderRadius: generalDiff$n.borderRadious,
+        textDecoration: generalDiff$r.insertedTextDecoration,
+        backgroundColor: addedBackground$r,
+        color: addedText$r,
+        padding: generalDiff$r.insertedLinePadding,
+        borderRadius: generalDiff$r.borderRadious,
     },
     'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
-        textDecoration: generalDiff$n.insertedTextDecoration,
-        backgroundColor: `${addedBackground$n} !important`,
-        color: addedText$n,
-        padding: generalDiff$n.insertedLinePadding,
-        borderRadius: generalDiff$n.borderRadious,
-        border: `1px solid ${addedText$n}40`,
+        textDecoration: generalDiff$r.insertedTextDecoration,
+        backgroundColor: `${addedBackground$r} !important`,
+        color: addedText$r,
+        padding: generalDiff$r.insertedLinePadding,
+        borderRadius: generalDiff$r.borderRadious,
+        border: `1px solid ${addedText$r}40`,
     },
     'ins.cm-insertedLine .cm-changedText': {
         background: 'transparent !important',
     },
     // Deleted/Removed Content
     '.cm-deletedLine': {
-        textDecoration: generalDiff$n.deletedTextDecoration,
-        backgroundColor: removedBackground$n,
-        color: removedText$n,
-        padding: generalDiff$n.insertedLinePadding,
-        borderRadius: generalDiff$n.borderRadious,
+        textDecoration: generalDiff$r.deletedTextDecoration,
+        backgroundColor: removedBackground$r,
+        color: removedText$r,
+        padding: generalDiff$r.insertedLinePadding,
+        borderRadius: generalDiff$r.borderRadious,
     },
     'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
-        textDecoration: generalDiff$n.deletedTextDecoration,
-        backgroundColor: `${removedBackground$n} !important`,
-        color: removedText$n,
-        padding: generalDiff$n.insertedLinePadding,
-        borderRadius: generalDiff$n.borderRadious,
-        border: `1px solid ${removedText$n}40`,
+        textDecoration: generalDiff$r.deletedTextDecoration,
+        backgroundColor: `${removedBackground$r} !important`,
+        color: removedText$r,
+        padding: generalDiff$r.insertedLinePadding,
+        borderRadius: generalDiff$r.borderRadious,
+        border: `1px solid ${removedText$r}40`,
     },
     'del .cm-deletedText, del .cm-changedText': {
         background: 'transparent !important',
     },
     // Tooltips and autocomplete
     '.cm-tooltip': {
-        backgroundColor: tooltipBackground$m,
+        backgroundColor: tooltipBackground$q,
         border: '1px solid #3a4a5f',
-        borderRadius: generalTooltip$n.borderRadius,
-        padding: generalTooltip$n.padding,
+        borderRadius: generalTooltip$r.borderRadius,
+        padding: generalTooltip$r.padding,
         boxShadow: '0 6px 12px rgba(0, 0, 0, 0.3)',
     },
     '.cm-tooltip-autocomplete': {
         '& > ul > li': {
-            padding: generalTooltip$n.padding,
-            lineHeight: generalTooltip$n.lineHeight,
+            padding: generalTooltip$r.padding,
+            lineHeight: generalTooltip$r.lineHeight,
         },
         '& > ul > li[aria-selected]': {
             backgroundColor: '#3a4a5f',
             color: '#e0edff',
-            borderRadius: generalTooltip$n.borderRadiusSelected,
+            borderRadius: generalTooltip$r.borderRadiusSelected,
         },
         '& > ul > li > span.cm-completionIcon': {
             color: base0D$k,
-            paddingRight: generalTooltip$n.paddingRight,
+            paddingRight: generalTooltip$r.paddingRight,
         },
         '& > ul > li > span.cm-completionDetail': {
             color: base0A$k,
@@ -34302,79 +34590,79 @@ const abcdefTheme = /*@__PURE__*/EditorView.theme({
         borderBottomColor: 'transparent',
     },
     '.cm-tooltip .cm-tooltip-arrow:after': {
-        borderTopColor: tooltipBackground$m,
-        borderBottomColor: tooltipBackground$m,
+        borderTopColor: tooltipBackground$q,
+        borderBottomColor: tooltipBackground$q,
     },
     // Diagnostics styling
     '.cm-diagnostic': {
         '&-error': {
-            borderLeft: `3px solid ${invalid$m}`,
+            borderLeft: `3px solid ${invalid$q}`,
         },
         '&-warning': {
             borderLeft: `3px solid ${base08$l}`,
         },
         '&-info': {
-            borderLeft: `3px solid ${base05$m}`,
+            borderLeft: `3px solid ${base05$p}`,
         },
     },
     '.cm-lintPoint-error': {
-        borderBottom: `2px wavy ${invalid$m}`,
+        borderBottom: `2px wavy ${invalid$q}`,
     },
     '.cm-lintPoint-warning': {
         borderBottom: `2px wavy ${base08$l}`,
     },
     // Matching brackets
     '.cm-matchingBracket': {
-        backgroundColor: activeBracketBg$m,
-        outline: `1px solid ${activeBracketBorder$m}`,
-        borderRadius: generalMatching$n.borderRadius,
+        backgroundColor: activeBracketBg$q,
+        outline: `1px solid ${activeBracketBorder$q}`,
+        borderRadius: generalMatching$r.borderRadius,
     },
     '.cm-nonmatchingBracket': {
         backgroundColor: '#3a4a5f40',
         outline: '1px solid #abcdef',
-        borderRadius: generalMatching$n.borderRadius,
+        borderRadius: generalMatching$r.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
         backgroundColor: '#3a4a5f40',
         outline: '1px solid #abcdef',
-        borderRadius: generalMatching$n.borderRadius,
+        borderRadius: generalMatching$r.borderRadius,
     },
     // Fold placeholder
     '.cm-foldPlaceholder': {
         backgroundColor: '#3a4a5f40',
         color: '#abcdef',
         fontStyle: 'italic',
-        border: `1px dotted ${activeBracketBorder$m}`,
-        borderRadius: generalPlaceholder$n.borderRadius,
-        padding: generalPlaceholder$n.padding,
-        margin: generalPlaceholder$n.margin,
+        border: `1px dotted ${activeBracketBorder$q}`,
+        borderRadius: generalPlaceholder$r.borderRadius,
+        padding: generalPlaceholder$r.padding,
+        margin: generalPlaceholder$r.margin,
     },
     // Focus outline
     '&.cm-focused': {
         outline: 'none',
-        boxShadow: `0 0 0 2px ${base00$m}, 0 0 0 3px ${base0D$k}40`,
+        boxShadow: `0 0 0 2px ${base00$q}, 0 0 0 3px ${base0D$k}40`,
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
-        width: generalScroller$n.width,
-        height: generalScroller$n.height,
+        width: generalScroller$r.width,
+        height: generalScroller$r.height,
     },
     '& .cm-scroller::-webkit-scrollbar-track': {
         background: base07$m,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
-        backgroundColor: `${base02$l}AA`,
-        borderRadius: generalScroller$n.borderRadius,
+        backgroundColor: `${base02$p}AA`,
+        borderRadius: generalScroller$r.borderRadius,
         border: `3px solid ${base07$m}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-        backgroundColor: base02$l,
+        backgroundColor: base02$p,
     },
     // Ghost text
     '.cm-ghostText': {
         opacity: '0.5',
-        color: base04$m,
+        color: base04$q,
     },
 }, { dark: true });
 /**
@@ -34438,12 +34726,12 @@ const abcdefHighlightStyle = /*@__PURE__*/HighlightStyle.define([
         textUnderlineOffset: '2px',
     },
     // Special states
-    { tag: tags$1.invalid, color: invalid$m, textDecoration: 'underline wavy' },
-    { tag: tags$1.strikethrough, color: invalid$m, textDecoration: 'line-through' },
+    { tag: tags$1.invalid, color: invalid$q, textDecoration: 'underline wavy' },
+    { tag: tags$1.strikethrough, color: invalid$q, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
     { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base0B$k },
     { tag: tags$1.controlKeyword, color: base08$l, fontWeight: 'bold' },
-    { tag: tags$1.deleted, color: invalid$m },
+    { tag: tags$1.deleted, color: invalid$q },
     { tag: tags$1.labelName, color: '#ffad5c' },
     { tag: tags$1.string, color: '#7aecb3' /* New mint green for strings */ },
 ]);
@@ -34458,58 +34746,59 @@ const abcdef = [
  * Abcdef merge revert styles configuration
  */
 const abcdefMergeStyles = {
-    backgroundColor: base03$m, // Using theme-specific color variables
-    borderColor: base02$l,
+    backgroundColor: base03$q, // Using theme-specific color variables
+    borderColor: base02$p,
     buttonColor: selectionForeground$2,
-    buttonHoverColor: base02$l,
+    buttonHoverColor: base02$p,
 };
 
 // Helper module for styling options
-const generalContent$m = {
+const generalContent$q = {
     fontSize: '14px',
     fontFamily: 'JetBrains Mono, Consolas, monospace',
     lineHeight: '1.6',
 };
-const generalCursor$m = {
+const generalCursor$o = {
     borderLeftWidth: '2px',
 };
-const generalDiff$m = {
+const generalDiff$q = {
     insertedTextDecoration: 'none',
     deletedTextDecoration: 'line-through',
     insertedLinePadding: '1px 3px',
     borderRadious: '3px'};
-const generalGutter$m = {
+const generalGutter$q = {
     border: 'none',
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
-const generalPanel$m = {
+const generalPanel$q = {
     border: 'none',
     borderRadius: '4px',
     padding: '2px 10px',
 };
-const generalLine$m = {
+const generalLine$q = {
     borderRadius: '2px',
 };
-const generalMatching$m = {
+const generalMatching$q = {
     borderRadius: '2px',
 };
-const generalPlaceholder$m = {
+const generalPlaceholder$q = {
     borderRadius: '4px',
     padding: '0 5px',
     margin: '0 2px',
 };
-const generalScroller$m = {
+const generalScroller$q = {
     width: '12px',
     height: '12px',
     borderRadius: '6px',
 };
-const generalSearchField$m = {
+const generalSearchField$q = {
     borderRadius: '4px',
     padding: '2px 6px',
 };
-const generalTooltip$m = {
+const generalTooltip$q = {
     borderRadius: '4px',
     borderRadiusSelected: '3px',
     lineHeight: '1.3',
@@ -34518,12 +34807,12 @@ const generalTooltip$m = {
 };
 
 // Base colors - Ocean depths
-const base00$l = '#000c18', // - Background (deep ocean blue)
-base01$k = '#a3c9e9', // - Foreground (lighter blue for enhanced readability)
-base02$k = '#0e6299', // - Selection (more vibrant blue for better visibility)
-base03$l = '#b4a2f7', // - Gutter background (darker for contrast)
-base04$l = '#e6d4a3', // - Cursor (warmer gold for better visibility)
-base05$l = '#0066ff20', // - Active line (subtle blue tint)
+const base00$p = '#000c18', // - Background (deep ocean blue)
+base01$o = '#a3c9e9', // - Foreground (lighter blue for enhanced readability)
+base02$o = '#0e6299', // - Selection (more vibrant blue for better visibility)
+base03$p = '#b4a2f7', // - Gutter background (darker for contrast)
+base04$p = '#e6d4a3', // - Cursor (warmer gold for better visibility)
+base05$o = '#0066ff20', // - Active line (subtle blue tint)
 base06$l = '#ffffff', // - Pure white for maximum contrast
 base07$l = '#47c1ff', // - Keywords (brighter cyan blue)
 base08$k = '#5caeff', // - Variables (softer azure blue)
@@ -34537,47 +34826,47 @@ base0F$e = '#59d6ff', // - Tags (brighter cyan)
 base10$7 = '#ff50c8', // - Links (brighter magenta)
 base11$5 = '#66ecd4', // - URLs (brighter teal)
 // UI elements
-invalid$l = '#ff5370', darkBackground$h = '#0a1422', // Darker background for better contrast
-highlightBackground$l = '#0055ff15', tooltipBackground$l = '#05101d', // Darker tooltip for better contrast
-cursor$m = base04$l, selection$j = base02$k, activeBracketBg$l = '#0a5999b0', activeBracketBorder$l = base0F$e, 
+invalid$p = '#ff5370', darkBackground$k = '#0a1422', // Darker background for better contrast
+highlightBackground$m = '#0055ff15', tooltipBackground$p = '#05101d', // Darker tooltip for better contrast
+cursor$q = base04$p, selection$m = base02$o, activeBracketBg$p = '#0a5999b0', activeBracketBorder$p = base0F$e, 
 // Diff/merge specific colors
-addedBackground$m = '#0e4e1d50', // Dark green with transparency for insertions
-removedBackground$m = '#78112240', // Dark red with transparency for deletions
-addedText$m = '#4ce660', // Bright green for added text (matching string color)
-removedText$m = '#ff6b7d'; // Bright red for removed text
+addedBackground$q = '#0e4e1d50', // Dark green with transparency for insertions
+removedBackground$q = '#78112240', // Dark red with transparency for deletions
+addedText$q = '#4ce660', // Bright green for added text (matching string color)
+removedText$q = '#ff6b7d'; // Bright red for removed text
 /**
  * Enhanced editor theme styles for Abyss
  */
 const abyssTheme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base01$k,
-        backgroundColor: base00$l,
-        fontSize: generalContent$m.fontSize,
-        fontFamily: generalContent$m.fontFamily,
+        color: base01$o,
+        backgroundColor: base00$p,
+        fontSize: generalContent$q.fontSize,
+        fontFamily: generalContent$q.fontFamily,
     },
     // Content and cursor
     '.cm-content': {
-        caretColor: cursor$m,
-        lineHeight: generalContent$m.lineHeight,
+        caretColor: cursor$q,
+        lineHeight: generalContent$q.lineHeight,
     },
     '.cm-cursor, .cm-dropCursor': {
-        borderLeftColor: cursor$m,
-        borderLeftWidth: generalCursor$m.borderLeftWidth,
+        borderLeftColor: cursor$q,
+        borderLeftWidth: generalCursor$o.borderLeftWidth,
     },
     '.cm-fat-cursor': {
-        backgroundColor: `${cursor$m}99`,
-        color: base00$l,
+        backgroundColor: `${cursor$q}99`,
+        color: base00$p,
     },
     // Selection
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-        backgroundColor: selection$j,
+        backgroundColor: selection$m,
     },
     // Search functionality
     '.cm-searchMatch': {
         backgroundColor: '#155ab380',
         outline: `1px solid ${base08$k}`,
-        borderRadius: generalSearchField$m.borderRadius,
+        borderRadius: generalSearchField$q.borderRadius,
         '& span': {
             color: base06$l,
         },
@@ -34585,20 +34874,20 @@ const abyssTheme = /*@__PURE__*/EditorView.theme({
     '.cm-searchMatch.cm-searchMatch-selected': {
         backgroundColor: '#2a6ac080',
         color: base06$l,
-        padding: generalSearchField$m.padding,
+        padding: generalSearchField$q.padding,
         '& span': {
             color: base06$l,
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
-        color: base01$k,
-        borderRadius: generalSearchField$m.borderRadius,
-        padding: generalSearchField$m.padding,
+        color: base01$o,
+        borderRadius: generalSearchField$q.borderRadius,
+        padding: generalSearchField$q.padding,
     },
     // Panels
     '.cm-panels': {
-        backgroundColor: darkBackground$h,
-        color: base01$k,
+        backgroundColor: darkBackground$k,
+        color: base01$o,
     },
     '.cm-panels.cm-panels-top': {
         borderBottom: '2px solid #0a3555',
@@ -34607,105 +34896,107 @@ const abyssTheme = /*@__PURE__*/EditorView.theme({
         borderTop: '2px solid #0a3555',
     },
     '.cm-panel button': {
-        backgroundColor: darkBackground$h,
-        color: base01$k,
-        border: generalPanel$m.border,
-        borderRadius: generalPanel$m.borderRadius,
-        padding: generalPanel$m.padding,
+        backgroundColor: darkBackground$k,
+        color: base01$o,
+        border: generalPanel$q.border,
+        borderRadius: generalPanel$q.borderRadius,
+        padding: generalPanel$q.padding,
     },
     '.cm-panel button:hover': {
         backgroundColor: '#0a3555',
     },
     // Line highlighting
     '.cm-activeLine': {
-        backgroundColor: highlightBackground$l,
-        borderRadius: generalLine$m.borderRadius,
+        backgroundColor: highlightBackground$m,
+        borderRadius: generalLine$q.borderRadius,
     },
     // Gutters
     '.cm-gutters': {
-        backgroundColor: darkBackground$h,
+        backgroundColor: darkBackground$k,
         color: '#5f7e97',
-        border: generalGutter$m.border,
-        paddingRight: generalGutter$m.paddingRight,
+        border: generalGutter$q.border,
+        paddingRight: generalGutter$q.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: highlightBackground$l,
-        color: base01$k,
-        fontWeight: generalGutter$m.fontWeight,
+        backgroundColor: highlightBackground$m,
+        color: base01$o,
+        fontWeight: generalGutter$q.fontWeight,
     },
     '.cm-lineNumbers': {
-        fontSize: generalGutter$m.fontSize,
+        fontSize: generalGutter$q.fontSize,
+        lineHeight: generalGutter$q.lineHeight,
     },
     '.cm-foldGutter': {
-        fontSize: generalGutter$m.fontSize,
+        fontSize: generalGutter$q.fontSize,
+        lineHeight: generalGutter$q.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
         color: '#5f7e97',
         cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-        color: base01$k,
+        color: base01$o,
     },
     // Diff/Merge View Styles
     // Inserted/Added Content
     '.cm-insertedLine': {
-        textDecoration: generalDiff$m.insertedTextDecoration,
-        backgroundColor: addedBackground$m,
-        color: addedText$m,
-        padding: generalDiff$m.insertedLinePadding,
-        borderRadius: generalDiff$m.borderRadious,
+        textDecoration: generalDiff$q.insertedTextDecoration,
+        backgroundColor: addedBackground$q,
+        color: addedText$q,
+        padding: generalDiff$q.insertedLinePadding,
+        borderRadius: generalDiff$q.borderRadious,
     },
     'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
-        textDecoration: generalDiff$m.insertedTextDecoration,
-        backgroundColor: `${addedBackground$m} !important`,
-        color: addedText$m,
-        padding: generalDiff$m.insertedLinePadding,
-        borderRadius: generalDiff$m.borderRadious,
-        border: `1px solid ${addedText$m}40`,
+        textDecoration: generalDiff$q.insertedTextDecoration,
+        backgroundColor: `${addedBackground$q} !important`,
+        color: addedText$q,
+        padding: generalDiff$q.insertedLinePadding,
+        borderRadius: generalDiff$q.borderRadious,
+        border: `1px solid ${addedText$q}40`,
     },
     'ins.cm-insertedLine .cm-changedText': {
         background: 'transparent !important',
     },
     // Deleted/Removed Content
     '.cm-deletedLine': {
-        textDecoration: generalDiff$m.deletedTextDecoration,
-        backgroundColor: removedBackground$m,
-        color: removedText$m,
-        padding: generalDiff$m.insertedLinePadding,
-        borderRadius: generalDiff$m.borderRadious,
+        textDecoration: generalDiff$q.deletedTextDecoration,
+        backgroundColor: removedBackground$q,
+        color: removedText$q,
+        padding: generalDiff$q.insertedLinePadding,
+        borderRadius: generalDiff$q.borderRadious,
     },
     'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
-        textDecoration: generalDiff$m.deletedTextDecoration,
-        backgroundColor: `${removedBackground$m} !important`,
-        color: removedText$m,
-        padding: generalDiff$m.insertedLinePadding,
-        borderRadius: generalDiff$m.borderRadious,
-        border: `1px solid ${removedText$m}40`,
+        textDecoration: generalDiff$q.deletedTextDecoration,
+        backgroundColor: `${removedBackground$q} !important`,
+        color: removedText$q,
+        padding: generalDiff$q.insertedLinePadding,
+        borderRadius: generalDiff$q.borderRadious,
+        border: `1px solid ${removedText$q}40`,
     },
     'del .cm-deletedText, del .cm-changedText': {
         background: 'transparent !important',
     },
     // Tooltips and autocomplete
     '.cm-tooltip': {
-        backgroundColor: tooltipBackground$l,
+        backgroundColor: tooltipBackground$p,
         border: '1px solid #084671',
-        borderRadius: generalTooltip$m.borderRadius,
-        padding: generalTooltip$m.padding,
+        borderRadius: generalTooltip$q.borderRadius,
+        padding: generalTooltip$q.padding,
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
     },
     '.cm-tooltip-autocomplete': {
         '& > ul > li': {
-            padding: generalTooltip$m.padding,
-            lineHeight: generalTooltip$m.lineHeight,
+            padding: generalTooltip$q.padding,
+            lineHeight: generalTooltip$q.lineHeight,
         },
         '& > ul > li[aria-selected]': {
             backgroundColor: '#084671',
             color: '#e0edff',
-            borderRadius: generalTooltip$m.borderRadiusSelected,
+            borderRadius: generalTooltip$q.borderRadiusSelected,
         },
         '& > ul > li > span.cm-completionIcon': {
             color: '#5f7e97',
-            paddingRight: generalTooltip$m.paddingRight,
+            paddingRight: generalTooltip$q.paddingRight,
         },
         '& > ul > li > span.cm-completionDetail': {
             color: '#5f7e97',
@@ -34717,13 +35008,13 @@ const abyssTheme = /*@__PURE__*/EditorView.theme({
         borderBottomColor: 'transparent',
     },
     '.cm-tooltip .cm-tooltip-arrow:after': {
-        borderTopColor: tooltipBackground$l,
-        borderBottomColor: tooltipBackground$l,
+        borderTopColor: tooltipBackground$p,
+        borderBottomColor: tooltipBackground$p,
     },
     // Diagnostics styling
     '.cm-diagnostic': {
         '&-error': {
-            borderLeft: `3px solid ${invalid$l}`,
+            borderLeft: `3px solid ${invalid$p}`,
         },
         '&-warning': {
             borderLeft: `3px solid ${base0A$j}`,
@@ -34733,55 +35024,55 @@ const abyssTheme = /*@__PURE__*/EditorView.theme({
         },
     },
     '.cm-lintPoint-error': {
-        borderBottom: `2px wavy ${invalid$l}`,
+        borderBottom: `2px wavy ${invalid$p}`,
     },
     '.cm-lintPoint-warning': {
         borderBottom: `2px wavy ${base0A$j}`,
     },
     // Matching brackets
     '.cm-matchingBracket': {
-        backgroundColor: activeBracketBg$l,
-        outline: `1px solid ${activeBracketBorder$l}`,
-        borderRadius: generalMatching$m.borderRadius,
+        backgroundColor: activeBracketBg$p,
+        outline: `1px solid ${activeBracketBorder$p}`,
+        borderRadius: generalMatching$q.borderRadius,
     },
     '.cm-nonmatchingBracket': {
         backgroundColor: '#780e1e80',
-        outline: `1px solid ${invalid$l}`,
-        borderRadius: generalMatching$m.borderRadius,
+        outline: `1px solid ${invalid$p}`,
+        borderRadius: generalMatching$q.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
         backgroundColor: '#155ab340',
         outline: `1px solid ${base08$k}`,
-        borderRadius: generalMatching$m.borderRadius,
+        borderRadius: generalMatching$q.borderRadius,
     },
     // Fold placeholder
     '.cm-foldPlaceholder': {
         backgroundColor: 'transparent',
         color: '#5f7e97',
         fontStyle: 'italic',
-        border: `1px dotted ${activeBracketBorder$l}`,
-        borderRadius: generalPlaceholder$m.borderRadius,
-        padding: generalPlaceholder$m.padding,
-        margin: generalPlaceholder$m.margin,
+        border: `1px dotted ${activeBracketBorder$p}`,
+        borderRadius: generalPlaceholder$q.borderRadius,
+        padding: generalPlaceholder$q.padding,
+        margin: generalPlaceholder$q.margin,
     },
     // Focus outline
     '&.cm-focused': {
         outline: 'none',
-        boxShadow: `0 0 0 2px ${base05$l}, 0 0 0 4px ${base00$l}`,
+        boxShadow: `0 0 0 2px ${base05$o}, 0 0 0 4px ${base00$p}`,
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
-        width: generalScroller$m.width,
-        height: generalScroller$m.height,
+        width: generalScroller$q.width,
+        height: generalScroller$q.height,
     },
     '& .cm-scroller::-webkit-scrollbar-track': {
-        background: darkBackground$h,
+        background: darkBackground$k,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
         backgroundColor: '#5f7e97',
-        borderRadius: generalScroller$m.borderRadius,
-        border: `3px solid ${darkBackground$h}`,
+        borderRadius: generalScroller$q.borderRadius,
+        border: `3px solid ${darkBackground$k}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
         backgroundColor: '#4cc9ff',
@@ -34805,14 +35096,14 @@ const abyssHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     { tag: [tags$1.variableName], color: '#7ab2ff' },
     { tag: [tags$1.propertyName], color: base0E$h, fontStyle: 'normal' },
     // Classes and types
-    { tag: [tags$1.typeName], color: base03$l },
+    { tag: [tags$1.typeName], color: base03$p },
     { tag: [tags$1.className], color: base0D$j, fontStyle: 'italic' },
     { tag: [tags$1.namespace], color: base0C$j, fontStyle: 'italic' },
     // Operators and punctuation - clearer blues
     { tag: [tags$1.operator, tags$1.operatorKeyword], color: base0E$h },
-    { tag: [tags$1.bracket], color: base01$k },
-    { tag: [tags$1.brace], color: base01$k },
-    { tag: [tags$1.punctuation], color: base01$k },
+    { tag: [tags$1.bracket], color: base01$o },
+    { tag: [tags$1.brace], color: base01$o },
+    { tag: [tags$1.punctuation], color: base01$o },
     // Functions and parameters
     { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base0B$j },
     { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base0B$j },
@@ -34853,8 +35144,8 @@ const abyssHighlightStyle = /*@__PURE__*/HighlightStyle.define([
         textUnderlineOffset: '2px',
     },
     // Special states
-    { tag: [tags$1.invalid], color: invalid$l, textDecoration: 'underline wavy' },
-    { tag: [tags$1.strikethrough], color: invalid$l, textDecoration: 'line-through' },
+    { tag: [tags$1.invalid], color: invalid$p, textDecoration: 'underline wavy' },
+    { tag: [tags$1.strikethrough], color: invalid$p, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
     { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base0C$j },
     { tag: tags$1.controlKeyword, color: base07$l, fontWeight: 'bold' },
@@ -34873,58 +35164,59 @@ const abyss = [
  * Abyss merge revert styles configuration
  */
 const abyssMergeStyles = {
-    backgroundColor: darkBackground$h,
+    backgroundColor: darkBackground$k,
     borderColor: '#084671',
-    buttonColor: base01$k,
+    buttonColor: base01$o,
     buttonHoverColor: '#0a3555',
 };
 
 // Helper module for styling options
-const generalContent$l = {
+const generalContent$p = {
     fontSize: '14px',
     fontFamily: 'JetBrains Mono, Consolas, monospace',
     lineHeight: '1.6',
 };
-const generalCursor$l = {
+const generalCursor$n = {
     borderLeftWidth: '2px',
 };
-const generalDiff$l = {
+const generalDiff$p = {
     insertedTextDecoration: 'none',
     deletedTextDecoration: 'line-through',
     insertedLinePadding: '1px 3px',
     borderRadious: '3px'};
-const generalGutter$l = {
+const generalGutter$p = {
     border: 'none',
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
-const generalPanel$l = {
+const generalPanel$p = {
     border: 'none',
     borderRadius: '4px',
     padding: '2px 10px',
 };
-const generalLine$l = {
+const generalLine$p = {
     borderRadius: '2px',
 };
-const generalMatching$l = {
+const generalMatching$p = {
     borderRadius: '2px',
 };
-const generalPlaceholder$l = {
+const generalPlaceholder$p = {
     borderRadius: '4px',
     padding: '0 5px',
     margin: '0 2px',
 };
-const generalScroller$l = {
+const generalScroller$p = {
     width: '12px',
     height: '12px',
     borderRadius: '6px',
 };
-const generalSearchField$l = {
+const generalSearchField$p = {
     borderRadius: '4px',
     padding: '2px 6px',
 };
-const generalTooltip$l = {
+const generalTooltip$p = {
     borderRadius: '4px',
     borderRadiusSelected: '3px',
     lineHeight: '1.3',
@@ -34938,13 +35230,13 @@ const generalTooltip$l = {
  * Colors refined for better contrast and visual hierarchy
  */
 // Base colors
-const base00$k = '#282b2e', // Background (authentic IntelliJ IDEA dark theme)
-base01$j = '#a9b7c6', // Foreground (standard text)
-base02$j = '#3f3f3f', // Selection background (slightly darker for contrast)
-base03$k = '#3b3b3b', // Gutter background (slightly lighter than the main background)
-base04$k = '#606366', // Line numbers (slightly darker for less distraction)
+const base00$o = '#282b2e', // Background (authentic IntelliJ IDEA dark theme)
+base01$n = '#a9b7c6', // Foreground (standard text)
+base02$n = '#3f3f3f', // Selection background (slightly darker for contrast)
+base03$o = '#3b3b3b', // Gutter background (slightly lighter than the main background)
+base04$o = '#606366', // Line numbers (slightly darker for less distraction)
 // Language syntax colors
-base05$k = '#cc7832', // Keywords (signature orange)
+base05$n = '#cc7832', // Keywords (signature orange)
 base06$k = '#6897bb', // Numbers, constants (signature blue)
 base07$k = '#9876aa', // Variables (improved purple)
 base08$j = '#787878', // Comments (authentic gray)
@@ -34958,42 +35250,42 @@ base0F$d = '#e8bf6a', // Tags (amber)
 base10$6 = '#3c7abb', // Links (blue)
 base11$4 = '#50a658', // URLs (green)
 // UI-specific colors
-invalid$k = '#ff5353', // Error highlighting (more visible)
-cursor$l = '#ffffff', // Cursor color
+invalid$o = '#ff5353', // Error highlighting (more visible)
+cursor$p = '#ffffff', // Cursor color
 selectionBackground$2 = '#2e5280', // Stronger selection background
 selectionForeground$1 = '#ffffff', // Selection text color
-highlightBackground$k = '#323232', // Active line highlight
+highlightBackground$l = '#323232', // Active line highlight
 gutterBackground$1 = '#313335', // Gutter background
-tooltipBackground$k = base03$k, // Tooltip background
-activeBracketBg$k = '#3b514d', activeBracketBorder$k = '#43705c', darkBackground$g = '#313335', 
+tooltipBackground$o = base03$o, // Tooltip background
+activeBracketBg$o = '#3b514d', activeBracketBorder$o = '#43705c', darkBackground$j = '#313335', 
 // Diff/merge specific colors
-addedBackground$l = '#294436', // Dark green for insertions, matching IntelliJ
-removedBackground$l = '#484a4a', // Dark gray/red for deletions
-addedText$l = '#6a8759', // Matching the string color for added text
-removedText$l = '#cc7832'; // Using the keyword orange for removed text
+addedBackground$p = '#294436', // Dark green for insertions, matching IntelliJ
+removedBackground$p = '#484a4a', // Dark gray/red for deletions
+addedText$p = '#6a8759', // Matching the string color for added text
+removedText$p = '#cc7832'; // Using the keyword orange for removed text
 /**
  * Enhanced editor theme styles for Android Studio
  */
 const androidStudioTheme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base01$j,
-        backgroundColor: base00$k,
-        fontSize: generalContent$l.fontSize,
-        fontFamily: generalContent$l.fontFamily,
+        color: base01$n,
+        backgroundColor: base00$o,
+        fontSize: generalContent$p.fontSize,
+        fontFamily: generalContent$p.fontFamily,
     },
     // Content and cursor
     '.cm-content': {
-        caretColor: cursor$l,
-        lineHeight: generalContent$l.lineHeight,
+        caretColor: cursor$p,
+        lineHeight: generalContent$p.lineHeight,
     },
     '.cm-cursor, .cm-dropCursor': {
-        borderLeftColor: cursor$l,
-        borderLeftWidth: generalCursor$l.borderLeftWidth,
+        borderLeftColor: cursor$p,
+        borderLeftWidth: generalCursor$n.borderLeftWidth,
     },
     '.cm-fat-cursor': {
-        backgroundColor: `${cursor$l}99`,
-        color: base00$k,
+        backgroundColor: `${cursor$p}99`,
+        color: base00$o,
     },
     // Selection
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
@@ -35003,7 +35295,7 @@ const androidStudioTheme = /*@__PURE__*/EditorView.theme({
     '.cm-searchMatch': {
         backgroundColor: '#32593d',
         outline: '1px solid #ffffff',
-        borderRadius: generalSearchField$l.borderRadius,
+        borderRadius: generalSearchField$p.borderRadius,
         '& span': {
             color: selectionForeground$1,
         },
@@ -35011,20 +35303,20 @@ const androidStudioTheme = /*@__PURE__*/EditorView.theme({
     '.cm-searchMatch.cm-searchMatch-selected': {
         backgroundColor: '#375580',
         color: selectionForeground$1,
-        padding: generalSearchField$l.padding,
+        padding: generalSearchField$p.padding,
         '& span': {
             color: selectionForeground$1,
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
-        color: base01$j,
-        borderRadius: generalSearchField$l.borderRadius,
-        padding: generalSearchField$l.padding,
+        color: base01$n,
+        borderRadius: generalSearchField$p.borderRadius,
+        padding: generalSearchField$p.padding,
     },
     // Panels
     '.cm-panels': {
-        backgroundColor: darkBackground$g,
-        color: base01$j,
+        backgroundColor: darkBackground$j,
+        color: base01$n,
     },
     '.cm-panels.cm-panels-top': {
         borderBottom: '2px solid #5b5b5b',
@@ -35033,11 +35325,11 @@ const androidStudioTheme = /*@__PURE__*/EditorView.theme({
         borderTop: '2px solid #5b5b5b',
     },
     '.cm-panel button': {
-        backgroundColor: darkBackground$g,
-        color: base01$j,
-        border: generalPanel$l.border,
-        borderRadius: generalPanel$l.borderRadius,
-        padding: generalPanel$l.padding,
+        backgroundColor: darkBackground$j,
+        color: base01$n,
+        border: generalPanel$p.border,
+        borderRadius: generalPanel$p.borderRadius,
+        padding: generalPanel$p.padding,
     },
     '.cm-panel button:hover': {
         backgroundColor: '#404040',
@@ -35045,97 +35337,99 @@ const androidStudioTheme = /*@__PURE__*/EditorView.theme({
     // Line highlighting
     '.cm-activeLine': {
         backgroundColor: '#32323221',
-        borderRadius: generalLine$l.borderRadius,
+        borderRadius: generalLine$p.borderRadius,
     },
     // Gutters
     '.cm-gutters': {
         backgroundColor: gutterBackground$1,
-        color: base04$k,
-        border: generalGutter$l.border,
+        color: base04$o,
+        border: generalGutter$p.border,
         borderRight: '1px solid #3f3f3f',
-        paddingRight: generalGutter$l.paddingRight,
+        paddingRight: generalGutter$p.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: highlightBackground$k,
+        backgroundColor: highlightBackground$l,
         color: '#c0c0c0',
-        fontWeight: generalGutter$l.fontWeight,
+        fontWeight: generalGutter$p.fontWeight,
     },
     '.cm-lineNumbers': {
-        fontSize: generalGutter$l.fontSize,
+        fontSize: generalGutter$p.fontSize,
+        lineHeight: generalGutter$p.lineHeight,
     },
     '.cm-foldGutter': {
-        fontSize: generalGutter$l.fontSize,
+        fontSize: generalGutter$p.fontSize,
+        lineHeight: generalGutter$p.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
-        color: base04$k,
+        color: base04$o,
         cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-        color: base01$j,
+        color: base01$n,
     },
     // Diff/Merge View Styles
     // Inserted/Added Content
     '.cm-insertedLine': {
-        textDecoration: generalDiff$l.insertedTextDecoration,
-        backgroundColor: addedBackground$l,
-        color: addedText$l,
-        padding: generalDiff$l.insertedLinePadding,
-        borderRadius: generalDiff$l.borderRadious,
+        textDecoration: generalDiff$p.insertedTextDecoration,
+        backgroundColor: addedBackground$p,
+        color: addedText$p,
+        padding: generalDiff$p.insertedLinePadding,
+        borderRadius: generalDiff$p.borderRadious,
     },
     'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
-        textDecoration: generalDiff$l.insertedTextDecoration,
-        backgroundColor: `${addedBackground$l} !important`,
-        color: addedText$l,
-        padding: generalDiff$l.insertedLinePadding,
-        borderRadius: generalDiff$l.borderRadious,
-        border: `1px solid ${addedText$l}40`,
+        textDecoration: generalDiff$p.insertedTextDecoration,
+        backgroundColor: `${addedBackground$p} !important`,
+        color: addedText$p,
+        padding: generalDiff$p.insertedLinePadding,
+        borderRadius: generalDiff$p.borderRadious,
+        border: `1px solid ${addedText$p}40`,
     },
     'ins.cm-insertedLine .cm-changedText': {
         background: 'transparent !important',
     },
     // Deleted/Removed Content
     '.cm-deletedLine': {
-        textDecoration: generalDiff$l.deletedTextDecoration,
-        backgroundColor: removedBackground$l,
-        color: removedText$l,
-        padding: generalDiff$l.insertedLinePadding,
-        borderRadius: generalDiff$l.borderRadious,
+        textDecoration: generalDiff$p.deletedTextDecoration,
+        backgroundColor: removedBackground$p,
+        color: removedText$p,
+        padding: generalDiff$p.insertedLinePadding,
+        borderRadius: generalDiff$p.borderRadious,
     },
     'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
-        textDecoration: generalDiff$l.deletedTextDecoration,
-        backgroundColor: `${removedBackground$l} !important`,
-        color: removedText$l,
-        padding: generalDiff$l.insertedLinePadding,
-        borderRadius: generalDiff$l.borderRadious,
-        border: `1px solid ${removedText$l}40`,
+        textDecoration: generalDiff$p.deletedTextDecoration,
+        backgroundColor: `${removedBackground$p} !important`,
+        color: removedText$p,
+        padding: generalDiff$p.insertedLinePadding,
+        borderRadius: generalDiff$p.borderRadious,
+        border: `1px solid ${removedText$p}40`,
     },
     'del .cm-deletedText, del .cm-changedText': {
         background: 'transparent !important',
     },
     // Tooltips and autocomplete
     '.cm-tooltip': {
-        backgroundColor: tooltipBackground$k,
+        backgroundColor: tooltipBackground$o,
         border: '1px solid #5b5b5b',
-        borderRadius: generalTooltip$l.borderRadius,
-        padding: generalTooltip$l.padding,
+        borderRadius: generalTooltip$p.borderRadius,
+        padding: generalTooltip$p.padding,
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
     },
     '.cm-tooltip-autocomplete': {
         '& > ul > li': {
-            padding: generalTooltip$l.padding,
-            lineHeight: generalTooltip$l.lineHeight,
+            padding: generalTooltip$p.padding,
+            lineHeight: generalTooltip$p.lineHeight,
         },
         '& > ul > li[aria-selected]': {
             backgroundColor: selectionBackground$2,
             color: selectionForeground$1,
-            borderRadius: generalTooltip$l.borderRadiusSelected,
+            borderRadius: generalTooltip$p.borderRadiusSelected,
         },
         '& > ul > li > span.cm-completionIcon': {
-            color: base04$k,
-            paddingRight: generalTooltip$l.paddingRight,
+            color: base04$o,
+            paddingRight: generalTooltip$p.paddingRight,
         },
         '& > ul > li > span.cm-completionDetail': {
-            color: base04$k,
+            color: base04$o,
             fontStyle: 'italic',
         },
     },
@@ -35144,13 +35438,13 @@ const androidStudioTheme = /*@__PURE__*/EditorView.theme({
         borderBottomColor: 'transparent',
     },
     '.cm-tooltip .cm-tooltip-arrow:after': {
-        borderTopColor: tooltipBackground$k,
-        borderBottomColor: tooltipBackground$k,
+        borderTopColor: tooltipBackground$o,
+        borderBottomColor: tooltipBackground$o,
     },
     // Diagnostics styling
     '.cm-diagnostic': {
         '&-error': {
-            borderLeft: `3px solid ${invalid$k}`,
+            borderLeft: `3px solid ${invalid$o}`,
         },
         '&-warning': {
             borderLeft: `3px solid ${base0F$d}`,
@@ -35160,54 +35454,54 @@ const androidStudioTheme = /*@__PURE__*/EditorView.theme({
         },
     },
     '.cm-lintPoint-error': {
-        borderBottom: `2px wavy ${invalid$k}`,
+        borderBottom: `2px wavy ${invalid$o}`,
     },
     '.cm-lintPoint-warning': {
         borderBottom: `2px wavy ${base0F$d}`,
     },
     // Matching brackets
     '.cm-matchingBracket': {
-        backgroundColor: activeBracketBg$k,
-        outline: `1px solid ${activeBracketBorder$k}`,
-        borderRadius: generalMatching$l.borderRadius,
+        backgroundColor: activeBracketBg$o,
+        outline: `1px solid ${activeBracketBorder$o}`,
+        borderRadius: generalMatching$p.borderRadius,
     },
     '.cm-nonmatchingBracket': {
         backgroundColor: '#53383e',
-        outline: `1px solid ${invalid$k}`,
-        borderRadius: generalMatching$l.borderRadius,
+        outline: `1px solid ${invalid$o}`,
+        borderRadius: generalMatching$p.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
         backgroundColor: '#32593d40',
         outline: `1px solid ${base0D$i}`,
-        borderRadius: generalMatching$l.borderRadius,
+        borderRadius: generalMatching$p.borderRadius,
     },
     // Fold placeholder
     '.cm-foldPlaceholder': {
-        backgroundColor: tooltipBackground$k,
+        backgroundColor: tooltipBackground$o,
         color: '#a1a1a1',
-        border: `1px dotted ${base04$k}`,
-        borderRadius: generalPlaceholder$l.borderRadius,
-        padding: generalPlaceholder$l.padding,
-        margin: generalPlaceholder$l.margin,
+        border: `1px dotted ${base04$o}`,
+        borderRadius: generalPlaceholder$p.borderRadius,
+        padding: generalPlaceholder$p.padding,
+        margin: generalPlaceholder$p.margin,
     },
     // Focus outline
     '&.cm-focused': {
         outline: 'none',
-        boxShadow: `0 0 0 2px ${base02$j}, 0 0 0 4px ${base00$k}`,
+        boxShadow: `0 0 0 2px ${base02$n}, 0 0 0 4px ${base00$o}`,
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
-        width: generalScroller$l.width,
-        height: generalScroller$l.height,
+        width: generalScroller$p.width,
+        height: generalScroller$p.height,
     },
     '& .cm-scroller::-webkit-scrollbar-track': {
-        background: darkBackground$g,
+        background: darkBackground$j,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
         backgroundColor: '#5a5a5a',
-        borderRadius: generalScroller$l.borderRadius,
-        border: `3px solid ${darkBackground$g}`,
+        borderRadius: generalScroller$p.borderRadius,
+        border: `3px solid ${darkBackground$j}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
         backgroundColor: '#6e6e6e',
@@ -35223,9 +35517,9 @@ const androidStudioTheme = /*@__PURE__*/EditorView.theme({
  */
 const androidStudioHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Keywords and control flow
-    { tag: tags$1.keyword, color: base05$k, fontWeight: 'bold' },
-    { tag: tags$1.controlKeyword, color: base05$k, fontWeight: 'bold' },
-    { tag: tags$1.moduleKeyword, color: base05$k, fontWeight: 'bold' },
+    { tag: tags$1.keyword, color: base05$n, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: base05$n, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: base05$n, fontWeight: 'bold' },
     // Names and variables
     { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base07$k },
     { tag: [tags$1.variableName], color: base07$k },
@@ -35235,21 +35529,21 @@ const androidStudioHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     { tag: [tags$1.className], color: base0B$i, fontStyle: 'italic' },
     { tag: [tags$1.namespace], color: base07$k, fontStyle: 'italic' },
     // Operators and punctuation
-    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base05$k },
+    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base05$n },
     { tag: [tags$1.bracket], color: base0E$g },
-    { tag: [tags$1.brace], color: base01$j },
-    { tag: [tags$1.punctuation], color: base01$j },
+    { tag: [tags$1.brace], color: base01$n },
+    { tag: [tags$1.punctuation], color: base01$n },
     // Functions and parameters
-    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base01$j },
+    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base01$n },
     { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base07$k },
     // Constants and literals
     { tag: tags$1.number, color: base06$k },
     { tag: tags$1.changed, color: base06$k },
     { tag: tags$1.annotation, color: base09$j, fontStyle: 'italic' },
     { tag: tags$1.modifier, color: base09$j, fontStyle: 'italic' },
-    { tag: tags$1.self, color: base05$k },
+    { tag: tags$1.self, color: base05$n },
     { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base06$k },
-    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base05$k },
+    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base05$n },
     // Strings and regex
     { tag: [tags$1.processingInstruction, tags$1.inserted], color: base0A$i },
     { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base0A$i },
@@ -35276,11 +35570,11 @@ const androidStudioHighlightStyle = /*@__PURE__*/HighlightStyle.define([
         textUnderlineOffset: '2px',
     },
     // Special states
-    { tag: [tags$1.invalid], color: invalid$k, textDecoration: 'underline wavy' },
-    { tag: [tags$1.strikethrough], color: invalid$k, textDecoration: 'line-through' },
+    { tag: [tags$1.invalid], color: invalid$o, textDecoration: 'underline wavy' },
+    { tag: [tags$1.strikethrough], color: invalid$o, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
     { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base06$k },
-    { tag: tags$1.deleted, color: invalid$k },
+    { tag: tags$1.deleted, color: invalid$o },
     { tag: tags$1.labelName, color: base0D$i },
 ]);
 /**
@@ -35294,58 +35588,59 @@ const androidStudio = [
  * Android Studio merge revert styles configuration
  */
 const androidStudioMergeStyles = {
-    backgroundColor: darkBackground$g,
+    backgroundColor: darkBackground$j,
     borderColor: '#5b5b5b',
-    buttonColor: base01$j,
+    buttonColor: base01$n,
     buttonHoverColor: '#414141',
 };
 
 // Helper module for styling options
-const generalContent$k = {
+const generalContent$o = {
     fontSize: '14px',
     fontFamily: 'JetBrains Mono, Consolas, monospace',
     lineHeight: '1.6',
 };
-const generalCursor$k = {
+const generalCursor$m = {
     borderLeftWidth: '2px',
 };
-const generalDiff$k = {
+const generalDiff$o = {
     insertedTextDecoration: 'none',
     deletedTextDecoration: 'line-through',
     insertedLinePadding: '1px 3px',
     borderRadious: '3px'};
-const generalGutter$k = {
+const generalGutter$o = {
     border: 'none',
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
-const generalPanel$k = {
+const generalPanel$o = {
     border: 'none',
     borderRadius: '4px',
     padding: '2px 10px',
 };
-const generalLine$k = {
+const generalLine$o = {
     borderRadius: '2px',
 };
-const generalMatching$k = {
+const generalMatching$o = {
     borderRadius: '2px',
 };
-const generalPlaceholder$k = {
+const generalPlaceholder$o = {
     borderRadius: '4px',
     padding: '0 5px',
     margin: '0 2px',
 };
-const generalScroller$k = {
+const generalScroller$o = {
     width: '12px',
     height: '12px',
     borderRadius: '6px',
 };
-const generalSearchField$k = {
+const generalSearchField$o = {
     borderRadius: '4px',
     padding: '2px 6px',
 };
-const generalTooltip$k = {
+const generalTooltip$o = {
     borderRadius: '4px',
     borderRadiusSelected: '3px',
     lineHeight: '1.3',
@@ -35359,12 +35654,12 @@ const generalTooltip$k = {
  * Colors refined for better contrast and visual hierarchy
  */
 // Base colors
-const base00$j = '#1b1e26', // Background (slightly darker for better contrast)
-base01$i = '#e4dff0', // Foreground (slightly brighter for better readability)
-base02$i = '#db45a270', // Selection and Selection Match (reduced opacity)
-base03$j = '#2b303b', // Dropdown Background
-base04$j = '#ffffff', // Cursor (pure white for better visibility)
-base05$j = '#d667ff', // Keyword, Storage (brighter purple)
+const base00$n = '#1b1e26', // Background (slightly darker for better contrast)
+base01$m = '#e4dff0', // Foreground (slightly brighter for better readability)
+base02$m = '#db45a270', // Selection and Selection Match (reduced opacity)
+base03$n = '#2b303b', // Dropdown Background
+base04$n = '#ffffff', // Cursor (pure white for better visibility)
+base05$m = '#d667ff', // Keyword, Storage (brighter purple)
 base06$j = '#24e3c3', // Variable, Parameter (slightly desaturated teal)
 base07$j = '#ffdd80', // Function, Type, Class (warmer yellow)
 base08$i = '#a6e07a', // String, RegExp (slightly muted green for better readability)
@@ -35375,38 +35670,38 @@ base0C$h = '#fd3681', // Tag (adjusted pink)
 base0D$h = '#c7c7ff', // New color for brackets/punctuation
 base0E$f = '#6ae4b9', // New color for special elements
 base0F$c = '#3c94ff', // New color for attributes and links
-invalid$j = '#ff3162', // Invalid (more visible red)
+invalid$n = '#ff3162', // Invalid (more visible red)
 // UI-specific colors
-darkBackground$f = '#242830', selectionBackground$1 = base02$i, selectionForeground = '#ffffff', highlightBackground$j = '#30343d40', tooltipBackground$j = '#1f232d', // Darker tooltip for better contrast
-cursor$k = base04$j, activeBracketBg$j = '#db45a230', activeBracketBorder$j = base05$j, 
+darkBackground$i = '#242830', selectionBackground$1 = base02$m, selectionForeground = '#ffffff', highlightBackground$k = '#30343d40', tooltipBackground$n = '#1f232d', // Darker tooltip for better contrast
+cursor$o = base04$n, activeBracketBg$n = '#db45a230', activeBracketBorder$n = base05$m, 
 // Diff/merge specific colors
-addedBackground$k = '#0f3a2440', // Dark green with transparency for insertions
-removedBackground$k = '#78112230', // Dark red with transparency for deletions
-addedText$k = base08$i, // Using string color for added text for consistency
-removedText$k = '#ff5d7a'; // Bright red for removed text
+addedBackground$o = '#0f3a2440', // Dark green with transparency for insertions
+removedBackground$o = '#78112230', // Dark red with transparency for deletions
+addedText$o = base08$i, // Using string color for added text for consistency
+removedText$o = '#ff5d7a'; // Bright red for removed text
 /**
  * Enhanced editor theme styles for Andromeda
  */
 const andromedaTheme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base01$i,
-        backgroundColor: base00$j,
-        fontSize: generalContent$k.fontSize,
-        fontFamily: generalContent$k.fontFamily,
+        color: base01$m,
+        backgroundColor: base00$n,
+        fontSize: generalContent$o.fontSize,
+        fontFamily: generalContent$o.fontFamily,
     },
     // Content and cursor
     '.cm-content': {
-        caretColor: cursor$k,
-        lineHeight: generalContent$k.lineHeight,
+        caretColor: cursor$o,
+        lineHeight: generalContent$o.lineHeight,
     },
     '.cm-cursor, .cm-dropCursor': {
-        borderLeftColor: cursor$k,
-        borderLeftWidth: generalCursor$k.borderLeftWidth,
+        borderLeftColor: cursor$o,
+        borderLeftWidth: generalCursor$m.borderLeftWidth,
     },
     '.cm-fat-cursor': {
-        backgroundColor: `${cursor$k}99`,
-        color: base00$j,
+        backgroundColor: `${cursor$o}99`,
+        color: base00$n,
     },
     // Selection
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
@@ -35420,29 +35715,29 @@ const andromedaTheme = /*@__PURE__*/EditorView.theme({
     // Search functionality
     '.cm-searchMatch': {
         backgroundColor: '#db45a230',
-        outline: `1px solid ${base05$j}30`,
-        color: base01$i,
-        borderRadius: generalSearchField$k.borderRadius,
+        outline: `1px solid ${base05$m}30`,
+        color: base01$m,
+        borderRadius: generalSearchField$o.borderRadius,
         '& span': {
-            color: base01$i,
+            color: base01$m,
         },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
         backgroundColor: '#db45a280',
-        color: base01$i,
-        padding: generalSearchField$k.padding,
+        color: base01$m,
+        padding: generalSearchField$o.padding,
         '& span': {
-            color: base01$i,
+            color: base01$m,
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
         color: base06$j,
-        borderRadius: generalSearchField$k.borderRadius,
-        padding: generalSearchField$k.padding,
+        borderRadius: generalSearchField$o.borderRadius,
+        padding: generalSearchField$o.padding,
     },
     // Panels
     '.cm-panels': {
-        backgroundColor: darkBackground$f,
+        backgroundColor: darkBackground$i,
         color: base06$j,
     },
     '.cm-panels.cm-panels-top': {
@@ -35452,111 +35747,113 @@ const andromedaTheme = /*@__PURE__*/EditorView.theme({
         borderTop: '1px solid #3a3e4c',
     },
     '.cm-panel button': {
-        backgroundColor: darkBackground$f,
+        backgroundColor: darkBackground$i,
         color: base06$j,
-        border: generalPanel$k.border,
-        borderRadius: generalPanel$k.borderRadius,
-        padding: generalPanel$k.padding,
+        border: generalPanel$o.border,
+        borderRadius: generalPanel$o.borderRadius,
+        padding: generalPanel$o.padding,
     },
     '.cm-panel button:hover': {
         backgroundColor: '#343946',
     },
     // Line highlighting
     '.cm-activeLine': {
-        backgroundColor: highlightBackground$j,
-        borderRadius: generalLine$k.borderRadius,
+        backgroundColor: highlightBackground$k,
+        borderRadius: generalLine$o.borderRadius,
         zIndex: 1,
     },
     // Gutters
     '.cm-gutters': {
-        backgroundColor: darkBackground$f,
+        backgroundColor: darkBackground$i,
         color: '#748099',
-        border: generalGutter$k.border,
+        border: generalGutter$o.border,
         borderRight: '1px solid #33384550',
-        paddingRight: generalGutter$k.paddingRight,
+        paddingRight: generalGutter$o.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: highlightBackground$j,
-        color: base01$i,
-        fontWeight: generalGutter$k.fontWeight,
+        backgroundColor: highlightBackground$k,
+        color: base01$m,
+        fontWeight: generalGutter$o.fontWeight,
     },
     '.cm-lineNumbers': {
-        fontSize: generalGutter$k.fontSize,
+        fontSize: generalGutter$o.fontSize,
+        lineHeight: generalGutter$o.lineHeight,
     },
     '.cm-foldGutter': {
-        fontSize: generalGutter$k.fontSize,
+        fontSize: generalGutter$o.fontSize,
+        lineHeight: generalGutter$o.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
         color: '#748099',
         cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-        color: base01$i,
+        color: base01$m,
     },
     // Diff/Merge View Styles
     // Inserted/Added Content
     '.cm-insertedLine': {
-        textDecoration: generalDiff$k.insertedTextDecoration,
-        backgroundColor: addedBackground$k,
-        color: addedText$k,
-        padding: generalDiff$k.insertedLinePadding,
-        borderRadius: generalDiff$k.borderRadious,
+        textDecoration: generalDiff$o.insertedTextDecoration,
+        backgroundColor: addedBackground$o,
+        color: addedText$o,
+        padding: generalDiff$o.insertedLinePadding,
+        borderRadius: generalDiff$o.borderRadious,
     },
     'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
-        textDecoration: generalDiff$k.insertedTextDecoration,
-        backgroundColor: `${addedBackground$k} !important`,
-        color: addedText$k,
-        padding: generalDiff$k.insertedLinePadding,
-        borderRadius: generalDiff$k.borderRadious,
-        border: `1px solid ${addedText$k}40`,
+        textDecoration: generalDiff$o.insertedTextDecoration,
+        backgroundColor: `${addedBackground$o} !important`,
+        color: addedText$o,
+        padding: generalDiff$o.insertedLinePadding,
+        borderRadius: generalDiff$o.borderRadious,
+        border: `1px solid ${addedText$o}40`,
     },
     'ins.cm-insertedLine .cm-changedText': {
         background: 'transparent !important',
     },
     // Deleted/Removed Content
     '.cm-deletedLine': {
-        textDecoration: generalDiff$k.deletedTextDecoration,
-        backgroundColor: removedBackground$k,
-        color: removedText$k,
-        padding: generalDiff$k.insertedLinePadding,
-        borderRadius: generalDiff$k.borderRadious,
+        textDecoration: generalDiff$o.deletedTextDecoration,
+        backgroundColor: removedBackground$o,
+        color: removedText$o,
+        padding: generalDiff$o.insertedLinePadding,
+        borderRadius: generalDiff$o.borderRadious,
     },
     'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
-        textDecoration: generalDiff$k.deletedTextDecoration,
-        backgroundColor: `${removedBackground$k} !important`,
-        color: removedText$k,
-        padding: generalDiff$k.insertedLinePadding,
-        borderRadius: generalDiff$k.borderRadious,
-        border: `1px solid ${removedText$k}40`,
+        textDecoration: generalDiff$o.deletedTextDecoration,
+        backgroundColor: `${removedBackground$o} !important`,
+        color: removedText$o,
+        padding: generalDiff$o.insertedLinePadding,
+        borderRadius: generalDiff$o.borderRadious,
+        border: `1px solid ${removedText$o}40`,
     },
     'del .cm-deletedText, del .cm-changedText': {
         background: 'transparent !important',
     },
     // Tooltips and autocomplete
     '.cm-tooltip': {
-        backgroundColor: tooltipBackground$j,
+        backgroundColor: tooltipBackground$n,
         border: '1px solid #3a3e4c',
-        borderRadius: generalTooltip$k.borderRadius,
-        padding: generalTooltip$k.padding,
+        borderRadius: generalTooltip$o.borderRadius,
+        padding: generalTooltip$o.padding,
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
     },
     '.cm-tooltip-autocomplete': {
         '& > ul': {
-            backgroundColor: base03$j,
+            backgroundColor: base03$n,
             border: 'none',
         },
         '& > ul > li': {
-            padding: generalTooltip$k.padding,
-            lineHeight: generalTooltip$k.lineHeight,
+            padding: generalTooltip$o.padding,
+            lineHeight: generalTooltip$o.lineHeight,
         },
         '& > ul > li[aria-selected]': {
             backgroundColor: '#db45a240',
-            color: base01$i,
-            borderRadius: generalTooltip$k.borderRadiusSelected,
+            color: base01$m,
+            borderRadius: generalTooltip$o.borderRadiusSelected,
         },
         '& > ul > li > span.cm-completionIcon': {
             color: '#748099',
-            paddingRight: generalTooltip$k.paddingRight,
+            paddingRight: generalTooltip$o.paddingRight,
         },
         '& > ul > li > span.cm-completionDetail': {
             color: '#748099',
@@ -35568,13 +35865,13 @@ const andromedaTheme = /*@__PURE__*/EditorView.theme({
         borderBottomColor: 'transparent',
     },
     '.cm-tooltip .cm-tooltip-arrow:after': {
-        borderTopColor: tooltipBackground$j,
-        borderBottomColor: tooltipBackground$j,
+        borderTopColor: tooltipBackground$n,
+        borderBottomColor: tooltipBackground$n,
     },
     // Diagnostics styling
     '.cm-diagnostic': {
         '&-error': {
-            borderLeft: `3px solid ${invalid$j}`,
+            borderLeft: `3px solid ${invalid$n}`,
         },
         '&-warning': {
             borderLeft: `3px solid ${base07$j}`,
@@ -35584,54 +35881,54 @@ const andromedaTheme = /*@__PURE__*/EditorView.theme({
         },
     },
     '.cm-lintPoint-error': {
-        borderBottom: `2px wavy ${invalid$j}`,
+        borderBottom: `2px wavy ${invalid$n}`,
     },
     '.cm-lintPoint-warning': {
         borderBottom: `2px wavy ${base07$j}`,
     },
     // Matching brackets
     '.cm-matchingBracket': {
-        backgroundColor: activeBracketBg$j,
-        outline: `1px solid ${activeBracketBorder$j}50`,
-        borderRadius: generalMatching$k.borderRadius,
+        backgroundColor: activeBracketBg$n,
+        outline: `1px solid ${activeBracketBorder$n}50`,
+        borderRadius: generalMatching$o.borderRadius,
     },
     '.cm-nonmatchingBracket': {
         backgroundColor: '#ff405030',
-        outline: `1px solid ${invalid$j}`,
-        borderRadius: generalMatching$k.borderRadius,
+        outline: `1px solid ${invalid$n}`,
+        borderRadius: generalMatching$o.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
         backgroundColor: '#db45a240',
-        outline: `1px solid ${base05$j}50`,
-        borderRadius: generalMatching$k.borderRadius,
+        outline: `1px solid ${base05$m}50`,
+        borderRadius: generalMatching$o.borderRadius,
     },
     // Fold placeholder
     '.cm-foldPlaceholder': {
         backgroundColor: 'transparent',
-        color: base02$i,
-        border: `1px dotted ${base05$j}70`,
-        borderRadius: generalPlaceholder$k.borderRadius,
-        padding: generalPlaceholder$k.padding,
-        margin: generalPlaceholder$k.margin,
+        color: base02$m,
+        border: `1px dotted ${base05$m}70`,
+        borderRadius: generalPlaceholder$o.borderRadius,
+        padding: generalPlaceholder$o.padding,
+        margin: generalPlaceholder$o.margin,
     },
     // Focus outline
     '&.cm-focused': {
         outline: 'none',
-        boxShadow: `0 0 0 2px ${base00$j}, 0 0 0 3px ${base05$j}40`,
+        boxShadow: `0 0 0 2px ${base00$n}, 0 0 0 3px ${base05$m}40`,
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
-        width: generalScroller$k.width,
-        height: generalScroller$k.height,
+        width: generalScroller$o.width,
+        height: generalScroller$o.height,
     },
     '& .cm-scroller::-webkit-scrollbar-track': {
-        background: darkBackground$f,
+        background: darkBackground$i,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
         backgroundColor: '#3b4151',
-        borderRadius: generalScroller$k.borderRadius,
-        border: `3px solid ${darkBackground$f}`,
+        borderRadius: generalScroller$o.borderRadius,
+        border: `3px solid ${darkBackground$i}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
         backgroundColor: '#4e5568',
@@ -35647,9 +35944,9 @@ const andromedaTheme = /*@__PURE__*/EditorView.theme({
  */
 const andromedaHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Keywords and control flow
-    { tag: tags$1.keyword, color: base05$j, fontWeight: 'bold' },
-    { tag: tags$1.controlKeyword, color: base05$j, fontWeight: 'bold' },
-    { tag: tags$1.moduleKeyword, color: base05$j, fontWeight: 'bold' },
+    { tag: tags$1.keyword, color: base05$m, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: base05$m, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: base05$m, fontWeight: 'bold' },
     // Names and variables
     { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base06$j },
     { tag: [tags$1.variableName], color: base06$j },
@@ -35700,11 +35997,11 @@ const andromedaHighlightStyle = /*@__PURE__*/HighlightStyle.define([
         textUnderlineOffset: '2px',
     },
     // Special states
-    { tag: [tags$1.invalid], color: invalid$j, textDecoration: 'underline wavy' },
-    { tag: [tags$1.strikethrough], color: invalid$j, textDecoration: 'line-through' },
+    { tag: [tags$1.invalid], color: invalid$n, textDecoration: 'underline wavy' },
+    { tag: [tags$1.strikethrough], color: invalid$n, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
     { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base09$i },
-    { tag: tags$1.deleted, color: invalid$j },
+    { tag: tags$1.deleted, color: invalid$n },
     { tag: tags$1.squareBracket, color: base0D$h },
     { tag: tags$1.angleBracket, color: base0D$h },
 ]);
@@ -35719,58 +36016,59 @@ const andromeda = [
  * Andromeda merge revert styles configuration
  */
 const andromedaMergeStyles = {
-    backgroundColor: darkBackground$f,
+    backgroundColor: darkBackground$i,
     borderColor: '#3a3e4c',
     buttonColor: base06$j,
     buttonHoverColor: '#343946',
 };
 
 // Helper module for styling options
-const generalContent$j = {
+const generalContent$n = {
     fontSize: '14px',
     fontFamily: 'JetBrains Mono, Consolas, monospace',
     lineHeight: '1.6',
 };
-const generalCursor$j = {
+const generalCursor$l = {
     borderLeftWidth: '2px',
 };
-const generalDiff$j = {
+const generalDiff$n = {
     insertedTextDecoration: 'none',
     deletedTextDecoration: 'line-through',
     insertedLinePadding: '1px 3px',
     borderRadious: '3px'};
-const generalGutter$j = {
+const generalGutter$n = {
     border: 'none',
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
-const generalPanel$j = {
+const generalPanel$n = {
     border: 'none',
     borderRadius: '4px',
     padding: '2px 10px',
 };
-const generalLine$j = {
+const generalLine$n = {
     borderRadius: '2px',
 };
-const generalMatching$j = {
+const generalMatching$n = {
     borderRadius: '2px',
 };
-const generalPlaceholder$j = {
+const generalPlaceholder$n = {
     borderRadius: '4px',
     padding: '0 5px',
     margin: '0 2px',
 };
-const generalScroller$j = {
+const generalScroller$n = {
     width: '12px',
     height: '12px',
     borderRadius: '6px',
 };
-const generalSearchField$j = {
+const generalSearchField$n = {
     borderRadius: '4px',
     padding: '2px 6px',
 };
-const generalTooltip$j = {
+const generalTooltip$n = {
     borderRadius: '4px',
     borderRadiusSelected: '3px',
     lineHeight: '1.3',
@@ -35784,12 +36082,12 @@ const generalTooltip$j = {
  * Colors refined for better contrast and visual hierarchy
  */
 // Base colors
-const base00$i = '#1e2124', // Background (slightly darker for better contrast)
-base01$h = '#e2e2e2', // Foreground (slightly brighter for better readability)
-base02$h = '#5c88da', // Selection elements (more vibrant blue)
-base03$i = '#b8b8b8', // Comments, line numbers (slightly lighter)
-base04$i = '#ffffff', // Cursor (pure white for better visibility)
-base05$i = '#e4e4e4', // Panels foreground
+const base00$m = '#1e2124', // Background (slightly darker for better contrast)
+base01$l = '#e2e2e2', // Foreground (slightly brighter for better readability)
+base02$l = '#5c88da', // Selection elements (more vibrant blue)
+base03$m = '#b8b8b8', // Comments, line numbers (slightly lighter)
+base04$m = '#ffffff', // Cursor (pure white for better visibility)
+base05$l = '#e4e4e4', // Panels foreground
 base06$i = '#909090', // Comments (slightly more visible gray)
 base07$i = '#000000', // Pure black for contrast elements
 base08$h = '#e06c75', // Error, deleted (more vibrant red)
@@ -35801,45 +36099,45 @@ base0D$g = '#61afef', // Functions, methods (bright blue)
 base0E$e = '#c678dd', // Operators, brackets (brighter purple)
 base0F$b = '#be5046', // Special elements (darker red)
 // UI-specific colors
-invalid$i = '#e06c75', // Error highlighting (consistent red)
-darkBackground$e = '#252529', // Panel background (slightly darker)
+invalid$m = '#e06c75', // Error highlighting (consistent red)
+darkBackground$h = '#252529', // Panel background (slightly darker)
 selectionBackground = '#3a5991aa', // Selection background (semi-transparent blue)
-highlightBackground$i = '#3a3d4166', // Active line background (subtle blue-gray)
-tooltipBackground$i = '#2a2c31', // Tooltip background (darker than the editor)
-cursor$j = base04$i, activeBracketBg$i = '#3a599140', activeBracketBorder$i = base0E$e, 
+highlightBackground$j = '#3a3d4166', // Active line background (subtle blue-gray)
+tooltipBackground$m = '#2a2c31', // Tooltip background (darker than the editor)
+cursor$n = base04$m, activeBracketBg$m = '#3a599140', activeBracketBorder$m = base0E$e, 
 // Diff/merge specific colors
-addedBackground$j = '#1e462c50', // Dark green with transparency for insertions
-removedBackground$j = '#5c1e2340', // Dark red with transparency for deletions
-addedText$j = '#73c991', // Green for added text
-removedText$j = '#f07178'; // Red for removed text
+addedBackground$n = '#1e462c50', // Dark green with transparency for insertions
+removedBackground$n = '#5c1e2340', // Dark red with transparency for deletions
+addedText$n = '#73c991', // Green for added text
+removedText$n = '#f07178'; // Red for removed text
 /**
  * Enhanced editor theme styles for Basic Dark
  */
 const basicDarkTheme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base01$h,
-        backgroundColor: base00$i,
-        fontSize: generalContent$j.fontSize,
-        fontFamily: generalContent$j.fontFamily,
+        color: base01$l,
+        backgroundColor: base00$m,
+        fontSize: generalContent$n.fontSize,
+        fontFamily: generalContent$n.fontFamily,
     },
     // Content and cursor
     '.cm-content': {
-        caretColor: cursor$j,
-        lineHeight: generalContent$j.lineHeight,
+        caretColor: cursor$n,
+        lineHeight: generalContent$n.lineHeight,
     },
     '.cm-cursor, .cm-dropCursor': {
-        borderLeftColor: cursor$j,
-        borderLeftWidth: generalCursor$j.borderLeftWidth,
+        borderLeftColor: cursor$n,
+        borderLeftWidth: generalCursor$l.borderLeftWidth,
     },
     '.cm-fat-cursor': {
-        backgroundColor: `${cursor$j}99`,
-        color: base00$i,
+        backgroundColor: `${cursor$n}99`,
+        color: base00$m,
     },
     // Selection
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
         backgroundColor: selectionBackground,
-        color: base01$h,
+        color: base01$l,
     },
     // Make sure selection appears above active line
     '.cm-selectionLayer': {
@@ -35848,30 +36146,30 @@ const basicDarkTheme = /*@__PURE__*/EditorView.theme({
     // Search functionality
     '.cm-searchMatch': {
         backgroundColor: '#4a74c480',
-        outline: `1px solid ${base02$h}`,
-        color: base01$h,
-        borderRadius: generalSearchField$j.borderRadius,
+        outline: `1px solid ${base02$l}`,
+        color: base01$l,
+        borderRadius: generalSearchField$n.borderRadius,
         '& span': {
-            color: base01$h,
+            color: base01$l,
         },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
         backgroundColor: '#5c88da90',
-        color: base01$h,
-        padding: generalSearchField$j.padding,
+        color: base01$l,
+        padding: generalSearchField$n.padding,
         '& span': {
-            color: base01$h,
+            color: base01$l,
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
-        color: base05$i,
-        borderRadius: generalSearchField$j.borderRadius,
-        padding: generalSearchField$j.padding,
+        color: base05$l,
+        borderRadius: generalSearchField$n.borderRadius,
+        padding: generalSearchField$n.padding,
     },
     // Panels
     '.cm-panels': {
-        backgroundColor: darkBackground$e,
-        color: base05$i,
+        backgroundColor: darkBackground$h,
+        color: base05$l,
         borderRadius: '0 0 4px 4px',
     },
     '.cm-panels.cm-panels-top': {
@@ -35881,111 +36179,113 @@ const basicDarkTheme = /*@__PURE__*/EditorView.theme({
         borderTop: '1px solid #3a3a3a',
     },
     '.cm-panel button': {
-        backgroundColor: darkBackground$e,
-        color: base05$i,
-        border: generalPanel$j.border,
-        borderRadius: generalPanel$j.borderRadius,
-        padding: generalPanel$j.padding,
+        backgroundColor: darkBackground$h,
+        color: base05$l,
+        border: generalPanel$n.border,
+        borderRadius: generalPanel$n.borderRadius,
+        padding: generalPanel$n.padding,
     },
     '.cm-panel button:hover': {
         backgroundColor: '#35373d',
     },
     // Line highlighting
     '.cm-activeLine': {
-        backgroundColor: highlightBackground$i,
-        borderRadius: generalLine$j.borderRadius,
+        backgroundColor: highlightBackground$j,
+        borderRadius: generalLine$n.borderRadius,
         zIndex: 1,
     },
     // Gutters
     '.cm-gutters': {
-        backgroundColor: darkBackground$e,
+        backgroundColor: darkBackground$h,
         color: base06$i,
-        border: generalGutter$j.border,
+        border: generalGutter$n.border,
         borderRight: '1px solid #35383d',
-        paddingRight: generalGutter$j.paddingRight,
+        paddingRight: generalGutter$n.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: highlightBackground$i,
-        color: base03$i,
-        fontWeight: generalGutter$j.fontWeight,
+        backgroundColor: highlightBackground$j,
+        color: base03$m,
+        fontWeight: generalGutter$n.fontWeight,
     },
     '.cm-lineNumbers': {
-        fontSize: generalGutter$j.fontSize,
+        fontSize: generalGutter$n.fontSize,
+        lineHeight: generalGutter$n.lineHeight,
     },
     '.cm-foldGutter': {
-        fontSize: generalGutter$j.fontSize,
+        fontSize: generalGutter$n.fontSize,
+        lineHeight: generalGutter$n.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
         color: base06$i,
         cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-        color: base01$h,
+        color: base01$l,
     },
     // Diff/Merge View Styles
     // Inserted/Added Content
     '.cm-insertedLine': {
-        textDecoration: generalDiff$j.insertedTextDecoration,
-        backgroundColor: addedBackground$j,
-        color: addedText$j,
-        padding: generalDiff$j.insertedLinePadding,
-        borderRadius: generalDiff$j.borderRadious,
+        textDecoration: generalDiff$n.insertedTextDecoration,
+        backgroundColor: addedBackground$n,
+        color: addedText$n,
+        padding: generalDiff$n.insertedLinePadding,
+        borderRadius: generalDiff$n.borderRadious,
     },
     'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
-        textDecoration: generalDiff$j.insertedTextDecoration,
-        backgroundColor: `${addedBackground$j} !important`,
-        color: addedText$j,
-        padding: generalDiff$j.insertedLinePadding,
-        borderRadius: generalDiff$j.borderRadious,
-        border: `1px solid ${addedText$j}40`,
+        textDecoration: generalDiff$n.insertedTextDecoration,
+        backgroundColor: `${addedBackground$n} !important`,
+        color: addedText$n,
+        padding: generalDiff$n.insertedLinePadding,
+        borderRadius: generalDiff$n.borderRadious,
+        border: `1px solid ${addedText$n}40`,
     },
     'ins.cm-insertedLine .cm-changedText': {
         background: 'transparent !important',
     },
     // Deleted/Removed Content
     '.cm-deletedLine': {
-        textDecoration: generalDiff$j.deletedTextDecoration,
-        backgroundColor: removedBackground$j,
-        color: removedText$j,
-        padding: generalDiff$j.insertedLinePadding,
-        borderRadius: generalDiff$j.borderRadious,
+        textDecoration: generalDiff$n.deletedTextDecoration,
+        backgroundColor: removedBackground$n,
+        color: removedText$n,
+        padding: generalDiff$n.insertedLinePadding,
+        borderRadius: generalDiff$n.borderRadious,
     },
     'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
-        textDecoration: generalDiff$j.deletedTextDecoration,
-        backgroundColor: `${removedBackground$j} !important`,
-        color: removedText$j,
-        padding: generalDiff$j.insertedLinePadding,
-        borderRadius: generalDiff$j.borderRadious,
-        border: `1px solid ${removedText$j}40`,
+        textDecoration: generalDiff$n.deletedTextDecoration,
+        backgroundColor: `${removedBackground$n} !important`,
+        color: removedText$n,
+        padding: generalDiff$n.insertedLinePadding,
+        borderRadius: generalDiff$n.borderRadious,
+        border: `1px solid ${removedText$n}40`,
     },
     'del .cm-deletedText, del .cm-changedText': {
         background: 'transparent !important',
     },
     // Tooltips and autocomplete
     '.cm-tooltip': {
-        backgroundColor: tooltipBackground$i,
+        backgroundColor: tooltipBackground$m,
         border: '1px solid #3a3a3a',
-        borderRadius: generalTooltip$j.borderRadius,
-        padding: generalTooltip$j.padding,
+        borderRadius: generalTooltip$n.borderRadius,
+        padding: generalTooltip$n.padding,
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
     },
     '.cm-tooltip-autocomplete': {
         '& > ul': {
-            backgroundColor: tooltipBackground$i,
+            backgroundColor: tooltipBackground$m,
             border: 'none',
         },
         '& > ul > li': {
-            padding: generalTooltip$j.padding,
-            lineHeight: generalTooltip$j.lineHeight,
+            padding: generalTooltip$n.padding,
+            lineHeight: generalTooltip$n.lineHeight,
         },
         '& > ul > li[aria-selected]': {
             backgroundColor: selectionBackground,
-            color: base01$h,
-            borderRadius: generalTooltip$j.borderRadiusSelected,
+            color: base01$l,
+            borderRadius: generalTooltip$n.borderRadiusSelected,
         },
         '& > ul > li > span.cm-completionIcon': {
             color: base06$i,
-            paddingRight: generalTooltip$j.paddingRight,
+            paddingRight: generalTooltip$n.paddingRight,
         },
         '& > ul > li > span.cm-completionDetail': {
             color: base06$i,
@@ -35997,13 +36297,13 @@ const basicDarkTheme = /*@__PURE__*/EditorView.theme({
         borderBottomColor: 'transparent',
     },
     '.cm-tooltip .cm-tooltip-arrow:after': {
-        borderTopColor: tooltipBackground$i,
-        borderBottomColor: tooltipBackground$i,
+        borderTopColor: tooltipBackground$m,
+        borderBottomColor: tooltipBackground$m,
     },
     // Diagnostics styling
     '.cm-diagnostic': {
         '&-error': {
-            borderLeft: `3px solid ${invalid$i}`,
+            borderLeft: `3px solid ${invalid$m}`,
         },
         '&-warning': {
             borderLeft: `3px solid ${base0A$g}`,
@@ -36013,54 +36313,54 @@ const basicDarkTheme = /*@__PURE__*/EditorView.theme({
         },
     },
     '.cm-lintPoint-error': {
-        borderBottom: `2px wavy ${invalid$i}`,
+        borderBottom: `2px wavy ${invalid$m}`,
     },
     '.cm-lintPoint-warning': {
         borderBottom: `2px wavy ${base0A$g}`,
     },
     // Matching brackets
     '.cm-matchingBracket': {
-        backgroundColor: activeBracketBg$i,
-        outline: `1px solid ${activeBracketBorder$i}60`,
-        borderRadius: generalMatching$j.borderRadius,
+        backgroundColor: activeBracketBg$m,
+        outline: `1px solid ${activeBracketBorder$m}60`,
+        borderRadius: generalMatching$n.borderRadius,
     },
     '.cm-nonmatchingBracket': {
         backgroundColor: '#e06c7540',
-        outline: `1px solid ${invalid$i}`,
-        borderRadius: generalMatching$j.borderRadius,
+        outline: `1px solid ${invalid$m}`,
+        borderRadius: generalMatching$n.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
         backgroundColor: '#4a74c440',
-        outline: `1px solid ${base02$h}50`,
-        borderRadius: generalMatching$j.borderRadius,
+        outline: `1px solid ${base02$l}50`,
+        borderRadius: generalMatching$n.borderRadius,
     },
     // Fold placeholder
     '.cm-foldPlaceholder': {
         backgroundColor: 'transparent',
-        color: base02$h,
-        border: `1px dotted ${base02$h}70`,
-        borderRadius: generalPlaceholder$j.borderRadius,
-        padding: generalPlaceholder$j.padding,
-        margin: generalPlaceholder$j.margin,
+        color: base02$l,
+        border: `1px dotted ${base02$l}70`,
+        borderRadius: generalPlaceholder$n.borderRadius,
+        padding: generalPlaceholder$n.padding,
+        margin: generalPlaceholder$n.margin,
     },
     // Focus outline
     '&.cm-focused': {
         outline: 'none',
-        boxShadow: `0 0 0 2px ${base00$i}, 0 0 0 3px ${base02$h}40`,
+        boxShadow: `0 0 0 2px ${base00$m}, 0 0 0 3px ${base02$l}40`,
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
-        width: generalScroller$j.width,
-        height: generalScroller$j.height,
+        width: generalScroller$n.width,
+        height: generalScroller$n.height,
     },
     '& .cm-scroller::-webkit-scrollbar-track': {
-        background: darkBackground$e,
+        background: darkBackground$h,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
         backgroundColor: '#444448',
-        borderRadius: generalScroller$j.borderRadius,
-        border: `3px solid ${darkBackground$e}`,
+        borderRadius: generalScroller$n.borderRadius,
+        border: `3px solid ${darkBackground$h}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
         backgroundColor: '#55555a',
@@ -36098,7 +36398,7 @@ const basicDarkHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Constants and literals
     { tag: tags$1.number, color: base09$h },
     { tag: tags$1.changed, color: base09$h },
-    { tag: tags$1.annotation, color: invalid$i, fontStyle: 'italic' },
+    { tag: tags$1.annotation, color: invalid$m, fontStyle: 'italic' },
     { tag: tags$1.modifier, color: base09$h, fontStyle: 'italic' },
     { tag: tags$1.self, color: base09$h },
     { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base09$h },
@@ -36142,18 +36442,18 @@ const basicDarkHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Special states
     {
         tag: [tags$1.invalid],
-        color: base01$h,
+        color: base01$l,
         textDecoration: 'underline wavy',
-        borderBottom: `1px wavy ${invalid$i}`,
+        borderBottom: `1px wavy ${invalid$m}`,
     },
-    { tag: [tags$1.strikethrough], color: invalid$i, textDecoration: 'line-through' },
+    { tag: [tags$1.strikethrough], color: invalid$m, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
     { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base09$h },
-    { tag: tags$1.deleted, color: invalid$i },
+    { tag: tags$1.deleted, color: invalid$m },
     { tag: tags$1.squareBracket, color: base0E$e },
     { tag: tags$1.angleBracket, color: base0E$e },
     // Additional specific styles
-    { tag: tags$1.monospace, color: base01$h },
+    { tag: tags$1.monospace, color: base01$l },
     { tag: [tags$1.contentSeparator], color: base0D$g },
     { tag: tags$1.quote, color: base06$i },
 ]);
@@ -36168,58 +36468,59 @@ const basicDark = [
  * Basic Dark merge revert styles configuration
  */
 const basicDarkMergeStyles = {
-    backgroundColor: darkBackground$e,
+    backgroundColor: darkBackground$h,
     borderColor: '#3a3a3a',
-    buttonColor: base05$i,
+    buttonColor: base05$l,
     buttonHoverColor: '#35373d',
 };
 
 // Helper module for styling options
-const generalContent$i = {
+const generalContent$m = {
     fontSize: '14px',
     fontFamily: 'JetBrains Mono, Consolas, monospace',
     lineHeight: '1.6',
 };
-const generalCursor$i = {
+const generalCursor$k = {
     borderLeftWidth: '2px',
 };
-const generalDiff$i = {
+const generalDiff$m = {
     insertedTextDecoration: 'none',
     deletedTextDecoration: 'line-through',
     insertedLinePadding: '1px 3px',
     borderRadious: '3px'};
-const generalGutter$i = {
+const generalGutter$m = {
     border: 'none',
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
-const generalPanel$i = {
+const generalPanel$m = {
     border: 'none',
     borderRadius: '4px',
     padding: '2px 10px',
 };
-const generalLine$i = {
+const generalLine$m = {
     borderRadius: '2px',
 };
-const generalMatching$i = {
+const generalMatching$m = {
     borderRadius: '2px',
 };
-const generalPlaceholder$i = {
+const generalPlaceholder$m = {
     borderRadius: '4px',
     padding: '0 5px',
     margin: '0 2px',
 };
-const generalScroller$i = {
+const generalScroller$m = {
     width: '12px',
     height: '12px',
     borderRadius: '6px',
 };
-const generalSearchField$i = {
+const generalSearchField$m = {
     borderRadius: '4px',
     padding: '2px 6px',
 };
-const generalTooltip$i = {
+const generalTooltip$m = {
     borderRadius: '4px',
     borderRadiusSelected: '3px',
     lineHeight: '1.3',
@@ -36233,13 +36534,13 @@ const generalTooltip$i = {
  * Colors are organized by function with visual color blocks for quick reference
  */
 // Text colors (dark shades)
-const base00$h = '#1c2434', //  deep navy - primary text (darker for better contrast)
-base01$g = '#2d3748', //  dark slate - secondary text, cursor
-base02$g = '#4a5568', //  medium slate - gutter text
-base03$h = '#718096', //  steel blue - comments, panel text
+const base00$l = '#1c2434', //  deep navy - primary text (darker for better contrast)
+base01$k = '#2d3748', //  dark slate - secondary text, cursor
+base02$k = '#4a5568', //  medium slate - gutter text
+base03$l = '#718096', //  steel blue - comments, panel text
 // Background shades
-base04$h = '#edf2f750', // very light blue w/transparency - active line gutter
-base05$h = '#f7fafc', // off-white - tooltip background
+base04$l = '#edf2f750', // very light blue w/transparency - active line gutter
+base05$k = '#f7fafc', // off-white - tooltip background
 base06$h = '#f0f4f8', // snow-white - gutter background
 // Primary accent colors (cool tones)
 base07$h = '#0c7792', //  teal - links, braces (more saturated)
@@ -36253,48 +36554,48 @@ base0D$f = '#d69e2e', //  amber - class names (more saturated)
 base0E$d = '#2f855a', //  green - operators (deeper, richer)
 base0F$a = '#805ad5'; //  purple - tag names (more vibrant)
 // UI-specific colors
-const invalid$h = '#e53e3e', //  bright red - errors (more visible)
-darkBackground$d = base06$h, // panel background
-highlightBackground$h = '#ebf4ff40', // active line highlight (subtle blue)
-background$e = '#ffffff', // editor background
-tooltipBackground$h = base05$h, // tooltip background
-selection$i = '#90cdf480', // selection background (clearer blue)
-selectionMatch$h = '#63b3ed40', // selection match highlight
-cursor$i = base01$g, //  cursor color
-activeBracketBg$h = '#0c779220', // active bracket background (transparent teal)
-activeBracketBorder$h = base09$g;
+const invalid$l = '#e53e3e', //  bright red - errors (more visible)
+darkBackground$g = base06$h, // panel background
+highlightBackground$i = '#ebf4ff40', // active line highlight (subtle blue)
+background$i = '#ffffff', // editor background
+tooltipBackground$l = base05$k, // tooltip background
+selection$l = '#90cdf480', // selection background (clearer blue)
+selectionMatch$l = '#63b3ed40', // selection match highlight
+cursor$m = base01$k, //  cursor color
+activeBracketBg$l = '#0c779220', // active bracket background (transparent teal)
+activeBracketBorder$l = base09$g;
 // Diff/merge specific colors
-const addedBackground$i = '#e6ffec60', // Light green with transparency for insertions
-removedBackground$i = '#ffebe9a0', // Light red with transparency for deletions
-addedText$i = '#24783b', // Dark green for added text
-removedText$i = '#cf222e'; // Dark red for removed text
+const addedBackground$m = '#e6ffec60', // Light green with transparency for insertions
+removedBackground$m = '#ffebe9a0', // Light red with transparency for deletions
+addedText$m = '#24783b', // Dark green for added text
+removedText$m = '#cf222e'; // Dark red for removed text
 /**
  * Enhanced editor theme styles for Basic Light
  */
 const basicLightTheme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base00$h,
-        backgroundColor: background$e,
-        fontSize: generalContent$i.fontSize,
-        fontFamily: generalContent$i.fontFamily,
+        color: base00$l,
+        backgroundColor: background$i,
+        fontSize: generalContent$m.fontSize,
+        fontFamily: generalContent$m.fontFamily,
     },
     // Content and cursor
     '.cm-content': {
-        caretColor: cursor$i,
-        lineHeight: generalContent$i.lineHeight,
+        caretColor: cursor$m,
+        lineHeight: generalContent$m.lineHeight,
     },
     '.cm-cursor, .cm-dropCursor': {
-        borderLeftColor: cursor$i,
-        borderLeftWidth: generalCursor$i.borderLeftWidth,
+        borderLeftColor: cursor$m,
+        borderLeftWidth: generalCursor$k.borderLeftWidth,
     },
     '.cm-fat-cursor': {
-        backgroundColor: `${cursor$i}99`,
-        color: background$e,
+        backgroundColor: `${cursor$m}99`,
+        color: background$i,
     },
     // Selection
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-        backgroundColor: selection$i,
+        backgroundColor: selection$l,
         color: base0A$f,
     },
     // Make sure selection appears above active line
@@ -36305,29 +36606,29 @@ const basicLightTheme = /*@__PURE__*/EditorView.theme({
     '.cm-searchMatch': {
         backgroundColor: '#63b3ed40',
         outline: `1px solid ${base09$g}`,
-        color: base00$h,
-        borderRadius: generalSearchField$i.borderRadius,
+        color: base00$l,
+        borderRadius: generalSearchField$m.borderRadius,
         '& span': {
-            color: base00$h,
+            color: base00$l,
         },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
         backgroundColor: '#63b3ed70',
-        color: base00$h,
-        padding: generalSearchField$i.padding,
+        color: base00$l,
+        padding: generalSearchField$m.padding,
         '& span': {
-            color: base00$h,
+            color: base00$l,
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
-        color: base02$g,
-        borderRadius: generalSearchField$i.borderRadius,
-        padding: generalSearchField$i.padding,
+        color: base02$k,
+        borderRadius: generalSearchField$m.borderRadius,
+        padding: generalSearchField$m.padding,
     },
     // Panels
     '.cm-panels': {
-        backgroundColor: darkBackground$d,
-        color: base03$h,
+        backgroundColor: darkBackground$g,
+        color: base03$l,
         borderRadius: '4px',
     },
     '.cm-panels.cm-panels-top': {
@@ -36337,114 +36638,116 @@ const basicLightTheme = /*@__PURE__*/EditorView.theme({
         borderTop: '1px solid #e2e8f0',
     },
     '.cm-panel button': {
-        backgroundColor: darkBackground$d,
-        color: base02$g,
-        border: generalPanel$i.border,
-        borderRadius: generalPanel$i.borderRadius,
-        padding: generalPanel$i.padding,
+        backgroundColor: darkBackground$g,
+        color: base02$k,
+        border: generalPanel$m.border,
+        borderRadius: generalPanel$m.borderRadius,
+        padding: generalPanel$m.padding,
     },
     '.cm-panel button:hover': {
         backgroundColor: '#e2e8f0',
     },
     // Line highlighting
     '.cm-activeLine': {
-        backgroundColor: highlightBackground$h,
-        borderRadius: generalLine$i.borderRadius,
+        backgroundColor: highlightBackground$i,
+        borderRadius: generalLine$m.borderRadius,
         zIndex: 1,
     },
     // Gutters
     '.cm-gutters': {
         backgroundColor: base06$h,
-        color: base02$g,
-        border: generalGutter$i.border,
+        color: base02$k,
+        border: generalGutter$m.border,
         borderRight: '1px solid #e2e8f0',
-        paddingRight: generalGutter$i.paddingRight,
+        paddingRight: generalGutter$m.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: base04$h,
-        color: base00$h,
-        fontWeight: generalGutter$i.fontWeight,
+        backgroundColor: base04$l,
+        color: base00$l,
+        fontWeight: generalGutter$m.fontWeight,
     },
     '.cm-lineNumbers': {
-        fontSize: generalGutter$i.fontSize,
+        fontSize: generalGutter$m.fontSize,
+        lineHeight: generalGutter$m.lineHeight,
     },
     '.cm-foldGutter': {
-        fontSize: generalGutter$i.fontSize,
+        fontSize: generalGutter$m.fontSize,
+        lineHeight: generalGutter$m.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
-        color: base02$g,
+        color: base02$k,
         cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-        color: base00$h,
+        color: base00$l,
     },
     // Diff/Merge View Styles
     // Inserted/Added Content
     '.cm-insertedLine': {
-        textDecoration: generalDiff$i.insertedTextDecoration,
-        backgroundColor: addedBackground$i,
-        color: addedText$i,
-        padding: generalDiff$i.insertedLinePadding,
-        borderRadius: generalDiff$i.borderRadious,
+        textDecoration: generalDiff$m.insertedTextDecoration,
+        backgroundColor: addedBackground$m,
+        color: addedText$m,
+        padding: generalDiff$m.insertedLinePadding,
+        borderRadius: generalDiff$m.borderRadious,
     },
     'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
-        textDecoration: generalDiff$i.insertedTextDecoration,
-        backgroundColor: `${addedBackground$i} !important`,
-        color: addedText$i,
-        padding: generalDiff$i.insertedLinePadding,
-        borderRadius: generalDiff$i.borderRadious,
-        border: `1px solid ${addedText$i}30`,
+        textDecoration: generalDiff$m.insertedTextDecoration,
+        backgroundColor: `${addedBackground$m} !important`,
+        color: addedText$m,
+        padding: generalDiff$m.insertedLinePadding,
+        borderRadius: generalDiff$m.borderRadious,
+        border: `1px solid ${addedText$m}30`,
     },
     'ins.cm-insertedLine .cm-changedText': {
         background: 'transparent !important',
     },
     // Deleted/Removed Content
     '.cm-deletedLine': {
-        textDecoration: generalDiff$i.deletedTextDecoration,
-        backgroundColor: removedBackground$i,
-        color: removedText$i,
-        padding: generalDiff$i.insertedLinePadding,
-        borderRadius: generalDiff$i.borderRadious,
+        textDecoration: generalDiff$m.deletedTextDecoration,
+        backgroundColor: removedBackground$m,
+        color: removedText$m,
+        padding: generalDiff$m.insertedLinePadding,
+        borderRadius: generalDiff$m.borderRadious,
     },
     'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
-        textDecoration: generalDiff$i.deletedTextDecoration,
-        backgroundColor: `${removedBackground$i} !important`,
-        color: removedText$i,
-        padding: generalDiff$i.insertedLinePadding,
-        borderRadius: generalDiff$i.borderRadious,
-        border: `1px solid ${removedText$i}30`,
+        textDecoration: generalDiff$m.deletedTextDecoration,
+        backgroundColor: `${removedBackground$m} !important`,
+        color: removedText$m,
+        padding: generalDiff$m.insertedLinePadding,
+        borderRadius: generalDiff$m.borderRadious,
+        border: `1px solid ${removedText$m}30`,
     },
     'del .cm-deletedText, del .cm-changedText': {
         background: 'transparent !important',
     },
     // Tooltips and autocomplete
     '.cm-tooltip': {
-        backgroundColor: tooltipBackground$h,
+        backgroundColor: tooltipBackground$l,
         border: '1px solid #e2e8f0',
-        borderRadius: generalTooltip$i.borderRadius,
-        padding: generalTooltip$i.padding,
+        borderRadius: generalTooltip$m.borderRadius,
+        padding: generalTooltip$m.padding,
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
     },
     '.cm-tooltip-autocomplete': {
         '& > ul': {
-            backgroundColor: tooltipBackground$h,
+            backgroundColor: tooltipBackground$l,
             border: 'none',
         },
         '& > ul > li': {
-            padding: generalTooltip$i.padding,
-            lineHeight: generalTooltip$i.lineHeight,
+            padding: generalTooltip$m.padding,
+            lineHeight: generalTooltip$m.lineHeight,
         },
         '& > ul > li[aria-selected]': {
             backgroundColor: '#0c779220',
-            color: base00$h,
-            borderRadius: generalTooltip$i.borderRadiusSelected,
+            color: base00$l,
+            borderRadius: generalTooltip$m.borderRadiusSelected,
         },
         '& > ul > li > span.cm-completionIcon': {
-            color: base03$h,
-            paddingRight: generalTooltip$i.paddingRight,
+            color: base03$l,
+            paddingRight: generalTooltip$m.paddingRight,
         },
         '& > ul > li > span.cm-completionDetail': {
-            color: base03$h,
+            color: base03$l,
             fontStyle: 'italic',
         },
     },
@@ -36453,13 +36756,13 @@ const basicLightTheme = /*@__PURE__*/EditorView.theme({
         borderBottomColor: 'transparent',
     },
     '.cm-tooltip .cm-tooltip-arrow:after': {
-        borderTopColor: tooltipBackground$h,
-        borderBottomColor: tooltipBackground$h,
+        borderTopColor: tooltipBackground$l,
+        borderBottomColor: tooltipBackground$l,
     },
     // Diagnostics styling
     '.cm-diagnostic': {
         '&-error': {
-            borderLeft: `3px solid ${invalid$h}`,
+            borderLeft: `3px solid ${invalid$l}`,
         },
         '&-warning': {
             borderLeft: `3px solid ${base0D$f}`,
@@ -36469,53 +36772,53 @@ const basicLightTheme = /*@__PURE__*/EditorView.theme({
         },
     },
     '.cm-lintPoint-error': {
-        borderBottom: `2px wavy ${invalid$h}`,
+        borderBottom: `2px wavy ${invalid$l}`,
     },
     '.cm-lintPoint-warning': {
         borderBottom: `2px wavy ${base0D$f}`,
     },
     // Matching brackets
     '.cm-matchingBracket': {
-        backgroundColor: activeBracketBg$h,
-        outline: `1px solid ${activeBracketBorder$h}`,
-        borderRadius: generalMatching$i.borderRadius,
+        backgroundColor: activeBracketBg$l,
+        outline: `1px solid ${activeBracketBorder$l}`,
+        borderRadius: generalMatching$m.borderRadius,
     },
     '.cm-nonmatchingBracket': {
-        backgroundColor: `${invalid$h}20`,
-        outline: `1px solid ${invalid$h}`,
-        borderRadius: generalMatching$i.borderRadius,
+        backgroundColor: `${invalid$l}20`,
+        outline: `1px solid ${invalid$l}`,
+        borderRadius: generalMatching$m.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
-        backgroundColor: selectionMatch$h,
+        backgroundColor: selectionMatch$l,
         outline: `1px solid ${base09$g}30`,
-        borderRadius: generalMatching$i.borderRadius,
+        borderRadius: generalMatching$m.borderRadius,
     },
     // Fold placeholder
     '.cm-foldPlaceholder': {
         backgroundColor: 'transparent',
-        color: base03$h,
+        color: base03$l,
         border: `1px dotted ${base09$g}50`,
-        borderRadius: generalPlaceholder$i.borderRadius,
-        padding: generalPlaceholder$i.padding,
-        margin: generalPlaceholder$i.margin,
+        borderRadius: generalPlaceholder$m.borderRadius,
+        padding: generalPlaceholder$m.padding,
+        margin: generalPlaceholder$m.margin,
     },
     // Focus outline
     '&.cm-focused': {
         outline: 'none',
-        boxShadow: `0 0 0 2px ${background$e}, 0 0 0 3px ${base09$g}30`,
+        boxShadow: `0 0 0 2px ${background$i}, 0 0 0 3px ${base09$g}30`,
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
-        width: generalScroller$i.width,
-        height: generalScroller$i.height,
+        width: generalScroller$m.width,
+        height: generalScroller$m.height,
     },
     '& .cm-scroller::-webkit-scrollbar-track': {
         background: base06$h,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
         backgroundColor: '#cbd5e0',
-        borderRadius: generalScroller$i.borderRadius,
+        borderRadius: generalScroller$m.borderRadius,
         border: `3px solid ${base06$h}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
@@ -36554,7 +36857,7 @@ const basicLightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Constants and literals
     { tag: tags$1.number, color: base08$g },
     { tag: tags$1.changed, color: base08$g },
-    { tag: tags$1.annotation, color: invalid$h, fontStyle: 'italic' },
+    { tag: tags$1.annotation, color: invalid$l, fontStyle: 'italic' },
     { tag: tags$1.modifier, color: base08$g, fontStyle: 'italic' },
     { tag: tags$1.self, color: base08$g },
     { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base0A$f },
@@ -36567,8 +36870,8 @@ const basicLightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base0D$f, fontWeight: 'bold' },
     // Comments and documentation
     { tag: tags$1.meta, color: base08$g },
-    { tag: tags$1.comment, fontStyle: 'italic', color: base03$h },
-    { tag: tags$1.docComment, fontStyle: 'italic', color: base03$h },
+    { tag: tags$1.comment, fontStyle: 'italic', color: base03$l },
+    { tag: tags$1.docComment, fontStyle: 'italic', color: base03$l },
     // HTML/XML elements
     { tag: [tags$1.tagName], color: base0F$a },
     { tag: [tags$1.attributeName], color: base0D$f },
@@ -36593,14 +36896,14 @@ const basicLightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Special states
     {
         tag: [tags$1.invalid],
-        color: base00$h,
+        color: base00$l,
         textDecoration: 'underline wavy',
-        borderBottom: `1px wavy ${invalid$h}`,
+        borderBottom: `1px wavy ${invalid$l}`,
     },
-    { tag: [tags$1.strikethrough], color: invalid$h, textDecoration: 'line-through' },
+    { tag: [tags$1.strikethrough], color: invalid$l, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
     { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base0A$f },
-    { tag: tags$1.deleted, color: invalid$h },
+    { tag: tags$1.deleted, color: invalid$l },
     { tag: tags$1.squareBracket, color: base0B$f },
     { tag: tags$1.angleBracket, color: base0C$f },
     // Additional specific styles
@@ -36612,9 +36915,9 @@ const basicLightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
         color: base08$g,
     },
     { tag: [tags$1.heading5, tags$1.heading6], color: base08$g },
-    { tag: tags$1.monospace, color: base00$h },
+    { tag: tags$1.monospace, color: base00$l },
     { tag: [tags$1.contentSeparator], color: base0D$f },
-    { tag: tags$1.quote, color: base01$g },
+    { tag: tags$1.quote, color: base01$k },
 ]);
 /**
  * Combined Basic Light theme extension
@@ -36627,57 +36930,490 @@ const basicLight = [
  * Basic Light merge revert styles configuration
  */
 const basicLightMergeStyles = {
-    backgroundColor: darkBackground$d,
+    backgroundColor: darkBackground$g,
     borderColor: '#e2e8f0',
-    buttonColor: base02$g,
+    buttonColor: base02$k,
     buttonHoverColor: '#e2e8f0',
 };
 
 // Helper module for styling options
-const generalContent$h = {
+const generalContent$l = {
     fontSize: '14px',
     fontFamily: 'JetBrains Mono, Consolas, monospace',
     lineHeight: '1.6',
 };
-const generalCursor$h = {
+const generalCursor$j = {
     borderLeftWidth: '2px',
 };
-const generalDiff$h = {
+const generalDiff$l = {
     insertedTextDecoration: 'none',
     deletedTextDecoration: 'line-through',
     insertedLinePadding: '1px 3px',
     borderRadious: '3px'};
-const generalGutter$h = {
+const generalGutter$l = {
     border: 'none',
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
-const generalPanel$h = {
+const generalPanel$l = {
+    border: 'none',
     borderRadius: '4px',
     padding: '2px 10px',
 };
-const generalLine$h = {
+const generalLine$l = {
     borderRadius: '2px',
 };
-const generalMatching$h = {
+const generalMatching$l = {
     borderRadius: '2px',
 };
-const generalPlaceholder$h = {
+const generalPlaceholder$l = {
     borderRadius: '4px',
     padding: '0 5px',
     margin: '0 2px',
 };
-const generalScroller$h = {
+const generalScroller$l = {
     width: '12px',
     height: '12px',
     borderRadius: '6px',
 };
-const generalSearchField$h = {
+const generalSearchField$l = {
     borderRadius: '4px',
     padding: '2px 6px',
 };
-const generalTooltip$h = {
+const generalTooltip$l = {
+    borderRadius: '4px',
+    borderRadiusSelected: '3px',
+    lineHeight: '1.3',
+    padding: '4px 8px',
+    paddingRight: '8px',
+};
+
+/**
+ * Catppuccin Mocha theme color definitions
+ * ----------------------------------------
+ * A soothing pastel theme with warm tones
+ */
+// Base colors (Mocha variant)
+const base00$k = '#1e1e2e', // Background - dark navy
+base01$j = '#313244', // Selection background
+base02$j = '#45475a', // Comments
+base03$k = '#585b70', // Dark grey
+base04$k = '#cdd6f4', // Foreground - light blue
+base05$j = '#f5e0dc', // Light foreground
+// Catppuccin Mocha colors
+rosewater = '#f5e0dc', flamingo = '#f2cdcd', pink$1 = '#f5c2e7', mauve = '#cba6f7', red$1 = '#f38ba8', maroon = '#eba0ac', peach = '#fab387', yellow$1 = '#f9e2af', green$1 = '#a6e3a1', teal = '#94e2d5', sky = '#89dceb', sapphire = '#74c7ec', blue$1 = '#89b4fa', lavender = '#b4befe';
+// UI specific colors
+const invalid$k = '#f38ba8', darkBackground$f = '#181825', background$h = base00$k, tooltipBackground$k = base01$j, selectionMatch$k = '#45475a80', cursor$l = rosewater, activeBracketBg$k = '#45475a55', activeBracketBorder$k = lavender, diagnosticWarning$j = yellow$1, linkColor$j = blue$1, visitedLinkColor$h = mauve;
+// Diff/merge specific colors
+const addedBackground$l = '#a6e3a140', removedBackground$l = '#f38ba840', addedText$l = green$1, removedText$l = red$1;
+/**
+ * Enhanced editor theme styles for Catppuccin Mocha
+ */
+const catppuccinMochaTheme = /*@__PURE__*/EditorView.theme({
+    // Base editor styles
+    '&': {
+        color: base04$k,
+        backgroundColor: background$h,
+        fontSize: generalContent$l.fontSize,
+        fontFamily: generalContent$l.fontFamily,
+    },
+    // Content and cursor
+    '.cm-content': {
+        caretColor: cursor$l,
+        lineHeight: generalContent$l.lineHeight,
+    },
+    '.cm-cursor, .cm-dropCursor': {
+        borderLeftColor: cursor$l,
+        borderLeftWidth: generalCursor$j.borderLeftWidth,
+    },
+    '.cm-fat-cursor': {
+        backgroundColor: `${cursor$l}99`,
+        color: background$h,
+    },
+    // Selection
+    '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
+        backgroundColor: '#585b7080',
+        outline: `1px solid ${mauve}`,
+    },
+    // Make sure selection appears above active line
+    '.cm-selectionLayer': {
+        zIndex: 100,
+    },
+    // Search functionality
+    '.cm-searchMatch': {
+        backgroundColor: '#89b4fa40',
+        outline: `1px solid ${sapphire}`,
+        color: base04$k,
+        borderRadius: generalSearchField$l.borderRadius,
+        '& span': {
+            color: base04$k,
+        },
+    },
+    '.cm-searchMatch.cm-searchMatch-selected': {
+        backgroundColor: blue$1,
+        color: base00$k,
+        padding: generalSearchField$l.padding,
+        '& span': {
+            color: base00$k,
+        },
+    },
+    '.cm-search.cm-panel.cm-textfield': {
+        color: base04$k,
+        borderRadius: generalSearchField$l.borderRadius,
+        padding: generalSearchField$l.padding,
+    },
+    // Panels
+    '.cm-panels': {
+        backgroundColor: darkBackground$f,
+        color: base04$k,
+        borderRadius: '4px',
+    },
+    '.cm-panels.cm-panels-top': {
+        borderBottom: `1px solid ${base02$j}`,
+    },
+    '.cm-panels.cm-panels-bottom': {
+        borderTop: `1px solid ${base02$j}`,
+    },
+    '.cm-panel button': {
+        backgroundColor: tooltipBackground$k,
+        color: base04$k,
+        border: generalPanel$l.border,
+        borderRadius: generalPanel$l.borderRadius,
+        padding: generalPanel$l.padding,
+    },
+    '.cm-panel button:hover': {
+        backgroundColor: base01$j,
+    },
+    // Line highlighting
+    '.cm-activeLine': {
+        backgroundColor: '#3a3a5266',
+        borderRadius: generalLine$l.borderRadius,
+        borderLeft: `2px solid ${lavender}`,
+        zIndex: 1,
+    },
+    // Gutters
+    '.cm-gutters': {
+        backgroundColor: darkBackground$f,
+        color: base02$j,
+        border: generalGutter$l.border,
+        borderRight: `1px solid ${base01$j}`,
+        paddingRight: generalGutter$l.paddingRight,
+    },
+    '.cm-activeLineGutter': {
+        backgroundColor: base01$j,
+        color: base04$k,
+        fontWeight: generalGutter$l.fontWeight,
+    },
+    '.cm-lineNumbers': {
+        fontSize: generalGutter$l.fontSize,
+        lineHeight: generalGutter$l.lineHeight,
+    },
+    '.cm-foldGutter': {
+        fontSize: generalGutter$l.fontSize,
+        lineHeight: generalGutter$l.lineHeight,
+    },
+    '.cm-foldGutter .cm-gutterElement': {
+        color: base02$j,
+        cursor: 'pointer',
+    },
+    '.cm-foldGutter .cm-gutterElement:hover': {
+        color: base04$k,
+    },
+    // Diff/Merge View Styles
+    '.cm-insertedLine': {
+        textDecoration: generalDiff$l.insertedTextDecoration,
+        backgroundColor: addedBackground$l,
+        color: addedText$l,
+        padding: generalDiff$l.insertedLinePadding,
+        borderRadius: generalDiff$l.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+        textDecoration: generalDiff$l.insertedTextDecoration,
+        backgroundColor: `${addedBackground$l} !important`,
+        color: addedText$l,
+        padding: generalDiff$l.insertedLinePadding,
+        borderRadius: generalDiff$l.borderRadious,
+        border: `1px solid ${addedText$l}40`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+        background: 'transparent !important',
+    },
+    '.cm-deletedLine': {
+        textDecoration: generalDiff$l.deletedTextDecoration,
+        backgroundColor: removedBackground$l,
+        color: removedText$l,
+        padding: generalDiff$l.insertedLinePadding,
+        borderRadius: generalDiff$l.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+        textDecoration: generalDiff$l.deletedTextDecoration,
+        backgroundColor: `${removedBackground$l} !important`,
+        color: removedText$l,
+        padding: generalDiff$l.insertedLinePadding,
+        borderRadius: generalDiff$l.borderRadious,
+        border: `1px solid ${removedText$l}40`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+        background: 'transparent !important',
+    },
+    // Tooltips and autocomplete
+    '.cm-tooltip': {
+        backgroundColor: tooltipBackground$k,
+        border: `1px solid ${base02$j}`,
+        borderRadius: generalTooltip$l.borderRadius,
+        padding: generalTooltip$l.padding,
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+    },
+    '.cm-tooltip-autocomplete': {
+        '& > ul': {
+            backgroundColor: tooltipBackground$k,
+            border: 'none',
+        },
+        '& > ul > li': {
+            padding: generalTooltip$l.padding,
+            lineHeight: generalTooltip$l.lineHeight,
+        },
+        '& > ul > li[aria-selected]': {
+            backgroundColor: base01$j,
+            color: base05$j,
+            borderRadius: generalTooltip$l.borderRadiusSelected,
+        },
+        '& > ul > li > span.cm-completionIcon': {
+            color: base02$j,
+            paddingRight: generalTooltip$l.paddingRight,
+        },
+        '& > ul > li > span.cm-completionDetail': {
+            color: base02$j,
+            fontStyle: 'italic',
+        },
+    },
+    '.cm-tooltip .cm-tooltip-arrow:before': {
+        borderTopColor: 'transparent',
+        borderBottomColor: 'transparent',
+    },
+    '.cm-tooltip .cm-tooltip-arrow:after': {
+        borderTopColor: tooltipBackground$k,
+        borderBottomColor: tooltipBackground$k,
+    },
+    // Diagnostics styling
+    '.cm-diagnostic': {
+        '&-error': {
+            borderLeft: `3px solid ${red$1}`,
+        },
+        '&-warning': {
+            borderLeft: `3px solid ${diagnosticWarning$j}`,
+        },
+        '&-info': {
+            borderLeft: `3px solid ${linkColor$j}`,
+        },
+    },
+    '.cm-lintPoint-error': {
+        borderBottom: `2px wavy ${red$1}`,
+    },
+    '.cm-lintPoint-warning': {
+        borderBottom: `2px wavy ${diagnosticWarning$j}`,
+    },
+    // Matching brackets
+    '.cm-matchingBracket': {
+        backgroundColor: activeBracketBg$k,
+        outline: `1px solid ${activeBracketBorder$k}`,
+        borderRadius: generalMatching$l.borderRadius,
+    },
+    '.cm-nonmatchingBracket': {
+        backgroundColor: `${red$1}40`,
+        outline: `1px solid ${invalid$k}`,
+        borderRadius: generalMatching$l.borderRadius,
+    },
+    // Selection matches
+    '.cm-selectionMatch': {
+        backgroundColor: selectionMatch$k,
+        outline: `1px solid ${base01$j}50`,
+        borderRadius: generalMatching$l.borderRadius,
+    },
+    // Fold placeholder
+    '.cm-foldPlaceholder': {
+        backgroundColor: tooltipBackground$k,
+        color: base02$j,
+        border: `1px dotted ${base02$j}70`,
+        borderRadius: generalPlaceholder$l.borderRadius,
+        padding: generalPlaceholder$l.padding,
+        margin: generalPlaceholder$l.margin,
+    },
+    // Focus outline
+    '&.cm-focused': {
+        outline: 'none',
+        boxShadow: `0 0 0 2px ${background$h}, 0 0 0 3px ${lavender}40`,
+    },
+    // Scrollbars
+    '& .cm-scroller::-webkit-scrollbar': {
+        width: generalScroller$l.width,
+        height: generalScroller$l.height,
+    },
+    '& .cm-scroller::-webkit-scrollbar-track': {
+        background: darkBackground$f,
+    },
+    '& .cm-scroller::-webkit-scrollbar-thumb': {
+        backgroundColor: base01$j,
+        borderRadius: generalScroller$l.borderRadius,
+        border: `3px solid ${darkBackground$f}`,
+    },
+    '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
+        backgroundColor: base02$j,
+    },
+    // Ghost text
+    '.cm-ghostText': {
+        opacity: '0.5',
+        color: base02$j,
+    },
+}, { dark: true });
+/**
+ * Enhanced syntax highlighting for Catppuccin Mocha theme
+ */
+const catppuccinMochaHighlightStyle = /*@__PURE__*/HighlightStyle.define([
+    // Keywords and control flow
+    { tag: tags$1.keyword, color: mauve, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: mauve, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: mauve, fontWeight: 'bold' },
+    // Names and variables
+    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base04$k },
+    { tag: [tags$1.variableName], color: base04$k },
+    { tag: [tags$1.propertyName], color: blue$1, fontStyle: 'normal' },
+    // Classes and types
+    { tag: [tags$1.typeName], color: yellow$1 },
+    { tag: [tags$1.className], color: yellow$1, fontStyle: 'italic' },
+    { tag: [tags$1.namespace], color: peach, fontStyle: 'italic' },
+    // Operators and punctuation
+    { tag: [tags$1.operator, tags$1.operatorKeyword], color: sky },
+    { tag: [tags$1.bracket], color: base03$k },
+    { tag: [tags$1.brace], color: teal },
+    { tag: [tags$1.punctuation], color: base03$k },
+    // Functions and parameters
+    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: blue$1 },
+    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: blue$1 },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: peach },
+    // Constants and literals
+    { tag: tags$1.number, color: peach },
+    { tag: tags$1.changed, color: yellow$1 },
+    { tag: tags$1.annotation, color: red$1, fontStyle: 'italic' },
+    { tag: tags$1.modifier, color: mauve, fontStyle: 'italic' },
+    { tag: tags$1.self, color: red$1 },
+    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: peach },
+    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: peach },
+    // Strings and regex
+    { tag: [tags$1.processingInstruction, tags$1.inserted], color: green$1 },
+    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: pink$1 },
+    { tag: tags$1.string, color: green$1 },
+    // Punctuation and structure
+    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: yellow$1, fontWeight: 'bold' },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.name), tags$1.separator], color: flamingo },
+    // Comments and documentation
+    { tag: tags$1.meta, color: base02$j },
+    { tag: tags$1.comment, fontStyle: 'italic', color: base02$j },
+    { tag: tags$1.docComment, fontStyle: 'italic', color: base02$j },
+    // HTML/XML elements
+    { tag: [tags$1.tagName], color: pink$1 },
+    { tag: [tags$1.attributeName], color: yellow$1 },
+    // Markdown and text formatting
+    { tag: [tags$1.heading], fontWeight: 'bold', color: mauve },
+    { tag: [tags$1.strong], fontWeight: 'bold', color: maroon },
+    { tag: [tags$1.emphasis], fontStyle: 'italic', color: pink$1 },
+    // Links and URLs
+    {
+        tag: [tags$1.link],
+        color: visitedLinkColor$h,
+        fontWeight: '500',
+        textDecoration: 'underline',
+        textUnderlinePosition: 'under',
+    },
+    {
+        tag: [tags$1.url],
+        color: linkColor$j,
+        textDecoration: 'underline',
+        textUnderlineOffset: '2px',
+    },
+    // Special states
+    {
+        tag: [tags$1.invalid],
+        color: red$1,
+        textDecoration: 'underline wavy',
+        borderBottom: `1px wavy ${red$1}`,
+    },
+    { tag: [tags$1.strikethrough], color: red$1, textDecoration: 'line-through' },
+    // Enhanced syntax highlighting
+    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: peach },
+    { tag: tags$1.deleted, color: red$1 },
+    { tag: tags$1.squareBracket, color: maroon },
+    { tag: tags$1.angleBracket, color: sky },
+    // Additional specific styles
+    { tag: tags$1.monospace, color: teal, fontStyle: 'italic' },
+    { tag: [tags$1.contentSeparator], color: sapphire },
+    { tag: tags$1.quote, color: lavender },
+]);
+/**
+ * Combined Catppuccin Mocha theme extension
+ */
+const catppuccinMocha = [
+    catppuccinMochaTheme,
+    /*@__PURE__*/syntaxHighlighting(catppuccinMochaHighlightStyle),
+];
+/**
+ * Catppuccin Mocha merge revert styles configuration
+ */
+const catppuccinMochaMergeStyles = {
+    backgroundColor: darkBackground$f,
+    borderColor: base02$j,
+    buttonColor: base04$k,
+    buttonHoverColor: base01$j,
+};
+
+// Helper module for styling options
+const generalContent$k = {
+    fontSize: '14px',
+    fontFamily: 'JetBrains Mono, Consolas, monospace',
+    lineHeight: '1.6',
+};
+const generalCursor$i = {
+    borderLeftWidth: '2px',
+};
+const generalDiff$k = {
+    insertedTextDecoration: 'none',
+    deletedTextDecoration: 'line-through',
+    insertedLinePadding: '1px 3px',
+    borderRadious: '3px'};
+const generalGutter$k = {
+    border: 'none',
+    paddingRight: '8px',
+    fontSize: '0.9em',
+    fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
+};
+const generalPanel$k = {
+    borderRadius: '4px',
+    padding: '2px 10px',
+};
+const generalLine$k = {
+    borderRadius: '2px',
+};
+const generalMatching$k = {
+    borderRadius: '2px',
+};
+const generalPlaceholder$k = {
+    borderRadius: '4px',
+    padding: '0 5px',
+    margin: '0 2px',
+};
+const generalScroller$k = {
+    width: '12px',
+    height: '12px',
+    borderRadius: '6px',
+};
+const generalSearchField$k = {
+    borderRadius: '4px',
+    padding: '2px 6px',
+};
+const generalTooltip$k = {
     borderRadius: '4px',
     borderRadiusSelected: '3px',
     lineHeight: '1.3',
@@ -36691,15 +37427,15 @@ const generalTooltip$h = {
  * Colors are organized by function with visual color blocks for quick reference
  */
 // Base colors from the original Cobalt2 theme (exact match)
-const background$d = '#193549', // Main editor background
+const background$g = '#193549', // Main editor background
 foreground = '#fff', // Main text color (exact from original)
-cursor$h = '#ffc600', // Cursor color (bright yellow)
-selection$h = '#0050A4', // Selection background
+cursor$k = '#ffc600', // Cursor color (bright yellow)
+selection$k = '#0050A4', // Selection background
 selectionInactive = '#003b8b', // Inactive selection
 selectionHighlight = '#0050A480', // Selection highlights (with transparency)
 lineHighlight = '#99eeff33', // The current line highlights
 // UI backgrounds (exact from original)
-darkBackground$c = '#122738', // Sidebar, panels, gutter
+darkBackground$e = '#122738', // Sidebar, panels, gutter
 panelBackground = '#15232d', // Panel background
 gutterBackground = '#12273866', // Gutter background with transparency
 // Searches and finds colors (exact from original)
@@ -36729,10 +37465,10 @@ parameterYellow = '#ffee80', // Parameters, template expressions
 stringQuotes = '#92fc79', // String quotes (special)
 supportTeal = '#80ffbb'; // Support classes, TypeScript types
 // Diff/merge specific colors (exact from original)
-const addedBackground$h = '#3ad90033', // Light green with transparency for insertions
-removedBackground$h = '#ee3a4333', // Light red with transparency for deletions
-addedText$h = lightGreen, // Green for added text
-removedText$h = pink; // Pink for removed text
+const addedBackground$k = '#3ad90033', // Light green with transparency for insertions
+removedBackground$k = '#ee3a4333', // Light red with transparency for deletions
+addedText$k = lightGreen, // Green for added text
+removedText$k = pink; // Pink for removed text
 /**
  * Enhanced editor theme styles for Cobalt2
  */
@@ -36740,26 +37476,26 @@ const cobalt2Theme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
         color: foreground,
-        backgroundColor: background$d,
-        fontSize: generalContent$h.fontSize,
-        fontFamily: generalContent$h.fontFamily,
+        backgroundColor: background$g,
+        fontSize: generalContent$k.fontSize,
+        fontFamily: generalContent$k.fontFamily,
     },
     // Content and cursor
     '.cm-content': {
-        caretColor: cursor$h,
-        lineHeight: generalContent$h.lineHeight,
+        caretColor: cursor$k,
+        lineHeight: generalContent$k.lineHeight,
     },
     '.cm-cursor, .cm-dropCursor': {
-        borderLeftColor: cursor$h,
-        borderLeftWidth: generalCursor$h.borderLeftWidth,
+        borderLeftColor: cursor$k,
+        borderLeftWidth: generalCursor$i.borderLeftWidth,
     },
     '.cm-fat-cursor': {
-        backgroundColor: `${cursor$h}99`,
-        color: background$d,
+        backgroundColor: `${cursor$k}99`,
+        color: background$g,
     },
     // Selection
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-        backgroundColor: selection$h,
+        backgroundColor: selection$k,
         color: foreground,
     },
     // Make sure selection appears above active line
@@ -36767,12 +37503,12 @@ const cobalt2Theme = /*@__PURE__*/EditorView.theme({
         zIndex: 100,
     },
     '.cm-activeLine .cm-selectionBackground': {
-        backgroundColor: `${selection$h}DD`,
+        backgroundColor: `${selection$k}DD`,
         border: `1px solid ${cyan}40`,
         borderRadius: '2px',
     },
     '&.cm-focused .cm-activeLine .cm-selectionBackground': {
-        backgroundColor: `${selection$h}FF`,
+        backgroundColor: `${selection$k}FF`,
         border: `1px solid ${cyan}60`,
         boxShadow: `0 0 3px ${cyan}30`,
     },
@@ -36788,7 +37524,7 @@ const cobalt2Theme = /*@__PURE__*/EditorView.theme({
         backgroundColor: findMatchCurrent,
         outline: `1px solid ${orange}`,
         color: foreground,
-        borderRadius: generalSearchField$h.borderRadius,
+        borderRadius: generalSearchField$k.borderRadius,
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
         backgroundColor: findMatchOther,
@@ -36796,14 +37532,14 @@ const cobalt2Theme = /*@__PURE__*/EditorView.theme({
     },
     '.cm-search.cm-panel.cm-textfield': {
         color: yellow,
-        backgroundColor: background$d,
+        backgroundColor: background$g,
         border: `1px solid ${darkGray}`,
-        borderRadius: generalSearchField$h.borderRadius,
-        padding: generalSearchField$h.padding,
+        borderRadius: generalSearchField$k.borderRadius,
+        padding: generalSearchField$k.padding,
     },
     // Panels
     '.cm-panels': {
-        backgroundColor: darkBackground$c,
+        backgroundColor: darkBackground$e,
         color: gray,
         borderRadius: '4px',
     },
@@ -36817,8 +37553,8 @@ const cobalt2Theme = /*@__PURE__*/EditorView.theme({
         backgroundColor: blue,
         color: foreground,
         border: `1px solid ${darkGray}`,
-        borderRadius: generalPanel$h.borderRadius,
-        padding: generalPanel$h.padding,
+        borderRadius: generalPanel$k.borderRadius,
+        padding: generalPanel$k.padding,
     },
     '.cm-panel button:hover': {
         backgroundColor: orange,
@@ -36827,27 +37563,29 @@ const cobalt2Theme = /*@__PURE__*/EditorView.theme({
     // Line highlighting
     '.cm-activeLine': {
         backgroundColor: lineHighlight,
-        borderRadius: generalLine$h.borderRadius,
+        borderRadius: generalLine$k.borderRadius,
     },
     // Gutters
     '.cm-gutters': {
         backgroundColor: gutterBackground,
         color: gray,
-        border: generalGutter$h.border,
+        border: generalGutter$k.border,
         borderRight: `1px solid ${darkGray}`,
-        paddingRight: generalGutter$h.paddingRight,
+        paddingRight: generalGutter$k.paddingRight,
     },
     '.cm-activeLineGutter': {
         backgroundColor: 'transparent',
         color: foreground,
-        fontWeight: generalGutter$h.fontWeight,
+        fontWeight: generalGutter$k.fontWeight,
     },
     '.cm-lineNumbers': {
-        fontSize: generalGutter$h.fontSize,
+        fontSize: generalGutter$k.fontSize,
+        lineHeight: generalGutter$k.lineHeight,
         color: gray,
     },
     '.cm-foldGutter': {
-        fontSize: generalGutter$h.fontSize,
+        fontSize: generalGutter$k.fontSize,
+        lineHeight: generalGutter$k.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
         color: gray,
@@ -36859,38 +37597,38 @@ const cobalt2Theme = /*@__PURE__*/EditorView.theme({
     // Diff/Merge View Styles
     // Inserted/Added Content
     '.cm-insertedLine': {
-        textDecoration: generalDiff$h.insertedTextDecoration,
-        backgroundColor: addedBackground$h,
-        color: addedText$h,
-        padding: generalDiff$h.insertedLinePadding,
-        borderRadius: generalDiff$h.borderRadious,
+        textDecoration: generalDiff$k.insertedTextDecoration,
+        backgroundColor: addedBackground$k,
+        color: addedText$k,
+        padding: generalDiff$k.insertedLinePadding,
+        borderRadius: generalDiff$k.borderRadious,
     },
     'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
-        textDecoration: generalDiff$h.insertedTextDecoration,
-        backgroundColor: `${addedBackground$h} !important`,
-        color: addedText$h,
-        padding: generalDiff$h.insertedLinePadding,
-        borderRadius: generalDiff$h.borderRadious,
-        border: `1px solid ${addedText$h}30`,
+        textDecoration: generalDiff$k.insertedTextDecoration,
+        backgroundColor: `${addedBackground$k} !important`,
+        color: addedText$k,
+        padding: generalDiff$k.insertedLinePadding,
+        borderRadius: generalDiff$k.borderRadious,
+        border: `1px solid ${addedText$k}30`,
     },
     'ins.cm-insertedLine .cm-changedText': {
         background: 'transparent !important',
     },
     // Deleted/Removed Content
     '.cm-deletedLine': {
-        textDecoration: generalDiff$h.deletedTextDecoration,
-        backgroundColor: removedBackground$h,
-        color: removedText$h,
-        padding: generalDiff$h.insertedLinePadding,
-        borderRadius: generalDiff$h.borderRadious,
+        textDecoration: generalDiff$k.deletedTextDecoration,
+        backgroundColor: removedBackground$k,
+        color: removedText$k,
+        padding: generalDiff$k.insertedLinePadding,
+        borderRadius: generalDiff$k.borderRadious,
     },
     'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
-        textDecoration: generalDiff$h.deletedTextDecoration,
-        backgroundColor: `${removedBackground$h} !important`,
-        color: removedText$h,
-        padding: generalDiff$h.insertedLinePadding,
-        borderRadius: generalDiff$h.borderRadious,
-        border: `1px solid ${removedText$h}30`,
+        textDecoration: generalDiff$k.deletedTextDecoration,
+        backgroundColor: `${removedBackground$k} !important`,
+        color: removedText$k,
+        padding: generalDiff$k.insertedLinePadding,
+        borderRadius: generalDiff$k.borderRadious,
+        border: `1px solid ${removedText$k}30`,
     },
     'del .cm-deletedText, del .cm-changedText': {
         background: 'transparent !important',
@@ -36899,8 +37637,8 @@ const cobalt2Theme = /*@__PURE__*/EditorView.theme({
     '.cm-tooltip': {
         backgroundColor: panelBackground,
         border: `1px solid ${darkGray}`,
-        borderRadius: generalTooltip$h.borderRadius,
-        padding: generalTooltip$h.padding,
+        borderRadius: generalTooltip$k.borderRadius,
+        padding: generalTooltip$k.padding,
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
         color: gray, // Tooltip text color from the original
     },
@@ -36910,18 +37648,18 @@ const cobalt2Theme = /*@__PURE__*/EditorView.theme({
             border: 'none',
         },
         '& > ul > li': {
-            padding: generalTooltip$h.padding,
-            lineHeight: generalTooltip$h.lineHeight,
+            padding: generalTooltip$k.padding,
+            lineHeight: generalTooltip$k.lineHeight,
             color: gray,
         },
         '& > ul > li[aria-selected]': {
-            backgroundColor: background$d,
+            backgroundColor: background$g,
             color: yellow,
-            borderRadius: generalTooltip$h.borderRadiusSelected,
+            borderRadius: generalTooltip$k.borderRadiusSelected,
         },
         '& > ul > li > span.cm-completionIcon': {
             color: blue,
-            paddingRight: generalTooltip$h.paddingRight,
+            paddingRight: generalTooltip$k.paddingRight,
         },
         '& > ul > li > span.cm-completionDetail': {
             color: gray,
@@ -36949,34 +37687,34 @@ const cobalt2Theme = /*@__PURE__*/EditorView.theme({
     // Matching brackets
     '.cm-matchingBracket': {
         backgroundColor: darkGray,
-        outline: `1px solid ${cursor$h}80`,
-        borderRadius: generalMatching$h.borderRadius,
+        outline: `1px solid ${cursor$k}80`,
+        borderRadius: generalMatching$k.borderRadius,
     },
     '.cm-nonmatchingBracket': {
         backgroundColor: `${errorRed}20`,
         outline: `1px solid ${errorRed}`,
-        borderRadius: generalMatching$h.borderRadius,
+        borderRadius: generalMatching$k.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
         backgroundColor: selectionHighlight,
-        borderRadius: generalMatching$h.borderRadius,
+        borderRadius: generalMatching$k.borderRadius,
     },
     '.cm-hoverHighlight': {
         backgroundColor: hoverHighlight$1,
     },
     '.cm-wordHighlight': {
         backgroundColor: wordHighlight,
-        borderRadius: generalMatching$h.borderRadius,
+        borderRadius: generalMatching$k.borderRadius,
     },
     // Fold placeholder
     '.cm-foldPlaceholder': {
         backgroundColor: 'transparent',
         color: gray,
         border: `1px dotted ${blue}50`,
-        borderRadius: generalPlaceholder$h.borderRadius,
-        padding: generalPlaceholder$h.padding,
-        margin: generalPlaceholder$h.margin,
+        borderRadius: generalPlaceholder$k.borderRadius,
+        padding: generalPlaceholder$k.padding,
+        margin: generalPlaceholder$k.margin,
     },
     // Focus outline
     '&.cm-focused': {
@@ -36984,16 +37722,16 @@ const cobalt2Theme = /*@__PURE__*/EditorView.theme({
     },
     // Scrollbars - exact from original
     '& .cm-scroller::-webkit-scrollbar': {
-        width: generalScroller$h.width,
-        height: generalScroller$h.height,
+        width: generalScroller$k.width,
+        height: generalScroller$k.height,
     },
     '& .cm-scroller::-webkit-scrollbar-track': {
-        background: darkBackground$c,
+        background: darkBackground$e,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
         backgroundColor: '#406179cc',
-        borderRadius: generalScroller$h.borderRadius,
-        border: `3px solid ${darkBackground$c}`,
+        borderRadius: generalScroller$k.borderRadius,
+        border: `3px solid ${darkBackground$e}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
         backgroundColor: '#437da3cc',
@@ -37139,12 +37877,1356 @@ const cobalt2MergeStyles = {
 };
 
 // Helper module for styling options
-const generalContent$g = {
+const generalContent$j = {
+    fontSize: '14px',
+    fontFamily: 'JetBrains Mono, Consolas, monospace',
+    lineHeight: '1.6',
+};
+const generalCursor$h = {
+    borderLeftWidth: '2px',
+};
+const generalDiff$j = {
+    insertedTextDecoration: 'none',
+    deletedTextDecoration: 'line-through',
+    insertedLinePadding: '1px 3px',
+    borderRadious: '3px'};
+const generalGutter$j = {
+    border: 'none',
+    paddingRight: '8px',
+    fontSize: '0.9em',
+    fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
+};
+const generalPanel$j = {
+    border: 'none',
+    borderRadius: '4px',
+    padding: '2px 10px',
+};
+const generalLine$j = {
+    borderRadius: '2px',
+};
+const generalMatching$j = {
+    borderRadius: '2px',
+};
+const generalPlaceholder$j = {
+    borderRadius: '4px',
+    padding: '0 5px',
+    margin: '0 2px',
+};
+const generalScroller$j = {
+    width: '12px',
+    height: '12px',
+    borderRadius: '6px',
+};
+const generalSearchField$j = {
+    borderRadius: '4px',
+    padding: '2px 6px',
+};
+const generalTooltip$j = {
+    borderRadius: '4px',
+    borderRadiusSelected: '3px',
+    lineHeight: '1.3',
+    padding: '4px 8px',
+    paddingRight: '8px',
+};
+
+/**
+ * Enhanced Forest theme color palette
+ * -----------------------------------
+ * Colors organized by natural forest elements with visual color blocks for reference
+ */
+// Core natural elements
+const base00$j = '#1a2a33'; // Background - deeper forest shade for better contrast
+const base01$i = '#d0d8e0'; // Foreground - clearer moonlight for better readability
+// const base02 = '#2d3c44'; // Selection - dark forest floor, more defined
+const base03$j = '#607d8b'; // Comments - silvery bark gray, more legible
+// Flora elements (accent colors)
+const base04$j = '#c594c5'; // Cursor - forest wildflower
+const base05$i = '#a9d3ab'; // Keywords - lighter, fresher leaf green
+const base06$g = '#4db6ac'; // Variables - clearer water reflection
+const base07$g = '#78aadc'; // Functions - brighter dusk sky
+const base08$f = '#ef5350'; // Strings - vibrant woodland berries
+const base09$f = '#bc8f6a'; // Numbers - rich forest soil
+const base0A$e = '#ffb74d'; // Classes - golden sunlight through canopy
+const base0B$e = '#9ccc65'; // Properties - fresh moss
+const base0C$e = '#4dd0e1'; // Special chars - forest stream
+const base0D$e = '#7986cb'; // Tags - morning mist
+const base0E$c = '#ba68c8'; // Operators - purple wildflowers
+// const base0F = '#f57f17'; // Metadata - autumn leaves
+// UI-specific colors
+const invalid$j = '#ff5252'; // Error highlight - warning red berry
+const darkBackground$d = '#233039'; // Panel background - shadowy forest
+const highlightBackground$h = '#314443aa'; // Active line - forest clearing with dappled light
+const tooltipBackground$j = '#2a3b42'; // Tooltip background - darker canopy shadow
+const cursor$j = base04$j; // Cursor color
+const selection$j = '#2c5a3acc'; // Selection - translucent forest green
+const selectionMatch$j = '#5d482faa'; // Selection match - amber forest light
+const lineNumbers = '#607d8b90'; // Line numbers - faded tree bark
+const activeBracketBg$j = '#2c5a3a80'; // Active bracket - forest green
+const activeBracketBorder$j = base0A$e; // Active bracket border - golden sunlight
+// Diff/merge specific colors
+const addedBackground$j = '#28513a80', // Forest green with transparency for insertions
+removedBackground$j = '#763c3c70', // Deep red with transparency for deletions
+addedText$j = '#9ccc65', // Moss green for added text
+removedText$j = '#ef5350'; // Berry red for removed text
+/**
+ * Enhanced editor theme styles for Forest
+ */
+const forestTheme = /*@__PURE__*/EditorView.theme({
+    // Base editor styles
+    '&': {
+        color: base01$i,
+        backgroundColor: base00$j,
+        fontSize: generalContent$j.fontSize,
+        fontFamily: generalContent$j.fontFamily,
+    },
+    // Content and cursor
+    '.cm-content': {
+        caretColor: cursor$j,
+        lineHeight: generalContent$j.lineHeight,
+    },
+    '.cm-cursor, .cm-dropCursor': {
+        borderLeftColor: cursor$j,
+        borderLeftWidth: generalCursor$h.borderLeftWidth,
+    },
+    '.cm-fat-cursor': {
+        backgroundColor: `${cursor$j}99`,
+        color: base00$j,
+    },
+    // Selection
+    '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
+        backgroundColor: selection$j,
+        color: base01$i,
+    },
+    // Make sure selection appears above active line
+    '.cm-selectionLayer': {
+        zIndex: 100,
+    },
+    // Search functionality
+    '.cm-searchMatch': {
+        backgroundColor: '#4d653b80',
+        outline: `1px solid ${base0A$e}90`,
+        color: base01$i,
+        borderRadius: generalSearchField$j.borderRadius,
+        '& span': {
+            color: base01$i,
+        },
+    },
+    '.cm-searchMatch.cm-searchMatch-selected': {
+        backgroundColor: '#42855c',
+        color: base01$i,
+        padding: generalSearchField$j.padding,
+        '& span': {
+            color: base01$i,
+        },
+    },
+    '.cm-search.cm-panel.cm-textfield': {
+        color: base01$i,
+        borderRadius: generalSearchField$j.borderRadius,
+        padding: generalSearchField$j.padding,
+    },
+    // Panels
+    '.cm-panels': {
+        backgroundColor: darkBackground$d,
+        color: base01$i,
+        borderRadius: '0 0 4px 4px',
+    },
+    '.cm-panels.cm-panels-top': {
+        borderBottom: '1px solid #3e5059',
+    },
+    '.cm-panels.cm-panels-bottom': {
+        borderTop: '1px solid #3e5059',
+    },
+    '.cm-panel button': {
+        backgroundColor: darkBackground$d,
+        color: base01$i,
+        border: generalPanel$j.border,
+        borderRadius: generalPanel$j.borderRadius,
+        padding: generalPanel$j.padding,
+    },
+    '.cm-panel button:hover': {
+        backgroundColor: '#2d3d47',
+    },
+    // Line highlighting
+    '.cm-activeLine': {
+        backgroundColor: highlightBackground$h,
+        borderRadius: generalLine$j.borderRadius,
+        zIndex: 1,
+    },
+    // Gutters
+    '.cm-gutters': {
+        backgroundColor: darkBackground$d,
+        color: lineNumbers,
+        border: generalGutter$j.border,
+        borderRight: '1px solid #3e505980',
+        paddingRight: generalGutter$j.paddingRight,
+    },
+    '.cm-activeLineGutter': {
+        backgroundColor: highlightBackground$h,
+        color: base01$i,
+        fontWeight: generalGutter$j.fontWeight,
+    },
+    '.cm-lineNumbers': {
+        fontSize: generalGutter$j.fontSize,
+        lineHeight: generalGutter$j.lineHeight,
+    },
+    '.cm-foldGutter': {
+        fontSize: generalGutter$j.fontSize,
+        lineHeight: generalGutter$j.lineHeight,
+    },
+    '.cm-foldGutter .cm-gutterElement': {
+        color: lineNumbers,
+        cursor: 'pointer',
+    },
+    '.cm-foldGutter .cm-gutterElement:hover': {
+        color: base01$i,
+    },
+    // Diff/Merge View Styles
+    // Inserted/Added Content
+    '.cm-insertedLine': {
+        textDecoration: generalDiff$j.insertedTextDecoration,
+        backgroundColor: addedBackground$j,
+        color: addedText$j,
+        padding: generalDiff$j.insertedLinePadding,
+        borderRadius: generalDiff$j.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+        textDecoration: generalDiff$j.insertedTextDecoration,
+        backgroundColor: `${addedBackground$j} !important`,
+        color: addedText$j,
+        padding: generalDiff$j.insertedLinePadding,
+        borderRadius: generalDiff$j.borderRadious,
+        border: `1px solid ${addedText$j}40`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+        background: 'transparent !important',
+    },
+    // Deleted/Removed Content
+    '.cm-deletedLine': {
+        textDecoration: generalDiff$j.deletedTextDecoration,
+        backgroundColor: removedBackground$j,
+        color: removedText$j,
+        padding: generalDiff$j.insertedLinePadding,
+        borderRadius: generalDiff$j.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+        textDecoration: generalDiff$j.deletedTextDecoration,
+        backgroundColor: `${removedBackground$j} !important`,
+        color: removedText$j,
+        padding: generalDiff$j.insertedLinePadding,
+        borderRadius: generalDiff$j.borderRadious,
+        border: `1px solid ${removedText$j}40`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+        background: 'transparent !important',
+    },
+    // Tooltips and autocomplete
+    '.cm-tooltip': {
+        backgroundColor: tooltipBackground$j,
+        border: '1px solid #3e5059',
+        borderRadius: generalTooltip$j.borderRadius,
+        padding: generalTooltip$j.padding,
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+    },
+    '.cm-tooltip-autocomplete': {
+        '& > ul': {
+            backgroundColor: tooltipBackground$j,
+            border: 'none',
+        },
+        '& > ul > li': {
+            padding: generalTooltip$j.padding,
+            lineHeight: generalTooltip$j.lineHeight,
+        },
+        '& > ul > li[aria-selected]': {
+            backgroundColor: selection$j,
+            color: base01$i,
+            borderRadius: generalTooltip$j.borderRadiusSelected,
+        },
+        '& > ul > li > span.cm-completionIcon': {
+            color: base03$j,
+            paddingRight: generalTooltip$j.paddingRight,
+        },
+        '& > ul > li > span.cm-completionDetail': {
+            color: base03$j,
+            fontStyle: 'italic',
+        },
+    },
+    '.cm-tooltip .cm-tooltip-arrow:before': {
+        borderTopColor: 'transparent',
+        borderBottomColor: 'transparent',
+    },
+    '.cm-tooltip .cm-tooltip-arrow:after': {
+        borderTopColor: tooltipBackground$j,
+        borderBottomColor: tooltipBackground$j,
+    },
+    // Diagnostics styling
+    '.cm-diagnostic': {
+        '&-error': {
+            borderLeft: `3px solid ${invalid$j}`,
+        },
+        '&-warning': {
+            borderLeft: `3px solid ${base0A$e}`,
+        },
+        '&-info': {
+            borderLeft: `3px solid ${base0C$e}`,
+        },
+    },
+    '.cm-lintPoint-error': {
+        borderBottom: `2px wavy ${invalid$j}`,
+    },
+    '.cm-lintPoint-warning': {
+        borderBottom: `2px wavy ${base0A$e}`,
+    },
+    // Matching brackets
+    '.cm-matchingBracket': {
+        backgroundColor: activeBracketBg$j,
+        outline: `1px solid ${activeBracketBorder$j}80`,
+        borderRadius: generalMatching$j.borderRadius,
+    },
+    '.cm-nonmatchingBracket': {
+        backgroundColor: '#5d482f80',
+        outline: `1px solid ${invalid$j}80`,
+        borderRadius: generalMatching$j.borderRadius,
+    },
+    // Selection matches
+    '.cm-selectionMatch': {
+        backgroundColor: selectionMatch$j,
+        outline: `1px solid ${base0A$e}40`,
+        borderRadius: generalMatching$j.borderRadius,
+    },
+    // Fold placeholder
+    '.cm-foldPlaceholder': {
+        backgroundColor: 'transparent',
+        color: base03$j,
+        border: `1px dotted ${base0A$e}70`,
+        borderRadius: generalPlaceholder$j.borderRadius,
+        padding: generalPlaceholder$j.padding,
+        margin: generalPlaceholder$j.margin,
+    },
+    // Focus outline
+    '&.cm-focused': {
+        outline: 'none',
+        boxShadow: `0 0 0 2px ${base00$j}, 0 0 0 3px ${base0A$e}40`,
+    },
+    // Scrollbars
+    '& .cm-scroller::-webkit-scrollbar': {
+        width: generalScroller$j.width,
+        height: generalScroller$j.height,
+    },
+    '& .cm-scroller::-webkit-scrollbar-track': {
+        background: darkBackground$d,
+    },
+    '& .cm-scroller::-webkit-scrollbar-thumb': {
+        backgroundColor: '#3e5059',
+        borderRadius: generalScroller$j.borderRadius,
+        border: `3px solid ${darkBackground$d}`,
+    },
+    '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
+        backgroundColor: '#4e616a',
+    },
+    // Ghost text
+    '.cm-ghostText': {
+        opacity: '0.5',
+        color: '#8fa7b5',
+    },
+}, { dark: true });
+/**
+ * Enhanced syntax highlighting for Forest theme
+ */
+const forestHighlightStyle = /*@__PURE__*/HighlightStyle.define([
+    // Keywords and language constructs
+    { tag: tags$1.keyword, color: base05$i, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: base05$i, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: base05$i, fontWeight: 'bold' },
+    // Names and variables
+    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base06$g },
+    { tag: [tags$1.variableName], color: base06$g },
+    { tag: [tags$1.propertyName], color: base0B$e, fontStyle: 'normal' },
+    // Classes and types
+    { tag: [tags$1.typeName], color: base0A$e },
+    { tag: [tags$1.className], color: base0A$e, fontStyle: 'italic' },
+    { tag: [tags$1.namespace], color: base06$g, fontStyle: 'italic' },
+    // Operators and punctuation
+    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base0E$c },
+    { tag: [tags$1.bracket], color: base0E$c },
+    { tag: [tags$1.brace], color: base0E$c },
+    { tag: [tags$1.punctuation], color: base0E$c },
+    // Functions and parameters
+    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base07$g },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base07$g },
+    // Constants and literals
+    { tag: tags$1.number, color: base09$f },
+    { tag: tags$1.changed, color: base09$f },
+    { tag: tags$1.annotation, color: invalid$j, fontStyle: 'italic' },
+    { tag: tags$1.modifier, color: base09$f, fontStyle: 'italic' },
+    { tag: tags$1.self, color: base09$f },
+    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base09$f, fontWeight: 'bold' },
+    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base09$f },
+    // Strings and regex
+    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base08$f },
+    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base08$f },
+    { tag: tags$1.string, color: base08$f },
+    // Punctuation and structure
+    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base0A$e, fontWeight: 'bold' },
+    // Comments and documentation
+    { tag: tags$1.meta, color: base03$j },
+    { tag: tags$1.comment, fontStyle: 'italic', color: base03$j },
+    { tag: tags$1.docComment, fontStyle: 'italic', color: base03$j },
+    // HTML/XML elements
+    { tag: [tags$1.tagName], color: base0D$e },
+    { tag: [tags$1.attributeName], color: base0C$e },
+    // Markdown and text formatting
+    { tag: [tags$1.heading], fontWeight: 'bold', color: base0A$e },
+    { tag: [tags$1.strong], fontWeight: 'bold', color: base05$i },
+    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base06$g },
+    // Links and URLs
+    { tag: [tags$1.link], color: base0A$e, fontWeight: '500', textDecoration: 'underline', textUnderlinePosition: 'under' },
+    {
+        tag: [tags$1.url],
+        color: base0C$e,
+        textDecoration: 'underline',
+        textUnderlineOffset: '2px',
+    },
+    // Special states
+    { tag: [tags$1.invalid], color: base01$i, textDecoration: 'underline wavy', borderBottom: `1px wavy ${invalid$j}` },
+    { tag: [tags$1.strikethrough], color: invalid$j, textDecoration: 'line-through' },
+    // Enhanced syntax highlighting
+    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base09$f },
+    { tag: tags$1.deleted, color: invalid$j },
+    { tag: tags$1.squareBracket, color: base0E$c },
+    { tag: tags$1.angleBracket, color: base0E$c },
+    // Additional specific styles
+    { tag: tags$1.heading1, fontWeight: 'bold', color: base0A$e },
+    { tag: /*@__PURE__*/tags$1.special(tags$1.heading1), fontWeight: 'bold', color: base0A$e },
+    { tag: [tags$1.heading2, tags$1.heading3, tags$1.heading4], fontWeight: 'bold', color: base0A$e },
+    { tag: [tags$1.heading5, tags$1.heading6], color: base0A$e },
+    { tag: tags$1.monospace, color: base01$i },
+    { tag: [tags$1.contentSeparator], color: base0C$e },
+    { tag: tags$1.quote, color: base03$j },
+]);
+/**
+ * Combined Forest theme extension
+ */
+const forest = [
+    forestTheme,
+    /*@__PURE__*/syntaxHighlighting(forestHighlightStyle),
+];
+/**
+ * Forest merge revert styles configuration
+ */
+const forestMergeStyles = {
+    backgroundColor: darkBackground$d,
+    borderColor: '#3e5059',
+    buttonColor: base01$i,
+    buttonHoverColor: '#2d3d47',
+};
+
+// Helper module for styling options
+const generalContent$i = {
     fontSize: '14px',
     fontFamily: 'JetBrains Mono, Consolas, monospace',
     lineHeight: '1.6',
 };
 const generalCursor$g = {
+    borderLeftWidth: '2px',
+};
+const generalDiff$i = {
+    insertedTextDecoration: 'none',
+    deletedTextDecoration: 'line-through',
+    insertedLinePadding: '1px 3px',
+    borderRadious: '3px'};
+const generalGutter$i = {
+    border: 'none',
+    paddingRight: '8px',
+    fontSize: '0.9em',
+    fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
+};
+const generalPanel$i = {
+    border: 'none',
+    borderRadius: '4px',
+    padding: '2px 10px',
+};
+const generalLine$i = {
+    borderRadius: '2px',
+};
+const generalMatching$i = {
+    borderRadius: '2px',
+};
+const generalPlaceholder$i = {
+    borderRadius: '4px',
+    padding: '0 5px',
+    margin: '0 2px',
+};
+const generalScroller$i = {
+    width: '12px',
+    height: '12px',
+    borderRadius: '6px',
+};
+const generalSearchField$i = {
+    borderRadius: '4px',
+    padding: '2px 6px',
+};
+const generalTooltip$i = {
+    borderRadius: '4px',
+    borderRadiusSelected: '3px',
+    lineHeight: '1.3',
+    padding: '4px 8px',
+    paddingRight: '8px',
+};
+
+/**
+ * Enhanced GitHub Dark theme color definitions
+ * -------------------------------------------
+ * Colors are organized by function with visual color blocks
+ */
+// Core UI colors
+const base00$i = '#0d1117', // Background (GitHub dark mode background)
+base01$h = '#c9d1d9', // Foreground (main text color)
+base02$i = '#264F78', // Selection - brighter blue for better visibility
+base03$i = '#8b949e', // Comment and Bracket color
+base04$i = '#ffffff', // Caret color (pure white for better visibility,
+// Syntax highlighting colors
+base05$h = '#7ee787', // TagName, Name, Quote - signature GitHub green
+base06$f = '#d2a8ff', // ClassName, PropertyName - GitHub purple
+base07$f = '#79c0ff', // VariableName, Number - GitHub blue
+base08$e = '#ff7b72', // Keyword, TypeName - GitHub red
+base09$e = '#a5d6ff', // String, Meta, Regexp - lighter blue
+base0A$d = '#2c333a', // Panel button hover
+base0B$d = '#3c444d', // Deleted background color
+base0C$d = '#ffab70', // Atom, Bool - GitHub orange
+// Background variants
+base0D$d = '#161b22', // Gutter background (slightly darker than the editor)
+base0E$b = '#30363d', // Panel and tooltip border color
+base0F$9 = '#21262d'; // Active line gutter background
+// UI-specific colors
+const invalid$i = '#f97583', // Invalid color - error red
+highlightBackground$g = '#2d333b1a', // Line highlight (GitHub selection color)
+tooltipBackground$i = '#21262d', // Tooltip background
+cursor$i = base04$i, // Caret color
+selection$i = base02$i, // Selection color
+activeBracketBg$i = '#3a587a75', // Active bracket background
+activeBracketBorder$i = '#4d90fe', // Active bracket border
+diagnosticWarning$i = '#d29922', // Warning color
+selectionMatch$i = '#3a587a55', // Selection match background
+linkColor$i = '#58a6ff', // Bright blue for links (GitHub link color)
+visitedLinkColor$g = '#bc8cff'; // Light purple for visited links
+// Diff/merge specific colors
+const addedBackground$i = '#2ea04350', // GitHub green with transparency
+removedBackground$i = '#f8514940', // GitHub red with transparency
+addedText$i = '#7ee787', // GitHub green for added text
+removedText$i = '#ff7b72'; // GitHub red for removed text
+/**
+ * Enhanced editor theme styles for GitHub Dark
+ */
+const githubDarkTheme = /*@__PURE__*/EditorView.theme({
+    // Base editor styles
+    '&': {
+        color: base01$h,
+        backgroundColor: base00$i,
+        fontSize: generalContent$i.fontSize,
+        fontFamily: generalContent$i.fontFamily,
+    },
+    // Content and cursor
+    '.cm-content': {
+        caretColor: cursor$i,
+        lineHeight: generalContent$i.lineHeight,
+    },
+    '.cm-cursor, .cm-dropCursor': {
+        borderLeftColor: cursor$i,
+        borderLeftWidth: generalCursor$g.borderLeftWidth,
+    },
+    '.cm-fat-cursor': {
+        backgroundColor: `${cursor$i}99`,
+        color: base00$i,
+    },
+    // Selection
+    '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
+        backgroundColor: selection$i,
+    },
+    // Make sure selection appears above active line
+    '.cm-selectionLayer': {
+        zIndex: 100,
+    },
+    // Search functionality
+    '.cm-searchMatch': {
+        backgroundColor: '#3a587a',
+        outline: `1px solid ${base07$f}`,
+        color: base01$h,
+        borderRadius: generalSearchField$i.borderRadius,
+        '& span': {
+            color: base01$h,
+        },
+    },
+    '.cm-searchMatch.cm-searchMatch-selected': {
+        backgroundColor: activeBracketBorder$i,
+        color: base04$i,
+        padding: generalSearchField$i.padding,
+        '& span': {
+            color: base04$i,
+        },
+    },
+    '.cm-search.cm-panel.cm-textfield': {
+        color: base01$h,
+        borderRadius: generalSearchField$i.borderRadius,
+        padding: generalSearchField$i.padding,
+    },
+    // Panels
+    '.cm-panels': {
+        backgroundColor: tooltipBackground$i,
+        color: base01$h,
+        borderRadius: '4px',
+    },
+    '.cm-panels.cm-panels-top': {
+        borderBottom: `1px solid ${base0E$b}`,
+    },
+    '.cm-panels.cm-panels-bottom': {
+        borderTop: `1px solid ${base0E$b}`,
+    },
+    '.cm-panel button': {
+        backgroundColor: tooltipBackground$i,
+        color: base01$h,
+        border: generalPanel$i.border,
+        borderRadius: generalPanel$i.borderRadius,
+        padding: generalPanel$i.padding,
+    },
+    '.cm-panel button:hover': {
+        backgroundColor: base0A$d,
+    },
+    // Line highlighting
+    '.cm-activeLine': {
+        backgroundColor: highlightBackground$g,
+        borderRadius: generalLine$i.borderRadius,
+        zIndex: 1,
+    },
+    // Gutters
+    '.cm-gutters': {
+        backgroundColor: base0D$d,
+        color: base03$i,
+        border: generalGutter$i.border,
+        borderRight: '1px solid #30363d',
+        paddingRight: generalGutter$i.paddingRight,
+    },
+    '.cm-activeLineGutter': {
+        backgroundColor: base0F$9,
+        color: base01$h,
+        fontWeight: generalGutter$i.fontWeight,
+    },
+    '.cm-lineNumbers': {
+        fontSize: generalGutter$i.fontSize,
+        lineHeight: generalGutter$i.lineHeight,
+    },
+    '.cm-foldGutter': {
+        fontSize: generalGutter$i.fontSize,
+        lineHeight: generalGutter$i.lineHeight,
+    },
+    '.cm-foldGutter .cm-gutterElement': {
+        color: base03$i,
+        cursor: 'pointer',
+    },
+    '.cm-foldGutter .cm-gutterElement:hover': {
+        color: base01$h,
+    },
+    // Diff/Merge View Styles
+    // Inserted/Added Content
+    '.cm-insertedLine': {
+        textDecoration: generalDiff$i.insertedTextDecoration,
+        backgroundColor: addedBackground$i,
+        color: addedText$i,
+        padding: generalDiff$i.insertedLinePadding,
+        borderRadius: generalDiff$i.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+        textDecoration: generalDiff$i.insertedTextDecoration,
+        backgroundColor: `${addedBackground$i} !important`,
+        color: addedText$i,
+        padding: generalDiff$i.insertedLinePadding,
+        borderRadius: generalDiff$i.borderRadious,
+        border: `1px solid ${addedText$i}40`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+        background: 'transparent !important',
+    },
+    // Deleted/Removed Content
+    '.cm-deletedLine': {
+        textDecoration: generalDiff$i.deletedTextDecoration,
+        backgroundColor: removedBackground$i,
+        color: removedText$i,
+        padding: generalDiff$i.insertedLinePadding,
+        borderRadius: generalDiff$i.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+        textDecoration: generalDiff$i.deletedTextDecoration,
+        backgroundColor: `${removedBackground$i} !important`,
+        color: removedText$i,
+        padding: generalDiff$i.insertedLinePadding,
+        borderRadius: generalDiff$i.borderRadious,
+        border: `1px solid ${removedText$i}40`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+        background: 'transparent !important',
+    },
+    // Tooltips and autocomplete
+    '.cm-tooltip': {
+        backgroundColor: tooltipBackground$i,
+        border: `1px solid ${base0E$b}`,
+        borderRadius: generalTooltip$i.borderRadius,
+        padding: generalTooltip$i.padding,
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+    },
+    '.cm-tooltip-autocomplete': {
+        '& > ul': {
+            backgroundColor: tooltipBackground$i,
+            border: 'none',
+        },
+        '& > ul > li': {
+            padding: generalTooltip$i.padding,
+            lineHeight: generalTooltip$i.lineHeight,
+        },
+        '& > ul > li[aria-selected]': {
+            backgroundColor: selection$i,
+            color: base04$i,
+            borderRadius: generalTooltip$i.borderRadiusSelected,
+        },
+        '& > ul > li > span.cm-completionIcon': {
+            color: base03$i,
+            paddingRight: generalTooltip$i.paddingRight,
+        },
+        '& > ul > li > span.cm-completionDetail': {
+            color: base03$i,
+            fontStyle: 'italic',
+        },
+    },
+    '.cm-tooltip .cm-tooltip-arrow:before': {
+        borderTopColor: 'transparent',
+        borderBottomColor: 'transparent',
+    },
+    '.cm-tooltip .cm-tooltip-arrow:after': {
+        borderTopColor: tooltipBackground$i,
+        borderBottomColor: tooltipBackground$i,
+    },
+    // Diagnostics styling
+    '.cm-diagnostic': {
+        '&-error': {
+            borderLeft: `3px solid ${invalid$i}`,
+        },
+        '&-warning': {
+            borderLeft: `3px solid ${diagnosticWarning$i}`,
+        },
+        '&-info': {
+            borderLeft: `3px solid ${linkColor$i}`,
+        },
+    },
+    '.cm-lintPoint-error': {
+        borderBottom: `2px wavy ${invalid$i}`,
+    },
+    '.cm-lintPoint-warning': {
+        borderBottom: `2px wavy ${diagnosticWarning$i}`,
+    },
+    // Matching brackets
+    '.cm-matchingBracket': {
+        backgroundColor: activeBracketBg$i,
+        outline: `1px solid ${activeBracketBorder$i}`,
+        borderRadius: generalMatching$i.borderRadius,
+    },
+    '.cm-nonmatchingBracket': {
+        backgroundColor: '#f9758340',
+        outline: `1px solid ${invalid$i}`,
+        borderRadius: generalMatching$i.borderRadius,
+    },
+    // Selection matches
+    '.cm-selectionMatch': {
+        backgroundColor: selectionMatch$i,
+        outline: `1px solid ${base02$i}50`,
+        borderRadius: generalMatching$i.borderRadius,
+    },
+    // Fold placeholder
+    '.cm-foldPlaceholder': {
+        backgroundColor: tooltipBackground$i,
+        color: base03$i,
+        border: `1px dotted ${base0E$b}70`,
+        borderRadius: generalPlaceholder$i.borderRadius,
+        padding: generalPlaceholder$i.padding,
+        margin: generalPlaceholder$i.margin,
+    },
+    // Focus outline
+    '&.cm-focused': {
+        outline: 'none',
+        boxShadow: `0 0 0 2px ${base00$i}, 0 0 0 3px ${linkColor$i}40`,
+    },
+    // Scrollbars
+    '& .cm-scroller::-webkit-scrollbar': {
+        width: generalScroller$i.width,
+        height: generalScroller$i.height,
+    },
+    '& .cm-scroller::-webkit-scrollbar-track': {
+        background: base0D$d,
+    },
+    '& .cm-scroller::-webkit-scrollbar-thumb': {
+        backgroundColor: base0E$b,
+        borderRadius: generalScroller$i.borderRadius,
+        border: `3px solid ${base0D$d}`,
+    },
+    '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
+        backgroundColor: base0B$d,
+    },
+    // Ghost text
+    '.cm-ghostText': {
+        opacity: '0.5',
+        color: base03$i,
+    },
+}, { dark: true });
+/**
+ * Enhanced syntax highlighting for GitHub Dark theme
+ */
+const githubDarkHighlightStyle = /*@__PURE__*/HighlightStyle.define([
+    // Keywords and control flow
+    { tag: tags$1.keyword, color: base08$e, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: base08$e, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: base08$e, fontWeight: 'bold' },
+    // Names and variables
+    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base07$f },
+    { tag: [tags$1.variableName], color: base07$f },
+    { tag: [tags$1.propertyName], color: base06$f, fontStyle: 'normal' },
+    // Classes and types
+    { tag: [tags$1.typeName], color: base08$e },
+    { tag: [tags$1.className], color: base06$f, fontStyle: 'italic' },
+    { tag: [tags$1.namespace], color: base07$f, fontStyle: 'italic' },
+    // Operators and punctuation
+    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base01$h },
+    { tag: [tags$1.bracket], color: base03$i },
+    { tag: [tags$1.brace], color: base03$i },
+    { tag: [tags$1.punctuation], color: base03$i },
+    // Functions and parameters
+    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base05$h },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base07$f },
+    // Constants and literals
+    { tag: tags$1.number, color: base0C$d },
+    { tag: tags$1.changed, color: base0C$d },
+    { tag: tags$1.annotation, color: invalid$i, fontStyle: 'italic' },
+    { tag: tags$1.modifier, color: base0C$d, fontStyle: 'italic' },
+    { tag: tags$1.self, color: base0C$d },
+    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base0C$d },
+    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base0C$d },
+    // Strings and regex
+    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base05$h },
+    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base09$e },
+    { tag: tags$1.string, color: base09$e },
+    // Punctuation and structure
+    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base08$e, fontWeight: 'bold' },
+    // Comments and documentation
+    { tag: tags$1.meta, color: base03$i },
+    { tag: tags$1.comment, fontStyle: 'italic', color: base03$i },
+    { tag: tags$1.docComment, fontStyle: 'italic', color: base03$i },
+    // HTML/XML elements
+    { tag: [tags$1.tagName], color: base05$h },
+    { tag: [tags$1.attributeName], color: base06$f },
+    // Markdown and text formatting
+    { tag: [tags$1.heading], fontWeight: 'bold', color: base07$f },
+    { tag: [tags$1.strong], fontWeight: 'bold', color: base07$f },
+    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base09$e },
+    // Links and URLs
+    { tag: [tags$1.link], color: visitedLinkColor$g, fontWeight: '500', textDecoration: 'underline', textUnderlinePosition: 'under' },
+    {
+        tag: [tags$1.url],
+        color: linkColor$i,
+        textDecoration: 'underline',
+        textUnderlineOffset: '2px',
+    },
+    // Special states
+    { tag: [tags$1.invalid], color: base01$h, textDecoration: 'underline wavy', borderBottom: `1px wavy ${invalid$i}` },
+    { tag: [tags$1.strikethrough], color: invalid$i, textDecoration: 'line-through' },
+    // Enhanced syntax highlighting
+    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base0C$d },
+    { tag: tags$1.deleted, color: invalid$i },
+    { tag: tags$1.squareBracket, color: base03$i },
+    { tag: tags$1.angleBracket, color: base03$i },
+    // Additional specific styles
+    { tag: tags$1.monospace, color: base01$h },
+    { tag: [tags$1.contentSeparator], color: base07$f },
+    { tag: tags$1.quote, color: base03$i },
+]);
+/**
+ * Combined GitHub Dark theme extension
+ */
+const githubDark = [
+    githubDarkTheme,
+    /*@__PURE__*/syntaxHighlighting(githubDarkHighlightStyle),
+];
+/**
+ * GitHub Dark merge revert styles configuration
+ */
+const githubDarkMergeStyles = {
+    backgroundColor: tooltipBackground$i,
+    borderColor: base0E$b,
+    buttonColor: base01$h,
+    buttonHoverColor: base0A$d,
+};
+
+// Helper module for styling options
+const generalContent$h = {
+    fontSize: '14px',
+    fontFamily: 'JetBrains Mono, Consolas, monospace',
+    lineHeight: '1.6',
+};
+const generalCursor$f = {
+    borderLeftWidth: '2px',
+};
+const generalDiff$h = {
+    insertedTextDecoration: 'none',
+    deletedTextDecoration: 'line-through',
+    insertedLinePadding: '1px 3px',
+    borderRadious: '3px'};
+const generalGutter$h = {
+    border: 'none',
+    paddingRight: '8px',
+    fontSize: '0.9em',
+    fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
+};
+const generalPanel$h = {
+    border: 'none',
+    borderRadius: '4px',
+    padding: '2px 10px',
+};
+const generalLine$h = {
+    borderRadius: '2px',
+};
+const generalMatching$h = {
+    borderRadius: '2px',
+};
+const generalPlaceholder$h = {
+    borderRadius: '4px',
+    padding: '0 5px',
+    margin: '0 2px',
+};
+const generalScroller$h = {
+    width: '12px',
+    height: '12px',
+    borderRadius: '6px',
+};
+const generalSearchField$h = {
+    borderRadius: '4px',
+    padding: '2px 6px',
+};
+const generalTooltip$h = {
+    borderRadius: '4px',
+    borderRadiusSelected: '3px',
+    lineHeight: '1.3',
+    padding: '4px 8px',
+    paddingRight: '8px',
+};
+
+/**
+ * Enhanced GitHub Light theme color palette
+ * ----------------------------------------
+ * Colors organized by function with visual color blocks for reference
+ */
+// Core UI colors
+const base00$h = '#ffffff', // Background (GitHub light mode background)
+base01$g = '#24292e', // Foreground (main text color)
+base02$h = '#BBDFFF', // Selection - light blue
+base03$h = '#6e7781', // Comments, subdued text
+base04$h = '#f6f8fa', // Light gray (gutter, panels)
+// Syntax highlighting colors
+base05$g = '#116329', // Tag names - GitHub green
+base06$e = '#6a737d', // Comments, brackets - GitHub gray
+base07$e = '#6f42c1', // Classes, properties - GitHub purple
+base08$d = '#005cc5', // Variables, attributes - GitHub blue
+base09$d = '#d73a49', // Keywords, types - GitHub red
+base0A$c = '#032f62', // Strings, regexps - GitHub navy
+base0B$c = '#22863a', // Names, quotes - GitHub green
+base0C$c = '#e36209', // Atoms, booleans - GitHub orange
+// Background variants
+base0D$c = '#f1f8ff', // Active line gutter background
+base0E$a = '#e1e4e8', // Panel and tooltip border color
+base0F$8 = '#f8f9fa'; // Tooltip background
+// Special states
+const invalid$h = '#cb2431', // Invalid color - error red
+highlightBackground$f = '#BBDFFF20', // Line highlight (light blue and opacity)
+tooltipBackground$h = base0F$8, // Tooltip background
+cursor$h = base01$g, // Caret color
+selection$h = base02$h, // Selection color
+activeBracketBg$h = '#e8f0fe', // Active bracket background
+activeBracketBorder$h = '#0366d6', // Active bracket border
+diagnosticWarning$h = '#b08800', // Warning color
+selectionMatch$h = '#79b8ff40', // Selection match background
+linkColor$h = '#0969da', // Bright blue for links
+visitedLinkColor$f = '#8250df'; // Purple for visited links
+// Diff/merge specific colors
+const addedBackground$h = '#e6ffec80', // GitHub light green with transparency
+removedBackground$h = '#ffebe980', // GitHub light red with transparency
+addedText$h = '#0f6d31', // GitHub dark green for added text
+removedText$h = '#cf222e'; // GitHub red for removed text
+/**
+ * Enhanced editor theme styles for GitHub Light
+ */
+const githubLightTheme = /*@__PURE__*/EditorView.theme({
+    // Base editor styles
+    '&': {
+        color: base01$g,
+        backgroundColor: base00$h,
+        fontSize: generalContent$h.fontSize,
+        fontFamily: generalContent$h.fontFamily,
+    },
+    // Content and cursor
+    '.cm-content': {
+        caretColor: cursor$h,
+        lineHeight: generalContent$h.lineHeight,
+    },
+    '.cm-cursor, .cm-dropCursor': {
+        borderLeftColor: cursor$h,
+        borderLeftWidth: generalCursor$f.borderLeftWidth,
+    },
+    '.cm-fat-cursor': {
+        backgroundColor: `${cursor$h}99`,
+        color: base00$h,
+    },
+    // Selection
+    '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
+        backgroundColor: selection$h,
+        color: base01$g,
+    },
+    // Make sure selection appears above active line
+    '.cm-selectionLayer': {
+        zIndex: 100,
+    },
+    // Search functionality
+    '.cm-searchMatch': {
+        backgroundColor: '#daebff',
+        outline: `1px solid ${base08$d}`,
+        color: base01$g,
+        borderRadius: generalSearchField$h.borderRadius,
+        '& span': {
+            color: base01$g,
+        },
+    },
+    '.cm-searchMatch.cm-searchMatch-selected': {
+        backgroundColor: '#79b8ff',
+        color: base00$h,
+        padding: generalSearchField$h.padding,
+        '& span': {
+            color: base00$h,
+        },
+    },
+    '.cm-search.cm-panel.cm-textfield': {
+        color: base01$g,
+        borderRadius: generalSearchField$h.borderRadius,
+        padding: generalSearchField$h.padding,
+    },
+    // Panels
+    '.cm-panels': {
+        backgroundColor: base04$h,
+        color: base03$h,
+        borderRadius: '0 0 4px 4px',
+    },
+    '.cm-panels.cm-panels-top': {
+        borderBottom: `1px solid ${base0E$a}`,
+    },
+    '.cm-panels.cm-panels-bottom': {
+        borderTop: `1px solid ${base0E$a}`,
+    },
+    '.cm-panel button': {
+        backgroundColor: base00$h,
+        color: base01$g,
+        border: generalPanel$h.border,
+        borderRadius: generalPanel$h.borderRadius,
+        padding: generalPanel$h.padding,
+    },
+    '.cm-panel button:hover': {
+        backgroundColor: '#f5f5f5',
+    },
+    // Line highlighting
+    '.cm-activeLine': {
+        backgroundColor: highlightBackground$f,
+        borderRadius: generalLine$h.borderRadius,
+        zIndex: 1,
+    },
+    // Gutters
+    '.cm-gutters': {
+        backgroundColor: base04$h,
+        color: base03$h,
+        border: generalGutter$h.border,
+        borderRight: `1px solid ${base0E$a}`,
+        paddingRight: generalGutter$h.paddingRight,
+    },
+    '.cm-activeLineGutter': {
+        backgroundColor: base0D$c,
+        color: base01$g,
+        fontWeight: generalGutter$h.fontWeight,
+    },
+    '.cm-lineNumbers': {
+        fontSize: generalGutter$h.fontSize,
+        lineHeight: generalGutter$h.lineHeight,
+    },
+    '.cm-foldGutter': {
+        fontSize: generalGutter$h.fontSize,
+        lineHeight: generalGutter$h.lineHeight,
+    },
+    '.cm-foldGutter .cm-gutterElement': {
+        color: base03$h,
+        cursor: 'pointer',
+    },
+    '.cm-foldGutter .cm-gutterElement:hover': {
+        color: base01$g,
+    },
+    // Diff/Merge View Styles
+    // Inserted/Added Content
+    '.cm-insertedLine': {
+        textDecoration: generalDiff$h.insertedTextDecoration,
+        backgroundColor: addedBackground$h,
+        color: addedText$h,
+        padding: generalDiff$h.insertedLinePadding,
+        borderRadius: generalDiff$h.borderRadious,
+    },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
+        textDecoration: generalDiff$h.insertedTextDecoration,
+        backgroundColor: `${addedBackground$h} !important`,
+        color: addedText$h,
+        padding: generalDiff$h.insertedLinePadding,
+        borderRadius: generalDiff$h.borderRadious,
+        border: `1px solid ${addedText$h}30`,
+    },
+    'ins.cm-insertedLine .cm-changedText': {
+        background: 'transparent !important',
+    },
+    // Deleted/Removed Content
+    '.cm-deletedLine': {
+        textDecoration: generalDiff$h.deletedTextDecoration,
+        backgroundColor: removedBackground$h,
+        color: removedText$h,
+        padding: generalDiff$h.insertedLinePadding,
+        borderRadius: generalDiff$h.borderRadious,
+    },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
+        textDecoration: generalDiff$h.deletedTextDecoration,
+        backgroundColor: `${removedBackground$h} !important`,
+        color: removedText$h,
+        padding: generalDiff$h.insertedLinePadding,
+        borderRadius: generalDiff$h.borderRadious,
+        border: `1px solid ${removedText$h}30`,
+    },
+    'del .cm-deletedText, del .cm-changedText': {
+        background: 'transparent !important',
+    },
+    // Tooltips and autocomplete
+    '.cm-tooltip': {
+        backgroundColor: tooltipBackground$h,
+        border: `1px solid ${base0E$a}`,
+        borderRadius: generalTooltip$h.borderRadius,
+        padding: generalTooltip$h.padding,
+        boxShadow: '0 1px 5px rgba(0, 0, 0, 0.1)',
+    },
+    '.cm-tooltip-autocomplete': {
+        '& > ul': {
+            backgroundColor: tooltipBackground$h,
+            border: 'none',
+        },
+        '& > ul > li': {
+            padding: generalTooltip$h.padding,
+            lineHeight: generalTooltip$h.lineHeight,
+        },
+        '& > ul > li[aria-selected]': {
+            backgroundColor: '#0366d630',
+            color: base01$g,
+            borderRadius: generalTooltip$h.borderRadiusSelected,
+        },
+        '& > ul > li:hover': {
+            backgroundColor: '#0366d615',
+        },
+        '& > ul > li > span.cm-completionIcon': {
+            color: base03$h,
+            paddingRight: generalTooltip$h.paddingRight,
+        },
+        '& > ul > li > span.cm-completionDetail': {
+            color: base03$h,
+            fontStyle: 'italic',
+        },
+    },
+    '.cm-tooltip .cm-tooltip-arrow:before': {
+        borderTopColor: 'transparent',
+        borderBottomColor: 'transparent',
+    },
+    '.cm-tooltip .cm-tooltip-arrow:after': {
+        borderTopColor: tooltipBackground$h,
+        borderBottomColor: tooltipBackground$h,
+    },
+    // Diagnostics styling
+    '.cm-diagnostic': {
+        '&-error': {
+            borderLeft: `3px solid ${invalid$h}`,
+        },
+        '&-warning': {
+            borderLeft: `3px solid ${diagnosticWarning$h}`,
+        },
+        '&-info': {
+            borderLeft: `3px solid ${linkColor$h}`,
+        },
+    },
+    '.cm-lintPoint-error': {
+        borderBottom: `2px wavy ${invalid$h}`,
+    },
+    '.cm-lintPoint-warning': {
+        borderBottom: `2px wavy ${diagnosticWarning$h}`,
+    },
+    // Matching brackets
+    '.cm-matchingBracket': {
+        backgroundColor: activeBracketBg$h,
+        outline: `1px solid ${activeBracketBorder$h}80`,
+        borderRadius: generalMatching$h.borderRadius,
+    },
+    '.cm-nonmatchingBracket': {
+        backgroundColor: '#ffeef080',
+        outline: `1px solid ${invalid$h}`,
+        borderRadius: generalMatching$h.borderRadius,
+    },
+    // Selection matches
+    '.cm-selectionMatch': {
+        backgroundColor: selectionMatch$h,
+        outline: `1px solid ${base02$h}50`,
+        borderRadius: generalMatching$h.borderRadius,
+    },
+    // Fold placeholder
+    '.cm-foldPlaceholder': {
+        backgroundColor: selectionMatch$h,
+        color: base03$h,
+        border: `1px dotted ${base0E$a}70`,
+        borderRadius: generalPlaceholder$h.borderRadius,
+        padding: generalPlaceholder$h.padding,
+        margin: generalPlaceholder$h.margin,
+    },
+    // Focus outline
+    '&.cm-focused': {
+        outline: 'none',
+        boxShadow: `0 0 0 2px ${base00$h}, 0 0 0 3px ${linkColor$h}40`,
+    },
+    // Scrollbars
+    '& .cm-scroller::-webkit-scrollbar': {
+        width: generalScroller$h.width,
+        height: generalScroller$h.height,
+    },
+    '& .cm-scroller::-webkit-scrollbar-track': {
+        background: base0E$a,
+    },
+    '& .cm-scroller::-webkit-scrollbar-thumb': {
+        backgroundColor: base01$g,
+        borderRadius: generalScroller$h.borderRadius,
+        border: `3px solid ${base0E$a}`,
+    },
+    '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
+        backgroundColor: base06$e,
+    },
+    // Ghost text
+    '.cm-ghostText': {
+        opacity: '0.5',
+        color: '#959da5',
+    },
+}, { dark: false });
+/**
+ * Enhanced syntax highlighting for GitHub Light theme
+ */
+const githubLightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
+    // Keywords and control flow
+    { tag: tags$1.keyword, color: base09$d, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: base09$d, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: base09$d, fontWeight: 'bold' },
+    // Names and variables
+    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base08$d },
+    { tag: [tags$1.variableName], color: base08$d },
+    { tag: [tags$1.propertyName], color: base07$e, fontStyle: 'normal' },
+    // Classes and types
+    { tag: [tags$1.typeName], color: base09$d },
+    { tag: [tags$1.className], color: base07$e, fontStyle: 'italic' },
+    { tag: [tags$1.namespace], color: base08$d, fontStyle: 'italic' },
+    // Operators and punctuation
+    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base01$g },
+    { tag: [tags$1.bracket], color: base06$e },
+    { tag: [tags$1.brace], color: base06$e },
+    { tag: [tags$1.punctuation], color: base06$e },
+    // Functions and parameters
+    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base0B$c },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base08$d },
+    // Constants and literals
+    { tag: tags$1.number, color: base0C$c },
+    { tag: tags$1.changed, color: base0C$c },
+    { tag: tags$1.annotation, color: invalid$h, fontStyle: 'italic' },
+    { tag: tags$1.modifier, color: base0C$c, fontStyle: 'italic' },
+    { tag: tags$1.self, color: base0C$c },
+    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base0C$c },
+    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base0C$c },
+    // Strings and regex
+    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base0B$c },
+    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base0A$c },
+    { tag: tags$1.string, color: base0A$c },
+    // Punctuation and structure
+    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base09$d, fontWeight: 'bold' },
+    // Comments and documentation
+    { tag: tags$1.meta, color: base06$e },
+    { tag: tags$1.comment, fontStyle: 'italic', color: base06$e },
+    { tag: tags$1.docComment, fontStyle: 'italic', color: base06$e },
+    // HTML/XML elements
+    { tag: [tags$1.tagName], color: base05$g },
+    { tag: [tags$1.attributeName], color: base07$e },
+    // Markdown and text formatting
+    { tag: [tags$1.heading], fontWeight: 'bold', color: base08$d },
+    { tag: [tags$1.strong], fontWeight: 'bold', color: base08$d },
+    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base0A$c },
+    // Links and URLs
+    {
+        tag: [tags$1.link],
+        color: visitedLinkColor$f,
+        fontWeight: '500',
+        textDecoration: 'underline',
+        textUnderlinePosition: 'under',
+    },
+    {
+        tag: [tags$1.url],
+        color: linkColor$h,
+        textDecoration: 'underline',
+        textUnderlineOffset: '2px',
+    },
+    // Special states
+    {
+        tag: [tags$1.invalid],
+        color: base01$g,
+        textDecoration: 'underline wavy',
+        borderBottom: `1px wavy ${invalid$h}`,
+    },
+    { tag: [tags$1.strikethrough], color: invalid$h, textDecoration: 'line-through' },
+    // Enhanced syntax highlighting
+    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base0C$c },
+    { tag: tags$1.deleted, color: invalid$h },
+    { tag: tags$1.squareBracket, color: base06$e },
+    { tag: tags$1.angleBracket, color: base06$e },
+    // Additional specific styles
+    { tag: tags$1.monospace, color: base01$g },
+    { tag: [tags$1.contentSeparator], color: base08$d },
+    { tag: tags$1.quote, color: base06$e },
+]);
+/**
+ * Combined GitHub Light theme extension
+ */
+const githubLight = [
+    githubLightTheme,
+    /*@__PURE__*/syntaxHighlighting(githubLightHighlightStyle),
+];
+/**
+ * GitHub Light merge revert styles configuration
+ */
+const githubLightMergeStyles = {
+    backgroundColor: tooltipBackground$h,
+    borderColor: base0E$a,
+    buttonColor: base01$g,
+    buttonHoverColor: '#f5f5f5',
+};
+
+// Helper module for styling options
+const generalContent$g = {
+    fontSize: '14px',
+    fontFamily: 'JetBrains Mono, Consolas, monospace',
+    lineHeight: '1.6',
+};
+const generalCursor$e = {
     borderLeftWidth: '2px',
 };
 const generalDiff$g = {
@@ -37157,6 +39239,7 @@ const generalGutter$g = {
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 const generalPanel$g = {
     border: 'none',
@@ -37192,52 +39275,50 @@ const generalTooltip$g = {
 };
 
 /**
- * Enhanced Forest theme color palette
- * -----------------------------------
- * Colors organized by natural forest elements with visual color blocks for reference
+ * Enhanced Gruvbox Dark theme color definitions
+ * --------------------------------------------
+ * Colors organized by function with visual color blocks
  */
-// Core natural elements
-const base00$g = '#1a2a33'; // Background - deeper forest shade for better contrast
-const base01$f = '#d0d8e0'; // Foreground - clearer moonlight for better readability
-// const base02 = '#2d3c44'; // Selection - dark forest floor, more defined
-const base03$g = '#607d8b'; // Comments - silvery bark gray, more legible
-// Flora elements (accent colors)
-const base04$g = '#c594c5'; // Cursor - forest wildflower
-const base05$g = '#a9d3ab'; // Keywords - lighter, fresher leaf green
-const base06$g = '#4db6ac'; // Variables - clearer water reflection
-const base07$g = '#78aadc'; // Functions - brighter dusk sky
-const base08$f = '#ef5350'; // Strings - vibrant woodland berries
-const base09$f = '#bc8f6a'; // Numbers - rich forest soil
-const base0A$e = '#ffb74d'; // Classes - golden sunlight through canopy
-const base0B$e = '#9ccc65'; // Properties - fresh moss
-const base0C$e = '#4dd0e1'; // Special chars - forest stream
-const base0D$e = '#7986cb'; // Tags - morning mist
-const base0E$c = '#ba68c8'; // Operators - purple wildflowers
-// const base0F = '#f57f17'; // Metadata - autumn leaves
-// UI-specific colors
-const invalid$g = '#ff5252'; // Error highlight - warning red berry
-const darkBackground$b = '#233039'; // Panel background - shadowy forest
-const highlightBackground$g = '#314443aa'; // Active line - forest clearing with dappled light
-const tooltipBackground$g = '#2a3b42'; // Tooltip background - darker canopy shadow
-const cursor$g = base04$g; // Cursor color
-const selection$g = '#2c5a3acc'; // Selection - translucent forest green
-const selectionMatch$g = '#5d482faa'; // Selection match - amber forest light
-const lineNumbers = '#607d8b90'; // Line numbers - faded tree bark
-const activeBracketBg$g = '#2c5a3a80'; // Active bracket - forest green
-const activeBracketBorder$g = base0A$e; // Active bracket border - golden sunlight
+// Gruvbox base colors
+const base00$g = '#282828', // Background
+base01$f = '#3c3836', // Lighter background (popups, statuslines)
+base02$g = '#504945', // Selection background
+base03$g = '#665c54', // Comments, invisibles, line highlighting
+base04$g = '#7c6f64', // Dark foreground (status bars)
+base05$f = '#928374', // Comments, invisibles, line highlighting
+// Light/foreground shades
+base06$d = '#fbf1c7', // Light foreground (preferbase08)
+base07$d = '#ebdbb2', // Light foreground (alternative)
+// Accent colors
+base08$c = '#fb4934', // Keywords, storage, operator
+base09$c = '#b8bb26', // Strings, tag attributes
+base0A$b = '#fabd2f', // Functions, tag names
+base0B$b = '#83a598', // Variables
+base0C$b = '#d3869b', // Numbers, special constants
+base0D$b = '#8ec07c', // Types
+base0E$9 = '#fe8019'; // Cursor, constants
+// UI specific colors
+const invalid$g = base08$c, darkBackground$c = base01$f, highlightBackground$e = '#3c383660', // Line highlight with transparency
+background$f = base00$g, tooltipBackground$g = base01$f, selection$g = base02$g, selectionMatch$g = '#665c5480', // Selection match background
+cursor$g = base0E$9, // Cursor color
+activeBracketBg$g = '#504945cc', // Active bracket background
+activeBracketBorder$g = base0A$b, // Active bracket border
+diagnosticWarning$g = base0A$b, // Warning color
+linkColor$g = base0B$b, // Link color
+visitedLinkColor$e = base0C$b; // Visited link color
 // Diff/merge specific colors
-const addedBackground$g = '#28513a80', // Forest green with transparency for insertions
-removedBackground$g = '#763c3c70', // Deep red with transparency for deletions
-addedText$g = '#9ccc65', // Moss green for added text
-removedText$g = '#ef5350'; // Berry red for removed text
+const addedBackground$g = '#32361a80', // Dark base09 with transparency for insertions
+removedBackground$g = '#3c1f1e80', // Dark base08 with transparency for deletions
+addedText$g = '#b8bb26', // Bright base09 for added text
+removedText$g = '#fb4934'; // Bright base08 for removed text
 /**
- * Enhanced editor theme styles for Forest
+ * Enhanced editor theme styles for Gruvbox Dark
  */
-const forestTheme = /*@__PURE__*/EditorView.theme({
+const gruvboxDarkTheme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base01$f,
-        backgroundColor: base00$g,
+        color: base07$d,
+        backgroundColor: background$f,
         fontSize: generalContent$g.fontSize,
         fontFamily: generalContent$g.fontFamily,
     },
@@ -37248,7 +39329,7 @@ const forestTheme = /*@__PURE__*/EditorView.theme({
     },
     '.cm-cursor, .cm-dropCursor': {
         borderLeftColor: cursor$g,
-        borderLeftWidth: generalCursor$g.borderLeftWidth,
+        borderLeftWidth: generalCursor$e.borderLeftWidth,
     },
     '.cm-fat-cursor': {
         backgroundColor: `${cursor$g}99`,
@@ -37257,7 +39338,6 @@ const forestTheme = /*@__PURE__*/EditorView.theme({
     // Selection
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
         backgroundColor: selection$g,
-        color: base01$f,
     },
     // Make sure selection appears above active line
     '.cm-selectionLayer': {
@@ -37265,80 +39345,82 @@ const forestTheme = /*@__PURE__*/EditorView.theme({
     },
     // Search functionality
     '.cm-searchMatch': {
-        backgroundColor: '#4d653b80',
-        outline: `1px solid ${base0A$e}90`,
-        color: base01$f,
+        backgroundColor: '#b57614cc',
+        outline: `1px solid ${base0A$b}`,
+        color: base06$d,
         borderRadius: generalSearchField$g.borderRadius,
         '& span': {
-            color: base01$f,
+            color: base06$d,
         },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-        backgroundColor: '#42855c',
-        color: base01$f,
+        backgroundColor: base0E$9,
+        color: base00$g,
         padding: generalSearchField$g.padding,
         '& span': {
-            color: base01$f,
+            color: base00$g,
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
-        color: base01$f,
+        color: base07$d,
         borderRadius: generalSearchField$g.borderRadius,
         padding: generalSearchField$g.padding,
     },
     // Panels
     '.cm-panels': {
-        backgroundColor: darkBackground$b,
-        color: base01$f,
-        borderRadius: '0 0 4px 4px',
+        backgroundColor: tooltipBackground$g,
+        color: base07$d,
+        borderRadius: '4px',
     },
     '.cm-panels.cm-panels-top': {
-        borderBottom: '1px solid #3e5059',
+        borderBottom: `1px solid ${base03$g}`,
     },
     '.cm-panels.cm-panels-bottom': {
-        borderTop: '1px solid #3e5059',
+        borderTop: `1px solid ${base03$g}`,
     },
     '.cm-panel button': {
-        backgroundColor: darkBackground$b,
-        color: base01$f,
+        backgroundColor: tooltipBackground$g,
+        color: base07$d,
         border: generalPanel$g.border,
         borderRadius: generalPanel$g.borderRadius,
         padding: generalPanel$g.padding,
     },
     '.cm-panel button:hover': {
-        backgroundColor: '#2d3d47',
+        backgroundColor: base02$g,
     },
     // Line highlighting
     '.cm-activeLine': {
-        backgroundColor: highlightBackground$g,
+        backgroundColor: highlightBackground$e,
         borderRadius: generalLine$g.borderRadius,
         zIndex: 1,
     },
     // Gutters
     '.cm-gutters': {
-        backgroundColor: darkBackground$b,
-        color: lineNumbers,
+        backgroundColor: base01$f,
+        color: base05$f,
         border: generalGutter$g.border,
-        borderRight: '1px solid #3e505980',
+        borderRight: `1px solid ${base02$g}`,
         paddingRight: generalGutter$g.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: highlightBackground$g,
-        color: base01$f,
+        backgroundColor: darkBackground$c,
+        color: base07$d,
         fontWeight: generalGutter$g.fontWeight,
     },
     '.cm-lineNumbers': {
         fontSize: generalGutter$g.fontSize,
+        lineHeight: generalGutter$g.lineHeight,
     },
     '.cm-foldGutter': {
         fontSize: generalGutter$g.fontSize,
+        lineHeight: generalGutter$g.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
-        color: lineNumbers,
+        color: base05$f,
         cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-        color: base01$f,
+        color: base07$d,
     },
     // Diff/Merge View Styles
     // Inserted/Added Content
@@ -37382,7 +39464,7 @@ const forestTheme = /*@__PURE__*/EditorView.theme({
     // Tooltips and autocomplete
     '.cm-tooltip': {
         backgroundColor: tooltipBackground$g,
-        border: '1px solid #3e5059',
+        border: `1px solid ${base03$g}`,
         borderRadius: generalTooltip$g.borderRadius,
         padding: generalTooltip$g.padding,
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
@@ -37398,15 +39480,15 @@ const forestTheme = /*@__PURE__*/EditorView.theme({
         },
         '& > ul > li[aria-selected]': {
             backgroundColor: selection$g,
-            color: base01$f,
+            color: base06$d,
             borderRadius: generalTooltip$g.borderRadiusSelected,
         },
         '& > ul > li > span.cm-completionIcon': {
-            color: base03$g,
+            color: base05$f,
             paddingRight: generalTooltip$g.paddingRight,
         },
         '& > ul > li > span.cm-completionDetail': {
-            color: base03$g,
+            color: base05$f,
             fontStyle: 'italic',
         },
     },
@@ -37424,40 +39506,40 @@ const forestTheme = /*@__PURE__*/EditorView.theme({
             borderLeft: `3px solid ${invalid$g}`,
         },
         '&-warning': {
-            borderLeft: `3px solid ${base0A$e}`,
+            borderLeft: `3px solid ${diagnosticWarning$g}`,
         },
         '&-info': {
-            borderLeft: `3px solid ${base0C$e}`,
+            borderLeft: `3px solid ${linkColor$g}`,
         },
     },
     '.cm-lintPoint-error': {
         borderBottom: `2px wavy ${invalid$g}`,
     },
     '.cm-lintPoint-warning': {
-        borderBottom: `2px wavy ${base0A$e}`,
+        borderBottom: `2px wavy ${diagnosticWarning$g}`,
     },
     // Matching brackets
     '.cm-matchingBracket': {
         backgroundColor: activeBracketBg$g,
-        outline: `1px solid ${activeBracketBorder$g}80`,
+        outline: `1px solid ${activeBracketBorder$g}`,
         borderRadius: generalMatching$g.borderRadius,
     },
     '.cm-nonmatchingBracket': {
-        backgroundColor: '#5d482f80',
-        outline: `1px solid ${invalid$g}80`,
+        backgroundColor: '#cc241d55',
+        outline: `1px solid ${invalid$g}`,
         borderRadius: generalMatching$g.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
         backgroundColor: selectionMatch$g,
-        outline: `1px solid ${base0A$e}40`,
+        outline: `1px solid ${base03$g}`,
         borderRadius: generalMatching$g.borderRadius,
     },
     // Fold placeholder
     '.cm-foldPlaceholder': {
-        backgroundColor: 'transparent',
-        color: base03$g,
-        border: `1px dotted ${base0A$e}70`,
+        backgroundColor: tooltipBackground$g,
+        color: base05$f,
+        border: `1px dotted ${base03$g}`,
         borderRadius: generalPlaceholder$g.borderRadius,
         padding: generalPlaceholder$g.padding,
         margin: generalPlaceholder$g.margin,
@@ -37465,7 +39547,7 @@ const forestTheme = /*@__PURE__*/EditorView.theme({
     // Focus outline
     '&.cm-focused': {
         outline: 'none',
-        boxShadow: `0 0 0 2px ${base00$g}, 0 0 0 3px ${base0A$e}40`,
+        boxShadow: `0 0 0 2px ${base00$g}, 0 0 0 3px ${base0E$9}40`,
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
@@ -37473,111 +39555,118 @@ const forestTheme = /*@__PURE__*/EditorView.theme({
         height: generalScroller$g.height,
     },
     '& .cm-scroller::-webkit-scrollbar-track': {
-        background: darkBackground$b,
+        background: base01$f,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
-        backgroundColor: '#3e5059',
+        backgroundColor: base03$g,
         borderRadius: generalScroller$g.borderRadius,
-        border: `3px solid ${darkBackground$b}`,
+        border: `3px solid ${base01$f}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-        backgroundColor: '#4e616a',
+        backgroundColor: base04$g,
     },
     // Ghost text
     '.cm-ghostText': {
         opacity: '0.5',
-        color: '#8fa7b5',
+        color: base05$f,
     },
 }, { dark: true });
 /**
- * Enhanced syntax highlighting for Forest theme
+ * Enhanced syntax highlighting for Gruvbox Dark theme
  */
-const forestHighlightStyle = /*@__PURE__*/HighlightStyle.define([
-    // Keywords and language constructs
-    { tag: tags$1.keyword, color: base05$g, fontWeight: 'bold' },
-    { tag: tags$1.controlKeyword, color: base05$g, fontWeight: 'bold' },
-    { tag: tags$1.moduleKeyword, color: base05$g, fontWeight: 'bold' },
+const gruvboxDarkHighlightStyle = /*@__PURE__*/HighlightStyle.define([
+    // Keywords and control flow
+    { tag: tags$1.keyword, color: base08$c, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: base08$c, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: base08$c, fontWeight: 'bold' },
     // Names and variables
-    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base06$g },
-    { tag: [tags$1.variableName], color: base06$g },
-    { tag: [tags$1.propertyName], color: base0B$e, fontStyle: 'normal' },
+    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base0B$b },
+    { tag: [tags$1.variableName], color: base0B$b },
+    { tag: [tags$1.propertyName], color: base0D$b, fontStyle: 'normal' },
     // Classes and types
-    { tag: [tags$1.typeName], color: base0A$e },
-    { tag: [tags$1.className], color: base0A$e, fontStyle: 'italic' },
-    { tag: [tags$1.namespace], color: base06$g, fontStyle: 'italic' },
+    { tag: [tags$1.typeName], color: base0D$b },
+    { tag: [tags$1.className], color: base0A$b, fontStyle: 'italic' },
+    { tag: [tags$1.namespace], color: base0B$b, fontStyle: 'italic' },
     // Operators and punctuation
-    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base0E$c },
-    { tag: [tags$1.bracket], color: base0E$c },
-    { tag: [tags$1.brace], color: base0E$c },
-    { tag: [tags$1.punctuation], color: base0E$c },
+    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base07$d },
+    { tag: [tags$1.bracket], color: base05$f },
+    { tag: [tags$1.brace], color: base05$f },
+    { tag: [tags$1.punctuation], color: base05$f },
     // Functions and parameters
-    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base07$g },
-    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base07$g },
+    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base0A$b },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base0B$b },
     // Constants and literals
-    { tag: tags$1.number, color: base09$f },
-    { tag: tags$1.changed, color: base09$f },
+    { tag: tags$1.number, color: base0C$b },
+    { tag: tags$1.changed, color: base0C$b },
     { tag: tags$1.annotation, color: invalid$g, fontStyle: 'italic' },
-    { tag: tags$1.modifier, color: base09$f, fontStyle: 'italic' },
-    { tag: tags$1.self, color: base09$f },
-    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base09$f, fontWeight: 'bold' },
-    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base09$f },
+    { tag: tags$1.modifier, color: base0C$b, fontStyle: 'italic' },
+    { tag: tags$1.self, color: base0C$b },
+    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base0E$9 },
+    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base0E$9 },
     // Strings and regex
-    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base08$f },
-    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base08$f },
-    { tag: tags$1.string, color: base08$f },
+    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base09$c },
+    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base09$c },
+    { tag: tags$1.string, color: base09$c },
     // Punctuation and structure
-    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base0A$e, fontWeight: 'bold' },
+    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base0D$b, fontWeight: 'bold' },
     // Comments and documentation
-    { tag: tags$1.meta, color: base03$g },
-    { tag: tags$1.comment, fontStyle: 'italic', color: base03$g },
-    { tag: tags$1.docComment, fontStyle: 'italic', color: base03$g },
+    { tag: tags$1.meta, color: base05$f },
+    { tag: tags$1.comment, fontStyle: 'italic', color: base05$f },
+    { tag: tags$1.docComment, fontStyle: 'italic', color: base05$f },
     // HTML/XML elements
-    { tag: [tags$1.tagName], color: base0D$e },
-    { tag: [tags$1.attributeName], color: base0C$e },
+    { tag: [tags$1.tagName], color: base08$c },
+    { tag: [tags$1.attributeName], color: base0A$b },
     // Markdown and text formatting
-    { tag: [tags$1.heading], fontWeight: 'bold', color: base0A$e },
-    { tag: [tags$1.strong], fontWeight: 'bold', color: base05$g },
-    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base06$g },
+    { tag: [tags$1.heading], fontWeight: 'bold', color: base0A$b },
+    { tag: [tags$1.strong], fontWeight: 'bold', color: base0A$b },
+    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base09$c },
     // Links and URLs
-    { tag: [tags$1.link], color: base0A$e, fontWeight: '500', textDecoration: 'underline', textUnderlinePosition: 'under' },
+    {
+        tag: [tags$1.link],
+        color: visitedLinkColor$e,
+        fontWeight: '500',
+        textDecoration: 'underline',
+        textUnderlinePosition: 'under',
+    },
     {
         tag: [tags$1.url],
-        color: base0C$e,
+        color: linkColor$g,
         textDecoration: 'underline',
         textUnderlineOffset: '2px',
     },
     // Special states
-    { tag: [tags$1.invalid], color: base01$f, textDecoration: 'underline wavy', borderBottom: `1px wavy ${invalid$g}` },
+    {
+        tag: [tags$1.invalid],
+        color: base07$d,
+        textDecoration: 'underline wavy',
+        borderBottom: `1px wavy ${invalid$g}`,
+    },
     { tag: [tags$1.strikethrough], color: invalid$g, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
-    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base09$f },
+    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base0E$9 },
     { tag: tags$1.deleted, color: invalid$g },
-    { tag: tags$1.squareBracket, color: base0E$c },
-    { tag: tags$1.angleBracket, color: base0E$c },
+    { tag: tags$1.squareBracket, color: base05$f },
+    { tag: tags$1.angleBracket, color: base05$f },
     // Additional specific styles
-    { tag: tags$1.heading1, fontWeight: 'bold', color: base0A$e },
-    { tag: /*@__PURE__*/tags$1.special(tags$1.heading1), fontWeight: 'bold', color: base0A$e },
-    { tag: [tags$1.heading2, tags$1.heading3, tags$1.heading4], fontWeight: 'bold', color: base0A$e },
-    { tag: [tags$1.heading5, tags$1.heading6], color: base0A$e },
-    { tag: tags$1.monospace, color: base01$f },
-    { tag: [tags$1.contentSeparator], color: base0C$e },
-    { tag: tags$1.quote, color: base03$g },
+    { tag: tags$1.monospace, color: base07$d },
+    { tag: [tags$1.contentSeparator], color: base0B$b },
+    { tag: tags$1.quote, color: base05$f },
 ]);
 /**
- * Combined Forest theme extension
+ * Combined Gruvbox Dark theme extension
  */
-const forest = [
-    forestTheme,
-    /*@__PURE__*/syntaxHighlighting(forestHighlightStyle),
+const gruvboxDark = [
+    gruvboxDarkTheme,
+    /*@__PURE__*/syntaxHighlighting(gruvboxDarkHighlightStyle),
 ];
 /**
- * Forest merge revert styles configuration
+ * Gruvbox Dark merge revert styles configuration
  */
-const forestMergeStyles = {
-    backgroundColor: darkBackground$b,
-    borderColor: '#3e5059',
-    buttonColor: base01$f,
-    buttonHoverColor: '#2d3d47',
+const gruvboxDarkMergeStyles = {
+    backgroundColor: tooltipBackground$g,
+    borderColor: base03$g,
+    buttonColor: base07$d,
+    buttonHoverColor: base02$g,
 };
 
 // Helper module for styling options
@@ -37586,7 +39675,7 @@ const generalContent$f = {
     fontFamily: 'JetBrains Mono, Consolas, monospace',
     lineHeight: '1.6',
 };
-const generalCursor$f = {
+const generalCursor$d = {
     borderLeftWidth: '2px',
 };
 const generalDiff$f = {
@@ -37599,6 +39688,7 @@ const generalGutter$f = {
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 const generalPanel$f = {
     border: 'none',
@@ -37634,54 +39724,52 @@ const generalTooltip$f = {
 };
 
 /**
- * Enhanced GitHub Dark theme color definitions
- * -------------------------------------------
- * Colors are organized by function with visual color blocks
+ * Enhanced Gruvbox Light theme color definitions
+ * --------------------------------------------
+ * Colors organized by function with visual color blocks
  */
-// Core UI colors
-const base00$f = '#0d1117', // Background (GitHub dark mode background)
-base01$e = '#c9d1d9', // Foreground (main text color)
-base02$f = '#264F78', // Selection - brighter blue for better visibility
-base03$f = '#8b949e', // Comment and Bracket color
-base04$f = '#ffffff', // Caret color (pure white for better visibility,
-// Syntax highlighting colors
-base05$f = '#7ee787', // TagName, Name, Quote - signature GitHub green
-base06$f = '#d2a8ff', // ClassName, PropertyName - GitHub purple
-base07$f = '#79c0ff', // VariableName, Number - GitHub blue
-base08$e = '#ff7b72', // Keyword, TypeName - GitHub red
-base09$e = '#a5d6ff', // String, Meta, Regexp - lighter blue
-base0A$d = '#2c333a', // Panel button hover
-base0B$d = '#3c444d', // Deleted background color
-base0C$d = '#ffab70', // Atom, Bool - GitHub orange
-// Background variants
-base0D$d = '#161b22', // Gutter background (slightly darker than the editor)
-base0E$b = '#30363d', // Panel and tooltip border color
-base0F$9 = '#21262d'; // Active line gutter background
-// UI-specific colors
-const invalid$f = '#f97583', // Invalid color - error red
-highlightBackground$f = '#2d333b1a', // Line highlight (GitHub selection color)
-tooltipBackground$f = '#21262d', // Tooltip background
-cursor$f = base04$f, // Caret color
-selection$f = base02$f, // Selection color
-activeBracketBg$f = '#3a587a75', // Active bracket background
-activeBracketBorder$f = '#4d90fe', // Active bracket border
-diagnosticWarning$f = '#d29922', // Warning color
-selectionMatch$f = '#3a587a55', // Selection match background
-linkColor$f = '#58a6ff', // Bright blue for links (GitHub link color)
-visitedLinkColor$d = '#bc8cff'; // Light purple for visited links
+// Gruvbox base colors
+const base00$f = '#3c3836', // Main foreground (text)
+base01$e = '#504945', // Secondary foreground
+base02$f = '#665c54', // Tertiary foreground
+base03$f = '#7c6f64', // Quaternary foreground
+base04$f = '#928374', // Comments, invisibles, line highlighting
+// Light/background shades
+base05$e = '#fbf1c7', // Main background
+base06$c = '#ebdbb2', // Secondary background
+base07$c = '#d5c4a1', // Tertiary background (not defined above)
+base08$b = '#bdae93', // Quaternary background
+base09$b = '#a89984', // Quinary background (not defined above)
+// Accent colors
+base0A$a = '#9d0006', // Keywords, storage, operator
+base0B$a = '#79740e', // Strings, tag attributes
+base0C$a = '#b57614', // Functions, tag names
+base0D$a = '#076678', // Variables
+base0E$8 = '#8f3f71', // Numbers, special constants
+base0F$7 = '#427b58', // Types
+base10$5 = '#af3a03'; // Cursor, constants
+// UI specific colors
+const invalid$f = base0A$a, darkBackground$b = base06$c, highlightBackground$d = '#ffc42e25', // Line highlight with transparency
+background$e = base05$e, tooltipBackground$f = base06$c, selection$f = darkBackground$b, selectionMatch$f = '#ffc42e40', // Selection match background
+cursor$f = base10$5, // Cursor color
+activeBracketBg$f = '#d5c4a180', // Active bracket background
+activeBracketBorder$f = base10$5, // Active bracket border
+diagnosticWarning$f = base0C$a, // Warning color
+linkColor$f = base0D$a, // Link color
+visitedLinkColor$d = base0E$8; // Visited link color
 // Diff/merge specific colors
-const addedBackground$f = '#2ea04350', // GitHub green with transparency
-removedBackground$f = '#f8514940', // GitHub red with transparency
-addedText$f = '#7ee787', // GitHub green for added text
-removedText$f = '#ff7b72'; // GitHub red for removed text
+const addedBackground$f = '#d8e5bc80', // Light base0B with transparency for insertions
+removedBackground$f = '#f7cfcf80', // Light base0A with transparency for deletions
+addedText$f = '#79740e', // Gruvbox base0B for added text
+removedText$f = '#9d0006'; // Gruvbox base0A for removed text
 /**
- * Enhanced editor theme styles for GitHub Dark
+ * Enhanced editor theme styles for Gruvbox Light
  */
-const githubDarkTheme = /*@__PURE__*/EditorView.theme({
+const gruvboxLightTheme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base01$e,
-        backgroundColor: base00$f,
+        color: base00$f,
+        backgroundColor: background$e,
         fontSize: generalContent$f.fontSize,
         fontFamily: generalContent$f.fontFamily,
     },
@@ -37692,15 +39780,16 @@ const githubDarkTheme = /*@__PURE__*/EditorView.theme({
     },
     '.cm-cursor, .cm-dropCursor': {
         borderLeftColor: cursor$f,
-        borderLeftWidth: generalCursor$f.borderLeftWidth,
+        borderLeftWidth: generalCursor$d.borderLeftWidth,
     },
     '.cm-fat-cursor': {
         backgroundColor: `${cursor$f}99`,
-        color: base00$f,
+        color: base05$e,
     },
     // Selection
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
         backgroundColor: selection$f,
+        color: base00$f,
     },
     // Make sure selection appears above active line
     '.cm-selectionLayer': {
@@ -37708,80 +39797,82 @@ const githubDarkTheme = /*@__PURE__*/EditorView.theme({
     },
     // Search functionality
     '.cm-searchMatch': {
-        backgroundColor: '#3a587a',
-        outline: `1px solid ${base07$f}`,
-        color: base01$e,
+        backgroundColor: '#ffc42e80',
+        outline: `1px solid ${base10$5}`,
+        color: base00$f,
         borderRadius: generalSearchField$f.borderRadius,
         '& span': {
-            color: base01$e,
+            color: base00$f,
         },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-        backgroundColor: activeBracketBorder$f,
-        color: base04$f,
+        backgroundColor: base10$5,
+        color: base05$e,
         padding: generalSearchField$f.padding,
         '& span': {
-            color: base04$f,
+            color: base05$e,
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
-        color: base01$e,
+        color: base00$f,
         borderRadius: generalSearchField$f.borderRadius,
         padding: generalSearchField$f.padding,
     },
     // Panels
     '.cm-panels': {
-        backgroundColor: tooltipBackground$f,
+        backgroundColor: base06$c,
         color: base01$e,
-        borderRadius: '4px',
+        borderRadius: '0 0 4px 4px',
     },
     '.cm-panels.cm-panels-top': {
-        borderBottom: `1px solid ${base0E$b}`,
+        borderBottom: `1px solid ${base08$b}`,
     },
     '.cm-panels.cm-panels-bottom': {
-        borderTop: `1px solid ${base0E$b}`,
+        borderTop: `1px solid ${base08$b}`,
     },
     '.cm-panel button': {
-        backgroundColor: tooltipBackground$f,
-        color: base01$e,
+        backgroundColor: base05$e,
+        color: base00$f,
         border: generalPanel$f.border,
         borderRadius: generalPanel$f.borderRadius,
         padding: generalPanel$f.padding,
     },
     '.cm-panel button:hover': {
-        backgroundColor: base0A$d,
+        backgroundColor: base07$c,
     },
     // Line highlighting
     '.cm-activeLine': {
-        backgroundColor: highlightBackground$f,
+        backgroundColor: highlightBackground$d,
         borderRadius: generalLine$f.borderRadius,
         zIndex: 1,
     },
     // Gutters
     '.cm-gutters': {
-        backgroundColor: base0D$d,
+        backgroundColor: base06$c,
         color: base03$f,
         border: generalGutter$f.border,
-        borderRight: '1px solid #30363d',
+        borderRight: `1px solid ${base08$b}`,
         paddingRight: generalGutter$f.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: base0F$9,
-        color: base01$e,
+        backgroundColor: base07$c,
+        color: base00$f,
         fontWeight: generalGutter$f.fontWeight,
     },
     '.cm-lineNumbers': {
         fontSize: generalGutter$f.fontSize,
+        lineHeight: generalGutter$f.lineHeight,
     },
     '.cm-foldGutter': {
         fontSize: generalGutter$f.fontSize,
+        lineHeight: generalGutter$f.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
         color: base03$f,
         cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-        color: base01$e,
+        color: base00$f,
     },
     // Diff/Merge View Styles
     // Inserted/Added Content
@@ -37825,10 +39916,10 @@ const githubDarkTheme = /*@__PURE__*/EditorView.theme({
     // Tooltips and autocomplete
     '.cm-tooltip': {
         backgroundColor: tooltipBackground$f,
-        border: `1px solid ${base0E$b}`,
+        border: `1px solid ${base08$b}`,
         borderRadius: generalTooltip$f.borderRadius,
         padding: generalTooltip$f.padding,
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+        boxShadow: '0 1px 5px rgba(0, 0, 0, 0.1)',
     },
     '.cm-tooltip-autocomplete': {
         '& > ul': {
@@ -37840,9 +39931,12 @@ const githubDarkTheme = /*@__PURE__*/EditorView.theme({
             lineHeight: generalTooltip$f.lineHeight,
         },
         '& > ul > li[aria-selected]': {
-            backgroundColor: selection$f,
-            color: base04$f,
+            backgroundColor: base10$5 + '30',
+            color: base00$f,
             borderRadius: generalTooltip$f.borderRadiusSelected,
+        },
+        '& > ul > li:hover': {
+            backgroundColor: base10$5 + '15',
         },
         '& > ul > li > span.cm-completionIcon': {
             color: base03$f,
@@ -37886,21 +39980,21 @@ const githubDarkTheme = /*@__PURE__*/EditorView.theme({
         borderRadius: generalMatching$f.borderRadius,
     },
     '.cm-nonmatchingBracket': {
-        backgroundColor: '#f9758340',
+        backgroundColor: '#fb492740',
         outline: `1px solid ${invalid$f}`,
         borderRadius: generalMatching$f.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
         backgroundColor: selectionMatch$f,
-        outline: `1px solid ${base02$f}50`,
+        outline: `1px solid ${base08$b}`,
         borderRadius: generalMatching$f.borderRadius,
     },
     // Fold placeholder
     '.cm-foldPlaceholder': {
-        backgroundColor: tooltipBackground$f,
-        color: base03$f,
-        border: `1px dotted ${base0E$b}70`,
+        backgroundColor: 'transparent',
+        color: base02$f,
+        border: `1px dotted ${base08$b}`,
         borderRadius: generalPlaceholder$f.borderRadius,
         padding: generalPlaceholder$f.padding,
         margin: generalPlaceholder$f.margin,
@@ -37908,7 +40002,7 @@ const githubDarkTheme = /*@__PURE__*/EditorView.theme({
     // Focus outline
     '&.cm-focused': {
         outline: 'none',
-        boxShadow: `0 0 0 2px ${base00$f}, 0 0 0 3px ${linkColor$f}40`,
+        boxShadow: `0 0 0 2px ${base05$e}, 0 0 0 3px ${base10$5}40`,
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
@@ -37916,73 +40010,79 @@ const githubDarkTheme = /*@__PURE__*/EditorView.theme({
         height: generalScroller$f.height,
     },
     '& .cm-scroller::-webkit-scrollbar-track': {
-        background: base0D$d,
+        background: base05$e,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
-        backgroundColor: base0E$b,
+        backgroundColor: base08$b,
         borderRadius: generalScroller$f.borderRadius,
-        border: `3px solid ${base0D$d}`,
+        border: `3px solid ${base05$e}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-        backgroundColor: base0B$d,
+        backgroundColor: base09$b,
     },
     // Ghost text
     '.cm-ghostText': {
         opacity: '0.5',
-        color: base03$f,
+        color: base04$f,
     },
-}, { dark: true });
+}, { dark: false });
 /**
- * Enhanced syntax highlighting for GitHub Dark theme
+ * Enhanced syntax highlighting for Gruvbox Light theme
  */
-const githubDarkHighlightStyle = /*@__PURE__*/HighlightStyle.define([
+const gruvboxLightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Keywords and control flow
-    { tag: tags$1.keyword, color: base08$e, fontWeight: 'bold' },
-    { tag: tags$1.controlKeyword, color: base08$e, fontWeight: 'bold' },
-    { tag: tags$1.moduleKeyword, color: base08$e, fontWeight: 'bold' },
+    { tag: tags$1.keyword, color: base0A$a, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: base0A$a, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: base0A$a, fontWeight: 'bold' },
     // Names and variables
-    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base07$f },
-    { tag: [tags$1.variableName], color: base07$f },
-    { tag: [tags$1.propertyName], color: base06$f, fontStyle: 'normal' },
+    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base0D$a },
+    { tag: [tags$1.variableName], color: base0D$a },
+    { tag: [tags$1.propertyName], color: base0F$7, fontStyle: 'normal' },
     // Classes and types
-    { tag: [tags$1.typeName], color: base08$e },
-    { tag: [tags$1.className], color: base06$f, fontStyle: 'italic' },
-    { tag: [tags$1.namespace], color: base07$f, fontStyle: 'italic' },
+    { tag: [tags$1.typeName], color: base0F$7 },
+    { tag: [tags$1.className], color: base0C$a, fontStyle: 'italic' },
+    { tag: [tags$1.namespace], color: base0D$a, fontStyle: 'italic' },
     // Operators and punctuation
-    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base01$e },
-    { tag: [tags$1.bracket], color: base03$f },
-    { tag: [tags$1.brace], color: base03$f },
-    { tag: [tags$1.punctuation], color: base03$f },
+    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base00$f },
+    { tag: [tags$1.bracket], color: base04$f },
+    { tag: [tags$1.brace], color: base04$f },
+    { tag: [tags$1.punctuation], color: base04$f },
     // Functions and parameters
-    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base05$f },
-    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base07$f },
+    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base0C$a },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base0D$a },
     // Constants and literals
-    { tag: tags$1.number, color: base0C$d },
-    { tag: tags$1.changed, color: base0C$d },
+    { tag: tags$1.number, color: base0E$8 },
+    { tag: tags$1.changed, color: base0E$8 },
     { tag: tags$1.annotation, color: invalid$f, fontStyle: 'italic' },
-    { tag: tags$1.modifier, color: base0C$d, fontStyle: 'italic' },
-    { tag: tags$1.self, color: base0C$d },
-    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base0C$d },
-    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base0C$d },
+    { tag: tags$1.modifier, color: base0E$8, fontStyle: 'italic' },
+    { tag: tags$1.self, color: base0E$8 },
+    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base10$5 },
+    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base10$5 },
     // Strings and regex
-    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base05$f },
-    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base09$e },
-    { tag: tags$1.string, color: base09$e },
+    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base0B$a },
+    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base0B$a },
+    { tag: tags$1.string, color: base0B$a },
     // Punctuation and structure
-    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base08$e, fontWeight: 'bold' },
+    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base0F$7, fontWeight: 'bold' },
     // Comments and documentation
-    { tag: tags$1.meta, color: base03$f },
-    { tag: tags$1.comment, fontStyle: 'italic', color: base03$f },
-    { tag: tags$1.docComment, fontStyle: 'italic', color: base03$f },
+    { tag: tags$1.meta, color: base04$f },
+    { tag: tags$1.comment, fontStyle: 'italic', color: base04$f },
+    { tag: tags$1.docComment, fontStyle: 'italic', color: base04$f },
     // HTML/XML elements
-    { tag: [tags$1.tagName], color: base05$f },
-    { tag: [tags$1.attributeName], color: base06$f },
+    { tag: [tags$1.tagName], color: base0A$a },
+    { tag: [tags$1.attributeName], color: base0C$a },
     // Markdown and text formatting
-    { tag: [tags$1.heading], fontWeight: 'bold', color: base07$f },
-    { tag: [tags$1.strong], fontWeight: 'bold', color: base07$f },
-    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base09$e },
+    { tag: [tags$1.heading], fontWeight: 'bold', color: base0C$a },
+    { tag: [tags$1.strong], fontWeight: 'bold', color: base0C$a },
+    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base0B$a },
     // Links and URLs
-    { tag: [tags$1.link], color: visitedLinkColor$d, fontWeight: '500', textDecoration: 'underline', textUnderlinePosition: 'under' },
+    {
+        tag: [tags$1.link],
+        color: visitedLinkColor$d,
+        fontWeight: '500',
+        textDecoration: 'underline',
+        textUnderlinePosition: 'under',
+    },
     {
         tag: [tags$1.url],
         color: linkColor$f,
@@ -37990,33 +40090,38 @@ const githubDarkHighlightStyle = /*@__PURE__*/HighlightStyle.define([
         textUnderlineOffset: '2px',
     },
     // Special states
-    { tag: [tags$1.invalid], color: base01$e, textDecoration: 'underline wavy', borderBottom: `1px wavy ${invalid$f}` },
+    {
+        tag: [tags$1.invalid],
+        color: base00$f,
+        textDecoration: 'underline wavy',
+        borderBottom: `1px wavy ${invalid$f}`,
+    },
     { tag: [tags$1.strikethrough], color: invalid$f, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
-    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base0C$d },
+    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base10$5 },
     { tag: tags$1.deleted, color: invalid$f },
-    { tag: tags$1.squareBracket, color: base03$f },
-    { tag: tags$1.angleBracket, color: base03$f },
+    { tag: tags$1.squareBracket, color: base04$f },
+    { tag: tags$1.angleBracket, color: base04$f },
     // Additional specific styles
-    { tag: tags$1.monospace, color: base01$e },
-    { tag: [tags$1.contentSeparator], color: base07$f },
-    { tag: tags$1.quote, color: base03$f },
+    { tag: tags$1.monospace, color: base00$f },
+    { tag: [tags$1.contentSeparator], color: base0D$a },
+    { tag: tags$1.quote, color: base04$f },
 ]);
 /**
- * Combined GitHub Dark theme extension
+ * Combined Gruvbox Light theme extension
  */
-const githubDark = [
-    githubDarkTheme,
-    /*@__PURE__*/syntaxHighlighting(githubDarkHighlightStyle),
+const gruvboxLight = [
+    gruvboxLightTheme,
+    /*@__PURE__*/syntaxHighlighting(gruvboxLightHighlightStyle),
 ];
 /**
- * GitHub Dark merge revert styles configuration
+ * Gruvbox Light merge revert styles configuration
  */
-const githubDarkMergeStyles = {
+const gruvboxLightMergeStyles = {
     backgroundColor: tooltipBackground$f,
-    borderColor: base0E$b,
-    buttonColor: base01$e,
-    buttonHoverColor: base0A$d,
+    borderColor: base08$b,
+    buttonColor: base00$f,
+    buttonHoverColor: base07$c,
 };
 
 // Helper module for styling options
@@ -38024,9 +40129,6 @@ const generalContent$e = {
     fontSize: '14px',
     fontFamily: 'JetBrains Mono, Consolas, monospace',
     lineHeight: '1.6',
-};
-const generalCursor$e = {
-    borderLeftWidth: '2px',
 };
 const generalDiff$e = {
     insertedTextDecoration: 'none',
@@ -38037,10 +40139,9 @@ const generalGutter$e = {
     border: 'none',
     paddingRight: '8px',
     fontSize: '0.9em',
-    fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 const generalPanel$e = {
-    border: 'none',
     borderRadius: '4px',
     padding: '2px 10px',
 };
@@ -38073,56 +40174,34 @@ const generalTooltip$e = {
 };
 
 /**
- * Enhanced GitHub Light theme color palette
- * ----------------------------------------
- * Colors organized by function with visual color blocks for reference
+ * High Contrast Dark theme color definitions
+ * ------------------------------------------
+ * Maximum contrast theme for accessibility
  */
-// Core UI colors
-const base00$e = '#ffffff', // Background (GitHub light mode background)
-base01$d = '#24292e', // Foreground (main text color)
-base02$e = '#BBDFFF', // Selection - light blue
-base03$e = '#6e7781', // Comments, subdued text
-base04$e = '#f6f8fa', // Light gray (gutter, panels)
-// Syntax highlighting colors
-base05$e = '#116329', // Tag names - GitHub green
-base06$e = '#6a737d', // Comments, brackets - GitHub gray
-base07$e = '#6f42c1', // Classes, properties - GitHub purple
-base08$d = '#005cc5', // Variables, attributes - GitHub blue
-base09$d = '#d73a49', // Keywords, types - GitHub red
-base0A$c = '#032f62', // Strings, regexps - GitHub navy
-base0B$c = '#22863a', // Names, quotes - GitHub green
-base0C$c = '#e36209', // Atoms, booleans - GitHub orange
-// Background variants
-base0D$c = '#f1f8ff', // Active line gutter background
-base0E$a = '#e1e4e8', // Panel and tooltip border color
-base0F$8 = '#f8f9fa'; // Tooltip background
-// Special states
-const invalid$e = '#cb2431', // Invalid color - error red
-highlightBackground$e = '#BBDFFF20', // Line highlight (light blue and opacity)
-tooltipBackground$e = base0F$8, // Tooltip background
-cursor$e = base01$d, // Caret color
-selection$e = base02$e, // Selection color
-activeBracketBg$e = '#e8f0fe', // Active bracket background
-activeBracketBorder$e = '#0366d6', // Active bracket border
-diagnosticWarning$e = '#b08800', // Warning color
-selectionMatch$e = '#79b8ff40', // Selection match background
-linkColor$e = '#0969da', // Bright blue for links
-visitedLinkColor$c = '#8250df'; // Purple for visited links
+// Base colors - Pure black and white for maximum contrast
+const base00$e = '#000000', // Background - pure black
+base01$d = '#0a0a0a', // Darker background
+base02$e = '#1f1f1f', // Selection background
+base03$e = '#808080', // Comments - medium grey
+base04$e = '#b0b0b0', // Dark grey
+base05$d = '#ffffff', // Foreground - pure white
+// High contrast accent colors
+brightYellow = '#ffff00', brightCyan = '#00ffff', brightGreen = '#00ff00', brightRed = '#ff0000', brightMagenta = '#ff00ff', brightBlue = '#0099ff', brightOrange = '#ff9900', brightPurple = '#cc66ff';
+// UI specific colors
+const invalid$e = brightRed, darkBackground$a = base00$e, background$d = base00$e, tooltipBackground$e = '#1a1a1a', selection$e = '#264f78', selectionMatch$e = '#264f7880', cursor$e = brightYellow, activeBracketBg$e = '#1f1f1f', activeBracketBorder$e = brightCyan, diagnosticWarning$e = brightYellow, linkColor$e = brightCyan, visitedLinkColor$c = brightMagenta;
 // Diff/merge specific colors
-const addedBackground$e = '#e6ffec80', // GitHub light green with transparency
-removedBackground$e = '#ffebe980', // GitHub light red with transparency
-addedText$e = '#0f6d31', // GitHub dark green for added text
-removedText$e = '#cf222e'; // GitHub red for removed text
+const addedBackground$e = '#00550060', removedBackground$e = '#55000060', addedText$e = brightGreen, removedText$e = brightRed;
 /**
- * Enhanced editor theme styles for GitHub Light
+ * Enhanced editor theme styles for High Contrast Dark
  */
-const githubLightTheme = /*@__PURE__*/EditorView.theme({
+const highContrastDarkTheme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base01$d,
-        backgroundColor: base00$e,
+        color: base05$d,
+        backgroundColor: background$d,
         fontSize: generalContent$e.fontSize,
         fontFamily: generalContent$e.fontFamily,
+        border: `1px solid ${base04$e}`,
     },
     // Content and cursor
     '.cm-content': {
@@ -38131,16 +40210,17 @@ const githubLightTheme = /*@__PURE__*/EditorView.theme({
     },
     '.cm-cursor, .cm-dropCursor': {
         borderLeftColor: cursor$e,
-        borderLeftWidth: generalCursor$e.borderLeftWidth,
+        borderLeftWidth: '3px',
     },
     '.cm-fat-cursor': {
-        backgroundColor: `${cursor$e}99`,
-        color: base00$e,
+        backgroundColor: cursor$e,
+        color: background$d,
+        border: `2px solid ${base05$d}`,
     },
     // Selection
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-        backgroundColor: selection$e,
-        color: base01$d,
+        backgroundColor: '#3a5a8a',
+        outline: `2px solid ${brightCyan}`,
     },
     // Make sure selection appears above active line
     '.cm-selectionLayer': {
@@ -38148,89 +40228,99 @@ const githubLightTheme = /*@__PURE__*/EditorView.theme({
     },
     // Search functionality
     '.cm-searchMatch': {
-        backgroundColor: '#daebff',
-        outline: `1px solid ${base08$d}`,
-        color: base01$d,
+        backgroundColor: '#006400',
+        outline: `2px solid ${brightGreen}`,
+        color: base05$d,
         borderRadius: generalSearchField$e.borderRadius,
         '& span': {
-            color: base01$d,
+            color: base05$d,
         },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-        backgroundColor: '#79b8ff',
+        backgroundColor: brightGreen,
         color: base00$e,
         padding: generalSearchField$e.padding,
+        outline: `2px solid ${base05$d}`,
         '& span': {
             color: base00$e,
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
-        color: base01$d,
+        color: base05$d,
+        backgroundColor: base01$d,
+        border: `1px solid ${base04$e}`,
         borderRadius: generalSearchField$e.borderRadius,
         padding: generalSearchField$e.padding,
     },
     // Panels
     '.cm-panels': {
-        backgroundColor: base04$e,
-        color: base03$e,
-        borderRadius: '0 0 4px 4px',
+        backgroundColor: darkBackground$a,
+        color: base05$d,
+        borderRadius: '4px',
+        border: `1px solid ${base04$e}`,
     },
     '.cm-panels.cm-panels-top': {
-        borderBottom: `1px solid ${base0E$a}`,
+        borderBottom: `2px solid ${base04$e}`,
     },
     '.cm-panels.cm-panels-bottom': {
-        borderTop: `1px solid ${base0E$a}`,
+        borderTop: `2px solid ${base04$e}`,
     },
     '.cm-panel button': {
-        backgroundColor: base00$e,
-        color: base01$d,
-        border: generalPanel$e.border,
+        backgroundColor: tooltipBackground$e,
+        color: brightCyan,
+        border: `1px solid ${base04$e}`,
         borderRadius: generalPanel$e.borderRadius,
         padding: generalPanel$e.padding,
     },
     '.cm-panel button:hover': {
-        backgroundColor: '#f5f5f5',
+        backgroundColor: base02$e,
+        border: `1px solid ${brightCyan}`,
     },
     // Line highlighting
     '.cm-activeLine': {
-        backgroundColor: highlightBackground$e,
+        backgroundColor: '#2a2a2aa6',
         borderRadius: generalLine$e.borderRadius,
+        borderLeft: `3px solid ${brightCyan}`,
+        borderRight: `1px solid ${base04$e}`,
         zIndex: 1,
     },
     // Gutters
     '.cm-gutters': {
-        backgroundColor: base04$e,
-        color: base03$e,
+        backgroundColor: darkBackground$a,
+        color: base04$e,
         border: generalGutter$e.border,
-        borderRight: `1px solid ${base0E$a}`,
+        borderRight: `2px solid ${base04$e}`,
         paddingRight: generalGutter$e.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: base0D$c,
-        color: base01$d,
-        fontWeight: generalGutter$e.fontWeight,
+        backgroundColor: base02$e,
+        color: brightYellow,
+        fontWeight: 'bold',
+        border: `1px solid ${base03$e}`,
     },
     '.cm-lineNumbers': {
         fontSize: generalGutter$e.fontSize,
+        lineHeight: generalGutter$e.lineHeight,
     },
     '.cm-foldGutter': {
         fontSize: generalGutter$e.fontSize,
+        lineHeight: generalGutter$e.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
-        color: base03$e,
+        color: base04$e,
         cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-        color: base01$d,
+        color: brightCyan,
     },
     // Diff/Merge View Styles
-    // Inserted/Added Content
     '.cm-insertedLine': {
         textDecoration: generalDiff$e.insertedTextDecoration,
         backgroundColor: addedBackground$e,
         color: addedText$e,
         padding: generalDiff$e.insertedLinePadding,
         borderRadius: generalDiff$e.borderRadious,
+        border: `1px solid ${addedText$e}`,
     },
     'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
         textDecoration: generalDiff$e.insertedTextDecoration,
@@ -38238,18 +40328,18 @@ const githubLightTheme = /*@__PURE__*/EditorView.theme({
         color: addedText$e,
         padding: generalDiff$e.insertedLinePadding,
         borderRadius: generalDiff$e.borderRadious,
-        border: `1px solid ${addedText$e}30`,
+        border: `1px solid ${addedText$e}`,
     },
     'ins.cm-insertedLine .cm-changedText': {
         background: 'transparent !important',
     },
-    // Deleted/Removed Content
     '.cm-deletedLine': {
         textDecoration: generalDiff$e.deletedTextDecoration,
         backgroundColor: removedBackground$e,
         color: removedText$e,
         padding: generalDiff$e.insertedLinePadding,
         borderRadius: generalDiff$e.borderRadious,
+        border: `1px solid ${removedText$e}`,
     },
     'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
         textDecoration: generalDiff$e.deletedTextDecoration,
@@ -38257,7 +40347,7 @@ const githubLightTheme = /*@__PURE__*/EditorView.theme({
         color: removedText$e,
         padding: generalDiff$e.insertedLinePadding,
         borderRadius: generalDiff$e.borderRadious,
-        border: `1px solid ${removedText$e}30`,
+        border: `1px solid ${removedText$e}`,
     },
     'del .cm-deletedText, del .cm-changedText': {
         background: 'transparent !important',
@@ -38265,34 +40355,32 @@ const githubLightTheme = /*@__PURE__*/EditorView.theme({
     // Tooltips and autocomplete
     '.cm-tooltip': {
         backgroundColor: tooltipBackground$e,
-        border: `1px solid ${base0E$a}`,
+        border: `2px solid ${brightCyan}`,
         borderRadius: generalTooltip$e.borderRadius,
         padding: generalTooltip$e.padding,
-        boxShadow: '0 1px 5px rgba(0, 0, 0, 0.1)',
+        color: base05$d,
     },
     '.cm-tooltip-autocomplete': {
         '& > ul': {
             backgroundColor: tooltipBackground$e,
-            border: 'none',
+            border: `1px solid ${base04$e}`,
         },
         '& > ul > li': {
             padding: generalTooltip$e.padding,
             lineHeight: generalTooltip$e.lineHeight,
         },
         '& > ul > li[aria-selected]': {
-            backgroundColor: '#0366d630',
-            color: base01$d,
+            backgroundColor: selection$e,
+            color: brightYellow,
             borderRadius: generalTooltip$e.borderRadiusSelected,
-        },
-        '& > ul > li:hover': {
-            backgroundColor: '#0366d615',
+            border: `1px solid ${brightCyan}`,
         },
         '& > ul > li > span.cm-completionIcon': {
-            color: base03$e,
+            color: brightCyan,
             paddingRight: generalTooltip$e.paddingRight,
         },
         '& > ul > li > span.cm-completionDetail': {
-            color: base03$e,
+            color: brightYellow,
             fontStyle: 'italic',
         },
     },
@@ -38301,57 +40389,60 @@ const githubLightTheme = /*@__PURE__*/EditorView.theme({
         borderBottomColor: 'transparent',
     },
     '.cm-tooltip .cm-tooltip-arrow:after': {
-        borderTopColor: tooltipBackground$e,
-        borderBottomColor: tooltipBackground$e,
+        borderTopColor: brightCyan,
+        borderBottomColor: brightCyan,
     },
     // Diagnostics styling
     '.cm-diagnostic': {
         '&-error': {
-            borderLeft: `3px solid ${invalid$e}`,
+            borderLeft: `4px solid ${brightRed}`,
+            backgroundColor: '#33000020',
         },
         '&-warning': {
-            borderLeft: `3px solid ${diagnosticWarning$e}`,
+            borderLeft: `4px solid ${diagnosticWarning$e}`,
+            backgroundColor: '#33330020',
         },
         '&-info': {
-            borderLeft: `3px solid ${linkColor$e}`,
+            borderLeft: `4px solid ${linkColor$e}`,
+            backgroundColor: '#00333320',
         },
     },
     '.cm-lintPoint-error': {
-        borderBottom: `2px wavy ${invalid$e}`,
+        borderBottom: `3px wavy ${brightRed}`,
     },
     '.cm-lintPoint-warning': {
-        borderBottom: `2px wavy ${diagnosticWarning$e}`,
+        borderBottom: `3px wavy ${diagnosticWarning$e}`,
     },
     // Matching brackets
     '.cm-matchingBracket': {
         backgroundColor: activeBracketBg$e,
-        outline: `1px solid ${activeBracketBorder$e}80`,
+        outline: `2px solid ${activeBracketBorder$e}`,
         borderRadius: generalMatching$e.borderRadius,
     },
     '.cm-nonmatchingBracket': {
-        backgroundColor: '#ffeef080',
-        outline: `1px solid ${invalid$e}`,
+        backgroundColor: '#33000050',
+        outline: `2px solid ${invalid$e}`,
         borderRadius: generalMatching$e.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
         backgroundColor: selectionMatch$e,
-        outline: `1px solid ${base02$e}50`,
+        outline: `2px solid ${brightCyan}50`,
         borderRadius: generalMatching$e.borderRadius,
     },
     // Fold placeholder
     '.cm-foldPlaceholder': {
-        backgroundColor: selectionMatch$e,
-        color: base03$e,
-        border: `1px dotted ${base0E$a}70`,
+        backgroundColor: tooltipBackground$e,
+        color: brightCyan,
+        border: `2px solid ${brightCyan}`,
         borderRadius: generalPlaceholder$e.borderRadius,
         padding: generalPlaceholder$e.padding,
         margin: generalPlaceholder$e.margin,
     },
     // Focus outline
     '&.cm-focused': {
-        outline: 'none',
-        boxShadow: `0 0 0 2px ${base00$e}, 0 0 0 3px ${linkColor$e}40`,
+        outline: `3px solid ${brightCyan}`,
+        outlineOffset: '2px',
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
@@ -38359,71 +40450,77 @@ const githubLightTheme = /*@__PURE__*/EditorView.theme({
         height: generalScroller$e.height,
     },
     '& .cm-scroller::-webkit-scrollbar-track': {
-        background: base0E$a,
+        background: darkBackground$a,
+        border: `1px solid ${base04$e}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
-        backgroundColor: base01$d,
+        backgroundColor: base04$e,
+        border: `2px solid ${base05$d}`,
         borderRadius: generalScroller$e.borderRadius,
-        border: `3px solid ${base0E$a}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-        backgroundColor: base06$e,
+        backgroundColor: brightCyan,
     },
     // Ghost text
     '.cm-ghostText': {
-        opacity: '0.5',
-        color: '#959da5',
+        opacity: '0.7',
+        color: base03$e,
     },
-}, { dark: false });
+}, { dark: true });
 /**
- * Enhanced syntax highlighting for GitHub Light theme
+ * Enhanced syntax highlighting for High Contrast Dark theme
  */
-const githubLightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
+const highContrastDarkHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Keywords and control flow
-    { tag: tags$1.keyword, color: base09$d, fontWeight: 'bold' },
-    { tag: tags$1.controlKeyword, color: base09$d, fontWeight: 'bold' },
-    { tag: tags$1.moduleKeyword, color: base09$d, fontWeight: 'bold' },
+    { tag: tags$1.keyword, color: brightMagenta, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: brightMagenta, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: brightMagenta, fontWeight: 'bold' },
     // Names and variables
-    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base08$d },
-    { tag: [tags$1.variableName], color: base08$d },
-    { tag: [tags$1.propertyName], color: base07$e, fontStyle: 'normal' },
+    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base05$d },
+    { tag: [tags$1.variableName], color: base05$d },
+    { tag: [tags$1.propertyName], color: brightCyan, fontStyle: 'normal' },
     // Classes and types
-    { tag: [tags$1.typeName], color: base09$d },
-    { tag: [tags$1.className], color: base07$e, fontStyle: 'italic' },
-    { tag: [tags$1.namespace], color: base08$d, fontStyle: 'italic' },
+    { tag: [tags$1.typeName], color: brightYellow },
+    { tag: [tags$1.className], color: brightYellow, fontStyle: 'italic' },
+    { tag: [tags$1.namespace], color: brightOrange, fontStyle: 'italic' },
     // Operators and punctuation
-    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base01$d },
-    { tag: [tags$1.bracket], color: base06$e },
-    { tag: [tags$1.brace], color: base06$e },
-    { tag: [tags$1.punctuation], color: base06$e },
+    { tag: [tags$1.operator, tags$1.operatorKeyword], color: brightCyan },
+    { tag: [tags$1.bracket], color: brightYellow },
+    { tag: [tags$1.brace], color: brightCyan },
+    { tag: [tags$1.punctuation], color: base05$d },
     // Functions and parameters
-    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base0B$c },
-    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base08$d },
+    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: brightBlue },
+    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: brightBlue },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: brightOrange },
     // Constants and literals
-    { tag: tags$1.number, color: base0C$c },
-    { tag: tags$1.changed, color: base0C$c },
-    { tag: tags$1.annotation, color: invalid$e, fontStyle: 'italic' },
-    { tag: tags$1.modifier, color: base0C$c, fontStyle: 'italic' },
-    { tag: tags$1.self, color: base0C$c },
-    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base0C$c },
-    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base0C$c },
+    { tag: tags$1.number, color: brightOrange },
+    { tag: tags$1.changed, color: brightYellow },
+    { tag: tags$1.annotation, color: brightRed, fontStyle: 'italic' },
+    { tag: tags$1.modifier, color: brightPurple, fontStyle: 'italic' },
+    { tag: tags$1.self, color: brightRed },
+    {
+        tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)],
+        color: brightOrange,
+    },
+    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: brightOrange },
     // Strings and regex
-    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base0B$c },
-    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base0A$c },
-    { tag: tags$1.string, color: base0A$c },
+    { tag: [tags$1.processingInstruction, tags$1.inserted], color: brightGreen },
+    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: brightMagenta },
+    { tag: tags$1.string, color: brightGreen },
     // Punctuation and structure
-    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base09$d, fontWeight: 'bold' },
+    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: brightYellow, fontWeight: 'bold' },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.name), tags$1.separator], color: brightCyan },
     // Comments and documentation
-    { tag: tags$1.meta, color: base06$e },
-    { tag: tags$1.comment, fontStyle: 'italic', color: base06$e },
-    { tag: tags$1.docComment, fontStyle: 'italic', color: base06$e },
+    { tag: tags$1.meta, color: base03$e },
+    { tag: tags$1.comment, fontStyle: 'italic', color: base03$e },
+    { tag: tags$1.docComment, fontStyle: 'italic', color: base03$e },
     // HTML/XML elements
-    { tag: [tags$1.tagName], color: base05$e },
-    { tag: [tags$1.attributeName], color: base07$e },
+    { tag: [tags$1.tagName], color: brightMagenta },
+    { tag: [tags$1.attributeName], color: brightYellow },
     // Markdown and text formatting
-    { tag: [tags$1.heading], fontWeight: 'bold', color: base08$d },
-    { tag: [tags$1.strong], fontWeight: 'bold', color: base08$d },
-    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base0A$c },
+    { tag: [tags$1.heading], fontWeight: 'bold', color: brightMagenta },
+    { tag: [tags$1.strong], fontWeight: 'bold', color: brightOrange },
+    { tag: [tags$1.emphasis], fontStyle: 'italic', color: brightMagenta },
     // Links and URLs
     {
         tag: [tags$1.link],
@@ -38441,36 +40538,36 @@ const githubLightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Special states
     {
         tag: [tags$1.invalid],
-        color: base01$d,
+        color: brightRed,
         textDecoration: 'underline wavy',
-        borderBottom: `1px wavy ${invalid$e}`,
+        borderBottom: `2px wavy ${brightRed}`,
     },
-    { tag: [tags$1.strikethrough], color: invalid$e, textDecoration: 'line-through' },
+    { tag: [tags$1.strikethrough], color: brightRed, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
-    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base0C$c },
-    { tag: tags$1.deleted, color: invalid$e },
-    { tag: tags$1.squareBracket, color: base06$e },
-    { tag: tags$1.angleBracket, color: base06$e },
+    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: brightOrange },
+    { tag: tags$1.deleted, color: brightRed },
+    { tag: tags$1.squareBracket, color: brightYellow },
+    { tag: tags$1.angleBracket, color: brightCyan },
     // Additional specific styles
-    { tag: tags$1.monospace, color: base01$d },
-    { tag: [tags$1.contentSeparator], color: base08$d },
-    { tag: tags$1.quote, color: base06$e },
+    { tag: tags$1.monospace, color: brightBlue, fontStyle: 'italic' },
+    { tag: [tags$1.contentSeparator], color: brightPurple },
+    { tag: tags$1.quote, color: brightPurple },
 ]);
 /**
- * Combined GitHub Light theme extension
+ * Combined High Contrast Dark theme extension
  */
-const githubLight = [
-    githubLightTheme,
-    /*@__PURE__*/syntaxHighlighting(githubLightHighlightStyle),
+const highContrastDark = [
+    highContrastDarkTheme,
+    /*@__PURE__*/syntaxHighlighting(highContrastDarkHighlightStyle),
 ];
 /**
- * GitHub Light merge revert styles configuration
+ * High Contrast Dark merge revert styles configuration
  */
-const githubLightMergeStyles = {
-    backgroundColor: tooltipBackground$e,
-    borderColor: base0E$a,
-    buttonColor: base01$d,
-    buttonHoverColor: '#f5f5f5',
+const highContrastDarkMergeStyles = {
+    backgroundColor: darkBackground$a,
+    borderColor: brightCyan,
+    buttonColor: brightCyan,
+    buttonHoverColor: brightYellow,
 };
 
 // Helper module for styling options
@@ -38478,9 +40575,6 @@ const generalContent$d = {
     fontSize: '14px',
     fontFamily: 'JetBrains Mono, Consolas, monospace',
     lineHeight: '1.6',
-};
-const generalCursor$d = {
-    borderLeftWidth: '2px',
 };
 const generalDiff$d = {
     insertedTextDecoration: 'none',
@@ -38491,10 +40585,9 @@ const generalGutter$d = {
     border: 'none',
     paddingRight: '8px',
     fontSize: '0.9em',
-    fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 const generalPanel$d = {
-    border: 'none',
     borderRadius: '4px',
     padding: '2px 10px',
 };
@@ -38527,52 +40620,33 @@ const generalTooltip$d = {
 };
 
 /**
- * Enhanced Gruvbox Dark theme color definitions
- * --------------------------------------------
- * Colors organized by function with visual color blocks
+ * High Contrast Light theme color definitions
+ * -------------------------------------------
+ * Maximum contrast theme for accessibility (light variant)
  */
-// Gruvbox base colors
-const base00$d = '#282828', // Background
-base01$c = '#3c3836', // Lighter background (popups, statuslines)
-base02$d = '#504945', // Selection background
-base03$d = '#665c54', // Comments, invisibles, line highlighting
-base04$d = '#7c6f64', // Dark foreground (status bars)
-base05$d = '#928374', // Comments, invisibles, line highlighting
-// Light/foreground shades
-base06$d = '#fbf1c7', // Light foreground (preferbase08)
-base07$d = '#ebdbb2', // Light foreground (alternative)
-// Accent colors
-base08$c = '#fb4934', // Keywords, storage, operator
-base09$c = '#b8bb26', // Strings, tag attributes
-base0A$b = '#fabd2f', // Functions, tag names
-base0B$b = '#83a598', // Variables
-base0C$b = '#d3869b', // Numbers, special constants
-base0D$b = '#8ec07c', // Types
-base0E$9 = '#fe8019'; // Cursor, constants
+// Base colors - Pure white and black for maximum contrast
+const base00$d = '#ffffff', // Background - pure white
+base01$c = '#e0e0e0', // Selection background
+base02$d = '#707070', // Comments - medium grey
+base03$d = '#505050', // Dark grey
+base04$d = '#000000', // Foreground - pure black
+// High contrast accent colors for a light background
+darkBlue = '#0000ff', darkCyan = '#008080', darkGreen = '#008000', darkRed = '#c80000', darkMagenta = '#800080', darkOrange = '#d04800', darkPurple$1 = '#6600cc', darkBrown = '#7c3400';
 // UI specific colors
-const invalid$d = base08$c, darkBackground$a = base01$c, highlightBackground$d = '#3c383660', // Line highlight with transparency
-background$c = base00$d, tooltipBackground$d = base01$c, selection$d = base02$d, selectionMatch$d = '#665c5480', // Selection match background
-cursor$d = base0E$9, // Cursor color
-activeBracketBg$d = '#504945cc', // Active bracket background
-activeBracketBorder$d = base0A$b, // Active bracket border
-diagnosticWarning$d = base0A$b, // Warning color
-linkColor$d = base0B$b, // Link color
-visitedLinkColor$b = base0C$b; // Visited link color
+const invalid$d = darkRed, lightBackground = base00$d, background$c = base00$d, tooltipBackground$d = '#f0f0f0', selection$d = '#0078d4', selectionMatch$d = '#0078d480', cursor$d = darkBlue, activeBracketBg$d = '#e0e0e0', activeBracketBorder$d = darkCyan, diagnosticWarning$d = darkOrange, linkColor$d = darkBlue, visitedLinkColor$b = darkPurple$1;
 // Diff/merge specific colors
-const addedBackground$d = '#32361a80', // Dark base09 with transparency for insertions
-removedBackground$d = '#3c1f1e80', // Dark base08 with transparency for deletions
-addedText$d = '#b8bb26', // Bright base09 for added text
-removedText$d = '#fb4934'; // Bright base08 for removed text
+const addedBackground$d = '#00800040', removedBackground$d = '#c8000040', addedText$d = darkGreen, removedText$d = darkRed;
 /**
- * Enhanced editor theme styles for Gruvbox Dark
+ * Enhanced editor theme styles for High Contrast Light
  */
-const gruvboxDarkTheme = /*@__PURE__*/EditorView.theme({
+const highContrastLightTheme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base07$d,
+        color: base04$d,
         backgroundColor: background$c,
         fontSize: generalContent$d.fontSize,
         fontFamily: generalContent$d.fontFamily,
+        border: `2px solid ${base04$d}`,
     },
     // Content and cursor
     '.cm-content': {
@@ -38581,15 +40655,17 @@ const gruvboxDarkTheme = /*@__PURE__*/EditorView.theme({
     },
     '.cm-cursor, .cm-dropCursor': {
         borderLeftColor: cursor$d,
-        borderLeftWidth: generalCursor$d.borderLeftWidth,
+        borderLeftWidth: '3px',
     },
     '.cm-fat-cursor': {
-        backgroundColor: `${cursor$d}99`,
-        color: base00$d,
+        backgroundColor: cursor$d,
+        color: background$c,
+        border: `2px solid ${base04$d}`,
     },
     // Selection
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-        backgroundColor: selection$d,
+        backgroundColor: '#4d90fe',
+        outline: `2px solid ${darkBlue}`,
     },
     // Make sure selection appears above active line
     '.cm-selectionLayer': {
@@ -38597,89 +40673,99 @@ const gruvboxDarkTheme = /*@__PURE__*/EditorView.theme({
     },
     // Search functionality
     '.cm-searchMatch': {
-        backgroundColor: '#b57614cc',
-        outline: `1px solid ${base0A$b}`,
-        color: base06$d,
+        backgroundColor: '#ffff00',
+        outline: `2px solid ${darkOrange}`,
+        color: base04$d,
         borderRadius: generalSearchField$d.borderRadius,
         '& span': {
-            color: base06$d,
+            color: base04$d,
         },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-        backgroundColor: base0E$9,
+        backgroundColor: darkOrange,
         color: base00$d,
         padding: generalSearchField$d.padding,
+        outline: `2px solid ${base04$d}`,
         '& span': {
             color: base00$d,
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
-        color: base07$d,
+        color: base04$d,
+        backgroundColor: base00$d,
+        border: `2px solid ${base04$d}`,
         borderRadius: generalSearchField$d.borderRadius,
         padding: generalSearchField$d.padding,
     },
     // Panels
     '.cm-panels': {
-        backgroundColor: tooltipBackground$d,
-        color: base07$d,
+        backgroundColor: lightBackground,
+        color: base04$d,
         borderRadius: '4px',
+        border: `2px solid ${base04$d}`,
     },
     '.cm-panels.cm-panels-top': {
-        borderBottom: `1px solid ${base03$d}`,
+        borderBottom: `2px solid ${base04$d}`,
     },
     '.cm-panels.cm-panels-bottom': {
-        borderTop: `1px solid ${base03$d}`,
+        borderTop: `2px solid ${base04$d}`,
     },
     '.cm-panel button': {
         backgroundColor: tooltipBackground$d,
-        color: base07$d,
-        border: generalPanel$d.border,
+        color: darkBlue,
+        border: `2px solid ${base04$d}`,
         borderRadius: generalPanel$d.borderRadius,
         padding: generalPanel$d.padding,
     },
     '.cm-panel button:hover': {
-        backgroundColor: base02$d,
+        backgroundColor: base01$c,
+        border: `2px solid ${darkBlue}`,
     },
     // Line highlighting
     '.cm-activeLine': {
-        backgroundColor: highlightBackground$d,
+        backgroundColor: '#ffffccba',
         borderRadius: generalLine$d.borderRadius,
+        borderLeft: `3px solid ${darkBlue}`,
+        borderRight: `1px solid ${base02$d}`,
         zIndex: 1,
     },
     // Gutters
     '.cm-gutters': {
-        backgroundColor: base01$c,
-        color: base05$d,
+        backgroundColor: lightBackground,
+        color: base03$d,
         border: generalGutter$d.border,
-        borderRight: `1px solid ${base02$d}`,
+        borderRight: `2px solid ${base04$d}`,
         paddingRight: generalGutter$d.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: darkBackground$a,
-        color: base07$d,
-        fontWeight: generalGutter$d.fontWeight,
+        backgroundColor: base01$c,
+        color: darkBlue,
+        fontWeight: 'bold',
+        border: `1px solid ${base02$d}`,
     },
     '.cm-lineNumbers': {
         fontSize: generalGutter$d.fontSize,
+        lineHeight: generalGutter$d.lineHeight,
     },
     '.cm-foldGutter': {
         fontSize: generalGutter$d.fontSize,
+        lineHeight: generalGutter$d.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
-        color: base05$d,
+        color: base03$d,
         cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-        color: base07$d,
+        color: darkCyan,
     },
     // Diff/Merge View Styles
-    // Inserted/Added Content
     '.cm-insertedLine': {
         textDecoration: generalDiff$d.insertedTextDecoration,
         backgroundColor: addedBackground$d,
         color: addedText$d,
         padding: generalDiff$d.insertedLinePadding,
         borderRadius: generalDiff$d.borderRadious,
+        border: `2px solid ${addedText$d}`,
     },
     'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
         textDecoration: generalDiff$d.insertedTextDecoration,
@@ -38687,18 +40773,18 @@ const gruvboxDarkTheme = /*@__PURE__*/EditorView.theme({
         color: addedText$d,
         padding: generalDiff$d.insertedLinePadding,
         borderRadius: generalDiff$d.borderRadious,
-        border: `1px solid ${addedText$d}40`,
+        border: `2px solid ${addedText$d}`,
     },
     'ins.cm-insertedLine .cm-changedText': {
         background: 'transparent !important',
     },
-    // Deleted/Removed Content
     '.cm-deletedLine': {
         textDecoration: generalDiff$d.deletedTextDecoration,
         backgroundColor: removedBackground$d,
         color: removedText$d,
         padding: generalDiff$d.insertedLinePadding,
         borderRadius: generalDiff$d.borderRadious,
+        border: `2px solid ${removedText$d}`,
     },
     'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
         textDecoration: generalDiff$d.deletedTextDecoration,
@@ -38706,7 +40792,7 @@ const gruvboxDarkTheme = /*@__PURE__*/EditorView.theme({
         color: removedText$d,
         padding: generalDiff$d.insertedLinePadding,
         borderRadius: generalDiff$d.borderRadious,
-        border: `1px solid ${removedText$d}40`,
+        border: `2px solid ${removedText$d}`,
     },
     'del .cm-deletedText, del .cm-changedText': {
         background: 'transparent !important',
@@ -38714,15 +40800,15 @@ const gruvboxDarkTheme = /*@__PURE__*/EditorView.theme({
     // Tooltips and autocomplete
     '.cm-tooltip': {
         backgroundColor: tooltipBackground$d,
-        border: `1px solid ${base03$d}`,
+        border: `2px solid ${darkBlue}`,
         borderRadius: generalTooltip$d.borderRadius,
         padding: generalTooltip$d.padding,
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+        color: base04$d,
     },
     '.cm-tooltip-autocomplete': {
         '& > ul': {
             backgroundColor: tooltipBackground$d,
-            border: 'none',
+            border: `2px solid ${base04$d}`,
         },
         '& > ul > li': {
             padding: generalTooltip$d.padding,
@@ -38730,15 +40816,16 @@ const gruvboxDarkTheme = /*@__PURE__*/EditorView.theme({
         },
         '& > ul > li[aria-selected]': {
             backgroundColor: selection$d,
-            color: base06$d,
+            color: base00$d,
             borderRadius: generalTooltip$d.borderRadiusSelected,
+            border: `2px solid ${darkBlue}`,
         },
         '& > ul > li > span.cm-completionIcon': {
-            color: base05$d,
+            color: darkCyan,
             paddingRight: generalTooltip$d.paddingRight,
         },
         '& > ul > li > span.cm-completionDetail': {
-            color: base05$d,
+            color: darkOrange,
             fontStyle: 'italic',
         },
     },
@@ -38747,57 +40834,60 @@ const gruvboxDarkTheme = /*@__PURE__*/EditorView.theme({
         borderBottomColor: 'transparent',
     },
     '.cm-tooltip .cm-tooltip-arrow:after': {
-        borderTopColor: tooltipBackground$d,
-        borderBottomColor: tooltipBackground$d,
+        borderTopColor: darkBlue,
+        borderBottomColor: darkBlue,
     },
     // Diagnostics styling
     '.cm-diagnostic': {
         '&-error': {
-            borderLeft: `3px solid ${invalid$d}`,
+            borderLeft: `4px solid ${darkRed}`,
+            backgroundColor: '#ff000020',
         },
         '&-warning': {
-            borderLeft: `3px solid ${diagnosticWarning$d}`,
+            borderLeft: `4px solid ${diagnosticWarning$d}`,
+            backgroundColor: '#ff990020',
         },
         '&-info': {
-            borderLeft: `3px solid ${linkColor$d}`,
+            borderLeft: `4px solid ${linkColor$d}`,
+            backgroundColor: '#0000ff20',
         },
     },
     '.cm-lintPoint-error': {
-        borderBottom: `2px wavy ${invalid$d}`,
+        borderBottom: `3px wavy ${darkRed}`,
     },
     '.cm-lintPoint-warning': {
-        borderBottom: `2px wavy ${diagnosticWarning$d}`,
+        borderBottom: `3px wavy ${diagnosticWarning$d}`,
     },
     // Matching brackets
     '.cm-matchingBracket': {
         backgroundColor: activeBracketBg$d,
-        outline: `1px solid ${activeBracketBorder$d}`,
+        outline: `2px solid ${activeBracketBorder$d}`,
         borderRadius: generalMatching$d.borderRadius,
     },
     '.cm-nonmatchingBracket': {
-        backgroundColor: '#cc241d55',
-        outline: `1px solid ${invalid$d}`,
+        backgroundColor: '#ff000030',
+        outline: `2px solid ${invalid$d}`,
         borderRadius: generalMatching$d.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
         backgroundColor: selectionMatch$d,
-        outline: `1px solid ${base03$d}`,
+        outline: `2px solid ${darkBlue}50`,
         borderRadius: generalMatching$d.borderRadius,
     },
     // Fold placeholder
     '.cm-foldPlaceholder': {
         backgroundColor: tooltipBackground$d,
-        color: base05$d,
-        border: `1px dotted ${base03$d}`,
+        color: darkBlue,
+        border: `2px solid ${darkBlue}`,
         borderRadius: generalPlaceholder$d.borderRadius,
         padding: generalPlaceholder$d.padding,
         margin: generalPlaceholder$d.margin,
     },
     // Focus outline
     '&.cm-focused': {
-        outline: 'none',
-        boxShadow: `0 0 0 2px ${base00$d}, 0 0 0 3px ${base0E$9}40`,
+        outline: `3px solid ${darkBlue}`,
+        outlineOffset: '2px',
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
@@ -38805,71 +40895,74 @@ const gruvboxDarkTheme = /*@__PURE__*/EditorView.theme({
         height: generalScroller$d.height,
     },
     '& .cm-scroller::-webkit-scrollbar-track': {
-        background: base01$c,
+        background: lightBackground,
+        border: `2px solid ${base04$d}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
         backgroundColor: base03$d,
+        border: `2px solid ${base04$d}`,
         borderRadius: generalScroller$d.borderRadius,
-        border: `3px solid ${base01$c}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-        backgroundColor: base04$d,
+        backgroundColor: darkBlue,
     },
     // Ghost text
     '.cm-ghostText': {
-        opacity: '0.5',
-        color: base05$d,
+        opacity: '0.7',
+        color: base02$d,
     },
-}, { dark: true });
+}, { dark: false });
 /**
- * Enhanced syntax highlighting for Gruvbox Dark theme
+ * Enhanced syntax highlighting for High Contrast Light theme
  */
-const gruvboxDarkHighlightStyle = /*@__PURE__*/HighlightStyle.define([
+const highContrastLightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Keywords and control flow
-    { tag: tags$1.keyword, color: base08$c, fontWeight: 'bold' },
-    { tag: tags$1.controlKeyword, color: base08$c, fontWeight: 'bold' },
-    { tag: tags$1.moduleKeyword, color: base08$c, fontWeight: 'bold' },
+    { tag: tags$1.keyword, color: darkMagenta, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: darkMagenta, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: darkMagenta, fontWeight: 'bold' },
     // Names and variables
-    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base0B$b },
-    { tag: [tags$1.variableName], color: base0B$b },
-    { tag: [tags$1.propertyName], color: base0D$b, fontStyle: 'normal' },
+    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base04$d },
+    { tag: [tags$1.variableName], color: base04$d },
+    { tag: [tags$1.propertyName], color: darkBlue, fontStyle: 'normal' },
     // Classes and types
-    { tag: [tags$1.typeName], color: base0D$b },
-    { tag: [tags$1.className], color: base0A$b, fontStyle: 'italic' },
-    { tag: [tags$1.namespace], color: base0B$b, fontStyle: 'italic' },
+    { tag: [tags$1.typeName], color: darkCyan },
+    { tag: [tags$1.className], color: darkCyan, fontStyle: 'italic' },
+    { tag: [tags$1.namespace], color: darkOrange, fontStyle: 'italic' },
     // Operators and punctuation
-    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base07$d },
-    { tag: [tags$1.bracket], color: base05$d },
-    { tag: [tags$1.brace], color: base05$d },
-    { tag: [tags$1.punctuation], color: base05$d },
+    { tag: [tags$1.operator, tags$1.operatorKeyword], color: darkCyan },
+    { tag: [tags$1.bracket], color: darkBrown },
+    { tag: [tags$1.brace], color: darkCyan },
+    { tag: [tags$1.punctuation], color: base04$d },
     // Functions and parameters
-    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base0A$b },
-    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base0B$b },
+    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: darkBlue },
+    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: darkBlue },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: darkOrange },
     // Constants and literals
-    { tag: tags$1.number, color: base0C$b },
-    { tag: tags$1.changed, color: base0C$b },
-    { tag: tags$1.annotation, color: invalid$d, fontStyle: 'italic' },
-    { tag: tags$1.modifier, color: base0C$b, fontStyle: 'italic' },
-    { tag: tags$1.self, color: base0C$b },
-    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base0E$9 },
-    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base0E$9 },
+    { tag: tags$1.number, color: darkOrange },
+    { tag: tags$1.changed, color: darkOrange },
+    { tag: tags$1.annotation, color: darkRed, fontStyle: 'italic' },
+    { tag: tags$1.modifier, color: darkPurple$1, fontStyle: 'italic' },
+    { tag: tags$1.self, color: darkRed },
+    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: darkOrange },
+    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: darkOrange },
     // Strings and regex
-    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base09$c },
-    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base09$c },
-    { tag: tags$1.string, color: base09$c },
+    { tag: [tags$1.processingInstruction, tags$1.inserted], color: darkGreen },
+    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: darkMagenta },
+    { tag: tags$1.string, color: darkGreen },
     // Punctuation and structure
-    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base0D$b, fontWeight: 'bold' },
+    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: darkCyan, fontWeight: 'bold' },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.name), tags$1.separator], color: darkBlue },
     // Comments and documentation
-    { tag: tags$1.meta, color: base05$d },
-    { tag: tags$1.comment, fontStyle: 'italic', color: base05$d },
-    { tag: tags$1.docComment, fontStyle: 'italic', color: base05$d },
+    { tag: tags$1.meta, color: base02$d },
+    { tag: tags$1.comment, fontStyle: 'italic', color: base02$d },
+    { tag: tags$1.docComment, fontStyle: 'italic', color: base02$d },
     // HTML/XML elements
-    { tag: [tags$1.tagName], color: base08$c },
-    { tag: [tags$1.attributeName], color: base0A$b },
+    { tag: [tags$1.tagName], color: darkMagenta },
+    { tag: [tags$1.attributeName], color: darkCyan },
     // Markdown and text formatting
-    { tag: [tags$1.heading], fontWeight: 'bold', color: base0A$b },
-    { tag: [tags$1.strong], fontWeight: 'bold', color: base0A$b },
-    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base09$c },
+    { tag: [tags$1.heading], fontWeight: 'bold', color: darkMagenta },
+    { tag: [tags$1.strong], fontWeight: 'bold', color: darkOrange },
+    { tag: [tags$1.emphasis], fontStyle: 'italic', color: darkMagenta },
     // Links and URLs
     {
         tag: [tags$1.link],
@@ -38887,36 +40980,36 @@ const gruvboxDarkHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Special states
     {
         tag: [tags$1.invalid],
-        color: base07$d,
+        color: darkRed,
         textDecoration: 'underline wavy',
-        borderBottom: `1px wavy ${invalid$d}`,
+        borderBottom: `2px wavy ${darkRed}`,
     },
-    { tag: [tags$1.strikethrough], color: invalid$d, textDecoration: 'line-through' },
+    { tag: [tags$1.strikethrough], color: darkRed, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
-    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base0E$9 },
-    { tag: tags$1.deleted, color: invalid$d },
-    { tag: tags$1.squareBracket, color: base05$d },
-    { tag: tags$1.angleBracket, color: base05$d },
+    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: darkOrange },
+    { tag: tags$1.deleted, color: darkRed },
+    { tag: tags$1.squareBracket, color: darkBrown },
+    { tag: tags$1.angleBracket, color: darkCyan },
     // Additional specific styles
-    { tag: tags$1.monospace, color: base07$d },
-    { tag: [tags$1.contentSeparator], color: base0B$b },
-    { tag: tags$1.quote, color: base05$d },
+    { tag: tags$1.monospace, color: darkBlue, fontStyle: 'italic' },
+    { tag: [tags$1.contentSeparator], color: darkPurple$1 },
+    { tag: tags$1.quote, color: darkPurple$1 },
 ]);
 /**
- * Combined Gruvbox Dark theme extension
+ * Combined High Contrast Light theme extension
  */
-const gruvboxDark = [
-    gruvboxDarkTheme,
-    /*@__PURE__*/syntaxHighlighting(gruvboxDarkHighlightStyle),
+const highContrastLight = [
+    highContrastLightTheme,
+    /*@__PURE__*/syntaxHighlighting(highContrastLightHighlightStyle),
 ];
 /**
- * Gruvbox Dark merge revert styles configuration
+ * High Contrast Light merge revert styles configuration
  */
-const gruvboxDarkMergeStyles = {
-    backgroundColor: tooltipBackground$d,
-    borderColor: base03$d,
-    buttonColor: base07$d,
-    buttonHoverColor: base02$d,
+const highContrastLightMergeStyles = {
+    backgroundColor: lightBackground,
+    borderColor: darkBlue,
+    buttonColor: darkBlue,
+    buttonHoverColor: darkOrange,
 };
 
 // Helper module for styling options
@@ -38938,6 +41031,7 @@ const generalGutter$c = {
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 const generalPanel$c = {
     border: 'none',
@@ -38973,51 +41067,53 @@ const generalTooltip$c = {
 };
 
 /**
- * Enhanced Gruvbox Light theme color definitions
+ * Enhanced Material Dark theme color definitions
  * --------------------------------------------
  * Colors organized by function with visual color blocks
  */
-// Gruvbox base colors
-const base00$c = '#3c3836', // Main foreground (text)
-base01$b = '#504945', // Secondary foreground
-base02$c = '#665c54', // Tertiary foreground
-base03$c = '#7c6f64', // Quaternary foreground
-base04$c = '#928374', // Comments, invisibles, line highlighting
-// Light/background shades
-base05$c = '#fbf1c7', // Main background
-base06$c = '#ebdbb2', // Secondary background
-base07$c = '#d5c4a1', // Tertiary background (not defined above)
-base08$b = '#bdae93', // Quaternary background
-base09$b = '#a89984', // Quinary background (not defined above)
+// Base colors
+const base00$c = '#212121', // Background
+base01$b = '#505d64', // Lighter background (popups, statuslines)
+base02$c = '#606f7a', // Selection background
+base03$c = '#707d8b', // Comments, invisibles, line highlighting
+base04$c = '#a0a4ae', // Dark foreground (cursor)
+base05$c = '#bdbdbd', // Default foreground
+base06$b = '#e0e0e0', // Light foreground
+base07$b = '#202325', // Dark background (gutter)
 // Accent colors
-base0A$a = '#9d0006', // Keywords, storage, operator
-base0B$a = '#79740e', // Strings, tag attributes
-base0C$a = '#b57614', // Functions, tag names
-base0D$a = '#076678', // Variables
-base0E$8 = '#8f3f71', // Numbers, special constants
-base0F$7 = '#427b58', // Types
-base10$5 = '#af3a03'; // Cursor, constants
+base08$a = '#ff5f52', // Keywords, storage, errors
+base09$a = '#ff6e40', // Constants, attributes
+base0A$9 = '#fa5788', // Regex, special symbols
+base0B$9 = '#facf4e', // Classes, numbers
+base0C$9 = '#ffad42', // Strings, values
+base0D$9 = '#56c8d8', // Support, functions
+base0E$7 = '#7186f0', // Variables, parameters
+base0F$6 = '#cf6edf', // Operators, tags
+base10$4 = '#6abf69', // Added elements
+base11$3 = '#99d066', // Modified elements
+base12$1 = '#4ebaaa'; // Markup headings
 // UI specific colors
-const invalid$c = base0A$a, darkBackground$9 = base06$c, highlightBackground$c = '#ffc42e25', // Line highlight with transparency
-background$b = base05$c, tooltipBackground$c = base06$c, selection$c = darkBackground$9, selectionMatch$c = '#ffc42e40', // Selection match background
-cursor$c = base10$5, // Cursor color
-activeBracketBg$c = '#d5c4a180', // Active bracket background
-activeBracketBorder$c = base10$5, // Active bracket border
-diagnosticWarning$c = base0C$a, // Warning color
-linkColor$c = base0D$a, // Link color
-visitedLinkColor$a = base0E$8; // Visited link color
+const invalid$c = base08$a, darkBackground$9 = base07$b, highlightBackground$c = '#2d333b30', // Line highlight with transparency
+background$b = base00$c, tooltipBackground$c = base01$b, selection$c = '#ffffff1f', // Selection background with transparency
+selectionMatch$c = '#4A707A80', // Selection match background with transparency
+cursor$c = base04$c, // Cursor color
+activeBracketBg$c = '#39496650', // Active bracket background with transparency
+activeBracketBorder$c = base0D$9, // Active bracket border
+diagnosticWarning$c = base0C$9, // Warning color
+linkColor$c = base0D$9, // Link color
+visitedLinkColor$a = base0F$6; // Visited link color
 // Diff/merge specific colors
-const addedBackground$c = '#d8e5bc80', // Light base0B with transparency for insertions
-removedBackground$c = '#f7cfcf80', // Light base0A with transparency for deletions
-addedText$c = '#79740e', // Gruvbox base0B for added text
-removedText$c = '#9d0006'; // Gruvbox base0A for removed text
+const addedBackground$c = '#1e3d2780', // Dark green with transparency for insertions
+removedBackground$c = '#4e282880', // Dark red with transparency for deletions
+addedText$c = '#6abf69', // Material green for added text
+removedText$c = '#ff5f52'; // Material red for removed text
 /**
- * Enhanced editor theme styles for Gruvbox Light
+ * Enhanced editor theme styles for Material Dark
  */
-const gruvboxLightTheme = /*@__PURE__*/EditorView.theme({
+const materialDarkTheme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base00$c,
+        color: base05$c,
         backgroundColor: background$b,
         fontSize: generalContent$c.fontSize,
         fontFamily: generalContent$c.fontFamily,
@@ -39033,12 +41129,11 @@ const gruvboxLightTheme = /*@__PURE__*/EditorView.theme({
     },
     '.cm-fat-cursor': {
         backgroundColor: `${cursor$c}99`,
-        color: base05$c,
+        color: background$b,
     },
     // Selection
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
         backgroundColor: selection$c,
-        color: base00$c,
     },
     // Make sure selection appears above active line
     '.cm-selectionLayer': {
@@ -39046,48 +41141,48 @@ const gruvboxLightTheme = /*@__PURE__*/EditorView.theme({
     },
     // Search functionality
     '.cm-searchMatch': {
-        backgroundColor: '#ffc42e80',
-        outline: `1px solid ${base10$5}`,
-        color: base00$c,
+        backgroundColor: '#394966cc',
+        outline: `1px solid ${base0D$9}`,
+        color: base06$b,
         borderRadius: generalSearchField$c.borderRadius,
         '& span': {
-            color: base00$c,
+            color: base06$b,
         },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-        backgroundColor: base10$5,
-        color: base05$c,
+        backgroundColor: base0D$9,
+        color: background$b,
         padding: generalSearchField$c.padding,
         '& span': {
-            color: base05$c,
+            color: background$b,
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
-        color: base00$c,
+        color: base05$c,
         borderRadius: generalSearchField$c.borderRadius,
         padding: generalSearchField$c.padding,
     },
     // Panels
     '.cm-panels': {
-        backgroundColor: base06$c,
-        color: base01$b,
-        borderRadius: '0 0 4px 4px',
+        backgroundColor: base00$c,
+        color: base05$c,
+        borderRadius: '4px',
     },
     '.cm-panels.cm-panels-top': {
-        borderBottom: `1px solid ${base08$b}`,
+        borderBottom: `1px solid ${base03$c}`,
     },
     '.cm-panels.cm-panels-bottom': {
-        borderTop: `1px solid ${base08$b}`,
+        borderTop: `1px solid ${base03$c}`,
     },
     '.cm-panel button': {
-        backgroundColor: base05$c,
-        color: base00$c,
+        backgroundColor: tooltipBackground$c,
+        color: base05$c,
         border: generalPanel$c.border,
         borderRadius: generalPanel$c.borderRadius,
         padding: generalPanel$c.padding,
     },
     '.cm-panel button:hover': {
-        backgroundColor: base07$c,
+        backgroundColor: base02$c,
     },
     // Line highlighting
     '.cm-activeLine': {
@@ -39097,29 +41192,31 @@ const gruvboxLightTheme = /*@__PURE__*/EditorView.theme({
     },
     // Gutters
     '.cm-gutters': {
-        backgroundColor: base06$c,
+        backgroundColor: darkBackground$9,
         color: base03$c,
         border: generalGutter$c.border,
-        borderRight: `1px solid ${base08$b}`,
+        borderRight: `1px solid ${base01$b}`,
         paddingRight: generalGutter$c.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: base07$c,
-        color: base00$c,
+        backgroundColor: '#252a2c',
+        color: base05$c,
         fontWeight: generalGutter$c.fontWeight,
     },
     '.cm-lineNumbers': {
         fontSize: generalGutter$c.fontSize,
+        lineHeight: generalGutter$c.lineHeight,
     },
     '.cm-foldGutter': {
         fontSize: generalGutter$c.fontSize,
+        lineHeight: generalGutter$c.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
         color: base03$c,
         cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-        color: base00$c,
+        color: base05$c,
     },
     // Diff/Merge View Styles
     // Inserted/Added Content
@@ -39163,10 +41260,10 @@ const gruvboxLightTheme = /*@__PURE__*/EditorView.theme({
     // Tooltips and autocomplete
     '.cm-tooltip': {
         backgroundColor: tooltipBackground$c,
-        border: `1px solid ${base08$b}`,
+        border: `1px solid ${base03$c}`,
         borderRadius: generalTooltip$c.borderRadius,
         padding: generalTooltip$c.padding,
-        boxShadow: '0 1px 5px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
     },
     '.cm-tooltip-autocomplete': {
         '& > ul': {
@@ -39178,12 +41275,9 @@ const gruvboxLightTheme = /*@__PURE__*/EditorView.theme({
             lineHeight: generalTooltip$c.lineHeight,
         },
         '& > ul > li[aria-selected]': {
-            backgroundColor: base10$5 + '30',
-            color: base00$c,
+            backgroundColor: selection$c,
+            color: base06$b,
             borderRadius: generalTooltip$c.borderRadiusSelected,
-        },
-        '& > ul > li:hover': {
-            backgroundColor: base10$5 + '15',
         },
         '& > ul > li > span.cm-completionIcon': {
             color: base03$c,
@@ -39227,21 +41321,21 @@ const gruvboxLightTheme = /*@__PURE__*/EditorView.theme({
         borderRadius: generalMatching$c.borderRadius,
     },
     '.cm-nonmatchingBracket': {
-        backgroundColor: '#fb492740',
+        backgroundColor: '#ff5f5240',
         outline: `1px solid ${invalid$c}`,
         borderRadius: generalMatching$c.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
         backgroundColor: selectionMatch$c,
-        outline: `1px solid ${base08$b}`,
+        outline: `1px solid ${base02$c}50`,
         borderRadius: generalMatching$c.borderRadius,
     },
     // Fold placeholder
     '.cm-foldPlaceholder': {
-        backgroundColor: 'transparent',
-        color: base02$c,
-        border: `1px dotted ${base08$b}`,
+        backgroundColor: tooltipBackground$c,
+        color: base03$c,
+        border: `1px dotted ${base03$c}70`,
         borderRadius: generalPlaceholder$c.borderRadius,
         padding: generalPlaceholder$c.padding,
         margin: generalPlaceholder$c.margin,
@@ -39249,7 +41343,7 @@ const gruvboxLightTheme = /*@__PURE__*/EditorView.theme({
     // Focus outline
     '&.cm-focused': {
         outline: 'none',
-        boxShadow: `0 0 0 2px ${base05$c}, 0 0 0 3px ${base10$5}40`,
+        boxShadow: `0 0 0 2px ${background$b}, 0 0 0 3px ${base0D$9}40`,
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
@@ -39257,71 +41351,82 @@ const gruvboxLightTheme = /*@__PURE__*/EditorView.theme({
         height: generalScroller$c.height,
     },
     '& .cm-scroller::-webkit-scrollbar-track': {
-        background: base05$c,
+        background: darkBackground$9,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
-        backgroundColor: base08$b,
+        backgroundColor: base02$c,
         borderRadius: generalScroller$c.borderRadius,
-        border: `3px solid ${base05$c}`,
+        border: `3px solid ${darkBackground$9}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-        backgroundColor: base09$b,
+        backgroundColor: base03$c,
     },
     // Ghost text
     '.cm-ghostText': {
         opacity: '0.5',
-        color: base04$c,
+        color: base03$c,
     },
-}, { dark: false });
+}, { dark: true });
 /**
- * Enhanced syntax highlighting for Gruvbox Light theme
+ * Enhanced syntax highlighting for Material Dark theme
  */
-const gruvboxLightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
+const materialDarkHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Keywords and control flow
-    { tag: tags$1.keyword, color: base0A$a, fontWeight: 'bold' },
-    { tag: tags$1.controlKeyword, color: base0A$a, fontWeight: 'bold' },
-    { tag: tags$1.moduleKeyword, color: base0A$a, fontWeight: 'bold' },
+    { tag: tags$1.keyword, color: base08$a, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: base08$a, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: base08$a, fontWeight: 'bold' },
     // Names and variables
-    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base0D$a },
-    { tag: [tags$1.variableName], color: base0D$a },
-    { tag: [tags$1.propertyName], color: base0F$7, fontStyle: 'normal' },
+    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base0E$7 },
+    { tag: [tags$1.variableName], color: base11$3 },
+    { tag: [tags$1.propertyName], color: base0F$6, fontStyle: 'normal' },
     // Classes and types
-    { tag: [tags$1.typeName], color: base0F$7 },
-    { tag: [tags$1.className], color: base0C$a, fontStyle: 'italic' },
-    { tag: [tags$1.namespace], color: base0D$a, fontStyle: 'italic' },
+    { tag: [tags$1.typeName], color: base08$a },
+    { tag: [tags$1.className], color: base0B$9, fontStyle: 'italic' },
+    { tag: [tags$1.namespace], color: base0E$7, fontStyle: 'italic' },
     // Operators and punctuation
-    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base00$c },
-    { tag: [tags$1.bracket], color: base04$c },
-    { tag: [tags$1.brace], color: base04$c },
-    { tag: [tags$1.punctuation], color: base04$c },
+    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base05$c },
+    { tag: [tags$1.bracket], color: base03$c },
+    { tag: [tags$1.brace], color: base03$c },
+    { tag: [tags$1.punctuation], color: base03$c },
     // Functions and parameters
-    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base0C$a },
-    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base0D$a },
+    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName)], color: base0D$9 },
+    { tag: [tags$1.labelName], color: base0D$9, fontStyle: 'italic' },
+    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: base0D$9 },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base0E$7 },
     // Constants and literals
-    { tag: tags$1.number, color: base0E$8 },
-    { tag: tags$1.changed, color: base0E$8 },
+    { tag: tags$1.number, color: base0B$9 },
+    { tag: tags$1.changed, color: base0B$9 },
     { tag: tags$1.annotation, color: invalid$c, fontStyle: 'italic' },
-    { tag: tags$1.modifier, color: base0E$8, fontStyle: 'italic' },
-    { tag: tags$1.self, color: base0E$8 },
-    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base10$5 },
-    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base10$5 },
+    { tag: tags$1.modifier, color: base09$a, fontStyle: 'italic' },
+    { tag: tags$1.self, color: base09$a },
+    {
+        tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)],
+        color: base09$a,
+    },
+    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base09$a },
     // Strings and regex
-    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base0B$a },
-    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base0B$a },
-    { tag: tags$1.string, color: base0B$a },
+    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base10$4 },
+    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base0A$9 },
+    { tag: tags$1.string, color: base0C$9 },
     // Punctuation and structure
-    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base0F$7, fontWeight: 'bold' },
+    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base08$a, fontWeight: 'bold' },
     // Comments and documentation
-    { tag: tags$1.meta, color: base04$c },
-    { tag: tags$1.comment, fontStyle: 'italic', color: base04$c },
-    { tag: tags$1.docComment, fontStyle: 'italic', color: base04$c },
+    { tag: tags$1.meta, color: base03$c },
+    { tag: tags$1.comment, fontStyle: 'italic', color: base03$c },
+    { tag: tags$1.docComment, fontStyle: 'italic', color: base03$c },
     // HTML/XML elements
-    { tag: [tags$1.tagName], color: base0A$a },
-    { tag: [tags$1.attributeName], color: base0C$a },
+    { tag: [tags$1.tagName], color: base0F$6 },
+    { tag: [tags$1.attributeName], color: base0B$9 },
     // Markdown and text formatting
-    { tag: [tags$1.heading], fontWeight: 'bold', color: base0C$a },
-    { tag: [tags$1.strong], fontWeight: 'bold', color: base0C$a },
-    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base0B$a },
+    { tag: [tags$1.heading], fontWeight: 'bold', color: base12$1 },
+    { tag: tags$1.heading1, color: base0B$9 },
+    { tag: tags$1.heading2, color: base0C$9 },
+    { tag: tags$1.heading3, color: base0D$9 },
+    { tag: tags$1.heading4, color: base0E$7 },
+    { tag: tags$1.heading5, color: base0F$6 },
+    { tag: tags$1.heading6, color: base08$a },
+    { tag: [tags$1.strong], fontWeight: 'bold', color: base0E$7 },
+    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base0C$9 },
     // Links and URLs
     {
         tag: [tags$1.link],
@@ -39339,36 +41444,36 @@ const gruvboxLightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Special states
     {
         tag: [tags$1.invalid],
-        color: base00$c,
+        color: base05$c,
         textDecoration: 'underline wavy',
         borderBottom: `1px wavy ${invalid$c}`,
     },
     { tag: [tags$1.strikethrough], color: invalid$c, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
-    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base10$5 },
+    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base09$a },
     { tag: tags$1.deleted, color: invalid$c },
-    { tag: tags$1.squareBracket, color: base04$c },
-    { tag: tags$1.angleBracket, color: base04$c },
+    { tag: tags$1.squareBracket, color: base03$c },
+    { tag: tags$1.angleBracket, color: base03$c },
     // Additional specific styles
-    { tag: tags$1.monospace, color: base00$c },
-    { tag: [tags$1.contentSeparator], color: base0D$a },
-    { tag: tags$1.quote, color: base04$c },
+    { tag: tags$1.monospace, color: base05$c },
+    { tag: [tags$1.contentSeparator], color: base0E$7 },
+    { tag: tags$1.quote, color: base03$c },
 ]);
 /**
- * Combined Gruvbox Light theme extension
+ * Combined Material Dark theme extension
  */
-const gruvboxLight = [
-    gruvboxLightTheme,
-    /*@__PURE__*/syntaxHighlighting(gruvboxLightHighlightStyle),
+const materialDark = [
+    materialDarkTheme,
+    /*@__PURE__*/syntaxHighlighting(materialDarkHighlightStyle),
 ];
 /**
- * Gruvbox Light merge revert styles configuration
+ * Material Dark merge revert styles configuration
  */
-const gruvboxLightMergeStyles = {
-    backgroundColor: tooltipBackground$c,
-    borderColor: base08$b,
-    buttonColor: base00$c,
-    buttonHoverColor: base07$c,
+const materialDarkMergeStyles = {
+    backgroundColor: base07$b,
+    borderColor: base03$c,
+    buttonColor: base05$c,
+    buttonHoverColor: base02$c,
 };
 
 // Helper module for styling options
@@ -39390,6 +41495,7 @@ const generalGutter$b = {
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 const generalPanel$b = {
     border: 'none',
@@ -39425,53 +41531,54 @@ const generalTooltip$b = {
 };
 
 /**
- * Enhanced Material Dark theme color definitions
+ * Enhanced Material Light theme color definitions
  * --------------------------------------------
  * Colors organized by function with visual color blocks
  */
 // Base colors
-const base00$b = '#212121', // Background
-base01$a = '#505d64', // Lighter background (popups, statuslines)
-base02$b = '#606f7a', // Selection background
-base03$b = '#707d8b', // Comments, invisibles, line highlighting
-base04$b = '#a0a4ae', // Dark foreground (cursor)
-base05$b = '#bdbdbd', // Default foreground
-base06$b = '#e0e0e0', // Light foreground
-base07$b = '#202325', // Dark background (gutter)
-// Accent colors
-base08$a = '#ff5f52', // Keywords, storage, errors
-base09$a = '#ff6e40', // Constants, attributes
-base0A$9 = '#fa5788', // Regex, special symbols
-base0B$9 = '#facf4e', // Classes, numbers
-base0C$9 = '#ffad42', // Strings, values
-base0D$9 = '#56c8d8', // Support, functions
-base0E$7 = '#7186f0', // Variables, parameters
-base0F$6 = '#cf6edf', // Operators, tags
-base10$4 = '#6abf69', // Added elements
-base11$3 = '#99d066', // Modified elements
-base12$1 = '#4ebaaa'; // Markup headings
+const base00$b = '#ffffff', // Background - pure white for clean look
+base01$a = '#f5f5f5', // Lighter background (popups, statuslines)
+base02$b = '#212121', // Main text - nearly black for contrast
+base03$b = '#757575', // Comments, invisibles - gray 600
+base04$b = '#9e9e9e', // Cursor and line numbers - gray 500
+base05$b = '#424242', // Default foreground - gray 800
+base06$a = '#eeeeee', // Light borders or divisions - gray 200
+base07$a = '#fafafa', // Light background (gutter) - gray 50
+// Accent colors - using standard Material Design palette
+base08$9 = '#f44336', // Red 500
+base09$9 = '#ff3e00', // Deep Orange 500
+base0A$8 = '#FF00E9FF', // Pink 500
+base0B$8 = '#ffc107', // Amber 500 (better than yellow for light theme)
+base0C$8 = '#ff9800', // Orange 500
+base0D$8 = '#00acc1', // Cyan 600 (better contrast for light theme)
+base0E$6 = '#3949ab', // Indigo 600 (better contrast for light theme)
+base0F$5 = '#8e24aa', // Purple 600 (better contrast for light theme)
+base10$3 = '#43a047', // Green 600 (better contrast for light theme)
+base11$2 = '#00897b', // Teal 600 (better contrast for light theme)
+base12 = '#1e88e5'; // Blue 600 (better contrast for light theme)
 // UI specific colors
-const invalid$b = base08$a, darkBackground$8 = base07$b, highlightBackground$b = '#2d333b30', // Line highlight with transparency
-background$a = base00$b, tooltipBackground$b = base01$a, selection$b = '#ffffff1f', // Selection background with transparency
-selectionMatch$b = '#4A707A80', // Selection match background with transparency
+const invalid$b = base08$9, highlightBackground$b = '#00000008', // Line highlight
+background$a = base00$b, tooltipBackground$b = base01$a, selection$b = '#DDEEFF', // Selection background
+selectionMatch$b = '#90a4ae26', // Selection match background
 cursor$b = base04$b, // Cursor color
-activeBracketBg$b = '#39496650', // Active bracket background with transparency
-activeBracketBorder$b = base0D$9, // Active bracket border
-diagnosticWarning$b = base0C$9, // Warning color
-linkColor$b = base0D$9, // Link color
-visitedLinkColor$9 = base0F$6; // Visited link color
+activeBracketBg$b = '#DDEEFF80', // Active bracket background
+activeBracketBorder$b = base0D$8, // Active bracket border
+diagnosticWarning$b = base0C$8, // Warning color
+linkColor$b = base0D$8, // Link color
+visitedLinkColor$9 = base0F$5, // Visited link color
+hoverHighlight = '#ECEFF180'; // Hover highlight
 // Diff/merge specific colors
-const addedBackground$b = '#1e3d2780', // Dark green with transparency for insertions
-removedBackground$b = '#4e282880', // Dark red with transparency for deletions
-addedText$b = '#6abf69', // Material green for added text
-removedText$b = '#ff5f52'; // Material red for removed text
+const addedBackground$b = '#e6ffed80', // Light green with transparency for insertions
+removedBackground$b = '#ffebe980', // Light red with transparency for deletions
+addedText$b = '#28a745', // Bright green for added text
+removedText$b = '#d73a49'; // Bright red for removed text
 /**
- * Enhanced editor theme styles for Material Dark
+ * Enhanced editor theme styles for Material Light
  */
-const materialDarkTheme = /*@__PURE__*/EditorView.theme({
+const materialLightTheme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base05$b,
+        color: base02$b,
         backgroundColor: background$a,
         fontSize: generalContent$b.fontSize,
         fontFamily: generalContent$b.fontFamily,
@@ -39486,7 +41593,7 @@ const materialDarkTheme = /*@__PURE__*/EditorView.theme({
         borderLeftWidth: generalCursor$b.borderLeftWidth,
     },
     '.cm-fat-cursor': {
-        backgroundColor: `${cursor$b}99`,
+        backgroundColor: `${base02$b}99`,
         color: background$a,
     },
     // Selection
@@ -39499,16 +41606,16 @@ const materialDarkTheme = /*@__PURE__*/EditorView.theme({
     },
     // Search functionality
     '.cm-searchMatch': {
-        backgroundColor: '#394966cc',
-        outline: `1px solid ${base0D$9}`,
-        color: base06$b,
+        backgroundColor: '#FFA72680',
+        outline: `1px solid ${base0B$8}`,
+        color: base02$b,
         borderRadius: generalSearchField$b.borderRadius,
         '& span': {
-            color: base06$b,
+            color: base02$b,
         },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-        backgroundColor: base0D$9,
+        backgroundColor: base0D$8,
         color: background$a,
         padding: generalSearchField$b.padding,
         '& span': {
@@ -39516,31 +41623,32 @@ const materialDarkTheme = /*@__PURE__*/EditorView.theme({
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
-        color: base05$b,
+        color: base02$b,
         borderRadius: generalSearchField$b.borderRadius,
         padding: generalSearchField$b.padding,
     },
     // Panels
     '.cm-panels': {
-        backgroundColor: base00$b,
-        color: base05$b,
+        backgroundColor: base06$a,
+        color: base02$b,
         borderRadius: '4px',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
     },
     '.cm-panels.cm-panels-top': {
-        borderBottom: `1px solid ${base03$b}`,
+        borderBottom: `1px solid ${base04$b}`,
     },
     '.cm-panels.cm-panels-bottom': {
-        borderTop: `1px solid ${base03$b}`,
+        borderTop: `1px solid ${base04$b}`,
     },
     '.cm-panel button': {
         backgroundColor: tooltipBackground$b,
-        color: base05$b,
+        color: base02$b,
         border: generalPanel$b.border,
         borderRadius: generalPanel$b.borderRadius,
         padding: generalPanel$b.padding,
     },
     '.cm-panel button:hover': {
-        backgroundColor: base02$b,
+        backgroundColor: '#CFD8DC',
     },
     // Line highlighting
     '.cm-activeLine': {
@@ -39550,29 +41658,32 @@ const materialDarkTheme = /*@__PURE__*/EditorView.theme({
     },
     // Gutters
     '.cm-gutters': {
-        backgroundColor: darkBackground$8,
+        backgroundColor: base07$a,
         color: base03$b,
         border: generalGutter$b.border,
-        borderRight: `1px solid ${base01$a}`,
+        borderRight: `1px solid ${base04$b}`,
         paddingRight: generalGutter$b.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: '#252a2c',
-        color: base05$b,
+        backgroundColor: '#E0E0E0',
+        color: base02$b,
         fontWeight: generalGutter$b.fontWeight,
     },
     '.cm-lineNumbers': {
         fontSize: generalGutter$b.fontSize,
+        lineHeight: generalGutter$b.lineHeight,
     },
     '.cm-foldGutter': {
         fontSize: generalGutter$b.fontSize,
+        lineHeight: generalGutter$b.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
         color: base03$b,
         cursor: 'pointer',
+        transition: 'color 0.15s ease',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-        color: base05$b,
+        color: base02$b,
     },
     // Diff/Merge View Styles
     // Inserted/Added Content
@@ -39589,7 +41700,7 @@ const materialDarkTheme = /*@__PURE__*/EditorView.theme({
         color: addedText$b,
         padding: generalDiff$b.insertedLinePadding,
         borderRadius: generalDiff$b.borderRadious,
-        border: `1px solid ${addedText$b}40`,
+        border: `1px solid ${addedText$b}30`,
     },
     'ins.cm-insertedLine .cm-changedText': {
         background: 'transparent !important',
@@ -39608,7 +41719,7 @@ const materialDarkTheme = /*@__PURE__*/EditorView.theme({
         color: removedText$b,
         padding: generalDiff$b.insertedLinePadding,
         borderRadius: generalDiff$b.borderRadious,
-        border: `1px solid ${removedText$b}40`,
+        border: `1px solid ${removedText$b}30`,
     },
     'del .cm-deletedText, del .cm-changedText': {
         background: 'transparent !important',
@@ -39616,10 +41727,10 @@ const materialDarkTheme = /*@__PURE__*/EditorView.theme({
     // Tooltips and autocomplete
     '.cm-tooltip': {
         backgroundColor: tooltipBackground$b,
-        border: `1px solid ${base03$b}`,
+        border: `1px solid ${base04$b}`,
         borderRadius: generalTooltip$b.borderRadius,
         padding: generalTooltip$b.padding,
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
     },
     '.cm-tooltip-autocomplete': {
         '& > ul': {
@@ -39631,9 +41742,12 @@ const materialDarkTheme = /*@__PURE__*/EditorView.theme({
             lineHeight: generalTooltip$b.lineHeight,
         },
         '& > ul > li[aria-selected]': {
-            backgroundColor: selection$b,
-            color: base06$b,
+            backgroundColor: hoverHighlight,
+            color: base02$b,
             borderRadius: generalTooltip$b.borderRadiusSelected,
+        },
+        '& > ul > li:hover': {
+            backgroundColor: hoverHighlight,
         },
         '& > ul > li > span.cm-completionIcon': {
             color: base03$b,
@@ -39677,19 +41791,19 @@ const materialDarkTheme = /*@__PURE__*/EditorView.theme({
         borderRadius: generalMatching$b.borderRadius,
     },
     '.cm-nonmatchingBracket': {
-        backgroundColor: '#ff5f5240',
+        backgroundColor: `${invalid$b}20`,
         outline: `1px solid ${invalid$b}`,
         borderRadius: generalMatching$b.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
         backgroundColor: selectionMatch$b,
-        outline: `1px solid ${base02$b}50`,
+        outline: `1px solid ${base03$b}30`,
         borderRadius: generalMatching$b.borderRadius,
     },
     // Fold placeholder
     '.cm-foldPlaceholder': {
-        backgroundColor: tooltipBackground$b,
+        backgroundColor: base01$a,
         color: base03$b,
         border: `1px dotted ${base03$b}70`,
         borderRadius: generalPlaceholder$b.borderRadius,
@@ -39699,7 +41813,7 @@ const materialDarkTheme = /*@__PURE__*/EditorView.theme({
     // Focus outline
     '&.cm-focused': {
         outline: 'none',
-        boxShadow: `0 0 0 2px ${background$a}, 0 0 0 3px ${base0D$9}40`,
+        boxShadow: `0 0 0 2px ${background$a}, 0 0 0 3px ${base0D$8}40`,
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
@@ -39707,82 +41821,83 @@ const materialDarkTheme = /*@__PURE__*/EditorView.theme({
         height: generalScroller$b.height,
     },
     '& .cm-scroller::-webkit-scrollbar-track': {
-        background: darkBackground$8,
+        background: base07$a,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
-        backgroundColor: base02$b,
+        backgroundColor: base03$b,
         borderRadius: generalScroller$b.borderRadius,
-        border: `3px solid ${darkBackground$8}`,
+        border: `3px solid ${base07$a}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-        backgroundColor: base03$b,
+        backgroundColor: base02$b,
     },
     // Ghost text
     '.cm-ghostText': {
         opacity: '0.5',
         color: base03$b,
     },
-}, { dark: true });
+}, { dark: false });
 /**
- * Enhanced syntax highlighting for Material Dark theme
+ * Enhanced syntax highlighting for Material Light theme
  */
-const materialDarkHighlightStyle = /*@__PURE__*/HighlightStyle.define([
+const materialLightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Keywords and control flow
-    { tag: tags$1.keyword, color: base08$a, fontWeight: 'bold' },
-    { tag: tags$1.controlKeyword, color: base08$a, fontWeight: 'bold' },
-    { tag: tags$1.moduleKeyword, color: base08$a, fontWeight: 'bold' },
+    { tag: tags$1.keyword, color: base0D$8, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: base0D$8, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: base0D$8, fontWeight: 'bold' },
     // Names and variables
-    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base0E$7 },
-    { tag: [tags$1.variableName], color: base11$3 },
-    { tag: [tags$1.propertyName], color: base0F$6, fontStyle: 'normal' },
+    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base05$b },
+    { tag: [tags$1.variableName], color: base05$b },
+    { tag: [tags$1.propertyName], color: base11$2, fontStyle: 'normal' },
     // Classes and types
-    { tag: [tags$1.typeName], color: base08$a },
-    { tag: [tags$1.className], color: base0B$9, fontStyle: 'italic' },
-    { tag: [tags$1.namespace], color: base0E$7, fontStyle: 'italic' },
+    { tag: [tags$1.typeName], color: base0C$8 },
+    { tag: [tags$1.className], color: base0C$8, fontStyle: 'italic' },
+    { tag: [tags$1.namespace], color: base0E$6, fontStyle: 'italic' },
     // Operators and punctuation
-    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base05$b },
-    { tag: [tags$1.bracket], color: base03$b },
-    { tag: [tags$1.brace], color: base03$b },
+    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base0E$6 },
+    { tag: [tags$1.bracket], color: base0F$5 },
+    { tag: [tags$1.brace], color: base0F$5 },
     { tag: [tags$1.punctuation], color: base03$b },
     // Functions and parameters
-    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName)], color: base0D$9 },
-    { tag: [tags$1.labelName], color: base0D$9, fontStyle: 'italic' },
-    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: base0D$9 },
-    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base0E$7 },
+    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName)], color: base09$9 },
+    { tag: [tags$1.labelName], color: base12, fontStyle: 'italic' },
+    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: base09$9 },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base0A$8 },
     // Constants and literals
-    { tag: tags$1.number, color: base0B$9 },
-    { tag: tags$1.changed, color: base0B$9 },
+    { tag: tags$1.number, color: base0C$8 },
+    { tag: tags$1.changed, color: base0C$8 },
     { tag: tags$1.annotation, color: invalid$b, fontStyle: 'italic' },
-    { tag: tags$1.modifier, color: base09$a, fontStyle: 'italic' },
-    { tag: tags$1.self, color: base09$a },
+    { tag: tags$1.modifier, color: base0C$8, fontStyle: 'italic' },
+    { tag: tags$1.self, color: base0C$8 },
     {
         tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)],
-        color: base09$a,
+        color: base0C$8,
     },
-    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base09$a },
+    { tag: [tags$1.atom, tags$1.bool], color: base0F$5 },
     // Strings and regex
-    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base10$4 },
-    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base0A$9 },
-    { tag: tags$1.string, color: base0C$9 },
+    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base10$3 },
+    { tag: tags$1.string, color: base10$3 },
+    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base0A$8 },
     // Punctuation and structure
-    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base08$a, fontWeight: 'bold' },
+    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base0A$8, fontWeight: 'bold' },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.name), tags$1.separator], color: base0A$8 },
     // Comments and documentation
     { tag: tags$1.meta, color: base03$b },
     { tag: tags$1.comment, fontStyle: 'italic', color: base03$b },
     { tag: tags$1.docComment, fontStyle: 'italic', color: base03$b },
     // HTML/XML elements
-    { tag: [tags$1.tagName], color: base0F$6 },
-    { tag: [tags$1.attributeName], color: base0B$9 },
+    { tag: [tags$1.tagName], color: base09$9 },
+    { tag: [tags$1.attributeName], color: base05$b },
     // Markdown and text formatting
-    { tag: [tags$1.heading], fontWeight: 'bold', color: base12$1 },
-    { tag: tags$1.heading1, color: base0B$9 },
-    { tag: tags$1.heading2, color: base0C$9 },
-    { tag: tags$1.heading3, color: base0D$9 },
-    { tag: tags$1.heading4, color: base0E$7 },
-    { tag: tags$1.heading5, color: base0F$6 },
-    { tag: tags$1.heading6, color: base08$a },
-    { tag: [tags$1.strong], fontWeight: 'bold', color: base0E$7 },
-    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base0C$9 },
+    { tag: [tags$1.heading], fontWeight: 'bold', color: base11$2 },
+    { tag: tags$1.heading1, color: base12 },
+    { tag: tags$1.heading2, color: base0C$8 },
+    { tag: tags$1.heading3, color: base0D$8 },
+    { tag: tags$1.heading4, color: base0E$6 },
+    { tag: tags$1.heading5, color: base0F$5 },
+    { tag: tags$1.heading6, color: base10$3 },
+    { tag: [tags$1.strong], fontWeight: 'bold', color: base0E$6 },
+    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base0C$8 },
     // Links and URLs
     {
         tag: [tags$1.link],
@@ -39800,36 +41915,36 @@ const materialDarkHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Special states
     {
         tag: [tags$1.invalid],
-        color: base05$b,
+        color: base02$b,
         textDecoration: 'underline wavy',
-        borderBottom: `1px wavy ${invalid$b}`,
+        borderBottom: `1px dotted ${base08$9}`,
     },
     { tag: [tags$1.strikethrough], color: invalid$b, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
-    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base09$a },
+    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base09$9 },
     { tag: tags$1.deleted, color: invalid$b },
-    { tag: tags$1.squareBracket, color: base03$b },
-    { tag: tags$1.angleBracket, color: base03$b },
+    { tag: tags$1.squareBracket, color: base08$9 },
+    { tag: tags$1.angleBracket, color: base02$b },
     // Additional specific styles
-    { tag: tags$1.monospace, color: base05$b },
-    { tag: [tags$1.contentSeparator], color: base0E$7 },
-    { tag: tags$1.quote, color: base03$b },
+    { tag: tags$1.monospace, color: base02$b },
+    { tag: [tags$1.contentSeparator], color: base0D$8 },
+    { tag: tags$1.quote, color: base10$3 },
 ]);
 /**
- * Combined Material Dark theme extension
+ * Combined Material Light theme extension
  */
-const materialDark = [
-    materialDarkTheme,
-    /*@__PURE__*/syntaxHighlighting(materialDarkHighlightStyle),
+const materialLight = [
+    materialLightTheme,
+    /*@__PURE__*/syntaxHighlighting(materialLightHighlightStyle),
 ];
 /**
- * Material Dark merge revert styles configuration
+ * Material Light merge revert styles configuration
  */
-const materialDarkMergeStyles = {
-    backgroundColor: base07$b,
-    borderColor: base03$b,
-    buttonColor: base05$b,
-    buttonHoverColor: base02$b,
+const materialLightMergeStyles = {
+    backgroundColor: tooltipBackground$b,
+    borderColor: base04$b,
+    buttonColor: base02$b,
+    buttonHoverColor: '#CFD8DC',
 };
 
 // Helper module for styling options
@@ -39851,6 +41966,7 @@ const generalGutter$a = {
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 const generalPanel$a = {
     border: 'none',
@@ -39886,55 +42002,48 @@ const generalTooltip$a = {
 };
 
 /**
- * Enhanced Material Light theme color definitions
- * --------------------------------------------
+ * Enhanced Monokai theme color definitions
+ * -------------------------------------
  * Colors organized by function with visual color blocks
  */
 // Base colors
-const base00$a = '#ffffff', // Background - pure white for clean look
-base01$9 = '#f5f5f5', // Lighter background (popups, statuslines)
-base02$a = '#212121', // Main text - nearly black for contrast
-base03$a = '#757575', // Comments, invisibles - gray 600
-base04$a = '#9e9e9e', // Cursor and line numbers - gray 500
-base05$a = '#424242', // Default foreground - gray 800
-base06$a = '#eeeeee', // Light borders or divisions - gray 200
-base07$a = '#fafafa', // Light background (gutter) - gray 50
-// Accent colors - using standard Material Design palette
-base08$9 = '#f44336', // Red 500
-base09$9 = '#ff3e00', // Deep Orange 500
-base0A$8 = '#FF00E9FF', // Pink 500
-base0B$8 = '#ffc107', // Amber 500 (better than yellow for light theme)
-base0C$8 = '#ff9800', // Orange 500
-base0D$8 = '#00acc1', // Cyan 600 (better contrast for light theme)
-base0E$6 = '#3949ab', // Indigo 600 (better contrast for light theme)
-base0F$5 = '#8e24aa', // Purple 600 (better contrast for light theme)
-base10$3 = '#43a047', // Green 600 (better contrast for light theme)
-base11$2 = '#00897b', // Teal 600 (better contrast for light theme)
-base12 = '#1e88e5'; // Blue 600 (better contrast for light theme)
+const base00$a = '#272822', // Background
+base01$9 = '#f8f8f2', // Foreground
+base02$a = '#88846f', // Comments, invisibles
+base03$a = '#f8f8f0', // Cursor
+// Accent colors
+base04$a = '#F92672', // Keyword, Storage, Tag - Pink
+base05$a = '#FD971F', // Variable, Parameter - Orange
+base06$9 = '#66D9EF', // Function, Type - Blue
+base07$9 = '#E6DB74', // String, RegExp - Yellow
+base08$8 = '#AE81FF', // Constant, Number - Purple
+base09$8 = '#A6E22E'; // Class, Heading - Green
 // UI specific colors
-const invalid$a = base08$9, highlightBackground$a = '#00000008', // Line highlight
-background$9 = base00$a, tooltipBackground$a = base01$9, selection$a = '#DDEEFF', // Selection background
-selectionMatch$a = '#90a4ae26', // Selection match background
-cursor$a = base04$a, // Cursor color
-activeBracketBg$a = '#DDEEFF80', // Active bracket background
-activeBracketBorder$a = base0D$8, // Active bracket border
-diagnosticWarning$a = base0C$8, // Warning color
-linkColor$a = base0D$8, // Link color
-visitedLinkColor$8 = base0F$5, // Visited link color
-hoverHighlight = '#ECEFF180'; // Hover highlight
+const invalid$a = '#F44747', // Error color - Red
+darkBackground$8 = '#414339', // Gutter background
+highlightBackground$a = '#3e3d3257', // Line highlight with opacity
+tooltipBackground$a = '#34352f', // Tooltip background - Slightly lighter than base00
+selection$a = '#49483E', // Selection background
+selectionMatch$a = '#75715e70', // Selection match with opacity
+cursor$a = base03$a, // Cursor color
+activeBracketBg$a = '#75715E55', // Active bracket background with opacity
+activeBracketBorder$a = base06$9, // Active bracket border - blue
+diagnosticWarning$a = base05$a, // Warning color - orange
+linkColor$a = base06$9, // Link color - blue
+visitedLinkColor$8 = base08$8; // Visited link color - purple
 // Diff/merge specific colors
-const addedBackground$a = '#e6ffed80', // Light green with transparency for insertions
-removedBackground$a = '#ffebe980', // Light red with transparency for deletions
-addedText$a = '#28a745', // Bright green for added text
-removedText$a = '#d73a49'; // Bright red for removed text
+const addedBackground$a = '#3d4d3880', // Dark green with transparency for insertions
+removedBackground$a = '#4d393980', // Dark red with transparency for deletions
+addedText$a = '#A6E22E', // Monokai green for added text
+removedText$a = '#F92672'; // Monokai pink/red for removed text
 /**
- * Enhanced editor theme styles for Material Light
+ * Enhanced editor theme styles for Monokai
  */
-const materialLightTheme = /*@__PURE__*/EditorView.theme({
+const monokaiTheme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base02$a,
-        backgroundColor: background$9,
+        color: base01$9,
+        backgroundColor: base00$a,
         fontSize: generalContent$a.fontSize,
         fontFamily: generalContent$a.fontFamily,
     },
@@ -39948,8 +42057,8 @@ const materialLightTheme = /*@__PURE__*/EditorView.theme({
         borderLeftWidth: generalCursor$a.borderLeftWidth,
     },
     '.cm-fat-cursor': {
-        backgroundColor: `${base02$a}99`,
-        color: background$9,
+        backgroundColor: `${cursor$a}99`,
+        color: base00$a,
     },
     // Selection
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
@@ -39961,49 +42070,48 @@ const materialLightTheme = /*@__PURE__*/EditorView.theme({
     },
     // Search functionality
     '.cm-searchMatch': {
-        backgroundColor: '#FFA72680',
-        outline: `1px solid ${base0B$8}`,
-        color: base02$a,
+        backgroundColor: '#49483E99',
+        outline: `1px solid ${base07$9}`,
+        color: base01$9,
         borderRadius: generalSearchField$a.borderRadius,
         '& span': {
-            color: base02$a,
+            color: base01$9,
         },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-        backgroundColor: base0D$8,
-        color: background$9,
+        backgroundColor: base04$a,
+        color: base00$a,
         padding: generalSearchField$a.padding,
         '& span': {
-            color: background$9,
+            color: base00$a,
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
-        color: base02$a,
+        color: base01$9,
         borderRadius: generalSearchField$a.borderRadius,
         padding: generalSearchField$a.padding,
     },
     // Panels
     '.cm-panels': {
-        backgroundColor: base06$a,
-        color: base02$a,
+        backgroundColor: darkBackground$8,
+        color: base01$9,
         borderRadius: '4px',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
     },
     '.cm-panels.cm-panels-top': {
-        borderBottom: `1px solid ${base04$a}`,
+        borderBottom: `1px solid ${base02$a}80`,
     },
     '.cm-panels.cm-panels-bottom': {
-        borderTop: `1px solid ${base04$a}`,
+        borderTop: `1px solid ${base02$a}80`,
     },
     '.cm-panel button': {
         backgroundColor: tooltipBackground$a,
-        color: base02$a,
+        color: base01$9,
         border: generalPanel$a.border,
         borderRadius: generalPanel$a.borderRadius,
         padding: generalPanel$a.padding,
     },
     '.cm-panel button:hover': {
-        backgroundColor: '#CFD8DC',
+        backgroundColor: '#49483E',
     },
     // Line highlighting
     '.cm-activeLine': {
@@ -40013,30 +42121,31 @@ const materialLightTheme = /*@__PURE__*/EditorView.theme({
     },
     // Gutters
     '.cm-gutters': {
-        backgroundColor: base07$a,
-        color: base03$a,
+        backgroundColor: darkBackground$8,
+        color: base02$a,
         border: generalGutter$a.border,
-        borderRight: `1px solid ${base04$a}`,
+        borderRight: '1px solid #3e3d32',
         paddingRight: generalGutter$a.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: '#E0E0E0',
-        color: base02$a,
+        backgroundColor: '#35352c',
+        color: base01$9,
         fontWeight: generalGutter$a.fontWeight,
     },
     '.cm-lineNumbers': {
         fontSize: generalGutter$a.fontSize,
+        lineHeight: generalGutter$a.lineHeight,
     },
     '.cm-foldGutter': {
         fontSize: generalGutter$a.fontSize,
+        lineHeight: generalGutter$a.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
-        color: base03$a,
+        color: base02$a,
         cursor: 'pointer',
-        transition: 'color 0.15s ease',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-        color: base02$a,
+        color: base01$9,
     },
     // Diff/Merge View Styles
     // Inserted/Added Content
@@ -40053,7 +42162,7 @@ const materialLightTheme = /*@__PURE__*/EditorView.theme({
         color: addedText$a,
         padding: generalDiff$a.insertedLinePadding,
         borderRadius: generalDiff$a.borderRadious,
-        border: `1px solid ${addedText$a}30`,
+        border: `1px solid ${addedText$a}40`,
     },
     'ins.cm-insertedLine .cm-changedText': {
         background: 'transparent !important',
@@ -40072,7 +42181,7 @@ const materialLightTheme = /*@__PURE__*/EditorView.theme({
         color: removedText$a,
         padding: generalDiff$a.insertedLinePadding,
         borderRadius: generalDiff$a.borderRadious,
-        border: `1px solid ${removedText$a}30`,
+        border: `1px solid ${removedText$a}40`,
     },
     'del .cm-deletedText, del .cm-changedText': {
         background: 'transparent !important',
@@ -40080,10 +42189,10 @@ const materialLightTheme = /*@__PURE__*/EditorView.theme({
     // Tooltips and autocomplete
     '.cm-tooltip': {
         backgroundColor: tooltipBackground$a,
-        border: `1px solid ${base04$a}`,
+        border: '1px solid #49483E',
         borderRadius: generalTooltip$a.borderRadius,
         padding: generalTooltip$a.padding,
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
     },
     '.cm-tooltip-autocomplete': {
         '& > ul': {
@@ -40095,19 +42204,16 @@ const materialLightTheme = /*@__PURE__*/EditorView.theme({
             lineHeight: generalTooltip$a.lineHeight,
         },
         '& > ul > li[aria-selected]': {
-            backgroundColor: hoverHighlight,
-            color: base02$a,
+            backgroundColor: selection$a,
+            color: base01$9,
             borderRadius: generalTooltip$a.borderRadiusSelected,
         },
-        '& > ul > li:hover': {
-            backgroundColor: hoverHighlight,
-        },
         '& > ul > li > span.cm-completionIcon': {
-            color: base03$a,
+            color: base02$a,
             paddingRight: generalTooltip$a.paddingRight,
         },
         '& > ul > li > span.cm-completionDetail': {
-            color: base03$a,
+            color: base02$a,
             fontStyle: 'italic',
         },
     },
@@ -40144,21 +42250,21 @@ const materialLightTheme = /*@__PURE__*/EditorView.theme({
         borderRadius: generalMatching$a.borderRadius,
     },
     '.cm-nonmatchingBracket': {
-        backgroundColor: `${invalid$a}20`,
+        backgroundColor: '#f9267240',
         outline: `1px solid ${invalid$a}`,
         borderRadius: generalMatching$a.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
         backgroundColor: selectionMatch$a,
-        outline: `1px solid ${base03$a}30`,
+        outline: `1px solid ${base02$a}50`,
         borderRadius: generalMatching$a.borderRadius,
     },
     // Fold placeholder
     '.cm-foldPlaceholder': {
-        backgroundColor: base01$9,
-        color: base03$a,
-        border: `1px dotted ${base03$a}70`,
+        backgroundColor: tooltipBackground$a,
+        color: base02$a,
+        border: `1px dotted ${base02$a}70`,
         borderRadius: generalPlaceholder$a.borderRadius,
         padding: generalPlaceholder$a.padding,
         margin: generalPlaceholder$a.margin,
@@ -40166,7 +42272,7 @@ const materialLightTheme = /*@__PURE__*/EditorView.theme({
     // Focus outline
     '&.cm-focused': {
         outline: 'none',
-        boxShadow: `0 0 0 2px ${background$9}, 0 0 0 3px ${base0D$8}40`,
+        boxShadow: `0 0 0 2px ${base00$a}, 0 0 0 3px ${base06$9}40`,
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
@@ -40174,83 +42280,72 @@ const materialLightTheme = /*@__PURE__*/EditorView.theme({
         height: generalScroller$a.height,
     },
     '& .cm-scroller::-webkit-scrollbar-track': {
-        background: base07$a,
+        background: darkBackground$8,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
-        backgroundColor: base03$a,
+        backgroundColor: '#49483E',
         borderRadius: generalScroller$a.borderRadius,
-        border: `3px solid ${base07$a}`,
+        border: `3px solid ${darkBackground$8}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-        backgroundColor: base02$a,
+        backgroundColor: '#5a594d',
     },
     // Ghost text
     '.cm-ghostText': {
         opacity: '0.5',
-        color: base03$a,
+        color: base02$a,
     },
-}, { dark: false });
+}, { dark: true });
 /**
- * Enhanced syntax highlighting for Material Light theme
+ * Enhanced syntax highlighting for Monokai theme
  */
-const materialLightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
+const monokaiHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Keywords and control flow
-    { tag: tags$1.keyword, color: base0D$8, fontWeight: 'bold' },
-    { tag: tags$1.controlKeyword, color: base0D$8, fontWeight: 'bold' },
-    { tag: tags$1.moduleKeyword, color: base0D$8, fontWeight: 'bold' },
+    { tag: tags$1.keyword, color: base04$a, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: base04$a, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: base04$a, fontWeight: 'bold' },
     // Names and variables
     { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base05$a },
     { tag: [tags$1.variableName], color: base05$a },
-    { tag: [tags$1.propertyName], color: base11$2, fontStyle: 'normal' },
+    { tag: [tags$1.propertyName], color: base09$8, fontStyle: 'normal' },
     // Classes and types
-    { tag: [tags$1.typeName], color: base0C$8 },
-    { tag: [tags$1.className], color: base0C$8, fontStyle: 'italic' },
-    { tag: [tags$1.namespace], color: base0E$6, fontStyle: 'italic' },
+    { tag: [tags$1.typeName], color: base06$9, fontStyle: 'italic' },
+    { tag: [tags$1.className], color: base09$8, fontStyle: 'italic' },
+    { tag: [tags$1.namespace], color: base05$a, fontStyle: 'italic' },
     // Operators and punctuation
-    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base0E$6 },
-    { tag: [tags$1.bracket], color: base0F$5 },
-    { tag: [tags$1.brace], color: base0F$5 },
-    { tag: [tags$1.punctuation], color: base03$a },
+    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base04$a },
+    { tag: [tags$1.bracket], color: base01$9 },
+    { tag: [tags$1.brace], color: base01$9 },
+    { tag: [tags$1.punctuation], color: base01$9 },
     // Functions and parameters
-    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName)], color: base09$9 },
-    { tag: [tags$1.labelName], color: base12, fontStyle: 'italic' },
-    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: base09$9 },
-    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base0A$8 },
+    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base06$9 },
+    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: base06$9 },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base05$a },
     // Constants and literals
-    { tag: tags$1.number, color: base0C$8 },
-    { tag: tags$1.changed, color: base0C$8 },
+    { tag: tags$1.number, color: base08$8 },
+    { tag: tags$1.changed, color: base08$8 },
     { tag: tags$1.annotation, color: invalid$a, fontStyle: 'italic' },
-    { tag: tags$1.modifier, color: base0C$8, fontStyle: 'italic' },
-    { tag: tags$1.self, color: base0C$8 },
-    {
-        tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)],
-        color: base0C$8,
-    },
-    { tag: [tags$1.atom, tags$1.bool], color: base0F$5 },
+    { tag: tags$1.modifier, color: base08$8, fontStyle: 'italic' },
+    { tag: tags$1.self, color: base08$8 },
+    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base08$8 },
+    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base08$8 },
     // Strings and regex
-    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base10$3 },
-    { tag: tags$1.string, color: base10$3 },
-    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base0A$8 },
+    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base09$8 },
+    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base07$9 },
+    { tag: tags$1.string, color: base07$9 },
     // Punctuation and structure
-    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base0A$8, fontWeight: 'bold' },
-    { tag: [/*@__PURE__*/tags$1.definition(tags$1.name), tags$1.separator], color: base0A$8 },
+    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base06$9, fontWeight: 'bold' },
     // Comments and documentation
-    { tag: tags$1.meta, color: base03$a },
-    { tag: tags$1.comment, fontStyle: 'italic', color: base03$a },
-    { tag: tags$1.docComment, fontStyle: 'italic', color: base03$a },
+    { tag: tags$1.meta, color: base02$a },
+    { tag: tags$1.comment, fontStyle: 'italic', color: base02$a },
+    { tag: tags$1.docComment, fontStyle: 'italic', color: base02$a },
     // HTML/XML elements
-    { tag: [tags$1.tagName], color: base09$9 },
-    { tag: [tags$1.attributeName], color: base05$a },
+    { tag: [tags$1.tagName], color: base04$a },
+    { tag: [tags$1.attributeName], color: base09$8 },
     // Markdown and text formatting
-    { tag: [tags$1.heading], fontWeight: 'bold', color: base11$2 },
-    { tag: tags$1.heading1, color: base12 },
-    { tag: tags$1.heading2, color: base0C$8 },
-    { tag: tags$1.heading3, color: base0D$8 },
-    { tag: tags$1.heading4, color: base0E$6 },
-    { tag: tags$1.heading5, color: base0F$5 },
-    { tag: tags$1.heading6, color: base10$3 },
-    { tag: [tags$1.strong], fontWeight: 'bold', color: base0E$6 },
-    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base0C$8 },
+    { tag: [tags$1.heading], fontWeight: 'bold', color: base09$8 },
+    { tag: [tags$1.strong], fontWeight: 'bold', color: base05$a },
+    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base05$a },
     // Links and URLs
     {
         tag: [tags$1.link],
@@ -40268,36 +42363,36 @@ const materialLightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Special states
     {
         tag: [tags$1.invalid],
-        color: base02$a,
+        color: base01$9,
         textDecoration: 'underline wavy',
-        borderBottom: `1px dotted ${base08$9}`,
+        borderBottom: `1px wavy ${invalid$a}`,
     },
     { tag: [tags$1.strikethrough], color: invalid$a, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
-    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base09$9 },
+    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base08$8 },
     { tag: tags$1.deleted, color: invalid$a },
-    { tag: tags$1.squareBracket, color: base08$9 },
-    { tag: tags$1.angleBracket, color: base02$a },
+    { tag: tags$1.squareBracket, color: base01$9 },
+    { tag: tags$1.angleBracket, color: base01$9 },
     // Additional specific styles
-    { tag: tags$1.monospace, color: base02$a },
-    { tag: [tags$1.contentSeparator], color: base0D$8 },
-    { tag: tags$1.quote, color: base10$3 },
+    { tag: tags$1.monospace, color: base01$9 },
+    { tag: [tags$1.contentSeparator], color: base05$a },
+    { tag: tags$1.quote, color: base02$a },
 ]);
 /**
- * Combined Material Light theme extension
+ * Combined Monokai theme extension
  */
-const materialLight = [
-    materialLightTheme,
-    /*@__PURE__*/syntaxHighlighting(materialLightHighlightStyle),
+const monokai = [
+    monokaiTheme,
+    /*@__PURE__*/syntaxHighlighting(monokaiHighlightStyle),
 ];
 /**
- * Material Light merge revert styles configuration
+ * Monokai merge revert styles configuration
  */
-const materialLightMergeStyles = {
-    backgroundColor: tooltipBackground$a,
-    borderColor: base04$a,
-    buttonColor: base02$a,
-    buttonHoverColor: '#CFD8DC',
+const monokaiMergeStyles = {
+    backgroundColor: darkBackground$8,
+    borderColor: base02$a,
+    buttonColor: base01$9,
+    buttonHoverColor: selection$a,
 };
 
 // Helper module for styling options
@@ -40319,6 +42414,7 @@ const generalGutter$9 = {
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 const generalPanel$9 = {
     border: 'none',
@@ -40354,48 +42450,56 @@ const generalTooltip$9 = {
 };
 
 /**
- * Enhanced Monokai theme color definitions
- * -------------------------------------
+ * Enhanced Nord theme color definitions
+ * ------------------------------------
  * Colors organized by function with visual color blocks
  */
-// Base colors
-const base00$9 = '#272822', // Background
-base01$8 = '#f8f8f2', // Foreground
-base02$9 = '#88846f', // Comments, invisibles
-base03$9 = '#f8f8f0', // Cursor
-// Accent colors
-base04$9 = '#F92672', // Keyword, Storage, Tag - Pink
-base05$9 = '#FD971F', // Variable, Parameter - Orange
-base06$9 = '#66D9EF', // Function, Type - Blue
-base07$9 = '#E6DB74', // String, RegExp - Yellow
-base08$8 = '#AE81FF', // Constant, Number - Purple
-base09$8 = '#A6E22E'; // Class, Heading - Green
+// Polar Night
+const base00$9 = '#2e3440', // Background - deep navy blue
+base01$8 = '#3b4252', // Lighter background (popups, statuslines)
+base02$9 = '#434c5e', // Selection background
+base03$9 = '#4c566a', // Comments, invisibles
+// Snow Storm
+base04$9 = '#d8dee9', // Foreground - light blue-grey
+base05$9 = '#eceff4', // Light background
+// Frost
+base06$8 = '#8fbcbb', // Moss green - function names
+base07$8 = '#88c0d0', // Ice blue - classes, attributes
+base08$7 = '#81a1c1', // Water blue - methods
+base09$7 = '#5e81ac', // Deep blue - keywords
+// Aurora
+base0A$7 = '#bf616a', // Red - errors, brackets
+base0B$7 = '#d08770', // Orange - numbers, constants
+base0C$7 = '#ebcb8b', // Yellow - types, classes
+base0D$7 = '#a3be8c', // Green - strings
+base0E$5 = '#b48ead'; // Purple - operators, special characters
 // UI specific colors
-const invalid$9 = '#F44747', // Error color - Red
-darkBackground$7 = '#414339', // Gutter background
-highlightBackground$9 = '#3e3d3257', // Line highlight with opacity
-tooltipBackground$9 = '#34352f', // Tooltip background - Slightly lighter than base00
-selection$9 = '#49483E', // Selection background
-selectionMatch$9 = '#75715e70', // Selection match with opacity
-cursor$9 = base03$9, // Cursor color
-activeBracketBg$9 = '#75715E55', // Active bracket background with opacity
-activeBracketBorder$9 = base06$9, // Active bracket border - blue
-diagnosticWarning$9 = base05$9, // Warning color - orange
-linkColor$9 = base06$9, // Link color - blue
-visitedLinkColor$7 = base08$8; // Visited link color - purple
+const invalid$9 = '#d30102', // Bright red for errors
+darkBackground$7 = '#252a33', // Darker background for panels
+highlightBackground$9 = '#3b425277', // Active line highlight with opacity
+background$9 = base00$9, // Main editor background
+tooltipBackground$9 = base01$8, // Tooltip background
+selection$9 = base02$9, // Selection background
+selectionMatch$9 = '#4c566a80', // Selection match with opacity
+cursor$9 = base04$9, // Cursor color
+activeBracketBg$9 = '#4c566a55', // Active bracket background with opacity
+activeBracketBorder$9 = base07$8, // Active bracket border - ice blue
+diagnosticWarning$9 = base0C$7, // Warning color - yellow
+linkColor$9 = base08$7, // Link color - water blue
+visitedLinkColor$7 = base0E$5; // Visited link color - purple
 // Diff/merge specific colors
-const addedBackground$9 = '#3d4d3880', // Dark green with transparency for insertions
-removedBackground$9 = '#4d393980', // Dark red with transparency for deletions
-addedText$9 = '#A6E22E', // Monokai green for added text
-removedText$9 = '#F92672'; // Monokai pink/red for removed text
+const addedBackground$9 = '#3b4a3880', // Dark green with transparency for insertions
+removedBackground$9 = '#4a393a80', // Dark red with transparency for deletions
+addedText$9 = '#a3be8c', // Nord green for added text
+removedText$9 = '#bf616a'; // Nord red for removed text
 /**
- * Enhanced editor theme styles for Monokai
+ * Enhanced editor theme styles for Nord
  */
-const monokaiTheme = /*@__PURE__*/EditorView.theme({
+const nordTheme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base01$8,
-        backgroundColor: base00$9,
+        color: base04$9,
+        backgroundColor: background$9,
         fontSize: generalContent$9.fontSize,
         fontFamily: generalContent$9.fontFamily,
     },
@@ -40410,7 +42514,7 @@ const monokaiTheme = /*@__PURE__*/EditorView.theme({
     },
     '.cm-fat-cursor': {
         backgroundColor: `${cursor$9}99`,
-        color: base00$9,
+        color: background$9,
     },
     // Selection
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
@@ -40422,48 +42526,48 @@ const monokaiTheme = /*@__PURE__*/EditorView.theme({
     },
     // Search functionality
     '.cm-searchMatch': {
-        backgroundColor: '#49483E99',
-        outline: `1px solid ${base07$9}`,
-        color: base01$8,
+        backgroundColor: '#5e81ac80',
+        outline: `1px solid ${base06$8}`,
+        color: base04$9,
         borderRadius: generalSearchField$9.borderRadius,
         '& span': {
-            color: base01$8,
+            color: base04$9,
         },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-        backgroundColor: base04$9,
-        color: base00$9,
+        backgroundColor: base08$7,
+        color: base05$9,
         padding: generalSearchField$9.padding,
         '& span': {
-            color: base00$9,
+            color: base05$9,
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
-        color: base01$8,
+        color: base04$9,
         borderRadius: generalSearchField$9.borderRadius,
         padding: generalSearchField$9.padding,
     },
     // Panels
     '.cm-panels': {
         backgroundColor: darkBackground$7,
-        color: base01$8,
+        color: base04$9,
         borderRadius: '4px',
     },
     '.cm-panels.cm-panels-top': {
-        borderBottom: `1px solid ${base02$9}80`,
+        borderBottom: `1px solid ${base03$9}`,
     },
     '.cm-panels.cm-panels-bottom': {
-        borderTop: `1px solid ${base02$9}80`,
+        borderTop: `1px solid ${base03$9}`,
     },
     '.cm-panel button': {
         backgroundColor: tooltipBackground$9,
-        color: base01$8,
+        color: base04$9,
         border: generalPanel$9.border,
         borderRadius: generalPanel$9.borderRadius,
         padding: generalPanel$9.padding,
     },
     '.cm-panel button:hover': {
-        backgroundColor: '#49483E',
+        backgroundColor: base02$9,
     },
     // Line highlighting
     '.cm-activeLine': {
@@ -40474,28 +42578,30 @@ const monokaiTheme = /*@__PURE__*/EditorView.theme({
     // Gutters
     '.cm-gutters': {
         backgroundColor: darkBackground$7,
-        color: base02$9,
+        color: base03$9,
         border: generalGutter$9.border,
-        borderRight: '1px solid #3e3d32',
+        borderRight: `1px solid ${base02$9}`,
         paddingRight: generalGutter$9.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: '#35352c',
-        color: base01$8,
+        backgroundColor: base01$8,
+        color: base04$9,
         fontWeight: generalGutter$9.fontWeight,
     },
     '.cm-lineNumbers': {
         fontSize: generalGutter$9.fontSize,
+        lineHeight: generalGutter$9.lineHeight,
     },
     '.cm-foldGutter': {
         fontSize: generalGutter$9.fontSize,
+        lineHeight: generalGutter$9.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
-        color: base02$9,
+        color: base03$9,
         cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-        color: base01$8,
+        color: base04$9,
     },
     // Diff/Merge View Styles
     // Inserted/Added Content
@@ -40539,10 +42645,10 @@ const monokaiTheme = /*@__PURE__*/EditorView.theme({
     // Tooltips and autocomplete
     '.cm-tooltip': {
         backgroundColor: tooltipBackground$9,
-        border: '1px solid #49483E',
+        border: `1px solid ${base03$9}`,
         borderRadius: generalTooltip$9.borderRadius,
         padding: generalTooltip$9.padding,
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
     },
     '.cm-tooltip-autocomplete': {
         '& > ul': {
@@ -40554,16 +42660,16 @@ const monokaiTheme = /*@__PURE__*/EditorView.theme({
             lineHeight: generalTooltip$9.lineHeight,
         },
         '& > ul > li[aria-selected]': {
-            backgroundColor: selection$9,
-            color: base01$8,
+            backgroundColor: base02$9,
+            color: base05$9,
             borderRadius: generalTooltip$9.borderRadiusSelected,
         },
         '& > ul > li > span.cm-completionIcon': {
-            color: base02$9,
+            color: base03$9,
             paddingRight: generalTooltip$9.paddingRight,
         },
         '& > ul > li > span.cm-completionDetail': {
-            color: base02$9,
+            color: base03$9,
             fontStyle: 'italic',
         },
     },
@@ -40578,7 +42684,7 @@ const monokaiTheme = /*@__PURE__*/EditorView.theme({
     // Diagnostics styling
     '.cm-diagnostic': {
         '&-error': {
-            borderLeft: `3px solid ${invalid$9}`,
+            borderLeft: `3px solid ${base0A$7}`,
         },
         '&-warning': {
             borderLeft: `3px solid ${diagnosticWarning$9}`,
@@ -40588,7 +42694,7 @@ const monokaiTheme = /*@__PURE__*/EditorView.theme({
         },
     },
     '.cm-lintPoint-error': {
-        borderBottom: `2px wavy ${invalid$9}`,
+        borderBottom: `2px wavy ${base0A$7}`,
     },
     '.cm-lintPoint-warning': {
         borderBottom: `2px wavy ${diagnosticWarning$9}`,
@@ -40600,7 +42706,7 @@ const monokaiTheme = /*@__PURE__*/EditorView.theme({
         borderRadius: generalMatching$9.borderRadius,
     },
     '.cm-nonmatchingBracket': {
-        backgroundColor: '#f9267240',
+        backgroundColor: `${base0A$7}40`,
         outline: `1px solid ${invalid$9}`,
         borderRadius: generalMatching$9.borderRadius,
     },
@@ -40613,8 +42719,8 @@ const monokaiTheme = /*@__PURE__*/EditorView.theme({
     // Fold placeholder
     '.cm-foldPlaceholder': {
         backgroundColor: tooltipBackground$9,
-        color: base02$9,
-        border: `1px dotted ${base02$9}70`,
+        color: base03$9,
+        border: `1px dotted ${base03$9}70`,
         borderRadius: generalPlaceholder$9.borderRadius,
         padding: generalPlaceholder$9.padding,
         margin: generalPlaceholder$9.margin,
@@ -40622,7 +42728,7 @@ const monokaiTheme = /*@__PURE__*/EditorView.theme({
     // Focus outline
     '&.cm-focused': {
         outline: 'none',
-        boxShadow: `0 0 0 2px ${base00$9}, 0 0 0 3px ${base06$9}40`,
+        boxShadow: `0 0 0 2px ${background$9}, 0 0 0 3px ${base07$8}40`,
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
@@ -40633,69 +42739,70 @@ const monokaiTheme = /*@__PURE__*/EditorView.theme({
         background: darkBackground$7,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
-        backgroundColor: '#49483E',
+        backgroundColor: base02$9,
         borderRadius: generalScroller$9.borderRadius,
         border: `3px solid ${darkBackground$7}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-        backgroundColor: '#5a594d',
+        backgroundColor: base03$9,
     },
     // Ghost text
     '.cm-ghostText': {
         opacity: '0.5',
-        color: base02$9,
+        color: base03$9,
     },
 }, { dark: true });
 /**
- * Enhanced syntax highlighting for Monokai theme
+ * Enhanced syntax highlighting for Nord theme
  */
-const monokaiHighlightStyle = /*@__PURE__*/HighlightStyle.define([
+const nordHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Keywords and control flow
-    { tag: tags$1.keyword, color: base04$9, fontWeight: 'bold' },
-    { tag: tags$1.controlKeyword, color: base04$9, fontWeight: 'bold' },
-    { tag: tags$1.moduleKeyword, color: base04$9, fontWeight: 'bold' },
+    { tag: tags$1.keyword, color: base09$7, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: base09$7, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: base09$7, fontWeight: 'bold' },
     // Names and variables
-    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base05$9 },
-    { tag: [tags$1.variableName], color: base05$9 },
-    { tag: [tags$1.propertyName], color: base09$8, fontStyle: 'normal' },
+    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base07$8 },
+    { tag: [tags$1.variableName], color: base04$9 },
+    { tag: [tags$1.propertyName], color: base07$8, fontStyle: 'normal' },
     // Classes and types
-    { tag: [tags$1.typeName], color: base06$9, fontStyle: 'italic' },
-    { tag: [tags$1.className], color: base09$8, fontStyle: 'italic' },
-    { tag: [tags$1.namespace], color: base05$9, fontStyle: 'italic' },
+    { tag: [tags$1.typeName], color: base0C$7 },
+    { tag: [tags$1.className], color: base0C$7, fontStyle: 'italic' },
+    { tag: [tags$1.namespace], color: base08$7, fontStyle: 'italic' },
     // Operators and punctuation
-    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base04$9 },
-    { tag: [tags$1.bracket], color: base01$8 },
-    { tag: [tags$1.brace], color: base01$8 },
-    { tag: [tags$1.punctuation], color: base01$8 },
+    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base0E$5 },
+    { tag: [tags$1.bracket], color: base04$9 },
+    { tag: [tags$1.brace], color: base06$8 },
+    { tag: [tags$1.punctuation], color: base04$9 },
     // Functions and parameters
-    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base06$9 },
-    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: base06$9 },
-    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base05$9 },
+    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base06$8 },
+    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: base06$8 },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base0B$7 },
     // Constants and literals
-    { tag: tags$1.number, color: base08$8 },
-    { tag: tags$1.changed, color: base08$8 },
-    { tag: tags$1.annotation, color: invalid$9, fontStyle: 'italic' },
-    { tag: tags$1.modifier, color: base08$8, fontStyle: 'italic' },
-    { tag: tags$1.self, color: base08$8 },
-    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base08$8 },
-    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base08$8 },
+    { tag: tags$1.number, color: base0B$7 },
+    { tag: tags$1.changed, color: base0E$5 },
+    { tag: tags$1.annotation, color: base0A$7, fontStyle: 'italic' },
+    { tag: tags$1.modifier, color: base0E$5, fontStyle: 'italic' },
+    { tag: tags$1.self, color: base0E$5 },
+    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base0B$7 },
+    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base0E$5 },
     // Strings and regex
-    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base09$8 },
-    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base07$9 },
-    { tag: tags$1.string, color: base07$9 },
+    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base06$8 },
+    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base0E$5 },
+    { tag: tags$1.string, color: base0D$7 },
     // Punctuation and structure
-    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base06$9, fontWeight: 'bold' },
+    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base0C$7, fontWeight: 'bold' },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.name), tags$1.separator], color: base0D$7 },
     // Comments and documentation
-    { tag: tags$1.meta, color: base02$9 },
-    { tag: tags$1.comment, fontStyle: 'italic', color: base02$9 },
-    { tag: tags$1.docComment, fontStyle: 'italic', color: base02$9 },
+    { tag: tags$1.meta, color: base03$9 },
+    { tag: tags$1.comment, fontStyle: 'italic', color: base03$9 },
+    { tag: tags$1.docComment, fontStyle: 'italic', color: base03$9 },
     // HTML/XML elements
-    { tag: [tags$1.tagName], color: base04$9 },
-    { tag: [tags$1.attributeName], color: base09$8 },
+    { tag: [tags$1.tagName], color: base0A$7 },
+    { tag: [tags$1.attributeName], color: base0C$7 },
     // Markdown and text formatting
-    { tag: [tags$1.heading], fontWeight: 'bold', color: base09$8 },
-    { tag: [tags$1.strong], fontWeight: 'bold', color: base05$9 },
-    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base05$9 },
+    { tag: [tags$1.heading], fontWeight: 'bold', color: base08$7 },
+    { tag: [tags$1.strong], fontWeight: 'bold', color: base07$8 },
+    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base0C$7 },
     // Links and URLs
     {
         tag: [tags$1.link],
@@ -40713,36 +42820,36 @@ const monokaiHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Special states
     {
         tag: [tags$1.invalid],
-        color: base01$8,
+        color: base04$9,
         textDecoration: 'underline wavy',
-        borderBottom: `1px wavy ${invalid$9}`,
+        borderBottom: `1px wavy ${base0A$7}`,
     },
-    { tag: [tags$1.strikethrough], color: invalid$9, textDecoration: 'line-through' },
+    { tag: [tags$1.strikethrough], color: base0A$7, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
-    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base08$8 },
-    { tag: tags$1.deleted, color: invalid$9 },
-    { tag: tags$1.squareBracket, color: base01$8 },
-    { tag: tags$1.angleBracket, color: base01$8 },
+    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base0B$7 },
+    { tag: tags$1.deleted, color: base0A$7 },
+    { tag: tags$1.squareBracket, color: base0A$7 },
+    { tag: tags$1.angleBracket, color: base0B$7 },
     // Additional specific styles
-    { tag: tags$1.monospace, color: base01$8 },
-    { tag: [tags$1.contentSeparator], color: base05$9 },
-    { tag: tags$1.quote, color: base02$9 },
+    { tag: tags$1.monospace, color: base04$9, fontStyle: 'italic' },
+    { tag: [tags$1.contentSeparator], color: base08$7 },
+    { tag: tags$1.quote, color: base0E$5 },
 ]);
 /**
- * Combined Monokai theme extension
+ * Combined Nord theme extension
  */
-const monokai = [
-    monokaiTheme,
-    /*@__PURE__*/syntaxHighlighting(monokaiHighlightStyle),
+const nord = [
+    nordTheme,
+    /*@__PURE__*/syntaxHighlighting(nordHighlightStyle),
 ];
 /**
- * Monokai merge revert styles configuration
+ * Nord merge revert styles configuration
  */
-const monokaiMergeStyles = {
+const nordMergeStyles = {
     backgroundColor: darkBackground$7,
-    borderColor: base02$9,
-    buttonColor: base01$8,
-    buttonHoverColor: selection$9,
+    borderColor: base03$9,
+    buttonColor: base04$9,
+    buttonHoverColor: base02$9,
 };
 
 // Helper module for styling options
@@ -40764,6 +42871,7 @@ const generalGutter$8 = {
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 const generalPanel$8 = {
     border: 'none',
@@ -40799,55 +42907,52 @@ const generalTooltip$8 = {
 };
 
 /**
- * Enhanced Nord theme color definitions
- * ------------------------------------
+ * Enhanced Palenight theme color definitions
+ * ---------------------------------------
  * Colors organized by function with visual color blocks
  */
-// Polar Night
-const base00$8 = '#2e3440', // Background - deep navy blue
-base01$7 = '#3b4252', // Lighter background (popups, statuslines)
-base02$8 = '#434c5e', // Selection background
-base03$8 = '#4c566a', // Comments, invisibles
-// Snow Storm
-base04$8 = '#d8dee9', // Foreground - light blue-grey
-base05$8 = '#eceff4', // Light background
-// Frost
-base06$8 = '#8fbcbb', // Moss green - function names
-base07$8 = '#88c0d0', // Ice blue - classes, attributes
-base08$7 = '#81a1c1', // Water blue - methods
-base09$7 = '#5e81ac', // Deep blue - keywords
-// Aurora
-base0A$7 = '#bf616a', // Red - errors, brackets
-base0B$7 = '#d08770', // Orange - numbers, constants
-base0C$7 = '#ebcb8b', // Yellow - types, classes
-base0D$7 = '#a3be8c', // Green - strings
-base0E$5 = '#b48ead'; // Purple - operators, special characters
+// Base colors
+const base00$8 = '#292D3E', // Background - deep indigo
+base01$7 = '#A6ACCD', // Foreground - lavender blue
+base02$8 = '#444267', // Selection background - muted indigo
+base03$8 = '#676E95', // Comments, invisible - steel blue
+base04$8 = '#BFC7D5', // Cursor - lighter lavender
+// Accent colors
+base05$8 = '#C3E88D', // Strings - light green
+base06$7 = '#82AAFF', // Keywords, Functions - sky blue
+base07$7 = '#C792EA', // Classes, Types - purple
+base08$6 = '#F78C6C', // Numbers, Constants - orange
+base09$6 = '#FFCB6B', // Classes, Attributes - yellow
+base0A$6 = '#89DDFF', // Punctuation, Operators - light blue
+base0B$6 = '#FF5370', // Tags, Errors - red
+base0C$6 = '#BB80B3', // Special elements - mauve
+base0D$6 = '#80CBC4'; // Properties - seafoam
 // UI specific colors
-const invalid$8 = '#d30102', // Bright red for errors
-darkBackground$6 = '#252a33', // Darker background for panels
-highlightBackground$8 = '#3b425277', // Active line highlight with opacity
+const invalid$8 = '#FF5370', // Error color - red
+darkBackground$6 = '#202331', // Darker background for panels and gutter
+highlightBackground$8 = '#2e324817', // Active line background
 background$8 = base00$8, // Main editor background
-tooltipBackground$8 = base01$7, // Tooltip background
+tooltipBackground$8 = '#343A50', // Tooltip background
 selection$8 = base02$8, // Selection background
-selectionMatch$8 = '#4c566a80', // Selection match with opacity
+selectionMatch$8 = '#444267AA', // Selection match with opacity
 cursor$8 = base04$8, // Cursor color
-activeBracketBg$8 = '#4c566a55', // Active bracket background with opacity
-activeBracketBorder$8 = base07$8, // Active bracket border - ice blue
-diagnosticWarning$8 = base0C$7, // Warning color - yellow
-linkColor$8 = base08$7, // Link color - water blue
-visitedLinkColor$6 = base0E$5; // Visited link color - purple
+activeBracketBg$8 = '#2E3248', // Active bracket background
+activeBracketBorder$8 = base06$7, // Active bracket border - sky blue
+diagnosticWarning$8 = base09$6, // Warning color - yellow
+linkColor$8 = base06$7, // Link color - sky blue
+visitedLinkColor$6 = base07$7; // Visited link color - purple
 // Diff/merge specific colors
-const addedBackground$8 = '#3b4a3880', // Dark green with transparency for insertions
-removedBackground$8 = '#4a393a80', // Dark red with transparency for deletions
-addedText$8 = '#a3be8c', // Nord green for added text
-removedText$8 = '#bf616a'; // Nord red for removed text
+const addedBackground$8 = '#2c3c2e80', // Dark green with transparency for insertions
+removedBackground$8 = '#3e2e3180', // Dark red with transparency for deletions
+addedText$8 = '#C3E88D', // Palenight green for added text
+removedText$8 = '#FF5370'; // Palenight red for removed text
 /**
- * Enhanced editor theme styles for Nord
+ * Enhanced editor theme styles for Palenight
  */
-const nordTheme = /*@__PURE__*/EditorView.theme({
+const palenightTheme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base04$8,
+        color: base01$7,
         backgroundColor: background$8,
         fontSize: generalContent$8.fontSize,
         fontFamily: generalContent$8.fontFamily,
@@ -40875,48 +42980,48 @@ const nordTheme = /*@__PURE__*/EditorView.theme({
     },
     // Search functionality
     '.cm-searchMatch': {
-        backgroundColor: '#5e81ac80',
-        outline: `1px solid ${base06$8}`,
-        color: base04$8,
+        backgroundColor: '#444267CC',
+        outline: `1px solid ${base06$7}`,
+        color: base01$7,
         borderRadius: generalSearchField$8.borderRadius,
         '& span': {
-            color: base04$8,
+            color: base01$7,
         },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-        backgroundColor: base08$7,
-        color: base05$8,
+        backgroundColor: base06$7,
+        color: background$8,
         padding: generalSearchField$8.padding,
         '& span': {
-            color: base05$8,
+            color: background$8,
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
-        color: base04$8,
+        color: base01$7,
         borderRadius: generalSearchField$8.borderRadius,
         padding: generalSearchField$8.padding,
     },
     // Panels
     '.cm-panels': {
         backgroundColor: darkBackground$6,
-        color: base04$8,
+        color: base01$7,
         borderRadius: '4px',
     },
     '.cm-panels.cm-panels-top': {
-        borderBottom: `1px solid ${base03$8}`,
+        borderBottom: `1px solid ${base02$8}`,
     },
     '.cm-panels.cm-panels-bottom': {
-        borderTop: `1px solid ${base03$8}`,
+        borderTop: `1px solid ${base02$8}`,
     },
     '.cm-panel button': {
         backgroundColor: tooltipBackground$8,
-        color: base04$8,
+        color: base01$7,
         border: generalPanel$8.border,
         borderRadius: generalPanel$8.borderRadius,
         padding: generalPanel$8.padding,
     },
     '.cm-panel button:hover': {
-        backgroundColor: base02$8,
+        backgroundColor: '#3A4058',
     },
     // Line highlighting
     '.cm-activeLine': {
@@ -40929,26 +43034,28 @@ const nordTheme = /*@__PURE__*/EditorView.theme({
         backgroundColor: darkBackground$6,
         color: base03$8,
         border: generalGutter$8.border,
-        borderRight: `1px solid ${base02$8}`,
+        borderRight: '1px solid #3A405880',
         paddingRight: generalGutter$8.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: base01$7,
-        color: base04$8,
+        backgroundColor: '#2A2D40',
+        color: base01$7,
         fontWeight: generalGutter$8.fontWeight,
     },
     '.cm-lineNumbers': {
         fontSize: generalGutter$8.fontSize,
+        lineHeight: generalGutter$8.lineHeight,
     },
     '.cm-foldGutter': {
         fontSize: generalGutter$8.fontSize,
+        lineHeight: generalGutter$8.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
         color: base03$8,
         cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-        color: base04$8,
+        color: base01$7,
     },
     // Diff/Merge View Styles
     // Inserted/Added Content
@@ -40992,10 +43099,10 @@ const nordTheme = /*@__PURE__*/EditorView.theme({
     // Tooltips and autocomplete
     '.cm-tooltip': {
         backgroundColor: tooltipBackground$8,
-        border: `1px solid ${base03$8}`,
+        border: '1px solid #3A4058',
         borderRadius: generalTooltip$8.borderRadius,
         padding: generalTooltip$8.padding,
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
     },
     '.cm-tooltip-autocomplete': {
         '& > ul': {
@@ -41007,8 +43114,8 @@ const nordTheme = /*@__PURE__*/EditorView.theme({
             lineHeight: generalTooltip$8.lineHeight,
         },
         '& > ul > li[aria-selected]': {
-            backgroundColor: base02$8,
-            color: base05$8,
+            backgroundColor: selection$8,
+            color: base04$8,
             borderRadius: generalTooltip$8.borderRadiusSelected,
         },
         '& > ul > li > span.cm-completionIcon': {
@@ -41031,7 +43138,7 @@ const nordTheme = /*@__PURE__*/EditorView.theme({
     // Diagnostics styling
     '.cm-diagnostic': {
         '&-error': {
-            borderLeft: `3px solid ${base0A$7}`,
+            borderLeft: `3px solid ${invalid$8}`,
         },
         '&-warning': {
             borderLeft: `3px solid ${diagnosticWarning$8}`,
@@ -41041,7 +43148,7 @@ const nordTheme = /*@__PURE__*/EditorView.theme({
         },
     },
     '.cm-lintPoint-error': {
-        borderBottom: `2px wavy ${base0A$7}`,
+        borderBottom: `2px wavy ${invalid$8}`,
     },
     '.cm-lintPoint-warning': {
         borderBottom: `2px wavy ${diagnosticWarning$8}`,
@@ -41053,14 +43160,14 @@ const nordTheme = /*@__PURE__*/EditorView.theme({
         borderRadius: generalMatching$8.borderRadius,
     },
     '.cm-nonmatchingBracket': {
-        backgroundColor: `${base0A$7}40`,
+        backgroundColor: `${invalid$8}40`,
         outline: `1px solid ${invalid$8}`,
         borderRadius: generalMatching$8.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
         backgroundColor: selectionMatch$8,
-        outline: `1px solid ${base02$8}50`,
+        outline: `1px solid ${base03$8}50`,
         borderRadius: generalMatching$8.borderRadius,
     },
     // Fold placeholder
@@ -41075,7 +43182,7 @@ const nordTheme = /*@__PURE__*/EditorView.theme({
     // Focus outline
     '&.cm-focused': {
         outline: 'none',
-        boxShadow: `0 0 0 2px ${background$8}, 0 0 0 3px ${base07$8}40`,
+        boxShadow: `0 0 0 2px ${background$8}, 0 0 0 3px ${base06$7}40`,
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
@@ -41091,7 +43198,7 @@ const nordTheme = /*@__PURE__*/EditorView.theme({
         border: `3px solid ${darkBackground$6}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-        backgroundColor: base03$8,
+        backgroundColor: '#515580',
     },
     // Ghost text
     '.cm-ghostText': {
@@ -41100,56 +43207,56 @@ const nordTheme = /*@__PURE__*/EditorView.theme({
     },
 }, { dark: true });
 /**
- * Enhanced syntax highlighting for Nord theme
+ * Enhanced syntax highlighting for Palenight theme
  */
-const nordHighlightStyle = /*@__PURE__*/HighlightStyle.define([
+const palenightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Keywords and control flow
-    { tag: tags$1.keyword, color: base09$7, fontWeight: 'bold' },
-    { tag: tags$1.controlKeyword, color: base09$7, fontWeight: 'bold' },
-    { tag: tags$1.moduleKeyword, color: base09$7, fontWeight: 'bold' },
+    { tag: tags$1.keyword, color: base06$7, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: base06$7, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: base06$7, fontWeight: 'bold' },
     // Names and variables
-    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base07$8 },
-    { tag: [tags$1.variableName], color: base04$8 },
-    { tag: [tags$1.propertyName], color: base07$8, fontStyle: 'normal' },
+    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base01$7 },
+    { tag: [tags$1.variableName], color: base01$7 },
+    { tag: [tags$1.propertyName], color: base0D$6, fontStyle: 'normal' },
     // Classes and types
-    { tag: [tags$1.typeName], color: base0C$7 },
-    { tag: [tags$1.className], color: base0C$7, fontStyle: 'italic' },
-    { tag: [tags$1.namespace], color: base08$7, fontStyle: 'italic' },
+    { tag: [tags$1.typeName], color: base07$7 },
+    { tag: [tags$1.className], color: base09$6, fontStyle: 'italic' },
+    { tag: [tags$1.namespace], color: base09$6, fontStyle: 'italic' },
     // Operators and punctuation
-    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base0E$5 },
-    { tag: [tags$1.bracket], color: base04$8 },
-    { tag: [tags$1.brace], color: base06$8 },
-    { tag: [tags$1.punctuation], color: base04$8 },
+    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base0A$6 },
+    { tag: [tags$1.bracket], color: base0A$6 },
+    { tag: [tags$1.brace], color: base0A$6 },
+    { tag: [tags$1.punctuation], color: base0A$6 },
     // Functions and parameters
-    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base06$8 },
-    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: base06$8 },
-    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base0B$7 },
+    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base06$7 },
+    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: base06$7 },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base08$6 },
     // Constants and literals
-    { tag: tags$1.number, color: base0B$7 },
-    { tag: tags$1.changed, color: base0E$5 },
-    { tag: tags$1.annotation, color: base0A$7, fontStyle: 'italic' },
-    { tag: tags$1.modifier, color: base0E$5, fontStyle: 'italic' },
-    { tag: tags$1.self, color: base0E$5 },
-    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base0B$7 },
-    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base0E$5 },
+    { tag: tags$1.number, color: base08$6 },
+    { tag: tags$1.changed, color: base08$6 },
+    { tag: tags$1.annotation, color: invalid$8, fontStyle: 'italic' },
+    { tag: tags$1.modifier, color: base0C$6, fontStyle: 'italic' },
+    { tag: tags$1.self, color: base07$7 },
+    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base08$6 },
+    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base0C$6 },
     // Strings and regex
-    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base06$8 },
-    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base0E$5 },
-    { tag: tags$1.string, color: base0D$7 },
+    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base05$8 },
+    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base05$8 },
+    { tag: tags$1.string, color: base05$8 },
     // Punctuation and structure
-    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base0C$7, fontWeight: 'bold' },
-    { tag: [/*@__PURE__*/tags$1.definition(tags$1.name), tags$1.separator], color: base0D$7 },
+    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base07$7, fontWeight: 'bold' },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.name), tags$1.separator], color: base0A$6 },
     // Comments and documentation
     { tag: tags$1.meta, color: base03$8 },
     { tag: tags$1.comment, fontStyle: 'italic', color: base03$8 },
     { tag: tags$1.docComment, fontStyle: 'italic', color: base03$8 },
     // HTML/XML elements
-    { tag: [tags$1.tagName], color: base0A$7 },
-    { tag: [tags$1.attributeName], color: base0C$7 },
+    { tag: [tags$1.tagName], color: base0B$6 },
+    { tag: [tags$1.attributeName], color: base09$6 },
     // Markdown and text formatting
-    { tag: [tags$1.heading], fontWeight: 'bold', color: base08$7 },
-    { tag: [tags$1.strong], fontWeight: 'bold', color: base07$8 },
-    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base0C$7 },
+    { tag: [tags$1.heading], fontWeight: 'bold', color: base09$6 },
+    { tag: [tags$1.strong], fontWeight: 'bold', color: base09$6 },
+    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base05$8 },
     // Links and URLs
     {
         tag: [tags$1.link],
@@ -41167,36 +43274,36 @@ const nordHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Special states
     {
         tag: [tags$1.invalid],
-        color: base04$8,
+        color: base01$7,
         textDecoration: 'underline wavy',
-        borderBottom: `1px wavy ${base0A$7}`,
+        borderBottom: `1px wavy ${invalid$8}`,
     },
-    { tag: [tags$1.strikethrough], color: base0A$7, textDecoration: 'line-through' },
+    { tag: [tags$1.strikethrough], color: invalid$8, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
-    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base0B$7 },
-    { tag: tags$1.deleted, color: base0A$7 },
-    { tag: tags$1.squareBracket, color: base0A$7 },
-    { tag: tags$1.angleBracket, color: base0B$7 },
+    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base08$6 },
+    { tag: tags$1.deleted, color: invalid$8 },
+    { tag: tags$1.squareBracket, color: base0A$6 },
+    { tag: tags$1.angleBracket, color: base0A$6 },
     // Additional specific styles
-    { tag: tags$1.monospace, color: base04$8, fontStyle: 'italic' },
-    { tag: [tags$1.contentSeparator], color: base08$7 },
-    { tag: tags$1.quote, color: base0E$5 },
+    { tag: tags$1.monospace, color: base01$7 },
+    { tag: [tags$1.contentSeparator], color: base09$6 },
+    { tag: tags$1.quote, color: base03$8 },
 ]);
 /**
- * Combined Nord theme extension
+ * Combined Palenight theme extension
  */
-const nord = [
-    nordTheme,
-    /*@__PURE__*/syntaxHighlighting(nordHighlightStyle),
+const palenight = [
+    palenightTheme,
+    /*@__PURE__*/syntaxHighlighting(palenightHighlightStyle),
 ];
 /**
- * Nord merge revert styles configuration
+ * Palenight merge revert styles configuration
  */
-const nordMergeStyles = {
+const palenightMergeStyles = {
     backgroundColor: darkBackground$6,
-    borderColor: base03$8,
-    buttonColor: base04$8,
-    buttonHoverColor: base02$8,
+    borderColor: '#3A4058',
+    buttonColor: base01$7,
+    buttonHoverColor: '#3A4058',
 };
 
 // Helper module for styling options
@@ -41218,6 +43325,7 @@ const generalGutter$7 = {
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 const generalPanel$7 = {
     border: 'none',
@@ -41253,52 +43361,53 @@ const generalTooltip$7 = {
 };
 
 /**
- * Enhanced Palenight theme color definitions
- * ---------------------------------------
+ * Enhanced Solarized Dark theme color definitions
+ * ---------------------------------------------
  * Colors organized by function with visual color blocks
  */
-// Base colors
-const base00$7 = '#292D3E', // Background - deep indigo
-base01$6 = '#A6ACCD', // Foreground - lavender blue
-base02$7 = '#444267', // Selection background - muted indigo
-base03$7 = '#676E95', // Comments, invisible - steel blue
-base04$7 = '#BFC7D5', // Cursor - lighter lavender
-// Accent colors
-base05$7 = '#C3E88D', // Strings - light green
-base06$7 = '#82AAFF', // Keywords, Functions - sky blue
-base07$7 = '#C792EA', // Classes, Types - purple
-base08$6 = '#F78C6C', // Numbers, Constants - orange
-base09$6 = '#FFCB6B', // Classes, Attributes - yellow
-base0A$6 = '#89DDFF', // Punctuation, Operators - light blue
-base0B$6 = '#FF5370', // Tags, Errors - red
-base0C$6 = '#BB80B3', // Special elements - mauve
-base0D$6 = '#80CBC4'; // Properties - seafoam
+// Base colors from Solarized palette
+const base00$7 = '#002b36', // Background - dark blue
+base01$6 = '#073642', // Lighter background (popups, statuslines)
+base02$7 = '#586e75', // Selection background
+base03$7 = '#657b83', // Comments, invisibles
+base04$7 = '#839496', // Body text
+base05$7 = '#93a1a1', // Default foreground
+base06$6 = '#eee8d5', // Light foreground
+base07$6 = '#fdf6e3', // Light background
+// Accent colors from Solarized palette
+base08$5 = '#dc322f', // Red
+base09$5 = '#cb4b16', // Orange
+base0A$5 = '#b58900', // Yellow
+base0B$5 = '#859900', // Green
+base0C$5 = '#2aa198', // Cyan
+base0D$5 = '#268bd2', // Blue
+base0E$4 = '#6c71c4', // Violet
+base0F$4 = '#d33682'; // Magenta
 // UI specific colors
-const invalid$7 = '#FF5370', // Error color - red
-darkBackground$5 = '#202331', // Darker background for panels and gutter
-highlightBackground$7 = '#2e324817', // Active line background
+const invalid$7 = '#d30102', // Bright red for errors
+darkBackground$5 = '#00252f', // Darker background for panels
+highlightBackground$7 = '#99eeff0f', // Active line highlight
 background$7 = base00$7, // Main editor background
-tooltipBackground$7 = '#343A50', // Tooltip background
-selection$7 = base02$7, // Selection background
-selectionMatch$7 = '#444267AA', // Selection match with opacity
+tooltipBackground$7 = base01$6, // Tooltip background
+selection$7 = '#02B8FF3F', // Selection background with opacity
+selectionMatch$7 = '#586e7580', // Selection match with opacity
 cursor$7 = base04$7, // Cursor color
-activeBracketBg$7 = '#2E3248', // Active bracket background
-activeBracketBorder$7 = base06$7, // Active bracket border - sky blue
-diagnosticWarning$7 = base09$6, // Warning color - yellow
-linkColor$7 = base06$7, // Link color - sky blue
-visitedLinkColor$5 = base07$7; // Visited link color - purple
+activeBracketBg$7 = '#586e7540', // Active bracket background with opacity
+activeBracketBorder$7 = base0D$5, // Active bracket border - blue
+diagnosticWarning$7 = base0A$5, // Warning color - yellow
+linkColor$7 = base0D$5; // Link color - blue
 // Diff/merge specific colors
-const addedBackground$7 = '#2c3c2e80', // Dark green with transparency for insertions
-removedBackground$7 = '#3e2e3180', // Dark red with transparency for deletions
-addedText$7 = '#C3E88D', // Palenight green for added text
-removedText$7 = '#FF5370'; // Palenight red for removed text
+const addedBackground$7 = '#2aa19820', // Solarized cyan with transparency for insertions
+removedBackground$7 = '#dc322f20', // Solarized red with transparency for deletions
+addedText$7 = '#859900', // Solarized green for added text
+removedText$7 = '#dc322f'; // Solarized red for removed text
 /**
- * Enhanced editor theme styles for Palenight
+ * Enhanced editor theme styles for Solarized Dark
  */
-const palenightTheme = /*@__PURE__*/EditorView.theme({
+const solarizedDarkTheme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base01$6,
+        color: base05$7,
         backgroundColor: background$7,
         fontSize: generalContent$7.fontSize,
         fontFamily: generalContent$7.fontFamily,
@@ -41326,48 +43435,48 @@ const palenightTheme = /*@__PURE__*/EditorView.theme({
     },
     // Search functionality
     '.cm-searchMatch': {
-        backgroundColor: '#444267CC',
-        outline: `1px solid ${base06$7}`,
-        color: base01$6,
+        backgroundColor: '#586e7599',
+        outline: `1px solid ${base0D$5}`,
+        color: base06$6,
         borderRadius: generalSearchField$7.borderRadius,
         '& span': {
-            color: base01$6,
+            color: base06$6,
         },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-        backgroundColor: base06$7,
-        color: background$7,
+        backgroundColor: base0D$5,
+        color: base07$6,
         padding: generalSearchField$7.padding,
         '& span': {
-            color: background$7,
+            color: base07$6,
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
-        color: base01$6,
+        color: base05$7,
         borderRadius: generalSearchField$7.borderRadius,
         padding: generalSearchField$7.padding,
     },
     // Panels
     '.cm-panels': {
         backgroundColor: darkBackground$5,
-        color: base01$6,
+        color: base04$7,
         borderRadius: '4px',
     },
     '.cm-panels.cm-panels-top': {
-        borderBottom: `1px solid ${base02$7}`,
+        borderBottom: `1px solid ${base01$6}`,
     },
     '.cm-panels.cm-panels-bottom': {
-        borderTop: `1px solid ${base02$7}`,
+        borderTop: `1px solid ${base01$6}`,
     },
     '.cm-panel button': {
         backgroundColor: tooltipBackground$7,
-        color: base01$6,
+        color: base05$7,
         border: generalPanel$7.border,
         borderRadius: generalPanel$7.borderRadius,
         padding: generalPanel$7.padding,
     },
     '.cm-panel button:hover': {
-        backgroundColor: '#3A4058',
+        backgroundColor: highlightBackground$7,
     },
     // Line highlighting
     '.cm-activeLine': {
@@ -41378,28 +43487,30 @@ const palenightTheme = /*@__PURE__*/EditorView.theme({
     // Gutters
     '.cm-gutters': {
         backgroundColor: darkBackground$5,
-        color: base03$7,
+        color: base02$7,
         border: generalGutter$7.border,
-        borderRight: '1px solid #3A405880',
+        borderRight: `1px solid ${base01$6}`,
         paddingRight: generalGutter$7.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: '#2A2D40',
-        color: base01$6,
+        backgroundColor: base01$6,
+        color: base05$7,
         fontWeight: generalGutter$7.fontWeight,
     },
     '.cm-lineNumbers': {
         fontSize: generalGutter$7.fontSize,
+        lineHeight: generalGutter$7.lineHeight,
     },
     '.cm-foldGutter': {
         fontSize: generalGutter$7.fontSize,
+        lineHeight: generalGutter$7.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
-        color: base03$7,
+        color: base02$7,
         cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-        color: base01$6,
+        color: base04$7,
     },
     // Diff/Merge View Styles
     // Inserted/Added Content
@@ -41443,10 +43554,10 @@ const palenightTheme = /*@__PURE__*/EditorView.theme({
     // Tooltips and autocomplete
     '.cm-tooltip': {
         backgroundColor: tooltipBackground$7,
-        border: '1px solid #3A4058',
+        border: `1px solid ${base02$7}`,
         borderRadius: generalTooltip$7.borderRadius,
         padding: generalTooltip$7.padding,
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
     },
     '.cm-tooltip-autocomplete': {
         '& > ul': {
@@ -41459,7 +43570,7 @@ const palenightTheme = /*@__PURE__*/EditorView.theme({
         },
         '& > ul > li[aria-selected]': {
             backgroundColor: selection$7,
-            color: base04$7,
+            color: base06$6,
             borderRadius: generalTooltip$7.borderRadiusSelected,
         },
         '& > ul > li > span.cm-completionIcon': {
@@ -41482,7 +43593,7 @@ const palenightTheme = /*@__PURE__*/EditorView.theme({
     // Diagnostics styling
     '.cm-diagnostic': {
         '&-error': {
-            borderLeft: `3px solid ${invalid$7}`,
+            borderLeft: `3px solid ${base08$5}`,
         },
         '&-warning': {
             borderLeft: `3px solid ${diagnosticWarning$7}`,
@@ -41492,7 +43603,7 @@ const palenightTheme = /*@__PURE__*/EditorView.theme({
         },
     },
     '.cm-lintPoint-error': {
-        borderBottom: `2px wavy ${invalid$7}`,
+        borderBottom: `2px wavy ${base08$5}`,
     },
     '.cm-lintPoint-warning': {
         borderBottom: `2px wavy ${diagnosticWarning$7}`,
@@ -41504,21 +43615,21 @@ const palenightTheme = /*@__PURE__*/EditorView.theme({
         borderRadius: generalMatching$7.borderRadius,
     },
     '.cm-nonmatchingBracket': {
-        backgroundColor: `${invalid$7}40`,
+        backgroundColor: `${base08$5}40`,
         outline: `1px solid ${invalid$7}`,
         borderRadius: generalMatching$7.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
         backgroundColor: selectionMatch$7,
-        outline: `1px solid ${base03$7}50`,
+        outline: `1px solid ${base02$7}50`,
         borderRadius: generalMatching$7.borderRadius,
     },
     // Fold placeholder
     '.cm-foldPlaceholder': {
         backgroundColor: tooltipBackground$7,
         color: base03$7,
-        border: `1px dotted ${base03$7}70`,
+        border: `1px dotted ${base02$7}70`,
         borderRadius: generalPlaceholder$7.borderRadius,
         padding: generalPlaceholder$7.padding,
         margin: generalPlaceholder$7.margin,
@@ -41526,7 +43637,7 @@ const palenightTheme = /*@__PURE__*/EditorView.theme({
     // Focus outline
     '&.cm-focused': {
         outline: 'none',
-        boxShadow: `0 0 0 2px ${background$7}, 0 0 0 3px ${base06$7}40`,
+        boxShadow: `0 0 0 2px ${background$7}, 0 0 0 3px ${base0D$5}40`,
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
@@ -41537,12 +43648,12 @@ const palenightTheme = /*@__PURE__*/EditorView.theme({
         background: darkBackground$5,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
-        backgroundColor: base02$7,
+        backgroundColor: base01$6,
         borderRadius: generalScroller$7.borderRadius,
         border: `3px solid ${darkBackground$5}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-        backgroundColor: '#515580',
+        backgroundColor: base02$7,
     },
     // Ghost text
     '.cm-ghostText': {
@@ -41551,103 +43662,113 @@ const palenightTheme = /*@__PURE__*/EditorView.theme({
     },
 }, { dark: true });
 /**
- * Enhanced syntax highlighting for Palenight theme
+ * Enhanced syntax highlighting for Solarized Dark theme
  */
-const palenightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
+const solarizedDarkHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Keywords and control flow
-    { tag: tags$1.keyword, color: base06$7, fontWeight: 'bold' },
-    { tag: tags$1.controlKeyword, color: base06$7, fontWeight: 'bold' },
-    { tag: tags$1.moduleKeyword, color: base06$7, fontWeight: 'bold' },
+    { tag: tags$1.keyword, color: base0B$5, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: base0B$5, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: base0B$5, fontWeight: 'bold' },
     // Names and variables
-    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base01$6 },
-    { tag: [tags$1.variableName], color: base01$6 },
-    { tag: [tags$1.propertyName], color: base0D$6, fontStyle: 'normal' },
+    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base0C$5 },
+    { tag: [tags$1.variableName], color: base05$7 },
+    { tag: [tags$1.propertyName], color: base0C$5, fontStyle: 'normal' },
     // Classes and types
-    { tag: [tags$1.typeName], color: base07$7 },
-    { tag: [tags$1.className], color: base09$6, fontStyle: 'italic' },
-    { tag: [tags$1.namespace], color: base09$6, fontStyle: 'italic' },
+    { tag: [tags$1.typeName], color: base09$5 },
+    { tag: [tags$1.className], color: base09$5, fontStyle: 'italic' },
+    { tag: [tags$1.namespace], color: base0F$4, fontStyle: 'italic' },
     // Operators and punctuation
-    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base0A$6 },
-    { tag: [tags$1.bracket], color: base0A$6 },
-    { tag: [tags$1.brace], color: base0A$6 },
-    { tag: [tags$1.punctuation], color: base0A$6 },
+    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base0E$4 },
+    { tag: [tags$1.bracket], color: base0F$4 },
+    { tag: [tags$1.brace], color: base0F$4 },
+    { tag: [tags$1.punctuation], color: base04$7 },
     // Functions and parameters
-    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: base06$7 },
-    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: base06$7 },
-    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base08$6 },
+    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName)], color: base0D$5 },
+    { tag: [tags$1.labelName], color: base0F$4 },
+    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: base0D$5 },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base0C$5 },
     // Constants and literals
-    { tag: tags$1.number, color: base08$6 },
-    { tag: tags$1.changed, color: base08$6 },
+    { tag: tags$1.number, color: base0F$4 },
+    { tag: tags$1.changed, color: base0F$4 },
     { tag: tags$1.annotation, color: invalid$7, fontStyle: 'italic' },
-    { tag: tags$1.modifier, color: base0C$6, fontStyle: 'italic' },
-    { tag: tags$1.self, color: base07$7 },
-    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: base08$6 },
-    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base0C$6 },
+    { tag: tags$1.modifier, color: base0F$4, fontStyle: 'italic' },
+    { tag: tags$1.self, color: base0F$4 },
+    {
+        tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)],
+        color: base0A$5,
+    },
+    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base0F$4 },
     // Strings and regex
-    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base05$7 },
-    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: base05$7 },
-    { tag: tags$1.string, color: base05$7 },
+    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base0B$5 },
+    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: invalid$7 },
+    { tag: tags$1.string, color: base0A$5 },
     // Punctuation and structure
-    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base07$7, fontWeight: 'bold' },
-    { tag: [/*@__PURE__*/tags$1.definition(tags$1.name), tags$1.separator], color: base0A$6 },
+    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base09$5, fontWeight: 'bold' },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.name), tags$1.separator], color: base0C$5 },
     // Comments and documentation
-    { tag: tags$1.meta, color: base03$7 },
-    { tag: tags$1.comment, fontStyle: 'italic', color: base03$7 },
-    { tag: tags$1.docComment, fontStyle: 'italic', color: base03$7 },
+    { tag: tags$1.meta, color: base08$5 },
+    { tag: tags$1.comment, fontStyle: 'italic', color: base02$7 },
+    { tag: tags$1.docComment, fontStyle: 'italic', color: base02$7 },
     // HTML/XML elements
-    { tag: [tags$1.tagName], color: base0B$6 },
-    { tag: [tags$1.attributeName], color: base09$6 },
+    { tag: [tags$1.tagName], color: base0D$5 },
+    { tag: [tags$1.attributeName], color: base05$7 },
     // Markdown and text formatting
-    { tag: [tags$1.heading], fontWeight: 'bold', color: base09$6 },
-    { tag: [tags$1.strong], fontWeight: 'bold', color: base09$6 },
-    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base05$7 },
+    { tag: [tags$1.heading], fontWeight: 'bold', color: base0A$5 },
+    { tag: tags$1.heading1, color: base07$6 },
+    { tag: tags$1.heading2, color: base06$6 },
+    { tag: tags$1.heading3, color: base06$6 },
+    { tag: tags$1.heading4, color: base06$6 },
+    { tag: tags$1.heading5, color: base06$6 },
+    { tag: tags$1.heading6, color: base06$6 },
+    { tag: [tags$1.strong], fontWeight: 'bold', color: base06$6 },
+    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base0B$5 },
     // Links and URLs
     {
         tag: [tags$1.link],
-        color: visitedLinkColor$5,
+        color: base0C$5,
         fontWeight: '500',
         textDecoration: 'underline',
         textUnderlinePosition: 'under',
     },
     {
         tag: [tags$1.url],
-        color: linkColor$7,
+        color: base0A$5,
         textDecoration: 'underline',
         textUnderlineOffset: '2px',
     },
     // Special states
     {
         tag: [tags$1.invalid],
-        color: base01$6,
+        color: base02$7,
         textDecoration: 'underline wavy',
-        borderBottom: `1px wavy ${invalid$7}`,
+        borderBottom: `1px dotted ${base08$5}`,
     },
     { tag: [tags$1.strikethrough], color: invalid$7, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
-    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base08$6 },
-    { tag: tags$1.deleted, color: invalid$7 },
-    { tag: tags$1.squareBracket, color: base0A$6 },
-    { tag: tags$1.angleBracket, color: base0A$6 },
+    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base0A$5 },
+    { tag: tags$1.deleted, color: base08$5 },
+    { tag: tags$1.squareBracket, color: base08$5 },
+    { tag: tags$1.angleBracket, color: base02$7 },
     // Additional specific styles
-    { tag: tags$1.monospace, color: base01$6 },
-    { tag: [tags$1.contentSeparator], color: base09$6 },
-    { tag: tags$1.quote, color: base03$7 },
+    { tag: tags$1.monospace, color: base05$7 },
+    { tag: [tags$1.contentSeparator], color: base0A$5 },
+    { tag: tags$1.quote, color: base0B$5 },
 ]);
 /**
- * Combined Palenight theme extension
+ * Combined Solarized Dark theme extension
  */
-const palenight = [
-    palenightTheme,
-    /*@__PURE__*/syntaxHighlighting(palenightHighlightStyle),
+const solarizedDark = [
+    solarizedDarkTheme,
+    /*@__PURE__*/syntaxHighlighting(solarizedDarkHighlightStyle),
 ];
 /**
- * Palenight merge revert styles configuration
+ * Solarized Dark merge revert styles configuration
  */
-const palenightMergeStyles = {
+const solarizedDarkMergeStyles = {
     backgroundColor: darkBackground$5,
-    borderColor: '#3A4058',
-    buttonColor: base01$6,
-    buttonHoverColor: '#3A4058',
+    borderColor: base02$7,
+    buttonColor: base05$7,
+    buttonHoverColor: base01$6,
 };
 
 // Helper module for styling options
@@ -41669,6 +43790,7 @@ const generalGutter$6 = {
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 const generalPanel$6 = {
     border: 'none',
@@ -41704,53 +43826,54 @@ const generalTooltip$6 = {
 };
 
 /**
- * Enhanced Solarized Dark theme color definitions
+ * Enhanced Solarized Light theme color definitions
  * ---------------------------------------------
  * Colors organized by function with visual color blocks
  */
 // Base colors from Solarized palette
-const base00$6 = '#002b36', // Background - dark blue
-base01$5 = '#073642', // Lighter background (popups, statuslines)
-base02$6 = '#586e75', // Selection background
-base03$6 = '#657b83', // Comments, invisibles
-base04$6 = '#839496', // Body text
-base05$6 = '#93a1a1', // Default foreground
-base06$6 = '#eee8d5', // Light foreground
-base07$6 = '#fdf6e3', // Light background
+const base00$6 = '#657b83', // Body text/default text color
+base01$5 = '#586e75', // Optional emphasized content
+base02$6 = '#073642', // Background highlights
+base03$6 = '#002b36', // Comments, invisible, line highlighting
+base04$6 = '#dfd9c8', // Dark background tint
+base05$6 = '#93a1a1', // Default foreground/UI text color
+base06$5 = '#cceeff7a', // Light background tint (for selection)
+base07$5 = '#fdf6e3', // Background - light base
+base08$4 = '#eee8d5', // Background tint - light secondary
 // Accent colors from Solarized palette
-base08$5 = '#dc322f', // Red
-base09$5 = '#cb4b16', // Orange
-base0A$5 = '#b58900', // Yellow
-base0B$5 = '#859900', // Green
-base0C$5 = '#2aa198', // Cyan
-base0D$5 = '#268bd2', // Blue
-base0E$4 = '#6c71c4', // Violet
-base0F$4 = '#d33682'; // Magenta
+base09$4 = '#dc322f', // Red
+base0A$4 = '#cb4b16', // Orange
+base0B$4 = '#b58900', // Yellow
+base0C$4 = '#859900', // Green
+base0D$4 = '#2aa198', // Cyan
+base0E$3 = '#268bd2', // Blue
+base0F$3 = '#6c71c4', // Violet
+base10$2 = '#d33682'; // Magenta
 // UI specific colors
 const invalid$6 = '#d30102', // Bright red for errors
-darkBackground$4 = '#00252f', // Darker background for panels
-highlightBackground$6 = '#99eeff0f', // Active line highlight
-background$6 = base00$6, // Main editor background
-tooltipBackground$6 = base01$5, // Tooltip background
-selection$6 = '#02B8FF3F', // Selection background with opacity
-selectionMatch$6 = '#586e7580', // Selection match with opacity
-cursor$6 = base04$6, // Cursor color
-activeBracketBg$6 = '#586e7540', // Active bracket background with opacity
-activeBracketBorder$6 = base0D$5, // Active bracket border - blue
-diagnosticWarning$6 = base0A$5, // Warning color - yellow
-linkColor$6 = base0D$5; // Link color - blue
+darkBackground$4 = base04$6, // Darker background for panels
+highlightBackground$6 = base06$5, // Active line highlight
+background$6 = base07$5, // Main editor background
+tooltipBackground$6 = '#f0e9d7', // Tooltip background
+selection$6 = '#ffd07a', // Selection background
+selectionMatch$6 = '#e1dbca90', // Selection match with opacity
+cursor$6 = base01$5, // Cursor color
+activeBracketBg$6 = '#93a1a140', // Active bracket background with opacity
+activeBracketBorder$6 = base0E$3, // Active bracket border - blue
+diagnosticWarning$6 = base0B$4, // Warning color - yellow
+linkColor$6 = base0E$3; // Link color - blue
 // Diff/merge specific colors
-const addedBackground$6 = '#2aa19820', // Solarized cyan with transparency for insertions
+const addedBackground$6 = '#85990020', // Solarized green with transparency for insertions
 removedBackground$6 = '#dc322f20', // Solarized red with transparency for deletions
 addedText$6 = '#859900', // Solarized green for added text
 removedText$6 = '#dc322f'; // Solarized red for removed text
 /**
- * Enhanced editor theme styles for Solarized Dark
+ * Enhanced editor theme styles for Solarized Light
  */
-const solarizedDarkTheme = /*@__PURE__*/EditorView.theme({
+const solarizedLightTheme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base05$6,
+        color: base00$6,
         backgroundColor: background$6,
         fontSize: generalContent$6.fontSize,
         fontFamily: generalContent$6.fontFamily,
@@ -41778,42 +43901,42 @@ const solarizedDarkTheme = /*@__PURE__*/EditorView.theme({
     },
     // Search functionality
     '.cm-searchMatch': {
-        backgroundColor: '#586e7599',
-        outline: `1px solid ${base0D$5}`,
-        color: base06$6,
+        backgroundColor: '#93a1a180',
+        outline: `1px solid ${base0E$3}`,
+        color: base01$5,
         borderRadius: generalSearchField$6.borderRadius,
         '& span': {
-            color: base06$6,
+            color: base01$5,
         },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-        backgroundColor: base0D$5,
-        color: base07$6,
+        backgroundColor: base0E$3,
+        color: base08$4,
         padding: generalSearchField$6.padding,
         '& span': {
-            color: base07$6,
+            color: base08$4,
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
-        color: base05$6,
+        color: base00$6,
         borderRadius: generalSearchField$6.borderRadius,
         padding: generalSearchField$6.padding,
     },
     // Panels
     '.cm-panels': {
         backgroundColor: darkBackground$4,
-        color: base04$6,
+        color: base00$6,
         borderRadius: '4px',
     },
     '.cm-panels.cm-panels-top': {
-        borderBottom: `1px solid ${base01$5}`,
+        borderBottom: `1px solid ${base04$6}`,
     },
     '.cm-panels.cm-panels-bottom': {
-        borderTop: `1px solid ${base01$5}`,
+        borderTop: `1px solid ${base04$6}`,
     },
     '.cm-panel button': {
         backgroundColor: tooltipBackground$6,
-        color: base05$6,
+        color: base00$6,
         border: generalPanel$6.border,
         borderRadius: generalPanel$6.borderRadius,
         padding: generalPanel$6.padding,
@@ -41830,28 +43953,30 @@ const solarizedDarkTheme = /*@__PURE__*/EditorView.theme({
     // Gutters
     '.cm-gutters': {
         backgroundColor: darkBackground$4,
-        color: base02$6,
+        color: base01$5,
         border: generalGutter$6.border,
-        borderRight: `1px solid ${base01$5}`,
+        borderRight: `1px solid ${base04$6}`,
         paddingRight: generalGutter$6.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: base01$5,
-        color: base05$6,
+        backgroundColor: highlightBackground$6,
+        color: base00$6,
         fontWeight: generalGutter$6.fontWeight,
     },
     '.cm-lineNumbers': {
         fontSize: generalGutter$6.fontSize,
+        lineHeight: generalGutter$6.lineHeight,
     },
     '.cm-foldGutter': {
         fontSize: generalGutter$6.fontSize,
+        lineHeight: generalGutter$6.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
-        color: base02$6,
+        color: base01$5,
         cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-        color: base04$6,
+        color: base00$6,
     },
     // Diff/Merge View Styles
     // Inserted/Added Content
@@ -41895,10 +44020,10 @@ const solarizedDarkTheme = /*@__PURE__*/EditorView.theme({
     // Tooltips and autocomplete
     '.cm-tooltip': {
         backgroundColor: tooltipBackground$6,
-        border: `1px solid ${base02$6}`,
+        border: `1px solid ${base01$5}`,
         borderRadius: generalTooltip$6.borderRadius,
         padding: generalTooltip$6.padding,
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
     },
     '.cm-tooltip-autocomplete': {
         '& > ul': {
@@ -41911,15 +44036,15 @@ const solarizedDarkTheme = /*@__PURE__*/EditorView.theme({
         },
         '& > ul > li[aria-selected]': {
             backgroundColor: selection$6,
-            color: base06$6,
+            color: base01$5,
             borderRadius: generalTooltip$6.borderRadiusSelected,
         },
         '& > ul > li > span.cm-completionIcon': {
-            color: base03$6,
+            color: base01$5,
             paddingRight: generalTooltip$6.paddingRight,
         },
         '& > ul > li > span.cm-completionDetail': {
-            color: base03$6,
+            color: base01$5,
             fontStyle: 'italic',
         },
     },
@@ -41934,7 +44059,7 @@ const solarizedDarkTheme = /*@__PURE__*/EditorView.theme({
     // Diagnostics styling
     '.cm-diagnostic': {
         '&-error': {
-            borderLeft: `3px solid ${base08$5}`,
+            borderLeft: `3px solid ${base09$4}`,
         },
         '&-warning': {
             borderLeft: `3px solid ${diagnosticWarning$6}`,
@@ -41944,7 +44069,7 @@ const solarizedDarkTheme = /*@__PURE__*/EditorView.theme({
         },
     },
     '.cm-lintPoint-error': {
-        borderBottom: `2px wavy ${base08$5}`,
+        borderBottom: `2px wavy ${base09$4}`,
     },
     '.cm-lintPoint-warning': {
         borderBottom: `2px wavy ${diagnosticWarning$6}`,
@@ -41956,21 +44081,21 @@ const solarizedDarkTheme = /*@__PURE__*/EditorView.theme({
         borderRadius: generalMatching$6.borderRadius,
     },
     '.cm-nonmatchingBracket': {
-        backgroundColor: `${base08$5}40`,
+        backgroundColor: `${base09$4}40`,
         outline: `1px solid ${invalid$6}`,
         borderRadius: generalMatching$6.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
         backgroundColor: selectionMatch$6,
-        outline: `1px solid ${base02$6}50`,
+        outline: `1px solid ${base05$6}50`,
         borderRadius: generalMatching$6.borderRadius,
     },
     // Fold placeholder
     '.cm-foldPlaceholder': {
         backgroundColor: tooltipBackground$6,
         color: base03$6,
-        border: `1px dotted ${base02$6}70`,
+        border: `1px dotted ${base05$6}70`,
         borderRadius: generalPlaceholder$6.borderRadius,
         padding: generalPlaceholder$6.padding,
         margin: generalPlaceholder$6.margin,
@@ -41978,7 +44103,7 @@ const solarizedDarkTheme = /*@__PURE__*/EditorView.theme({
     // Focus outline
     '&.cm-focused': {
         outline: 'none',
-        boxShadow: `0 0 0 2px ${background$6}, 0 0 0 3px ${base0D$5}40`,
+        boxShadow: `0 0 0 2px ${background$6}, 0 0 0 3px ${base0E$3}40`,
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
@@ -41989,127 +44114,127 @@ const solarizedDarkTheme = /*@__PURE__*/EditorView.theme({
         background: darkBackground$4,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
-        backgroundColor: base01$5,
+        backgroundColor: base04$6,
         borderRadius: generalScroller$6.borderRadius,
         border: `3px solid ${darkBackground$4}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-        backgroundColor: base02$6,
+        backgroundColor: base05$6,
     },
     // Ghost text
     '.cm-ghostText': {
         opacity: '0.5',
-        color: base03$6,
+        color: base01$5,
     },
-}, { dark: true });
+}, { dark: false });
 /**
- * Enhanced syntax highlighting for Solarized Dark theme
+ * Enhanced syntax highlighting for the Solarized Light theme
  */
-const solarizedDarkHighlightStyle = /*@__PURE__*/HighlightStyle.define([
+const solarizedLightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Keywords and control flow
-    { tag: tags$1.keyword, color: base0B$5, fontWeight: 'bold' },
-    { tag: tags$1.controlKeyword, color: base0B$5, fontWeight: 'bold' },
-    { tag: tags$1.moduleKeyword, color: base0B$5, fontWeight: 'bold' },
+    { tag: tags$1.keyword, color: base0C$4, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: base0C$4, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: base0C$4, fontWeight: 'bold' },
     // Names and variables
-    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base0C$5 },
-    { tag: [tags$1.variableName], color: base05$6 },
-    { tag: [tags$1.propertyName], color: base0C$5, fontStyle: 'normal' },
+    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base0D$4 },
+    { tag: [tags$1.variableName], color: base00$6 },
+    { tag: [tags$1.propertyName], color: base0D$4, fontStyle: 'normal' },
     // Classes and types
-    { tag: [tags$1.typeName], color: base09$5 },
-    { tag: [tags$1.className], color: base09$5, fontStyle: 'italic' },
-    { tag: [tags$1.namespace], color: base0F$4, fontStyle: 'italic' },
+    { tag: [tags$1.typeName], color: base0A$4 },
+    { tag: [tags$1.className], color: base0A$4, fontStyle: 'italic' },
+    { tag: [tags$1.namespace], color: base10$2, fontStyle: 'italic' },
     // Operators and punctuation
-    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base0E$4 },
-    { tag: [tags$1.bracket], color: base0F$4 },
-    { tag: [tags$1.brace], color: base0F$4 },
-    { tag: [tags$1.punctuation], color: base04$6 },
+    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base0F$3 },
+    { tag: [tags$1.bracket], color: base10$2 },
+    { tag: [tags$1.brace], color: base10$2 },
+    { tag: [tags$1.punctuation], color: base01$5 },
     // Functions and parameters
-    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName)], color: base0D$5 },
-    { tag: [tags$1.labelName], color: base0F$4 },
-    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: base0D$5 },
-    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base0C$5 },
+    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName)], color: base0E$3 },
+    { tag: [tags$1.labelName], color: base10$2 },
+    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: base0E$3 },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base0D$4 },
     // Constants and literals
-    { tag: tags$1.number, color: base0F$4 },
-    { tag: tags$1.changed, color: base0F$4 },
+    { tag: tags$1.number, color: base10$2 },
+    { tag: tags$1.changed, color: base10$2 },
     { tag: tags$1.annotation, color: invalid$6, fontStyle: 'italic' },
-    { tag: tags$1.modifier, color: base0F$4, fontStyle: 'italic' },
-    { tag: tags$1.self, color: base0F$4 },
+    { tag: tags$1.modifier, color: base10$2, fontStyle: 'italic' },
+    { tag: tags$1.self, color: base10$2 },
     {
         tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)],
-        color: base0A$5,
+        color: base0B$4,
     },
-    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base0F$4 },
+    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base10$2 },
     // Strings and regex
-    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base0B$5 },
+    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base0C$4 },
     { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: invalid$6 },
-    { tag: tags$1.string, color: base0A$5 },
+    { tag: tags$1.string, color: base0B$4 },
     // Punctuation and structure
-    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base09$5, fontWeight: 'bold' },
-    { tag: [/*@__PURE__*/tags$1.definition(tags$1.name), tags$1.separator], color: base0C$5 },
+    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base0A$4, fontWeight: 'bold' },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.name), tags$1.separator], color: base0D$4 },
     // Comments and documentation
-    { tag: tags$1.meta, color: base08$5 },
-    { tag: tags$1.comment, fontStyle: 'italic', color: base02$6 },
-    { tag: tags$1.docComment, fontStyle: 'italic', color: base02$6 },
+    { tag: tags$1.meta, color: base09$4 },
+    { tag: tags$1.comment, fontStyle: 'italic', color: base01$5 },
+    { tag: tags$1.docComment, fontStyle: 'italic', color: base01$5 },
     // HTML/XML elements
-    { tag: [tags$1.tagName], color: base0D$5 },
-    { tag: [tags$1.attributeName], color: base05$6 },
+    { tag: [tags$1.tagName], color: base0E$3 },
+    { tag: [tags$1.attributeName], color: base00$6 },
     // Markdown and text formatting
-    { tag: [tags$1.heading], fontWeight: 'bold', color: base0A$5 },
-    { tag: tags$1.heading1, color: base07$6 },
-    { tag: tags$1.heading2, color: base06$6 },
-    { tag: tags$1.heading3, color: base06$6 },
-    { tag: tags$1.heading4, color: base06$6 },
-    { tag: tags$1.heading5, color: base06$6 },
-    { tag: tags$1.heading6, color: base06$6 },
-    { tag: [tags$1.strong], fontWeight: 'bold', color: base06$6 },
-    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base0B$5 },
+    { tag: [tags$1.heading], fontWeight: 'bold', color: base0B$4 },
+    { tag: tags$1.heading1, color: base03$6 },
+    { tag: tags$1.heading2, color: base02$6 },
+    { tag: tags$1.heading3, color: base02$6 },
+    { tag: tags$1.heading4, color: base02$6 },
+    { tag: tags$1.heading5, color: base02$6 },
+    { tag: tags$1.heading6, color: base02$6 },
+    { tag: [tags$1.strong], fontWeight: 'bold', color: base02$6 },
+    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base0C$4 },
     // Links and URLs
     {
         tag: [tags$1.link],
-        color: base0C$5,
+        color: base0D$4,
         fontWeight: '500',
         textDecoration: 'underline',
         textUnderlinePosition: 'under',
     },
     {
         tag: [tags$1.url],
-        color: base0A$5,
+        color: base0B$4,
         textDecoration: 'underline',
         textUnderlineOffset: '2px',
     },
     // Special states
     {
         tag: [tags$1.invalid],
-        color: base02$6,
+        color: base01$5,
         textDecoration: 'underline wavy',
-        borderBottom: `1px dotted ${base08$5}`,
+        borderBottom: `1px dotted ${base09$4}`,
     },
     { tag: [tags$1.strikethrough], color: invalid$6, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
-    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base0A$5 },
-    { tag: tags$1.deleted, color: base08$5 },
-    { tag: tags$1.squareBracket, color: base08$5 },
-    { tag: tags$1.angleBracket, color: base02$6 },
+    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base0B$4 },
+    { tag: tags$1.deleted, color: base09$4 },
+    { tag: tags$1.squareBracket, color: base09$4 },
+    { tag: tags$1.angleBracket, color: base01$5 },
     // Additional specific styles
-    { tag: tags$1.monospace, color: base05$6 },
-    { tag: [tags$1.contentSeparator], color: base0A$5 },
-    { tag: tags$1.quote, color: base0B$5 },
+    { tag: tags$1.monospace, color: base00$6 },
+    { tag: [tags$1.contentSeparator], color: base0B$4 },
+    { tag: tags$1.quote, color: base0C$4 },
 ]);
 /**
- * Combined Solarized Dark theme extension
+ * Combined Solarized Light theme extension
  */
-const solarizedDark = [
-    solarizedDarkTheme,
-    /*@__PURE__*/syntaxHighlighting(solarizedDarkHighlightStyle),
+const solarizedLight = [
+    solarizedLightTheme,
+    /*@__PURE__*/syntaxHighlighting(solarizedLightHighlightStyle),
 ];
 /**
- * Solarized Dark merge revert styles configuration
+ * Solarized Light merge revert styles configuration
  */
-const solarizedDarkMergeStyles = {
-    backgroundColor: darkBackground$4,
+const solarizedLightMergeStyles = {
+    backgroundColor: base04$6,
     borderColor: base02$6,
-    buttonColor: base05$6,
-    buttonHoverColor: base01$5,
+    buttonColor: base0D$4,
+    buttonHoverColor: `${base05$6}40`,
 };
 
 // Helper module for styling options
@@ -42131,6 +44256,7 @@ const generalGutter$5 = {
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 const generalPanel$5 = {
     border: 'none',
@@ -42166,54 +44292,30 @@ const generalTooltip$5 = {
 };
 
 /**
- * Enhanced Solarized Light theme color definitions
- * ---------------------------------------------
- * Colors organized by function with visual color blocks
+ * Synthwave '84 theme color definitions
+ * -------------------------------------
+ * Retro cyberpunk theme with neon colors inspired by 1980s aesthetics
  */
-// Base colors from Solarized palette
-const base00$5 = '#657b83', // Body text/default text color
-base01$4 = '#586e75', // Optional emphasized content
-base02$5 = '#073642', // Background highlights
-base03$5 = '#002b36', // Comments, invisible, line highlighting
-base04$5 = '#dfd9c8', // Dark background tint
-base05$5 = '#93a1a1', // Default foreground/UI text color
-base06$5 = '#cceeff7a', // Light background tint (for selection)
-base07$5 = '#fdf6e3', // Background - light base
-base08$4 = '#eee8d5', // Background tint - light secondary
-// Accent colors from Solarized palette
-base09$4 = '#dc322f', // Red
-base0A$4 = '#cb4b16', // Orange
-base0B$4 = '#b58900', // Yellow
-base0C$4 = '#859900', // Green
-base0D$4 = '#2aa198', // Cyan
-base0E$3 = '#268bd2', // Blue
-base0F$3 = '#6c71c4', // Violet
-base10$2 = '#d33682'; // Magenta
+// Base colors
+const base00$5 = '#262335', // Background - deep purple-black
+base01$4 = '#2a2139', // Darker background
+base02$5 = '#34294f', // Selection background
+base03$5 = '#495495', // Comments - muted blue
+base04$5 = '#848bbd', // Dark foreground
+base05$5 = '#ffffff', // Foreground - white
+// Neon colors
+neonPink = '#ff7edb', neonCyan = '#72f1b8', neonYellow = '#fede5d', neonOrange = '#f97e72', neonPurple = '#b893ce', neonBlue = '#36f9f6', neonGreen = '#72f1b8', neonRed = '#fe4450', darkPurple = '#241b2f', glowPink = '#ff6ad5', glowYellow = '#f3e877';
 // UI specific colors
-const invalid$5 = '#d30102', // Bright red for errors
-darkBackground$3 = base04$5, // Darker background for panels
-highlightBackground$5 = base06$5, // Active line highlight
-background$5 = base07$5, // Main editor background
-tooltipBackground$5 = '#f0e9d7', // Tooltip background
-selection$5 = '#ffd07a', // Selection background
-selectionMatch$5 = '#e1dbca90', // Selection match with opacity
-cursor$5 = base01$4, // Cursor color
-activeBracketBg$5 = '#93a1a140', // Active bracket background with opacity
-activeBracketBorder$5 = base0E$3, // Active bracket border - blue
-diagnosticWarning$5 = base0B$4, // Warning color - yellow
-linkColor$5 = base0E$3; // Link color - blue
+const invalid$5 = neonRed, darkBackground$3 = darkPurple, highlightBackground$5 = '#2a213955', background$5 = base00$5, tooltipBackground$5 = base01$4, selection$5 = base02$5, selectionMatch$5 = '#34294f80', cursor$5 = neonPink, activeBracketBg$5 = '#34294f88', activeBracketBorder$5 = neonCyan, diagnosticWarning$5 = neonYellow, linkColor$5 = neonBlue, visitedLinkColor$5 = neonPurple;
 // Diff/merge specific colors
-const addedBackground$5 = '#85990020', // Solarized green with transparency for insertions
-removedBackground$5 = '#dc322f20', // Solarized red with transparency for deletions
-addedText$5 = '#859900', // Solarized green for added text
-removedText$5 = '#dc322f'; // Solarized red for removed text
+const addedBackground$5 = '#72f1b830', removedBackground$5 = '#fe445030', addedText$5 = neonGreen, removedText$5 = neonRed;
 /**
- * Enhanced editor theme styles for Solarized Light
+ * Enhanced editor theme styles for Synthwave '84
  */
-const solarizedLightTheme = /*@__PURE__*/EditorView.theme({
+const synthwave84Theme = /*@__PURE__*/EditorView.theme({
     // Base editor styles
     '&': {
-        color: base00$5,
+        color: base05$5,
         backgroundColor: background$5,
         fontSize: generalContent$5.fontSize,
         fontFamily: generalContent$5.fontFamily,
@@ -42226,10 +44328,12 @@ const solarizedLightTheme = /*@__PURE__*/EditorView.theme({
     '.cm-cursor, .cm-dropCursor': {
         borderLeftColor: cursor$5,
         borderLeftWidth: generalCursor$5.borderLeftWidth,
+        boxShadow: `0 0 8px ${cursor$5}`,
     },
     '.cm-fat-cursor': {
         backgroundColor: `${cursor$5}99`,
         color: background$5,
+        boxShadow: `0 0 8px ${cursor$5}`,
     },
     // Selection
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
@@ -42241,48 +44345,51 @@ const solarizedLightTheme = /*@__PURE__*/EditorView.theme({
     },
     // Search functionality
     '.cm-searchMatch': {
-        backgroundColor: '#93a1a180',
-        outline: `1px solid ${base0E$3}`,
-        color: base01$4,
+        backgroundColor: '#36f9f640',
+        outline: `1px solid ${neonBlue}`,
+        color: base05$5,
         borderRadius: generalSearchField$5.borderRadius,
+        boxShadow: `0 0 4px ${neonBlue}`,
         '& span': {
-            color: base01$4,
+            color: base05$5,
         },
     },
     '.cm-searchMatch.cm-searchMatch-selected': {
-        backgroundColor: base0E$3,
-        color: base08$4,
+        backgroundColor: neonBlue,
+        color: base00$5,
         padding: generalSearchField$5.padding,
+        boxShadow: `0 0 8px ${neonBlue}`,
         '& span': {
-            color: base08$4,
+            color: base00$5,
         },
     },
     '.cm-search.cm-panel.cm-textfield': {
-        color: base00$5,
+        color: base05$5,
         borderRadius: generalSearchField$5.borderRadius,
         padding: generalSearchField$5.padding,
     },
     // Panels
     '.cm-panels': {
         backgroundColor: darkBackground$3,
-        color: base00$5,
+        color: base05$5,
         borderRadius: '4px',
     },
     '.cm-panels.cm-panels-top': {
-        borderBottom: `1px solid ${base04$5}`,
+        borderBottom: `1px solid ${base03$5}`,
     },
     '.cm-panels.cm-panels-bottom': {
-        borderTop: `1px solid ${base04$5}`,
+        borderTop: `1px solid ${base03$5}`,
     },
     '.cm-panel button': {
         backgroundColor: tooltipBackground$5,
-        color: base00$5,
+        color: neonCyan,
         border: generalPanel$5.border,
         borderRadius: generalPanel$5.borderRadius,
         padding: generalPanel$5.padding,
     },
     '.cm-panel button:hover': {
-        backgroundColor: highlightBackground$5,
+        backgroundColor: base02$5,
+        boxShadow: `0 0 8px ${neonCyan}`,
     },
     // Line highlighting
     '.cm-activeLine': {
@@ -42293,31 +44400,32 @@ const solarizedLightTheme = /*@__PURE__*/EditorView.theme({
     // Gutters
     '.cm-gutters': {
         backgroundColor: darkBackground$3,
-        color: base01$4,
+        color: base03$5,
         border: generalGutter$5.border,
-        borderRight: `1px solid ${base04$5}`,
+        borderRight: `1px solid ${base02$5}`,
         paddingRight: generalGutter$5.paddingRight,
     },
     '.cm-activeLineGutter': {
-        backgroundColor: highlightBackground$5,
-        color: base00$5,
+        backgroundColor: base02$5,
+        color: neonPink,
         fontWeight: generalGutter$5.fontWeight,
     },
     '.cm-lineNumbers': {
         fontSize: generalGutter$5.fontSize,
+        lineHeight: generalGutter$5.lineHeight,
     },
     '.cm-foldGutter': {
         fontSize: generalGutter$5.fontSize,
+        lineHeight: generalGutter$5.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
-        color: base01$4,
+        color: base03$5,
         cursor: 'pointer',
     },
     '.cm-foldGutter .cm-gutterElement:hover': {
-        color: base00$5,
+        color: neonCyan,
     },
     // Diff/Merge View Styles
-    // Inserted/Added Content
     '.cm-insertedLine': {
         textDecoration: generalDiff$5.insertedTextDecoration,
         backgroundColor: addedBackground$5,
@@ -42336,7 +44444,6 @@ const solarizedLightTheme = /*@__PURE__*/EditorView.theme({
     'ins.cm-insertedLine .cm-changedText': {
         background: 'transparent !important',
     },
-    // Deleted/Removed Content
     '.cm-deletedLine': {
         textDecoration: generalDiff$5.deletedTextDecoration,
         backgroundColor: removedBackground$5,
@@ -42358,10 +44465,10 @@ const solarizedLightTheme = /*@__PURE__*/EditorView.theme({
     // Tooltips and autocomplete
     '.cm-tooltip': {
         backgroundColor: tooltipBackground$5,
-        border: `1px solid ${base01$4}`,
+        border: `1px solid ${neonCyan}`,
         borderRadius: generalTooltip$5.borderRadius,
         padding: generalTooltip$5.padding,
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+        boxShadow: `0 2px 16px ${neonCyan}40`,
     },
     '.cm-tooltip-autocomplete': {
         '& > ul': {
@@ -42373,16 +44480,16 @@ const solarizedLightTheme = /*@__PURE__*/EditorView.theme({
             lineHeight: generalTooltip$5.lineHeight,
         },
         '& > ul > li[aria-selected]': {
-            backgroundColor: selection$5,
-            color: base01$4,
+            backgroundColor: base02$5,
+            color: neonPink,
             borderRadius: generalTooltip$5.borderRadiusSelected,
         },
         '& > ul > li > span.cm-completionIcon': {
-            color: base01$4,
+            color: neonCyan,
             paddingRight: generalTooltip$5.paddingRight,
         },
         '& > ul > li > span.cm-completionDetail': {
-            color: base01$4,
+            color: neonYellow,
             fontStyle: 'italic',
         },
     },
@@ -42397,7 +44504,7 @@ const solarizedLightTheme = /*@__PURE__*/EditorView.theme({
     // Diagnostics styling
     '.cm-diagnostic': {
         '&-error': {
-            borderLeft: `3px solid ${base09$4}`,
+            borderLeft: `3px solid ${neonRed}`,
         },
         '&-warning': {
             borderLeft: `3px solid ${diagnosticWarning$5}`,
@@ -42407,7 +44514,7 @@ const solarizedLightTheme = /*@__PURE__*/EditorView.theme({
         },
     },
     '.cm-lintPoint-error': {
-        borderBottom: `2px wavy ${base09$4}`,
+        borderBottom: `2px wavy ${neonRed}`,
     },
     '.cm-lintPoint-warning': {
         borderBottom: `2px wavy ${diagnosticWarning$5}`,
@@ -42417,23 +44524,24 @@ const solarizedLightTheme = /*@__PURE__*/EditorView.theme({
         backgroundColor: activeBracketBg$5,
         outline: `1px solid ${activeBracketBorder$5}`,
         borderRadius: generalMatching$5.borderRadius,
+        boxShadow: `0 0 8px ${activeBracketBorder$5}40`,
     },
     '.cm-nonmatchingBracket': {
-        backgroundColor: `${base09$4}40`,
+        backgroundColor: `${neonRed}40`,
         outline: `1px solid ${invalid$5}`,
         borderRadius: generalMatching$5.borderRadius,
     },
     // Selection matches
     '.cm-selectionMatch': {
         backgroundColor: selectionMatch$5,
-        outline: `1px solid ${base05$5}50`,
+        outline: `1px solid ${base02$5}50`,
         borderRadius: generalMatching$5.borderRadius,
     },
     // Fold placeholder
     '.cm-foldPlaceholder': {
         backgroundColor: tooltipBackground$5,
-        color: base03$5,
-        border: `1px dotted ${base05$5}70`,
+        color: neonCyan,
+        border: `1px dotted ${neonCyan}70`,
         borderRadius: generalPlaceholder$5.borderRadius,
         padding: generalPlaceholder$5.padding,
         margin: generalPlaceholder$5.margin,
@@ -42441,7 +44549,7 @@ const solarizedLightTheme = /*@__PURE__*/EditorView.theme({
     // Focus outline
     '&.cm-focused': {
         outline: 'none',
-        boxShadow: `0 0 0 2px ${background$5}, 0 0 0 3px ${base0E$3}40`,
+        boxShadow: `0 0 0 2px ${background$5}, 0 0 0 3px ${neonPink}40`,
     },
     // Scrollbars
     '& .cm-scroller::-webkit-scrollbar': {
@@ -42452,127 +44560,118 @@ const solarizedLightTheme = /*@__PURE__*/EditorView.theme({
         background: darkBackground$3,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb': {
-        backgroundColor: base04$5,
+        backgroundColor: base02$5,
         borderRadius: generalScroller$5.borderRadius,
         border: `3px solid ${darkBackground$3}`,
     },
     '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-        backgroundColor: base05$5,
+        backgroundColor: neonPurple,
+        boxShadow: `0 0 8px ${neonPurple}`,
     },
     // Ghost text
     '.cm-ghostText': {
         opacity: '0.5',
-        color: base01$4,
+        color: base03$5,
     },
-}, { dark: false });
+}, { dark: true });
 /**
- * Enhanced syntax highlighting for the Solarized Light theme
+ * Enhanced syntax highlighting for Synthwave '84 theme
  */
-const solarizedLightHighlightStyle = /*@__PURE__*/HighlightStyle.define([
+const synthwave84HighlightStyle = /*@__PURE__*/HighlightStyle.define([
     // Keywords and control flow
-    { tag: tags$1.keyword, color: base0C$4, fontWeight: 'bold' },
-    { tag: tags$1.controlKeyword, color: base0C$4, fontWeight: 'bold' },
-    { tag: tags$1.moduleKeyword, color: base0C$4, fontWeight: 'bold' },
+    { tag: tags$1.keyword, color: neonPink, fontWeight: 'bold' },
+    { tag: tags$1.controlKeyword, color: neonPink, fontWeight: 'bold' },
+    { tag: tags$1.moduleKeyword, color: neonPink, fontWeight: 'bold' },
     // Names and variables
-    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base0D$4 },
-    { tag: [tags$1.variableName], color: base00$5 },
-    { tag: [tags$1.propertyName], color: base0D$4, fontStyle: 'normal' },
+    { tag: [tags$1.name, tags$1.deleted, tags$1.character, tags$1.macroName], color: base05$5 },
+    { tag: [tags$1.variableName], color: base05$5 },
+    { tag: [tags$1.propertyName], color: neonBlue, fontStyle: 'normal' },
     // Classes and types
-    { tag: [tags$1.typeName], color: base0A$4 },
-    { tag: [tags$1.className], color: base0A$4, fontStyle: 'italic' },
-    { tag: [tags$1.namespace], color: base10$2, fontStyle: 'italic' },
+    { tag: [tags$1.typeName], color: neonYellow },
+    { tag: [tags$1.className], color: neonYellow, fontStyle: 'italic' },
+    { tag: [tags$1.namespace], color: neonOrange, fontStyle: 'italic' },
     // Operators and punctuation
-    { tag: [tags$1.operator, tags$1.operatorKeyword], color: base0F$3 },
-    { tag: [tags$1.bracket], color: base10$2 },
-    { tag: [tags$1.brace], color: base10$2 },
-    { tag: [tags$1.punctuation], color: base01$4 },
+    { tag: [tags$1.operator, tags$1.operatorKeyword], color: neonCyan },
+    { tag: [tags$1.bracket], color: glowYellow },
+    { tag: [tags$1.brace], color: glowPink },
+    { tag: [tags$1.punctuation], color: base04$5 },
     // Functions and parameters
-    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName)], color: base0E$3 },
-    { tag: [tags$1.labelName], color: base10$2 },
-    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: base0E$3 },
-    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: base0D$4 },
+    { tag: [/*@__PURE__*/tags$1.function(tags$1.variableName), tags$1.labelName], color: neonCyan },
+    { tag: [/*@__PURE__*/tags$1.definition(/*@__PURE__*/tags$1.function(tags$1.variableName))], color: neonCyan },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.variableName)], color: neonOrange },
     // Constants and literals
-    { tag: tags$1.number, color: base10$2 },
-    { tag: tags$1.changed, color: base10$2 },
-    { tag: tags$1.annotation, color: invalid$5, fontStyle: 'italic' },
-    { tag: tags$1.modifier, color: base10$2, fontStyle: 'italic' },
-    { tag: tags$1.self, color: base10$2 },
-    {
-        tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)],
-        color: base0B$4,
-    },
-    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: base10$2 },
+    { tag: tags$1.number, color: neonOrange },
+    { tag: tags$1.changed, color: neonYellow },
+    { tag: tags$1.annotation, color: neonRed, fontStyle: 'italic' },
+    { tag: tags$1.modifier, color: neonPurple, fontStyle: 'italic' },
+    { tag: tags$1.self, color: neonRed },
+    { tag: [tags$1.color, /*@__PURE__*/tags$1.constant(tags$1.name), /*@__PURE__*/tags$1.standard(tags$1.name)], color: neonOrange },
+    { tag: [tags$1.atom, tags$1.bool, /*@__PURE__*/tags$1.special(tags$1.variableName)], color: neonOrange },
     // Strings and regex
-    { tag: [tags$1.processingInstruction, tags$1.inserted], color: base0C$4 },
-    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: invalid$5 },
-    { tag: tags$1.string, color: base0B$4 },
+    { tag: [tags$1.processingInstruction, tags$1.inserted], color: neonGreen },
+    { tag: [/*@__PURE__*/tags$1.special(tags$1.string), tags$1.regexp], color: glowPink },
+    { tag: tags$1.string, color: neonGreen },
     // Punctuation and structure
-    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: base0A$4, fontWeight: 'bold' },
-    { tag: [/*@__PURE__*/tags$1.definition(tags$1.name), tags$1.separator], color: base0D$4 },
+    { tag: /*@__PURE__*/tags$1.definition(tags$1.typeName), color: neonYellow, fontWeight: 'bold' },
+    { tag: [/*@__PURE__*/tags$1.definition(tags$1.name), tags$1.separator], color: neonCyan },
     // Comments and documentation
-    { tag: tags$1.meta, color: base09$4 },
-    { tag: tags$1.comment, fontStyle: 'italic', color: base01$4 },
-    { tag: tags$1.docComment, fontStyle: 'italic', color: base01$4 },
+    { tag: tags$1.meta, color: base03$5 },
+    { tag: tags$1.comment, fontStyle: 'italic', color: base03$5 },
+    { tag: tags$1.docComment, fontStyle: 'italic', color: base03$5 },
     // HTML/XML elements
-    { tag: [tags$1.tagName], color: base0E$3 },
-    { tag: [tags$1.attributeName], color: base00$5 },
+    { tag: [tags$1.tagName], color: neonPink },
+    { tag: [tags$1.attributeName], color: neonYellow },
     // Markdown and text formatting
-    { tag: [tags$1.heading], fontWeight: 'bold', color: base0B$4 },
-    { tag: tags$1.heading1, color: base03$5 },
-    { tag: tags$1.heading2, color: base02$5 },
-    { tag: tags$1.heading3, color: base02$5 },
-    { tag: tags$1.heading4, color: base02$5 },
-    { tag: tags$1.heading5, color: base02$5 },
-    { tag: tags$1.heading6, color: base02$5 },
-    { tag: [tags$1.strong], fontWeight: 'bold', color: base02$5 },
-    { tag: [tags$1.emphasis], fontStyle: 'italic', color: base0C$4 },
+    { tag: [tags$1.heading], fontWeight: 'bold', color: neonPink },
+    { tag: [tags$1.strong], fontWeight: 'bold', color: neonOrange },
+    { tag: [tags$1.emphasis], fontStyle: 'italic', color: neonPink },
     // Links and URLs
     {
         tag: [tags$1.link],
-        color: base0D$4,
+        color: visitedLinkColor$5,
         fontWeight: '500',
         textDecoration: 'underline',
         textUnderlinePosition: 'under',
     },
     {
         tag: [tags$1.url],
-        color: base0B$4,
+        color: linkColor$5,
         textDecoration: 'underline',
         textUnderlineOffset: '2px',
     },
     // Special states
     {
         tag: [tags$1.invalid],
-        color: base01$4,
+        color: neonRed,
         textDecoration: 'underline wavy',
-        borderBottom: `1px dotted ${base09$4}`,
+        borderBottom: `1px wavy ${neonRed}`,
     },
-    { tag: [tags$1.strikethrough], color: invalid$5, textDecoration: 'line-through' },
+    { tag: [tags$1.strikethrough], color: neonRed, textDecoration: 'line-through' },
     // Enhanced syntax highlighting
-    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: base0B$4 },
-    { tag: tags$1.deleted, color: base09$4 },
-    { tag: tags$1.squareBracket, color: base09$4 },
-    { tag: tags$1.angleBracket, color: base01$4 },
+    { tag: /*@__PURE__*/tags$1.constant(tags$1.name), color: neonOrange },
+    { tag: tags$1.deleted, color: neonRed },
+    { tag: tags$1.squareBracket, color: glowYellow },
+    { tag: tags$1.angleBracket, color: neonCyan },
     // Additional specific styles
-    { tag: tags$1.monospace, color: base00$5 },
-    { tag: [tags$1.contentSeparator], color: base0B$4 },
-    { tag: tags$1.quote, color: base0C$4 },
+    { tag: tags$1.monospace, color: neonBlue, fontStyle: 'italic' },
+    { tag: [tags$1.contentSeparator], color: neonPurple },
+    { tag: tags$1.quote, color: neonPurple },
 ]);
 /**
- * Combined Solarized Light theme extension
+ * Combined Synthwave '84 theme extension
  */
-const solarizedLight = [
-    solarizedLightTheme,
-    /*@__PURE__*/syntaxHighlighting(solarizedLightHighlightStyle),
+const synthwave84 = [
+    synthwave84Theme,
+    /*@__PURE__*/syntaxHighlighting(synthwave84HighlightStyle),
 ];
 /**
- * Solarized Light merge revert styles configuration
+ * Synthwave '84 merge revert styles configuration
  */
-const solarizedLightMergeStyles = {
-    backgroundColor: base04$5,
-    borderColor: base02$5,
-    buttonColor: base0D$4,
-    buttonHoverColor: `${base05$5}40`,
+const synthwave84MergeStyles = {
+    backgroundColor: darkBackground$3,
+    borderColor: neonCyan,
+    buttonColor: neonPink,
+    buttonHoverColor: base02$5,
 };
 
 // Helper module for styling options
@@ -42594,6 +44693,7 @@ const generalGutter$4 = {
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 const generalPanel$4 = {
     border: 'none',
@@ -42763,9 +44863,11 @@ const tokyoNightDayTheme = /*@__PURE__*/EditorView.theme({
     },
     '.cm-lineNumbers': {
         fontSize: generalGutter$4.fontSize,
+        lineHeight: generalGutter$4.lineHeight,
     },
     '.cm-foldGutter': {
         fontSize: generalGutter$4.fontSize,
+        lineHeight: generalGutter$4.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
         color: base03$4,
@@ -43053,6 +45155,7 @@ const generalGutter$3 = {
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 const generalPanel$3 = {
     border: 'none',
@@ -43218,9 +45321,11 @@ const tokyoNightStormTheme = /*@__PURE__*/EditorView.theme({
     },
     '.cm-lineNumbers': {
         fontSize: generalGutter$3.fontSize,
+        lineHeight: generalGutter$3.lineHeight,
     },
     '.cm-foldGutter': {
         fontSize: generalGutter$3.fontSize,
+        lineHeight: generalGutter$3.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
         color: base03$3,
@@ -43507,6 +45612,7 @@ const generalGutter$2 = {
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 const generalPanel$2 = {
     border: 'none',
@@ -43675,9 +45781,11 @@ const volcanoTheme = /*@__PURE__*/EditorView.theme({
     },
     '.cm-lineNumbers': {
         fontSize: generalGutter$2.fontSize,
+        lineHeight: generalGutter$2.lineHeight,
     },
     '.cm-foldGutter': {
         fontSize: generalGutter$2.fontSize,
+        lineHeight: generalGutter$2.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
         color: base03$2,
@@ -43964,6 +46072,7 @@ const generalGutter$1 = {
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 const generalPanel$1 = {
     borderRadius: '4px',
@@ -44134,9 +46243,11 @@ const vsCodeDarkTheme = /*@__PURE__*/EditorView.theme({
     },
     '.cm-lineNumbers': {
         fontSize: generalGutter$1.fontSize,
+        lineHeight: generalGutter$1.lineHeight,
     },
     '.cm-foldGutter': {
         fontSize: generalGutter$1.fontSize,
+        lineHeight: generalGutter$1.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
         color: base03$1,
@@ -44422,6 +46533,7 @@ const generalGutter = {
     paddingRight: '8px',
     fontSize: '0.9em',
     fontWeight: '500',
+    lineHeight: '1.78', // Adjusted to compensate for 0.9em fontSize (1.6 / 0.9 ≈ 1.78)
 };
 const generalPanel = {
     borderRadius: '4px',
@@ -44592,9 +46704,11 @@ const vsCodeLightTheme = /*@__PURE__*/EditorView.theme({
     },
     '.cm-lineNumbers': {
         fontSize: generalGutter.fontSize,
+        lineHeight: generalGutter.lineHeight,
     },
     '.cm-foldGutter': {
         fontSize: generalGutter.fontSize,
+        lineHeight: generalGutter.lineHeight,
     },
     '.cm-foldGutter .cm-gutterElement': {
         color: '#237893',
@@ -44894,6 +47008,11 @@ const themes = [
         mergeStyles: basicLightMergeStyles,
     },
     {
+        name: 'catppuccin-mocha',
+        extension: catppuccinMocha,
+        mergeStyles: catppuccinMochaMergeStyles,
+    },
+    {
         name: 'cobalt2',
         extension: cobalt2,
         mergeStyles: cobalt2MergeStyles,
@@ -44922,6 +47041,16 @@ const themes = [
         name: 'gruvbox-light',
         extension: gruvboxLight,
         mergeStyles: gruvboxLightMergeStyles,
+    },
+    {
+        name: 'high-contrast-dark',
+        extension: highContrastDark,
+        mergeStyles: highContrastDarkMergeStyles,
+    },
+    {
+        name: 'high-contrast-light',
+        extension: highContrastLight,
+        mergeStyles: highContrastLightMergeStyles,
     },
     {
         name: 'material-dark',
@@ -44957,6 +47086,11 @@ const themes = [
         name: 'solarized-light',
         extension: solarizedLight,
         mergeStyles: solarizedLightMergeStyles,
+    },
+    {
+        name: 'synthwave-84',
+        extension: synthwave84,
+        mergeStyles: synthwave84MergeStyles,
     },
     {
         name: 'tokyo-night-storm',
@@ -45672,7 +47806,7 @@ function updateChunks(ranges, chunks, a, b, conf) {
         let fromA = range ? range.fromA + offA : a.length, fromB = range ? range.fromB + offB : b.length;
         while (chunkI < chunks.length) {
             let next = chunks[chunkI];
-            if (next.toA + offA > fromA || next.toB + offB > fromB)
+            if (Math.min(a.length, next.toA + offA) > fromA || Math.min(b.length, next.toB + offB) > fromB)
                 break;
             result.push(next.offset(offA, offB));
             chunkI++;
@@ -46385,6 +48519,7 @@ chunks will be highlighted, with uneditable widgets displaying the
 original text displayed above the new text.
 */
 function unifiedMergeView(config) {
+    var _a;
     let orig = typeof config.original == "string" ? Text.of(config.original.split(/\r?\n/)) : config.original;
     let diffConf = config.diffConfig || defaultDiffConfig;
     return [
@@ -46405,7 +48540,7 @@ function unifiedMergeView(config) {
             markGutter: config.gutter !== false,
             syntaxHighlightDeletions: config.syntaxHighlightDeletions !== false,
             syntaxHighlightDeletionsMaxLength: 3000,
-            mergeControls: config.mergeControls !== false,
+            mergeControls: (_a = config.mergeControls) !== null && _a !== void 0 ? _a : true,
             overrideChunk: config.allowInlineDiffs ? overrideChunkInline : undefined,
             side: "b"
         }),
@@ -46450,14 +48585,22 @@ function deletionWidget(state, chunk, hideContent) {
         if (mergeControls) {
             let buttons = dom.appendChild(document.createElement("div"));
             buttons.className = "cm-chunkButtons";
-            let accept = buttons.appendChild(document.createElement("button"));
-            accept.name = "accept";
-            accept.textContent = state.phrase("Accept");
-            accept.onmousedown = e => { e.preventDefault(); acceptChunk(view, view.posAtDOM(dom)); };
-            let reject = buttons.appendChild(document.createElement("button"));
-            reject.name = "reject";
-            reject.textContent = state.phrase("Reject");
-            reject.onmousedown = e => { e.preventDefault(); rejectChunk(view, view.posAtDOM(dom)); };
+            let onAccept = (e) => { e.preventDefault(); acceptChunk(view, view.posAtDOM(dom)); };
+            let onReject = (e) => { e.preventDefault(); rejectChunk(view, view.posAtDOM(dom)); };
+            if (typeof mergeControls == "function") {
+                buttons.appendChild(mergeControls("accept", onAccept));
+                buttons.appendChild(mergeControls("reject", onReject));
+            }
+            else {
+                let accept = buttons.appendChild(document.createElement("button"));
+                accept.name = "accept";
+                accept.textContent = state.phrase("Accept");
+                accept.onmousedown = onAccept;
+                let reject = buttons.appendChild(document.createElement("button"));
+                reject.name = "reject";
+                reject.textContent = state.phrase("Reject");
+                reject.onmousedown = onReject;
+            }
         }
         if (hideContent || chunk.fromA >= chunk.toA)
             return dom;
@@ -46671,6 +48814,7 @@ const diffEditor = new MergeView({
         doc: diffMdSample,
         extensions: [
             basicSetup,
+            foldGutter(),
             EditorView.editable.of(false),
             EditorState.readOnly.of(true),
             markdown({
@@ -46686,6 +48830,7 @@ const diffEditor = new MergeView({
         doc: diffMdSample.replace(/t/g, 'T') + '\nSix',
         extensions: [
             basicSetup,
+            foldGutter(),
             markdown({
                 base: markdownLanguage,
                 codeLanguages: languages,
@@ -46701,6 +48846,7 @@ const unifiedDiff = new EditorView({
     doc: diffMdSample.replace(/t/g, 'T') + '\nSix',
     extensions: [
         basicSetup,
+        foldGutter(),
         unifiedMergeView({
             original: diffMdSample,
         }),
@@ -46718,6 +48864,7 @@ const editor = new EditorView({
     doc: mdSample,
     extensions: [
         basicSetup,
+        foldGutter(),
         markdown({
             base: markdownLanguage,
             codeLanguages: languages,
@@ -46782,4 +48929,4 @@ if (elList && defaultOption) {
     elList.classList.remove('hidden');
 }
 
-export { ContextTracker as C, ExternalTokenizer as E, IterMode as I, LanguageSupport as L, NodeWeakMap as N, LRLanguage as a, LRParser as b, continuedIndent as c, ifNotIn as d, completeFromList as e, foldNodeProp as f, syntaxTree as g, delimitedIndent as h, indentNodeProp as i, flatIndent as j, foldInside as k, LocalTokenGroup as l, snippetCompletion as m, defineCSSCompletionSource as n, EditorView as o, html as p, EditorSelection as q, parseMixed as r, styleTags as s, tags$1 as t, bracketMatchingHandle as u, javascriptLanguage as v, diffEditor as w, unifiedDiff as x, editor as y };
+export { ContextTracker as C, ExternalTokenizer as E, IterMode as I, LanguageSupport as L, NodeWeakMap as N, LRLanguage as a, LRParser as b, continuedIndent as c, ifNotIn as d, completeFromList as e, foldNodeProp as f, syntaxTree as g, delimitedIndent as h, indentNodeProp as i, flatIndent as j, foldInside as k, LocalTokenGroup as l, snippetCompletion as m, EditorView as n, html as o, EditorSelection as p, parseMixed as q, defineCSSCompletionSource as r, styleTags as s, tags$1 as t, bracketMatchingHandle as u, javascriptLanguage as v, diffEditor as w, unifiedDiff as x, editor as y };

@@ -3,7 +3,7 @@ const ENV_REFERENCE = {
 };
 
 const hostUrl = ENV_REFERENCE.CMT_HOST_URL_ENV;
-const lsTheme = 'codemirror-theme:fsegurai';
+const lsTheme = 'codemirror-themes:fsegurai';
 document.addEventListener('DOMContentLoaded', () => {
     const routes = [
         {

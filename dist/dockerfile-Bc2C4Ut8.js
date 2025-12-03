@@ -1,4 +1,4 @@
-import { s as simpleMode } from './simple-mode-BAO9cD7H.js';
+import { s as simpleMode } from './simple-mode-DouSrWNz.js';
 
 var from = "from";
 var fromRegex = new RegExp("^(\\s*)\\b(" + from + ")\\b", "i");
