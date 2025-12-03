@@ -70,11 +70,11 @@
     "lint": "bun run lint:demo && bun run lint:packages",
     "lint:demo": "eslint ./demo",
     "lint:packages": "eslint ./packages/*/src/**",
-    "utils.copy:helpers": "bun helper/utils/generate-utils.ts",
-    "utils.copy:readme": "bun ./helper/docs/generate-readme.ts",
-    "utils.update:versions": "bun ./helper/versions/update-packages-versions.ts --write",
-    "utils.update:versions-preview": "bun ./helper/versions/update-packages-versions.ts --dry-run",
-    "utils.update:versions-skip": "bun ./helper/versions/update-packages-versions.ts --dry-run --skip '@fsegurai/codemirror-theme-bundle'"
+    "utils.copy:helpers": "bun packages/.helper/utils/generate-utils.ts",
+    "utils.copy:readme": "bun packages/.helper/docs/generate-readme.ts",
+    "utils.update:versions": "bun packages/.helper/versions/update-packages-versions.ts --write",
+    "utils.update:versions-preview": "bun packages/.helper/versions/update-packages-versions.ts --dry-run",
+    "utils.update:versions-skip": "bun packages/.helper/versions/update-packages-versions.ts --dry-run --skip '@fsegurai/codemirror-theme-bundle'"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.0",
