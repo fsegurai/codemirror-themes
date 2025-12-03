@@ -33100,7 +33100,7 @@ function legacy(parser) {
     return new LanguageSupport(StreamLanguage.define(parser));
 }
 function sql(dialectName) {
-    return import('./index-BqXtEIdV.js').then(m => m.sql({ dialect: m[dialectName] }));
+    return import('./index-cvcTe5BA.js').then(m => m.sql({ dialect: m[dialectName] }));
 }
 /**
 An array of language descriptions for known language packages.
@@ -33111,7 +33111,7 @@ const languages = [
         name: "C",
         extensions: ["c", "h", "ino"],
         load() {
-            return import('./index-BSuTjBN0.js').then(m => m.cpp());
+            return import('./index-D3jiFqzc.js').then(m => m.cpp());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33119,7 +33119,7 @@ const languages = [
         alias: ["cpp"],
         extensions: ["cpp", "c++", "cc", "cxx", "hpp", "h++", "hh", "hxx"],
         load() {
-            return import('./index-BSuTjBN0.js').then(m => m.cpp());
+            return import('./index-D3jiFqzc.js').then(m => m.cpp());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33139,7 +33139,7 @@ const languages = [
         name: "Go",
         extensions: ["go"],
         load() {
-            return import('./index-BQyIiIXt.js').then(m => m.go());
+            return import('./index-BL2vMG6I.js').then(m => m.go());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33154,7 +33154,7 @@ const languages = [
         name: "Java",
         extensions: ["java"],
         load() {
-            return import('./index-Ck52Yiai.js').then(m => m.java());
+            return import('./index-B6Ei2eFr.js').then(m => m.java());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33169,7 +33169,7 @@ const languages = [
         name: "Jinja",
         extensions: ["j2", "jinja", "jinja2"],
         load() {
-            return import('./index-DzHaHdrb.js').then(m => m.jinja());
+            return import('./index-BGHX5-0b.js').then(m => m.jinja());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33177,7 +33177,7 @@ const languages = [
         alias: ["json5"],
         extensions: ["json", "map"],
         load() {
-            return import('./index-BVZBrSyu.js').then(m => m.json());
+            return import('./index-CC7rCzwL.js').then(m => m.json());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33191,14 +33191,14 @@ const languages = [
         name: "LESS",
         extensions: ["less"],
         load() {
-            return import('./index-BpfCVsjW.js').then(m => m.less());
+            return import('./index-BWES7DpG.js').then(m => m.less());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "Liquid",
         extensions: ["liquid"],
         load() {
-            return import('./index-CUSgFBzP.js').then(m => m.liquid());
+            return import('./index-LVVaPE3f.js').then(m => m.liquid());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33224,7 +33224,7 @@ const languages = [
         name: "PHP",
         extensions: ["php", "php3", "php4", "php5", "php7", "phtml"],
         load() {
-            return import('./index-DIxujqQj.js').then(m => m.php());
+            return import('./index-CqdbwziY.js').then(m => m.php());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33241,28 +33241,28 @@ const languages = [
         extensions: ["BUILD", "bzl", "py", "pyw"],
         filename: /^(BUCK|BUILD)$/,
         load() {
-            return import('./index-894AjRni.js').then(m => m.python());
+            return import('./index-B48qpAiu.js').then(m => m.python());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "Rust",
         extensions: ["rs"],
         load() {
-            return import('./index-DpX6alfm.js').then(m => m.rust());
+            return import('./index-Do8oWQJB.js').then(m => m.rust());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "Sass",
         extensions: ["sass"],
         load() {
-            return import('./index-Bijzs1zO.js').then(m => m.sass({ indented: true }));
+            return import('./index-C4TsxB76.js').then(m => m.sass({ indented: true }));
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "SCSS",
         extensions: ["scss"],
         load() {
-            return import('./index-Bijzs1zO.js').then(m => m.sass());
+            return import('./index-C4TsxB76.js').then(m => m.sass());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33293,7 +33293,7 @@ const languages = [
         name: "WebAssembly",
         extensions: ["wat", "wast"],
         load() {
-            return import('./index-HTwdFDl4.js').then(m => m.wast());
+            return import('./index-RgnQebqz.js').then(m => m.wast());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33301,7 +33301,7 @@ const languages = [
         alias: ["rss", "wsdl", "xsd"],
         extensions: ["xml", "xsl", "xsd", "svg"],
         load() {
-            return import('./index-BAaqOvHY.js').then(m => m.xml());
+            return import('./index-CV-b6GzZ.js').then(m => m.xml());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
@@ -33309,7 +33309,7 @@ const languages = [
         alias: ["yml"],
         extensions: ["yaml", "yml"],
         load() {
-            return import('./index-CLIarfrW.js').then(m => m.yaml());
+            return import('./index-CwnUlq5S.js').then(m => m.yaml());
         }
     }),
     // Legacy modes ported from CodeMirror 5
@@ -34098,13 +34098,13 @@ const languages = [
         name: "Vue",
         extensions: ["vue"],
         load() {
-            return import('./index-CqsFpoQO.js').then(m => m.vue());
+            return import('./index-DBZ8LGHB.js').then(m => m.vue());
         }
     }),
     /*@__PURE__*/LanguageDescription.of({
         name: "Angular Template",
         load() {
-            return import('./index-DRK8ox9q.js').then(m => m.angular());
+            return import('./index-Ct3Ietpf.js').then(m => m.angular());
         }
     })
 ];
@@ -48814,7 +48814,6 @@ const diffEditor = new MergeView({
         doc: diffMdSample,
         extensions: [
             basicSetup,
-            foldGutter(),
             EditorView.editable.of(false),
             EditorState.readOnly.of(true),
             markdown({
@@ -48830,7 +48829,6 @@ const diffEditor = new MergeView({
         doc: diffMdSample.replace(/t/g, 'T') + '\nSix',
         extensions: [
             basicSetup,
-            foldGutter(),
             markdown({
                 base: markdownLanguage,
                 codeLanguages: languages,
@@ -48846,7 +48844,6 @@ const unifiedDiff = new EditorView({
     doc: diffMdSample.replace(/t/g, 'T') + '\nSix',
     extensions: [
         basicSetup,
-        foldGutter(),
         unifiedMergeView({
             original: diffMdSample,
         }),
@@ -48864,7 +48861,6 @@ const editor = new EditorView({
     doc: mdSample,
     extensions: [
         basicSetup,
-        foldGutter(),
         markdown({
             base: markdownLanguage,
             codeLanguages: languages,
