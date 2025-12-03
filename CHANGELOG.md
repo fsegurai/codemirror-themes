@@ -7,6 +7,12 @@ This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
+### 🔧 Changes
+
+- Changed the project logo for a more accurate one.
+
+---
+
 No changes have been made yet.
 
 ---
