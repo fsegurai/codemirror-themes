@@ -102,6 +102,7 @@
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/release-notes-generator": "^14.1.0",
     "@types/node": "^24.10.1",
+    "@types/prismjs": "^1.26.5",
     "cpy-cli": "^6.0.0",
     "dotenv": "^17.2.3",
     "eslint": "^9.39.1",
