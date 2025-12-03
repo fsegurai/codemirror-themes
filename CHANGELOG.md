@@ -11,6 +11,70 @@ No changes have been made yet.
 
 ---
 
+## [6.29.0] - 2025-12-02
+
+### ⚠️ BREAKING CHANGES ⚠️
+
+- **Theme Declaration**: Changed VS Code theme declaration to be more consistent with the rest of the themes.
+	- Visual Studio Code Dark Theme from `vsCodeDark` to `vscodeDark`
+	- Visual Studio Code Light Theme from `vsCodeLight` to `vscodeLight`
+
+### 🚀 Features
+
+- **New Theme**: Added a new `catppuccin-mocha` theme to the collection.
+- **New Theme**: Added a new `high-contrast-dark` theme to the collection.
+- **New Theme**: Added a new `high-contrast-light` theme to the collection.
+- **New Theme**: Added a new `synthwave-84` theme to the collection.
+
+### 🐞 Fixes
+
+- For rollout configuration file, fixed `process` import reference to point to `node:process` directly.
+- Fixed inconsistent line-height between editor content and line numbers across all themes. Line numbers now properly
+  align with their corresponding code rows.
+	- <img alt="Comparison 1" src="https://raw.githubusercontent.com/fsegurai/codemirror-themes/main/demo/public/releases/6.29.0/fix/6.29.0-fix-lineheight-1.png">
+	- <img alt="Comparison 2" src="https://raw.githubusercontent.com/fsegurai/codemirror-themes/main/demo/public/releases/6.29.0/fix/6.29.0-fix-lineheight-2.png">
+
+### 🔧 Changes
+
+- Refactored the local storage theme keyword to a more accurate one based on the project.
+- Improved keywords declared in the `package.json` files.
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/lang-markdown` from `6.3.4` to `6.5.0`
+		- `@codemirror/language` from `6.11.2` to `6.11.3`
+		- `@codemirror/language-data` from `6.5.1` to `6.5.2`
+		- `@codemirror/legacy-modes` from `6.5.1` to `6.5.2`
+		- `@codemirror/merge` from `6.10.2` to `6.11.2`
+		- `@lezer/markdown` from `1.4.3` to `1.6.0`
+		- `@material/web` from `2.3.0` to `2.4.1`
+		- `marked` from `16.1.2` to `17.0.1`
+		- `marked-highlight` from `2.2.2` to `2.2.3`
+	- Dev Dependencies
+		- `@eslint/js` from `9.33.0` to `9.39.1`
+		  -`@rollup/plugin-commonjs` from `28.0.6` to `29.0.0`
+		- `@rollup/plugin-node-resolve` from `16.0.1` to `16.0.3`
+		- `@rollup/plugin-replace` from `6.0.2` to `6.0.3`
+		- `@rollup/plugin-typescript` from `12.1.4` to `12.3.0`
+		- `@semantic-release/release-notes-generator` from `14.0.3` from `14.1.0`
+		- `cpy-cli` from `5.0.0` to `6.0.0`
+		- `dotenv` from `17.2.1` to `17.2.3`
+		- `eslint` from `9.33.0` to `9.39.1`
+		- `globals` from `16.3.0` to `16.5.0`
+		- `rimraf` from `6.0.1` to `6.1.2`
+		- `rollup` from `4.46.2` to `4.53.3`
+		- `semantic-release` from `24.2.7` to `25.0.2`
+		- `typescript` from `5.9.2` to `5.9.3`
+		- `typescript-eslint` from `8.39.1` to `8.48.0`
+- **Removed dependencies** — removed unused dependencies.
+	- Dev Dependencies
+		- Removed `prettier` dependency.
+		- Removed `ts-node` dependency.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.29.0
+
 ## [6.25.0] - 2025-08-11
 
 ### 🚀 Features
@@ -24,10 +88,10 @@ No changes have been made yet.
 - Improved demo playground and logic.
 - Refined overall themes structure styles.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Enhanced helper utilities for easier theme development and testing.
-- Removed unused methods from rollup configuration.
+- Removed unused methods from the rollup configuration.
 - Refactored demo playground for better usability and maintainability.
 - Updated all package `README.md` files to include the new theme.
 
@@ -35,7 +99,7 @@ No changes have been made yet.
 
 - Upgraded libraries to the latest versions.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.24.0...v6.25.0
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.25.0
 
 ---
 
@@ -46,7 +110,7 @@ No changes have been made yet.
 - **Utils Declaration**: Added utils declaration across themes.
 - **Editor Support**: Added theme support for diff editor and unified editor.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved demo playground and logic.
 - Enhanced package keywords reference.
@@ -56,7 +120,7 @@ No changes have been made yet.
 
 - Upgraded libraries to the latest versions.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.4.0...v6.24.0
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.24.0
 
 ---
 
@@ -70,7 +134,7 @@ No changes have been made yet.
 
 - Upgraded libraries to the latest versions.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.8...v6.1.4.0
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.4.0
 
 ---
 
@@ -80,7 +144,7 @@ No changes have been made yet.
 
 - Fixed release setup files.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved project README.
 
@@ -88,7 +152,7 @@ No changes have been made yet.
 
 - Upgraded libraries to the latest versions.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.7...v6.1.3.8
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.8
 
 ---
 
@@ -98,7 +162,7 @@ No changes have been made yet.
 
 - Upgraded libraries to the latest versions.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.6...v6.1.3.7
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.7
 
 ---
 
@@ -108,7 +172,7 @@ No changes have been made yet.
 
 - Fixed release setup files.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.5...v6.1.3.6
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.6
 
 ---
 
@@ -118,7 +182,7 @@ No changes have been made yet.
 
 - Fixed release setup files.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.4...v6.1.3.5
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.5
 
 ---
 
@@ -128,7 +192,7 @@ No changes have been made yet.
 
 - Fixed release setup files.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved `bundle` theme packages versioning.
 
@@ -136,13 +200,13 @@ No changes have been made yet.
 
 - Upgraded libraries to the latest versions.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.3...v6.1.3.4
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.4
 
 ---
 
 ## [6.1.3.3] - 2025-01-13
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Migrated workflows package manager to Bun.js.
 
@@ -150,13 +214,13 @@ No changes have been made yet.
 
 - Upgraded libraries to the latest versions.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.2...v6.1.3.3
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.3
 
 ---
 
 ## [6.1.3.2] - 2024-11-26
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved header theme local storage reference.
 - Improved index logic.
@@ -165,7 +229,7 @@ No changes have been made yet.
 
 - Upgraded libraries to the latest versions.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.1...v6.1.3.2
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.2
 
 ---
 
@@ -175,12 +239,12 @@ No changes have been made yet.
 
 - Added code block clipboard and highlight.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved README, pipelines, and styles.
 - Enhanced project structure.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.0...v6.1.3.1
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.1
 
 ---
 
@@ -191,11 +255,11 @@ No changes have been made yet.
 - Fixed local links redirect due to host URL.
 - Fixed header current URL validation.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Refactored demo project.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.1.0.0...v6.1.3.0
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.0
 
 ---
 
@@ -207,11 +271,11 @@ No changes have been made yet.
 - **New Theme**: Added a new `vscode-light` theme to the collection.
 - **New Theme**: Added a new `vscode-dark` theme to the collection.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved README files.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.0.3...v6.1.0.0
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.0.0
 
 ---
 
@@ -225,12 +289,12 @@ No changes have been made yet.
 
 - Fixed demo pipeline issues.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved pipelines workflows and README.
 - Enhanced library release pipeline and dependencies.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v1.3.2...v6.0.3
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.0.3
 
 ---
 
@@ -240,11 +304,11 @@ No changes have been made yet.
 
 - Fixed README.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Updated pipelines and gitignore files.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v1.3.1...v1.3.2
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v1.3.2
 
 ---
 
@@ -263,18 +327,18 @@ No changes have been made yet.
 
 - Upgraded libraries to the latest versions.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v1.2.2...v1.3.1
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v1.3.1
 
 ---
 
 ## [1.2.2] - 2024-06-11
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved main package file.
 - Updated demo pipeline setup.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v1.2.0...v1.2.2
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v1.2.2
 
 ---
 
@@ -284,11 +348,11 @@ No changes have been made yet.
 
 - **New Theme**: Added a new `bundle` theme to the collection.
 
-### 🛠 Changes
+### 🔧 Changes
 
 - Improved selection styles.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v1.1.1...v1.2.0
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v1.2.0
 
 ---
 
@@ -298,7 +362,7 @@ No changes have been made yet.
 
 - Fixed packages README.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v1.1.0...v1.1.1
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v1.1.1
 
 ---
 
@@ -309,7 +373,7 @@ No changes have been made yet.
 - Added demo pipeline setup.
 - Created reference to the demo website.
 
-**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v1.0.0...v1.1.0
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v1.1.0
 
 ---
 
@@ -339,4 +403,62 @@ No changes have been made yet.
 - **New Theme**: Added a new `tokyo-night-storm` theme to the collection.
 - **New Theme**: Added a new `volcano` theme to the collection.
 
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v1.0.0
+
 ---
+
+## ✅ Compatibility
+
+- ✅ Chrome
+- ✅ Firefox
+- ✅ Safari
+- ✅ Edge
+- ⚠️ Internet Explorer is **not supported**
+
+---
+
+[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.25.0...HEAD
+
+[6.29.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.25.0...v6.29.0
+
+[6.25.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.24.0...v6.25.0
+
+[6.24.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.4.0...v6.24.0
+
+[6.1.4.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.8...v6.1.4.0
+
+[6.1.3.8]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.7...v6.1.3.8
+
+[6.1.3.7]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.6...v6.1.3.7
+
+[6.1.3.6]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.5...v6.1.3.6
+
+[6.1.3.5]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.4...v6.1.3.5
+
+[6.1.3.4]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.3...v6.1.3.4
+
+[6.1.3.3]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.2...v6.1.3.3
+
+[6.1.3.2]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.1...v6.1.3.2
+
+[6.1.3.1]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.0...v6.1.3.1
+
+[6.1.3.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.0.0...v6.1.3.0
+
+[6.1.0.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.0.3...v6.1.0.0
+
+[6.0.3]: https://github.com/fsegurai/codemirror-themes/compare/v1.3.2...v6.0.3
+
+[1.3.2]: https://github.com/fsegurai/codemirror-themes/compare/v1.3.1...v1.3.2
+
+[1.3.1]: https://github.com/fsegurai/codemirror-themes/compare/v1.2.2...v1.3.1
+
+[1.2.2]: https://github.com/fsegurai/codemirror-themes/compare/v1.2.0...v1.2.2
+
+[1.2.0]: https://github.com/fsegurai/codemirror-themes/compare/v1.1.1...v1.2.0
+
+[1.1.1]: https://github.com/fsegurai/codemirror-themes/compare/v1.1.0...v1.1.1
+
+[1.1.0]: https://github.com/fsegurai/codemirror-themes/compare/v1.0.0...v1.1.0
+
+[1.0.0]: https://github.com/fsegurai/codemirror-themes/releases/tag/v1.0.0

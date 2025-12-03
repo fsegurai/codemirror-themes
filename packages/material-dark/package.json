@@ -1,7 +1,7 @@
 {
   "name": "@fsegurai/codemirror-theme-material-dark",
   "description": "Material Dark theme for the CodeMirror editor",
-  "version": "6.2.2",
+  "version": "6.2.3",
   "type": "module",
   "main": "dist/index.cjs",
   "exports": {
