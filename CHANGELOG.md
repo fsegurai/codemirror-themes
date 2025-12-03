@@ -11,7 +11,7 @@ No changes have been made yet.
 
 ---
 
-## [6.29.0] - 2025-11-29
+## [6.29.0] - 2025-12-02
 
 ### ⚠️ BREAKING CHANGES ⚠️
 
