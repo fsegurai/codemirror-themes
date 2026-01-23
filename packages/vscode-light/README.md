@@ -53,14 +53,14 @@ Import the respective theme from the package and apply it to your CodeMirror ins
 ```javascript
 import { EditorView, basicSetup } from 'codemirror'
 import { markdown } from '@codemirror/lang-markdown'
-import { vscodeLight } from '@fsegurai/codemirror-theme-vscode-light'
+import { vsCodeLight } from '@fsegurai/codemirror-theme-vscode-light'
 
 let editor = new EditorView({
   doc: '# Hello World',
   extensions: [
     basicSetup,
     markdown(),
-    vscodeLight
+	  vsCodeLight
   ],
   parent: document.body
 })
