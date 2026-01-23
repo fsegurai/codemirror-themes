@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { glob } from 'glob';
 import process from 'process';
+import { fileURLToPath } from 'url';
 
 // ANSI color codes
 const colors = {
@@ -40,8 +41,9 @@ interface Options {
 
 const ROOT = process.cwd();
 const PACKAGES_GLOB = 'packages/*/package.json';
-const SCRIPT_DIR = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1'));
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const STORE_FILE = path.join(SCRIPT_DIR, 'versions.json');
+console.log(`${colors.dim}Looking for versions.json at: ${STORE_FILE}${colors.reset}`);
 
 function parseArgs(): Options {
   const argv = process.argv.slice(2);
