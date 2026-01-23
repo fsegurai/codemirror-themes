@@ -1,7 +1,7 @@
 {
   "name": "@fsegurai/codemirror-theme-bundle",
   "description": "Bundle themes for the CodeMirror editor",
-  "version": "6.3.0",
+  "version": "6.3.1",
   "type": "module",
   "main": "dist/index.cjs",
   "exports": {
@@ -59,8 +59,8 @@
     "@fsegurai/codemirror-theme-tokyo-night-storm": "^6.2.3",
     "@fsegurai/codemirror-theme-tokyo-night-day": "^6.2.3",
     "@fsegurai/codemirror-theme-volcano": "^6.2.3",
-    "@fsegurai/codemirror-theme-vscode-dark": "^6.2.3",
-    "@fsegurai/codemirror-theme-vscode-light": "^6.2.3"
+    "@fsegurai/codemirror-theme-vscode-dark": "^6.2.4",
+    "@fsegurai/codemirror-theme-vscode-light": "^6.2.4"
   },
   "peerDependencies": {
     "@lezer/highlight": "^1.0.0",
