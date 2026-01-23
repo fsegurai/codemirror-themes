@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-themes",
-  "version": "6.29.0",
+  "version": "6.29.1",
   "description": "Theme packages for the CodeMirror editor",
   "type": "module",
   "license": "MIT",
