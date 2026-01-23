@@ -16,12 +16,20 @@ No changes have been made yet.
 ### 🔧 Changes
 
 - Changed the project logo for a more accurate one.
+- Improved utils script to support Linux and Windows paths.
+
+### 🐞 Fixes
+
+- Fixed Visual Studio Code Dark & Light themes README files. Thanks to [@blurfx](https://github.com/blurfx) for the
+  contribution.
 
 ### 🔐 Security
 
 - **Added dependencies**.
 	- Dependencies
-		- `@codemirror/state` - `6.5.4`
+		- `@codemirror/state` - `6.5.4` - needed for demo playground.
+	- Dev Dependencies
+		- `glob` - `13.0.0` - needed for packages utilities.
 - **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
 	- Dependencies
 		- `@codemirror/language` from `6.11.3` to `6.12.1`
@@ -35,6 +43,8 @@ No changes have been made yet.
 		- `typescript-eslint` from `8.48.1` to `8.53.1`
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.29.1
+
+---
 
 ## [6.29.0] - 2025-12-02
 
@@ -99,6 +109,8 @@ No changes have been made yet.
 		- Removed `ts-node` dependency.
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.29.0
+
+---
 
 ## [6.25.0] - 2025-08-11
 
