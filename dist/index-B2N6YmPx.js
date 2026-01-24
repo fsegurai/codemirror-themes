@@ -1,4 +1,4 @@
-import { b as LRParser, s as styleTags, t as tags, a as LRLanguage, L as LanguageSupport, i as indentNodeProp, f as foldNodeProp, c as continuedIndent, h as delimitedIndent, j as flatIndent, k as foldInside } from './playground-DiT7HPGI.js';
+import { e as LRParser, s as styleTags, t as tags, a as LanguageSupport, L as LRLanguage, i as indentNodeProp, j as flatIndent, c as continuedIndent, k as delimitedIndent, f as foldNodeProp, l as foldInside } from './playground-BU7psuH2.js';
 
 const javaHighlighting = styleTags({
   null: tags.null,
