@@ -11,6 +11,41 @@ No changes have been made yet.
 
 ---
 
+## [6.29.1] - 2025-01-23
+
+### 🔧 Changes
+
+- Changed the project logo for a more accurate one.
+- Improved utils script to support Linux and Windows paths.
+
+### 🐞 Fixes
+
+- Fixed Visual Studio Code Dark & Light themes README files. Thanks to [@blurfx](https://github.com/blurfx) for the
+  contribution.
+
+### 🔐 Security
+
+- **Added dependencies**.
+	- Dependencies
+		- `@codemirror/state` - `6.5.4` - needed for demo playground.
+	- Dev Dependencies
+		- `glob` - `13.0.0` - needed for packages utilities.
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/language` from `6.11.3` to `6.12.1`
+		- `@lezer/markdown` from `1.6.0` to `1.6.3`
+	- Dev Dependencies
+		- `@eslint/js` from `9.39.1` to `9.39.2`
+		- `@types/node` from `24.10.1` to `25.0.10`
+		- `eslint` from `9.39.1` to `9.39.2`
+		- `globals` from `16.5.0` to `17.1.0`
+		- `rollup` from `4.53.3` to `4.56.0`
+		- `typescript-eslint` from `8.48.1` to `8.53.1`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.29.1
+
+---
+
 ## [6.29.0] - 2025-12-02
 
 ### ⚠️ BREAKING CHANGES ⚠️
@@ -26,6 +61,11 @@ No changes have been made yet.
 - **New Theme**: Added a new `high-contrast-light` theme to the collection.
 - **New Theme**: Added a new `synthwave-84` theme to the collection.
 
+### 🔧 Changes
+
+- Refactored the local storage theme keyword to a more accurate one based on the project.
+- Improved keywords declared in the `package.json` files.
+
 ### 🐞 Fixes
 
 - For rollout configuration file, fixed `process` import reference to point to `node:process` directly.
@@ -33,11 +73,6 @@ No changes have been made yet.
   align with their corresponding code rows.
 	- <img alt="Comparison 1" src="https://raw.githubusercontent.com/fsegurai/codemirror-themes/main/demo/public/releases/6.29.0/fix/6.29.0-fix-lineheight-1.png">
 	- <img alt="Comparison 2" src="https://raw.githubusercontent.com/fsegurai/codemirror-themes/main/demo/public/releases/6.29.0/fix/6.29.0-fix-lineheight-2.png">
-
-### 🔧 Changes
-
-- Refactored the local storage theme keyword to a more accurate one based on the project.
-- Improved keywords declared in the `package.json` files.
 
 ### 🔐 Security
 
@@ -75,6 +110,8 @@ No changes have been made yet.
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.29.0
 
+---
+
 ## [6.25.0] - 2025-08-11
 
 ### 🚀 Features
@@ -82,11 +119,6 @@ No changes have been made yet.
 - **New Theme**: Added a new `cobalt2` theme to the collection.
 - **Utils Declaration**: Added new utils scripts for better propagation across themes.
 - Improved overall project documentation, including `CHANGELOG.md` and `CONTRIBUTING.md`.
-
-### 🐞 Fixes
-
-- Improved demo playground and logic.
-- Refined overall themes structure styles.
 
 ### 🔧 Changes
 
@@ -98,6 +130,11 @@ No changes have been made yet.
 ### ⚡ Performance
 
 - Upgraded libraries to the latest versions.
+
+### 🐞 Fixes
+
+- Improved demo playground and logic.
+- Refined overall themes structure styles.
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.25.0
 
@@ -126,23 +163,19 @@ No changes have been made yet.
 
 ## [6.1.4.0] - 2025-04-22
 
-### 🐞 Fixes
-
-- Minor fixes and improvements.
-
 ### ⚡ Performance
 
 - Upgraded libraries to the latest versions.
+
+### 🐞 Fixes
+
+- Minor fixes and improvements.
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.4.0
 
 ---
 
 ## [6.1.3.8] - 2025-03-02
-
-### 🐞 Fixes
-
-- Fixed release setup files.
 
 ### 🔧 Changes
 
@@ -151,6 +184,10 @@ No changes have been made yet.
 ### ⚡ Performance
 
 - Upgraded libraries to the latest versions.
+
+### 🐞 Fixes
+
+- Fixed release setup files.
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.8
 
@@ -188,10 +225,6 @@ No changes have been made yet.
 
 ## [6.1.3.4] - 2025-02-02
 
-### 🐞 Fixes
-
-- Fixed release setup files.
-
 ### 🔧 Changes
 
 - Improved `bundle` theme packages versioning.
@@ -199,6 +232,10 @@ No changes have been made yet.
 ### ⚡ Performance
 
 - Upgraded libraries to the latest versions.
+
+### 🐞 Fixes
+
+- Fixed release setup files.
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.4
 
@@ -250,14 +287,14 @@ No changes have been made yet.
 
 ## [6.1.3.0] - 2024-11-15
 
+### 🔧 Changes
+
+- Refactored demo project.
+
 ### 🐞 Fixes
 
 - Fixed local links redirect due to host URL.
 - Fixed header current URL validation.
-
-### 🔧 Changes
-
-- Refactored demo project.
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.0
 
@@ -285,14 +322,14 @@ No changes have been made yet.
 
 - Added ESLint support.
 
-### 🐞 Fixes
-
-- Fixed demo pipeline issues.
-
 ### 🔧 Changes
 
 - Improved pipelines workflows and README.
 - Enhanced library release pipeline and dependencies.
+
+### 🐞 Fixes
+
+- Fixed demo pipeline issues.
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.0.3
 
@@ -300,13 +337,13 @@ No changes have been made yet.
 
 ## [1.3.2] - 2024-10-23
 
-### 🐞 Fixes
-
-- Fixed README.
-
 ### 🔧 Changes
 
 - Updated pipelines and gitignore files.
+
+### 🐞 Fixes
+
+- Fixed README.
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v1.3.2
 
@@ -318,14 +355,14 @@ No changes have been made yet.
 
 - Added Dependabot actions file.
 
+### ⚡ Performance
+
+- Upgraded libraries to the latest versions.
+
 ### 🐞 Fixes
 
 - Fixed demo deployment pipeline.
 - Fixed npm publish pipeline.
-
-### ⚡ Performance
-
-- Upgraded libraries to the latest versions.
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v1.3.1
 
@@ -417,7 +454,9 @@ No changes have been made yet.
 
 ---
 
-[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.25.0...HEAD
+[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.29.1...HEAD
+
+[6.29.1]: https://github.com/fsegurai/codemirror-themes/compare/v6.29.0...v6.29.1
 
 [6.29.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.25.0...v6.29.0
 

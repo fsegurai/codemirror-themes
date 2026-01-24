@@ -1,4 +1,3 @@
-// typescript
 import fs from 'fs';
 import path from 'path';
 import { readmeTemplate } from './README';
@@ -42,8 +41,6 @@ const perPackageCount: Record<string, number> = {};
 const errors: string[] = [];
 
 for (const pkgFolder of packageNames) {
-  if (pkgFolder === 'bundle') continue;
-
   const pkgDir = path.join(packagesDir, pkgFolder);
   const pkgJsonPath = path.join(pkgDir, 'package.json');
   if (!fs.existsSync(pkgJsonPath)) continue;

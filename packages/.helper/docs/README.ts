@@ -1,5 +1,5 @@
 const readmeTemplate = `<p align="center">
-  <img alt="CodeMirror 6 Themes Logo" src="https://raw.githubusercontent.com/fsegurai/codemirror-themes/main/demo/public/codemirror-themes.png">
+  <img alt="CodeMirror 6 Themes Logo" src="https://raw.githubusercontent.com/fsegurai/codemirror-themes/main/demo/public/codemirror-themes.svg">
 </p>
 
 <p align="center">
@@ -31,6 +31,7 @@ const readmeTemplate = `<p align="center">
 - [Installation](#installation)
 \t- [{{NPM_PACKAGE}}](#{{NPM_PACKAGE}})
 \t- [Using Theme](#using-theme)
+- [More Resources](#more-resources)
 \t- [Available Themes](#available-themes)
 \t- [Demo Application](#demo-application)
 - [License](#license)
