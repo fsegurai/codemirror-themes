@@ -21,7 +21,7 @@ No changes have been made yet.
 ### 🐞 Fixes
 
 - Fixed Visual Studio Code Dark & Light themes README files. Thanks to [@blurfx](https://github.com/blurfx) for the
-  contribution.
+  contribution in [#102](https://github.com/fsegurai/codemirror-themes/pull/102)
 
 ### 🔐 Security
 
