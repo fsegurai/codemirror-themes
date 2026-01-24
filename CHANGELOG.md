@@ -127,9 +127,19 @@ No changes have been made yet.
 - Refactored demo playground for better usability and maintainability.
 - Updated all package `README.md` files to include the new theme.
 
-### ⚡ Performance
+### 🔐 Security
 
-- Upgraded libraries to the latest versions.
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@lezer/markdown` from `1.4.2` to `1.4.3`
+		- `marked` from `15.0.9` to `15.0.12`
+	- Dev Dependencies
+		- `@eslint/js` from `9.25.1` to `9.27.0`
+		- `eslint` from `9.25.1` to `9.27.0`
+		- `globals` from `16.0.0` to `16.2.0`
+		- `rollup` from `4.40.0` to `4.41.1`
+		- `semantic-release` from `24.2.3` to `24.2.5`
+		- `typescript-eslint` from `8.31.0` to `8.33.0`
 
 ### 🐞 Fixes
 
@@ -153,9 +163,24 @@ No changes have been made yet.
 - Enhanced package keywords reference.
 - Refined overall themes, structure styles, and documentation for a better visualization and usability.
 
-### ⚡ Performance
+### 🔐 Security
 
-- Upgraded libraries to the latest versions.
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/language` from `6.10.8` to `6.11.0`
+		- `@codemirror/legacy-modes` from `6.4.3` to `6.5.1`
+		- `@material/web` from `2.2.0` to `2.3.0`
+		- `marked` from `15.0.7` to `15.0.9`
+		- `prismjs` from `1.29.0` to `1.30.0`
+	- Dev Dependencies
+		- `@eslint/js` from `9.21.0` to `9.25.1`
+		- `@rollup/plugin-commonjs` from `28.0.2` to `28.0.3`
+		- `@rollup/plugin-node-resolve` from `16.0.0` to `16.0.1`
+		- `dotenv` from `16.4.7` to `16.5.0`
+		- `eslint` from `9.21.0` to `9.25.1`
+		- `rollup` from `4.34.9` to `4.40.0`
+		- `typescript` from `5.7.3` to `5.8.3`
+		- `typescript-eslint` from `8.25.0` to `8.31.0`
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.24.0
 
@@ -163,9 +188,12 @@ No changes have been made yet.
 
 ## [6.1.4.0] - 2025-04-22
 
-### ⚡ Performance
+### 🔐 Security
 
-- Upgraded libraries to the latest versions.
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@lezer/markdown` from `1.4.1` to `1.4.2`
+	- Dev Dependencies
 
 ### 🐞 Fixes
 
@@ -195,9 +223,13 @@ No changes have been made yet.
 
 ## [6.1.3.7] - 2025-02-16
 
-### ⚡ Performance
+### 🔐 Security
 
-- Upgraded libraries to the latest versions.
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dev Dependencies
+		- `prettier` from `3.5.0` to `3.5.1`
+		- `rollup` from `4.34.6` to `4.34.7`
+		- `semantic-release` from `24.2.2` to `24.2.3`
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.7
 
@@ -208,6 +240,21 @@ No changes have been made yet.
 ### 🐞 Fixes
 
 - Fixed release setup files.
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/legacy-modes` from `6.4.2` to `6.4.3`
+		- `@lezer/markdown` from `1.4.0` to `1.4.1`
+		- `marked` from `15.0.6` to `15.0.7`
+	- Dev Dependencies
+		- `@eslint/js` from `9.19.0` to `9.20.1`
+		- `eslint` from `9.19.0` to `9.20.1
+		- `prettier` from `3.4.2` to `3.5.0`
+		- `rollup` from `4.34.1` to `4.34.6`
+		- `semantic-release` from `24.2.1` to `24.2.2`
+		- `typescript-eslint` from `8.23.1` to `8.24.0`
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.6
 
@@ -229,13 +276,16 @@ No changes have been made yet.
 
 - Improved `bundle` theme packages versioning.
 
-### ⚡ Performance
-
-- Upgraded libraries to the latest versions.
-
 ### 🐞 Fixes
 
 - Fixed release setup files.
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dev Dependencies
+		- `rollup` from `4.34.0` to `4.34.1`
+		- `typescript-eslint` from `8.22.0` to `8.23.0`
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.4
 
@@ -246,10 +296,6 @@ No changes have been made yet.
 ### 🔧 Changes
 
 - Migrated workflows package manager to Bun.js.
-
-### ⚡ Performance
-
-- Upgraded libraries to the latest versions.
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.3
 
@@ -312,6 +358,17 @@ No changes have been made yet.
 
 - Improved README files.
 
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/legacy-modes` from `6.5.0` to `6.5.1`
+		- `marked` from `15.0.8` to `15.0.9`
+	- Dev Dependencies
+		- `@eslint/js` from `9.25.0` to `9.25.1`
+		- `eslint` from `9.25.0` to `9.25.1`
+		- `typescript-eslint` from `8.30.1` to `8.31.0`
+
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.0.0
 
 ---
@@ -331,15 +388,40 @@ No changes have been made yet.
 
 - Fixed demo pipeline issues.
 
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/lang-markdown` from `6.3.0` to `6.3.1`
+		- `@codemirror/legacy-modes` from `6.4.1` to `6.4.2`
+		- `@lezer/markdown` from `1.3.1` to `1.3.2`
+	- Dev Dependencies
+		- `rollup` from `4.24.0` to `4.25.0`
+		- `typescript-eslint` from `8.13.0` to `8.14.0`
+
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.0.3
 
 ---
 
 ## [1.3.2] - 2024-10-23
 
-### 🔧 Changes
+### 🔐 Security
 
-- Updated pipelines and gitignore files.
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/lang-markdown` from `6.2.5` to `6.3.0`
+		- `@codemirror/language` from `6.10.2` to `6.10.3`
+		- `@codemirror/legacy-modes` from `6.4.0` to `6.4.1`
+		- `@lezer/markdown` from `1.3.0` to `1.3.1`
+	- Dev Dependencies
+		- `@codemirror/buildhelper` from `1.0.1` to `1.0.2`
+		- `@rollup/plugin-commonjs` from `26.0.1` to `28.0.1`
+		- `@rollup/plugin-node-resolve` from `15.2.3` to `15.3.0`
+		- `prettier` from `3.3.2` to `3.3.3`
+		- `rimraf` from `5.0.7` to `6.0.1`
+		- `rollup` from `4.18.0` to `4.24.0`
+		- `rollup-plugin-dev` from `2.0.4` to `2.0.5`
+		- `typescript` from `5.4.5` to `5.6.3`
 
 ### 🐞 Fixes
 
@@ -355,14 +437,21 @@ No changes have been made yet.
 
 - Added Dependabot actions file.
 
-### ⚡ Performance
-
-- Upgraded libraries to the latest versions.
-
 ### 🐞 Fixes
 
 - Fixed demo deployment pipeline.
 - Fixed npm publish pipeline.
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/language` from `6.10.1` to `6.10.2`
+	- Dev Dependencies
+		- `@rollup/plugin-commonjs` from `25.0.7` to `26.0.1`
+		- `prettier` from `3.2.5` to `3.3.2`
+		- `rimraf` from `5.0.5` to `5.0.7`
+		- `rollup` from `4.17.0` to `4.18.0`
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v1.3.1
 
