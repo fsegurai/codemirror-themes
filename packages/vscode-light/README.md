@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="CodeMirror 6 Themes Logo" src="https://raw.githubusercontent.com/fsegurai/codemirror-themes/main/demo/public/codemirror-themes.png">
+  <img alt="CodeMirror 6 Themes Logo" src="https://raw.githubusercontent.com/fsegurai/codemirror-themes/main/demo/public/codemirror-themes.svg">
 </p>
 
 <p align="center">
@@ -31,6 +31,7 @@
 - [Installation](#installation)
 	- [@fsegurai/codemirror-theme-vscode-light](#@fsegurai/codemirror-theme-vscode-light)
 	- [Using Theme](#using-theme)
+- [More Resources](#more-resources)
 	- [Available Themes](#available-themes)
 	- [Demo Application](#demo-application)
 - [License](#license)
@@ -52,14 +53,14 @@ Import the respective theme from the package and apply it to your CodeMirror ins
 ```javascript
 import { EditorView, basicSetup } from 'codemirror'
 import { markdown } from '@codemirror/lang-markdown'
-import { vscodeLight } from '@fsegurai/codemirror-theme-vscode-light'
+import { vsCodeLight } from '@fsegurai/codemirror-theme-vscode-light'
 
 let editor = new EditorView({
   doc: '# Hello World',
   extensions: [
     basicSetup,
     markdown(),
-    vscodeLight
+	  vsCodeLight
   ],
   parent: document.body
 })
