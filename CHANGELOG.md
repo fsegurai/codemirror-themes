@@ -51,8 +51,8 @@ No changes have been made yet.
 ### ⚠️ BREAKING CHANGES ⚠️
 
 - **Theme Declaration**: Changed VS Code theme declaration to be more consistent with the rest of the themes.
-	- Visual Studio Code Dark Theme from `vsCodeDark` to `vscodeDark`
-	- Visual Studio Code Light Theme from `vsCodeLight` to `vscodeLight`
+	- Visual Studio Code Dark Theme from `vscodeDark` to `vsCodeDark`
+	- Visual Studio Code Light Theme from `vscodeLight` to `vsCodeLight`
 
 ### 🚀 Features
 
@@ -209,10 +209,6 @@ No changes have been made yet.
 
 - Improved project README.
 
-### ⚡ Performance
-
-- Upgraded libraries to the latest versions.
-
 ### 🐞 Fixes
 
 - Fixed release setup files.
@@ -307,10 +303,6 @@ No changes have been made yet.
 
 - Improved header theme local storage reference.
 - Improved index logic.
-
-### ⚡ Performance
-
-- Upgraded libraries to the latest versions.
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.2
 
