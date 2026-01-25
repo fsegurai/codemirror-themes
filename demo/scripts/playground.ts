@@ -2,8 +2,8 @@ import { basicSetup, EditorView } from 'codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { Compartment, EditorState } from '@codemirror/state';
-import { diffMdSample, mdSample } from './markdown.example';
-import { applyMergeRevertStyles, themes } from './themes';
+import { diffMdSample, mdSample } from './utils/markdown.example';
+import { applyMergeRevertStyles, themes } from './utils/themes';
 import { MergeView, unifiedMergeView } from '@codemirror/merge';
 
 const elCM = document.querySelector('#codemirror')!;
