@@ -56,7 +56,7 @@ import {
   vsCodeDarkMergeStyles,
   vsCodeLight,
   vsCodeLightMergeStyles,
-} from '../../packages/bundle/src';
+} from '../../../packages/bundle/src';
 
 const themes = [
   {
