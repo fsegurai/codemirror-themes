@@ -108,7 +108,7 @@
     "@semantic-release/release-notes-generator": "^14.1.0",
     "@types/node": "25.0.10",
     "@types/prismjs": "^1.26.5",
-    "cpy-cli": "^6.0.0",
+    "cpy-cli": "^7.0.0",
     "dotenv": "^17.2.3",
     "eslint": "9.39.2",
     "glob": "^13.0.0",
