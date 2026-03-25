@@ -1,159 +1,278 @@
 /**
  * prism.js Visual Studio Code Theme
  * @author Visual Studio Code
+ * Enhanced for better readability
  */
 
+/* Base styles for all themes */
 code[class*='language-'],
 pre[class*='language-'] {
-  color: #9cdcfe;
-  background: none;
-  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-  text-align: left;
-  white-space: pre;
-  word-spacing: normal;
-  word-break: normal;
-  word-wrap: normal;
-  line-height: 1.5;
-
-  -moz-tab-size: 4;
-  -o-tab-size: 4;
-  tab-size: 4;
-
-  -webkit-hyphens: none;
-  -moz-hyphens: none;
-  -ms-hyphens: none;
-  hyphens: none;
+    color: #d4d4d4;
+    background: none;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    text-align: left;
+    white-space: pre;
+    word-spacing: normal;
+    word-break: normal;
+    word-wrap: normal;
+    line-height: 1.6;
+    tab-size: 4;
+    hyphens: none;
 }
 
-/* Code blocks */
-
 pre[class*='language-'] {
-  padding: 1em;
-  margin: 0.5em 0;
-  overflow: auto;
+    padding: 1.2em;
+    margin: 0.5em 0;
+    overflow: auto;
+    border-radius: 6px;
 }
 
 :not(pre) > code[class*='language-'],
 pre[class*='language-'] {
-  border-radius: 4px;
-  background: #1e1e1e;
-  font-size: 14px;
+    background: #1e1e1e;
+    font-size: 14px;
 }
 
-/* Inline code */
 
 :not(pre) > code[class*='language-'] {
-  padding: 0.1em;
-  border-radius: 0.3em;
-  white-space: normal;
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    white-space: normal;
 }
 
+/* Dark Mode (Default) */
 .token.comment,
 .token.block-comment,
 .token.prolog,
 .token.doctype,
 .token.cdata {
-  color: #6a9955;
+    color: #6a9955;
+    font-style: italic;
 }
 
 .token.punctuation {
-  color: #ccc;
-}
-
-.token.tag,
-.token.namespace,
-.token.deleted {
-  color: #569cd6;
-}
-
-.token.attr-name {
-  color: #9cdcfe;
-}
-
-.token.function-name {
-  color: #6196cc;
-}
-
-.token.boolean {
-  color: #569cd6;
-}
-
-.token.number {
-  color: #b5cea8;
-}
-
-.token.function {
-  color: #dcdcaa;
+    color: #d4d4d4;
 }
 
 .token.property,
+.token.tag,
+.token.boolean,
+.token.number,
 .token.constant,
-.token.symbol {
-  color: #51b6c4;
-}
-
-.token.builtin,
-.token.class-name {
-  color: #4ec9b0;
+.token.symbol,
+.token.deleted {
+    color: #b5cea8;
 }
 
 .token.selector,
-.token.important,
-.token.atrule,
-.token.keyword {
-  color: #c586c0;
+.token.attr-name,
+.token.builtin,
+.token.inserted {
+    color: #9cdcfe;
 }
 
-.token.variable,
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+    color: #d4d4d4;
+    background: transparent;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+    color: #c586c0;
+}
+
+.token.function,
+.token.class-name {
+    color: #dcdcaa;
+}
+
 .token.string,
 .token.char,
-.token.attr-value,
 .token.variable {
-  color: #ce9169;
+    color: #ce9178;
 }
 
-.token.regex {
-  color: #d16969;
-}
-
-.token.operator {
-  color: #d4d4d4;
-}
-
-.token.entity,
-.token.url {
-  color: #67cdcc;
+.token.regex,
+.token.important {
+    color: #d16969;
 }
 
 .token.important,
 .token.bold {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .token.italic {
-  font-style: italic;
+    font-style: italic;
 }
 
 .token.entity {
-  cursor: help;
+    cursor: help;
 }
 
-/* diff */
+/* Light Mode Override */
+body.light code[class*='language-'],
+body.light pre[class*='language-'] {
+    color: #24292e;
+}
 
-.language-diff {
-  .token.inserted {
-    color: #8fce00;
-  }
+body.light :not(pre) > code[class*='language-'] {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    color: #24292e;
+}
+
+body.light pre[class*='language-'] {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+}
+
+body.light .token.comment,
+body.light .token.block-comment,
+body.light .token.prolog,
+body.light .token.doctype,
+body.light .token.cdata {
+    color: #008000;
+    font-style: italic;
+}
+
+body.light .token.punctuation {
+    color: #393a34;
+}
+
+body.light .token.property,
+body.light .token.tag,
+body.light .token.boolean,
+body.light .token.number,
+body.light .token.constant,
+body.light .token.symbol,
+body.light .token.deleted {
+    color: #098658;
+}
+
+body.light .token.selector,
+body.light .token.attr-name,
+body.light .token.builtin,
+body.light .token.inserted {
+    color: #0451a5;
+}
+
+body.light .token.operator,
+body.light .token.entity,
+body.light .token.url,
+body.light .language-css .token.string,
+body.light .style .token.string {
+    color: #0000ff;
+    background: transparent;
+}
+
+body.light .token.atrule,
+body.light .token.attr-value,
+body.light .token.keyword {
+    color: #0000ff;
+}
+
+body.light .token.function,
+body.light .token.class-name {
+    color: #795e26;
+}
+
+body.light .token.string,
+body.light .token.char,
+body.light .token.variable {
+    color: #a31515;
+}
+
+body.light .token.regex,
+body.light .token.important {
+    color: #ee0000;
+}
+
+body.light .token.important,
+body.light .token.bold {
+    font-weight: bold;
+}
+
+body.light .token.italic {
+    font-style: italic;
+}
+
+body.light .token.entity {
+    cursor: help;
+}
+
+/* Additional token types for better highlighting */
+.token.namespace {
+    opacity: 0.7;
+}
+
+.token.parameter {
+    color: #9cdcfe;
+}
+
+body.light .token.parameter {
+    color: #001080;
+}
+
+/* Language-specific improvements */
+.language-json .token.property {
+    color: #9cdcfe;
+}
+
+body.light .language-json .token.property {
+    color: #0451a5;
+}
+
+.language-json .token.string {
+    color: #ce9178;
+}
+
+body.light .language-json .token.string {
+    color: #a31515;
+}
+
+/* Diff highlighting */
+.language-diff .token.deleted {
+    color: #f85149;
+    background: rgba(248, 81, 73, 0.15);
+}
+
+.language-diff .token.inserted {
+    color: #56d364;
+    background: rgba(86, 211, 100, 0.15);
+}
+
+body.light .language-diff .token.deleted {
+    color: #cf222e;
+    background: rgba(255, 235, 233, 0.5);
+}
+
+body.light .language-diff .token.inserted {
+    color: #1a7f37;
+    background: rgba(209, 250, 229, 0.5);
 }
 
 /* Html */
 
 .language-html :not(.token) {
-  color: #d4d4d4;
+    color: #d4d4d4;
+}
+
+body.light .language-html :not(.token) {
+    color: #000000;
 }
 
 .language-html .token.punctuation {
-  color: #808080;
+    color: #808080;
+}
+
+body.light .language-html .token.punctuation {
+    color: #393a34;
 }
 
 /* TypeScript, Javascript */
@@ -162,53 +281,155 @@ pre[class*='language-'] {
 .language-typescript,
 .language-js,
 .language-javascript {
-  color: #9cdcfe;
-
-  .token.string {
-    color: #ce9169;
-  }
-
-  .token.punctuation {
-    color: #d4d4d4;
-  }
-
-  .script-punctuation + .token.punctuation + .token.punctuation {
-    color: #d4d4d4;
-  }
-
-  .script-punctuation
-    + .token.punctuation
-    + .token.punctuation
-    ~ .token.punctuation {
-    color: #d4d4d4;
-  }
-
-  .script-punctuation
-    + .token.punctuation
-    + .token.punctuation
-    ~ .token.punctuation
-    + .token.punctuation {
-    color: #3f9cd6;
-  }
-
-  .keyword-class,
-  .keyword-const,
-  .keyword-constructor,
-  .keyword-function,
-  .keyword-implements,
-  .keyword-new,
-  .keyword-private,
-  .keyword-public,
-  .keyword-readonly,
-  .keyword-this {
-    color: #569cd6;
-  }
-
-  .keyword-void {
-    color: #4ec9b0;
-  }
-
-  .import-member {
     color: #9cdcfe;
-  }
+}
+
+.language-ts .token.string,
+.language-typescript .token.string,
+.language-js .token.string,
+.language-javascript .token.string {
+    color: #ce9169;
+}
+
+.language-ts .token.punctuation,
+.language-typescript .token.punctuation,
+.language-js .token.punctuation,
+.language-javascript .token.punctuation {
+    color: #d4d4d4;
+}
+
+.language-ts .keyword-class,
+.language-ts .keyword-const,
+.language-ts .keyword-constructor,
+.language-ts .keyword-function,
+.language-ts .keyword-implements,
+.language-ts .keyword-new,
+.language-ts .keyword-private,
+.language-ts .keyword-public,
+.language-ts .keyword-readonly,
+.language-ts .keyword-this,
+.language-typescript .keyword-class,
+.language-typescript .keyword-const,
+.language-typescript .keyword-constructor,
+.language-typescript .keyword-function,
+.language-typescript .keyword-implements,
+.language-typescript .keyword-new,
+.language-typescript .keyword-private,
+.language-typescript .keyword-public,
+.language-typescript .keyword-readonly,
+.language-typescript .keyword-this,
+.language-js .keyword-class,
+.language-js .keyword-const,
+.language-js .keyword-constructor,
+.language-js .keyword-function,
+.language-js .keyword-implements,
+.language-js .keyword-new,
+.language-js .keyword-private,
+.language-js .keyword-public,
+.language-js .keyword-readonly,
+.language-js .keyword-this,
+.language-javascript .keyword-class,
+.language-javascript .keyword-const,
+.language-javascript .keyword-constructor,
+.language-javascript .keyword-function,
+.language-javascript .keyword-implements,
+.language-javascript .keyword-new,
+.language-javascript .keyword-private,
+.language-javascript .keyword-public,
+.language-javascript .keyword-readonly,
+.language-javascript .keyword-this {
+    color: #569cd6;
+}
+
+.language-ts .keyword-void,
+.language-typescript .keyword-void,
+.language-js .keyword-void,
+.language-javascript .keyword-void {
+    color: #4ec9b0;
+}
+
+.language-ts .import-member,
+.language-typescript .import-member,
+.language-js .import-member,
+.language-javascript .import-member {
+    color: #9cdcfe;
+}
+
+/* TypeScript/JavaScript Light Mode */
+body.light .language-ts,
+body.light .language-typescript,
+body.light .language-js,
+body.light .language-javascript {
+    color: #001080;
+}
+
+body.light .language-ts .token.string,
+body.light .language-typescript .token.string,
+body.light .language-js .token.string,
+body.light .language-javascript .token.string {
+    color: #a31515;
+}
+
+body.light .language-ts .token.punctuation,
+body.light .language-typescript .token.punctuation,
+body.light .language-js .token.punctuation,
+body.light .language-javascript .token.punctuation {
+    color: #393a34;
+}
+
+body.light .language-ts .keyword-class,
+body.light .language-ts .keyword-const,
+body.light .language-ts .keyword-constructor,
+body.light .language-ts .keyword-function,
+body.light .language-ts .keyword-implements,
+body.light .language-ts .keyword-new,
+body.light .language-ts .keyword-private,
+body.light .language-ts .keyword-public,
+body.light .language-ts .keyword-readonly,
+body.light .language-ts .keyword-this,
+body.light .language-typescript .keyword-class,
+body.light .language-typescript .keyword-const,
+body.light .language-typescript .keyword-constructor,
+body.light .language-typescript .keyword-function,
+body.light .language-typescript .keyword-implements,
+body.light .language-typescript .keyword-new,
+body.light .language-typescript .keyword-private,
+body.light .language-typescript .keyword-public,
+body.light .language-typescript .keyword-readonly,
+body.light .language-typescript .keyword-this,
+body.light .language-js .keyword-class,
+body.light .language-js .keyword-const,
+body.light .language-js .keyword-constructor,
+body.light .language-js .keyword-function,
+body.light .language-js .keyword-implements,
+body.light .language-js .keyword-new,
+body.light .language-js .keyword-private,
+body.light .language-js .keyword-public,
+body.light .language-js .keyword-readonly,
+body.light .language-js .keyword-this,
+body.light .language-javascript .keyword-class,
+body.light .language-javascript .keyword-const,
+body.light .language-javascript .keyword-constructor,
+body.light .language-javascript .keyword-function,
+body.light .language-javascript .keyword-implements,
+body.light .language-javascript .keyword-new,
+body.light .language-javascript .keyword-private,
+body.light .language-javascript .keyword-public,
+body.light .language-javascript .keyword-readonly,
+body.light .language-javascript .keyword-this {
+    color: #0000ff;
+}
+
+body.light .language-ts .keyword-void,
+body.light .language-typescript .keyword-void,
+body.light .language-js .keyword-void,
+body.light .language-javascript .keyword-void {
+    color: #267f99;
+}
+
+body.light .language-ts .import-member,
+body.light .language-typescript .import-member,
+body.light .language-js .import-member,
+body.light .language-javascript .import-member {
+    color: #001080;
 }
