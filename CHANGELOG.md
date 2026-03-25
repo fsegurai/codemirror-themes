@@ -563,7 +563,9 @@ No changes have been made yet.
 
 ---
 
-[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.29.1...HEAD
+[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.29.2...HEAD
+
+[6.29.2]: https://github.com/fsegurai/codemirror-themes/compare/v6.29.1...v6.29.2
 
 [6.29.1]: https://github.com/fsegurai/codemirror-themes/compare/v6.29.0...v6.29.1
 
