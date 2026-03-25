@@ -11,7 +11,7 @@ No changes have been made yet.
 
 ---
 
-## [6.29.2] - 2026-xx-xx
+## [6.29.2] - 2026-03-24
 
 ### 🔐 Security
 
