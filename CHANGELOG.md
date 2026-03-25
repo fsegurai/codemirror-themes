@@ -37,6 +37,8 @@ No changes have been made yet.
 		- `typescript` from `5.9.3` to `6.0.2`
 		- `typescript-eslint` from `8.53.1` to `8.57.2`
 
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.29.2
+
 ---
 
 ## [6.29.1] - 2026-01-24
