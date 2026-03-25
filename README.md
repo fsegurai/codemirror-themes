@@ -1,8 +1,8 @@
-<p align="center">
+<p align="center" class="intro">
   <img alt="CodeMirror 6 Themes Logo" src="https://raw.githubusercontent.com/fsegurai/codemirror-themes/main/demo/public/codemirror-themes.png">
 </p>
 
-<p align="center">
+<p align="center" class="intro">
   <a href="https://github.com/fsegurai/codemirror-themes">
       <img src="https://img.shields.io/azure-devops/build/fsegurai/93779823-473d-4fb3-a5b1-27aaa1a88ea2/16/main?label=Build%20Status&"
           alt="Build Main Status">
@@ -10,7 +10,7 @@
   <a href="https://github.com/fsegurai/codemirror-themes/releases/latest">
       <img src="https://img.shields.io/github/v/release/fsegurai/codemirror-themes"
           alt="Latest Release">
-</a>
+  </a>
   <br>
   <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/fsegurai/codemirror-themes">
   <img alt="Dependency status for repo" src="https://img.shields.io/librariesio/github/fsegurai/codemirror-themes">
@@ -26,6 +26,8 @@
 
 `@fsegurai/codemirror-theme-bundle` is a collection of themes to enhance CodeMirror 6 editor, making it visually
 engaging and adaptable to different coding styles and user preferences.
+
+---
 
 ### Table of contents
 
@@ -52,9 +54,9 @@ bun install @fsegurai/codemirror-theme-bundle codemirror@^6.0.0 --save
 Import the desired theme from the package and apply it to your CodeMirror instance as shown below.
 
 ```javascript
-import { EditorView, basicSetup } from 'codemirror'
-import { markdown } from '@codemirror/lang-markdown'
-import { bundle } from '@fsegurai/codemirror-theme-bundle'
+import {EditorView, basicSetup} from 'codemirror'
+import {markdown} from '@codemirror/lang-markdown'
+import {bundle} from '@fsegurai/codemirror-theme-bundle'
 
 let editor = new EditorView({
 	doc: '# Hello World',

@@ -6,10 +6,25 @@ import { diffMdSample, mdSample } from './utils/markdown.example';
 import { applyMergeRevertStyles, themes } from './utils/themes';
 import { MergeView, unifiedMergeView } from '@codemirror/merge';
 
+const loadingSpinner = document.querySelector('#loadingSpinner') as HTMLElement;
 const elCM = document.querySelector('#codemirror')!;
 const elDCM = document.querySelector('#diff-codemirror')!;
 const elUDCM = document.querySelector('#undiff-codemirror')!;
 const themeConfig = new Compartment();
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (elList && defaultOption) {
+    // Hide loading spinner after initial render
+    setTimeout(() => {
+      if (loadingSpinner) {
+        loadingSpinner.classList.add('hidden');
+        setTimeout(() => {
+          loadingSpinner.style.display = 'none';
+        }, 300);
+      }
+    }, 300);
+  }
+});
 
 const diffEditor = new MergeView({
   orientation: 'b-a',
@@ -90,7 +105,7 @@ if (elList && defaultOption) {
   for (let i = 0; i < themes.length; ++i) {
     // Create new options for the remaining themes
     const elItem =
-      i === 0 ? defaultOption : document.createElement('md-select-option');
+            i === 0 ? defaultOption : document.createElement('md-select-option');
     elItem.setAttribute('value', i.toString());
     const themeItem = i === 0
       ? defaultOption.querySelector('div[slot="headline"]')!

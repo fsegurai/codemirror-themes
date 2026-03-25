@@ -11,6 +11,34 @@ No changes have been made yet.
 
 ---
 
+## [6.29.2] - 2026-xx-xx
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/language` from `6.12.1` to `6.12.2`
+        - `@codemirror/merge` from `6.11.2` to `6.12.1`
+        - `@codemirror/state` from `6.5.4` to `6.6.0`
+        - `marked` from `17.0.1` to `17.0.5`
+	- Dev Dependencies
+		- `@eslint/js` from `9.39.2` to `10.0.1`
+        - `@rollup/plugin-commonjs` from `29.0.0` to `29.0.2`
+		- `@types/node` from `25.0.10` to `25.5.0`
+        - `@types/prismjs` from `1.26.5` to `1.26.6`
+		- `cpy-cli` from `6.0.0` to `7.0.0`
+        - `dotenv` from `17.2.3` to `17.3.1`
+		- `eslint` from `9.39.2` to `10.1.0`
+        - `glob` from `13.0.0` to `13.00.6`
+		- `globals` from `17.1.0` to `17.4.0`
+        - `rimraf` from `6.1.2` to `6.1.3`
+		- `rollup` from `4.56.0` to `4.60.0`
+        - `semantic-release` from `25.0.2` to `25.0.3`
+		- `typescript` from `5.9.3` to `6.0.2`
+		- `typescript-eslint` from `8.53.1` to `8.57.2`
+
+---
+
 ## [6.29.1] - 2026-01-24
 
 ### 🔧 Changes
