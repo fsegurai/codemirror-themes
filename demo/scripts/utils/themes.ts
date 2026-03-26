@@ -32,6 +32,8 @@ import {
   highContrastLightMergeStyles,
   materialDark,
   materialDarkMergeStyles,
+  materialOcean,
+  materialOceanMergeStyles,
   materialLight,
   materialLightMergeStyles,
   monokai,
@@ -138,6 +140,11 @@ const themes = [
     name: 'material-dark',
     extension: materialDark,
     mergeStyles: materialDarkMergeStyles,
+  },
+  {
+    name: 'material-ocean',
+    extension: materialOcean,
+    mergeStyles: materialOceanMergeStyles,
   },
   {
     name: 'material-light',
