@@ -1,7 +1,7 @@
 {
   "name": "@fsegurai/codemirror-theme-material-ocean",
   "description": "Material Ocean theme for the CodeMirror editor",
-  "version": "6.2.3",
+  "version": "6.2.4",
   "type": "module",
   "main": "dist/index.cjs",
   "exports": {
