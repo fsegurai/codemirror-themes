@@ -11,6 +11,27 @@ No changes have been made yet.
 
 ---
 
+## [6.30.0] - 2026-04-02
+
+### 🚀 Features
+
+- **New Theme**: Added a new `material-ocean` theme to the collection. Thanks to [@Yug34](https://github.com/Yug34) for the
+  contribution in [#114](https://github.com/fsegurai/codemirror-themes/pull/114)
+
+### 🐞 Fixes
+
+- Fixed a typo in all themes utilities.
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/language` from `6.12.2` to `6.12.3`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.30.0
+
+---
+
 ## [6.29.2] - 2026-03-24
 
 ### 🔐 Security
@@ -34,8 +55,17 @@ No changes have been made yet.
         - `rimraf` from `6.1.2` to `6.1.3`
 		- `rollup` from `4.56.0` to `4.60.0`
         - `semantic-release` from `25.0.2` to `25.0.3`
-		- `typescript` from `5.9.3` to `6.0.2`
 		- `typescript-eslint` from `8.53.1` to `8.57.2`
+- **Removed dependencies** — eliminated unused dependencies to reduce potential security risks and improve project
+  maintainability.
+	- Removed Dependencies
+		- `@semantic-release/changelog`
+		- `@semantic-release/commit-analyzer`
+		- `@semantic-release/git`
+		- `@semantic-release/release-notes-generator`
+		- `semantic-release`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.29.2
 
 ---
 
@@ -44,7 +74,7 @@ No changes have been made yet.
 ### 🔧 Changes
 
 - Changed the project logo for a more accurate one.
-- Improved utils script to support Linux and Windows paths.
+- Improved a util script to support Linux and Windows paths.
 
 ### 🐞 Fixes
 
@@ -563,7 +593,9 @@ No changes have been made yet.
 
 ---
 
-[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.29.2...HEAD
+[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.0...HEAD
+
+[6.30.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.29.2...v6.30.0
 
 [6.29.2]: https://github.com/fsegurai/codemirror-themes/compare/v6.29.1...v6.29.2
 

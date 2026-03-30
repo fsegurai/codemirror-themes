@@ -1,0 +1,44 @@
+{
+  "name": "@fsegurai/codemirror-theme-material-ocean",
+  "version": "6.0.0",
+  "description": "Material Ocean theme for the CodeMirror editor",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    "import": "./dist/index.js",
+    "require": "./dist/index.cjs"
+  },
+  "sideEffects": false,
+  "keywords": [
+    "editor",
+    "diff",
+    "diff-editor",
+    "code",
+    "codemirror",
+    "theme",
+    "themes",
+    "syntax",
+    "highlight",
+    "material-ocean"
+  ],
+  "author": {
+    "name": "Fabián Segura",
+    "url": "https://www.fsegurai.com/"
+  },
+  "license": "MIT",
+  "scripts": {
+    "test": "cm-runtests",
+    "prepare": "cm-buildhelper src/index.ts"
+  },
+  "peerDependencies": {
+    "@lezer/highlight": "^1.0.0",
+    "@codemirror/language": "^6.0.0",
+    "@codemirror/state": "^6.0.0",
+    "@codemirror/view": "^6.0.0"
+  },
+  "devDependencies": {
+    "@codemirror/buildhelper": "^1.0.2"
+  }
+}

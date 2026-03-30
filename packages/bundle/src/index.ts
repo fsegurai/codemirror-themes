@@ -15,6 +15,7 @@ export { highContrastDark, highContrastDarkMergeStyles } from '@fsegurai/codemir
 export { highContrastLight, highContrastLightMergeStyles } from '@fsegurai/codemirror-theme-high-contrast-light';
 export { materialDark, materialDarkMergeStyles } from '@fsegurai/codemirror-theme-material-dark';
 export { materialLight, materialLightMergeStyles } from '@fsegurai/codemirror-theme-material-light';
+export { materialOcean, materialOceanMergeStyles } from '@fsegurai/codemirror-theme-material-ocean';
 export { monokai, monokaiMergeStyles } from '@fsegurai/codemirror-theme-monokai';
 export { nord, nordMergeStyles } from '@fsegurai/codemirror-theme-nord';
 export { palenight, palenightMergeStyles } from '@fsegurai/codemirror-theme-palenight';
