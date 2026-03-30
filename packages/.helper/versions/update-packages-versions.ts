@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { glob } from 'glob';
+import { glob } from 'node:fs/promises';
 import process from 'process';
 import { fileURLToPath } from 'url';
 
@@ -62,13 +62,22 @@ function parseArgs(): Options {
 }
 
 async function loadPackages(): Promise<PkgInfo[]> {
-  const files = await glob(PACKAGES_GLOB, { cwd: ROOT, absolute: true });
+  const files = glob(PACKAGES_GLOB, { cwd: ROOT });
   const pkgs: PkgInfo[] = [];
-  for (const f of files) {
-    const raw = await fs.readFile(f, 'utf8');
-    const json = JSON.parse(raw) as PackageJson;
-    if (!json.name) continue;
-    pkgs.push({ name: String(json.name), version: json.version || '0.0.0', file: f, json });
+  try {
+    for await (const f of files) {
+      const raw = await fs.readFile(f, 'utf8');
+      const json = JSON.parse(raw) as PackageJson;
+      if (!json.name) continue;
+      pkgs.push({ name: String(json.name), version: json.version || '0.0.0', file: f, json });
+    }
+  }catch (err) {
+    console.error({
+      message: 'Error loading packages',
+      error: err instanceof Error ? err.message : String(err),
+      context: { glob: PACKAGES_GLOB },
+      packages: pkgs.map(p => ({ name: p.name, version: p.version, file: p.file })),
+    });
   }
   pkgs.sort((a, b) => a.name.localeCompare(b.name));
   return pkgs;

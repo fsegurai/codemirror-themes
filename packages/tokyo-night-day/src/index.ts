@@ -193,14 +193,14 @@ const tokyoNightDayTheme = EditorView.theme(
       backgroundColor: addedBackground,
       color: addedText,
       padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadious,
+      borderRadius: generalDiff.borderRadius,
     },
     'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
       textDecoration: generalDiff.insertedTextDecoration,
       backgroundColor: `${addedBackground} !important`,
       color: addedText,
       padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadious,
+      borderRadius: generalDiff.borderRadius,
       border: `1px solid ${addedText}40`,
     },
     'ins.cm-insertedLine .cm-changedText': {
@@ -213,14 +213,14 @@ const tokyoNightDayTheme = EditorView.theme(
       backgroundColor: removedBackground,
       color: removedText,
       padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadious,
+      borderRadius: generalDiff.borderRadius,
     },
     'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
       textDecoration: generalDiff.deletedTextDecoration,
       backgroundColor: `${removedBackground} !important`,
       color: removedText,
       padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadious,
+      borderRadius: generalDiff.borderRadius,
       border: `1px solid ${removedText}40`,
     },
     'del .cm-deletedText, del .cm-changedText': {

@@ -202,7 +202,7 @@ const highContrastDarkTheme = EditorView.theme(
       backgroundColor: addedBackground,
       color: addedText,
       padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadious,
+      borderRadius: generalDiff.borderRadius,
       border: `1px solid ${addedText}`,
     },
     'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
@@ -210,7 +210,7 @@ const highContrastDarkTheme = EditorView.theme(
       backgroundColor: `${addedBackground} !important`,
       color: addedText,
       padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadious,
+      borderRadius: generalDiff.borderRadius,
       border: `1px solid ${addedText}`,
     },
     'ins.cm-insertedLine .cm-changedText': {
@@ -222,7 +222,7 @@ const highContrastDarkTheme = EditorView.theme(
       backgroundColor: removedBackground,
       color: removedText,
       padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadious,
+      borderRadius: generalDiff.borderRadius,
       border: `1px solid ${removedText}`,
     },
     'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
@@ -230,7 +230,7 @@ const highContrastDarkTheme = EditorView.theme(
       backgroundColor: `${removedBackground} !important`,
       color: removedText,
       padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadious,
+      borderRadius: generalDiff.borderRadius,
       border: `1px solid ${removedText}`,
     },
     'del .cm-deletedText, del .cm-changedText': {

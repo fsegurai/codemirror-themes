@@ -13,7 +13,7 @@ export const generalDiff = {
   insertedTextDecoration: 'none',
   deletedTextDecoration: 'line-through',
   insertedLinePadding: '1px 3px',
-  borderRadious: '3px',
+  borderRadius: '3px',
   ins_del_linePadding: '1px 3px',
 };
 
@@ -68,10 +68,10 @@ export const generalTooltip = {
 
 // Interface for merge revert styling options
 export interface IMergeRevertStyles {
-  backgroundColor: string
-  borderColor: string
-  buttonColor: string
-  buttonHoverColor: string
+    backgroundColor: string
+    borderColor: string
+    buttonColor: string
+    buttonHoverColor: string
 }
 
 /**

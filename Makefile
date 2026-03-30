@@ -43,6 +43,7 @@ trivy-full:
 		-v $(TRIVY_CACHE):/root/.cache/trivy \
 		$(TRIVY_IMAGE) fs \
 		--scanners license,vuln,secret,misconfig \
+		--include-dev-deps \
 		-f json -o /app/trivy-reports/trivy-$(BASE_NAME).json \
 		/app/$(TARGET)
 	# SARIF report
@@ -51,6 +52,7 @@ trivy-full:
 		-v $(TRIVY_CACHE):/root/.cache/trivy \
 		$(TRIVY_IMAGE) fs \
 		--scanners license,vuln,secret,misconfig \
+		--include-dev-deps \
 		-f sarif -o /app/trivy-reports/trivy-$(BASE_NAME).sarif \
 		/app/$(TARGET)
 	@echo "Reports saved in $(REPORT_DIR)"

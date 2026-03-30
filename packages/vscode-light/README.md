@@ -53,14 +53,14 @@ Import the respective theme from the package and apply it to your CodeMirror ins
 ```javascript
 import { EditorView, basicSetup } from 'codemirror'
 import { markdown } from '@codemirror/lang-markdown'
-import { vsCodeLight } from '@fsegurai/codemirror-theme-vscode-light'
+import { vscodeLight } from '@fsegurai/codemirror-theme-vscode-light'
 
 let editor = new EditorView({
   doc: '# Hello World',
   extensions: [
     basicSetup,
     markdown(),
-	  vsCodeLight
+    vscodeLight
   ],
   parent: document.body
 })
@@ -90,6 +90,7 @@ Read the [CodeMirror documentation](https://codemirror.net/6/examples/styling/) 
 | High Contrast Light | [@fsegurai/codemirror-theme-high-contrast-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-high-contrast-light) | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-high-contrast-light) |
 | Material Dark       | [@fsegurai/codemirror-theme-material-dark](https://www.npmjs.com/package/@fsegurai/codemirror-theme-material-dark)             | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-material-dark)       |
 | Material Light      | [@fsegurai/codemirror-theme-material-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-material-light)           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-material-light)      |
+| Material Ocean      | [@fsegurai/codemirror-theme-material-ocean](https://www.npmjs.com/package/@fsegurai/codemirror-theme-material-ocean)           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-material-ocean)      |
 | Monokai             | [@fsegurai/codemirror-theme-monokai](https://www.npmjs.com/package/@fsegurai/codemirror-theme-monokai)                         | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-monokai)             |
 | Nord                | [@fsegurai/codemirror-theme-nord](https://www.npmjs.com/package/@fsegurai/codemirror-theme-nord)                               | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-nord)                |
 | Palenight           | [@fsegurai/codemirror-theme-palenight](https://www.npmjs.com/package/@fsegurai/codemirror-theme-palenight)                     | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-palenight)           |
