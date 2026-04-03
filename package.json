@@ -64,10 +64,10 @@
   ],
   "scripts": {
     "prebuild": "bun run clean",
-    "build": "bun run build:packages && bun run build:demo && bun run postbuild:demo",
+    "build": "bun run build:packages && bun run postbuild:packages && bun run build:demo && bun run postbuild:demo",
     "postbuild:demo": "cpy ./README.md ./demo && cpy ./LICENSE ./demo",
     "build:packages": "bun run --filter '*' pkg:build",
-    "postbuild:packages": "cpy ./LICENSE ./packages/*",
+    "postbuild:packages": "find ./packages -maxdepth 1 -type d ! -name '.helper' ! -name 'packages' -exec cp ./LICENSE {} \\;",
     "build:demo": "rollup -c rollup.config.js",
     "build:doppler": "doppler run bun run build",
     "build:packages:doppler": "doppler run bun run build:packages",
