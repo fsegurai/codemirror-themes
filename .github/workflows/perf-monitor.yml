@@ -5,7 +5,7 @@ on:
     branches: ['main']
     paths:
       - 'packages/*/src/**'
-      - 'rollup.config.js'
+      - 'vite.config.js'
       - '.github/workflows/perf-monitor.yml'
   workflow_dispatch:
 

@@ -15,7 +15,8 @@ No changes have been made yet.
 
 ### 🚀 Features
 
-- **New Theme**: Added a new `material-ocean` theme to the collection. Thanks to [@Yug34](https://github.com/Yug34) for the
+- **New Theme**: Added a new `material-ocean` theme to the collection. Thanks to [@Yug34](https://github.com/Yug34) for
+  the
   contribution in [#114](https://github.com/fsegurai/codemirror-themes/pull/114)
 
 ### 🐞 Fixes
@@ -24,14 +25,50 @@ No changes have been made yet.
 
 ### 🔐 Security
 
+- **Added dependencies**.
+	- Dev Dependencies
+		- `portless` - `0.9.4` - needed for local development. Replace port numbers with stable names.
+        - `terser` - `5.46.1` - needed for production builds as part of Vite.
+		- `vite` - `8.0.3` - needed for development and build processes. Replacement of Rollup.
 - **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
 	- Dependencies
 		- `@codemirror/language` from `6.12.2` to `6.12.3`
 	- Dev Dependencies
-		- `dotenv` from `17.3.1` to `17.4.0`
-		- `rollup` from `4.60.0` to `4.60.1`
-        - `typescript` from `5.9.3` to `6.0.2`
-        - `typescript-eslint` from `8.57.2` to `8.58.0`
+		- `typescript` from `5.9.3` to `6.0.2`
+		- `typescript-eslint` from `8.57.2` to `8.58.0`
+- **Removed dependencies** — eliminated unused dependencies to reduce potential security risks and improve project
+  maintainability.
+	- Removed Dependencies
+		- `@rollup/plugin-commonjs`
+		- `@rollup/plugin-node-resolve`
+		- `@rollup/plugin-replace`
+		- `@rollup/plugin-typescript`
+		- `cpy-cli`
+		- `dotenv`
+		- `rollup`
+		- `rollup-plugin-dev`
+
+### 🔧 Infrastructure
+
+- **Build System Migration**: Migrated from Rollup to Vite
+	- Replaced `rollup` + `rollup-plugin-dev` with `vite`
+	- Removed all Rollup plugins (`@rollup/plugin-*`)
+	- Added `vite.config.js` for cleaner configuration
+	- Benefits:
+		- Faster dev server with better HMR (Hot Module Replacement)
+		- Built-in environment variable support (`.env` files)
+		- Native TypeScript compilation
+		- Better CSS/asset handling for future scalability
+		- Simplified build configuration
+	- Updated dev commands:
+		- `bun run dev` now uses `vite serve` (was `rollup -w`)
+		- `bun run build:demo` now uses `vite build` (was `rollup -c`)
+	- Removed `rollup.config.js` (replaced by `vite.config.js`)
+	- Removed build helper script `scripts/build-demo.mjs` (Vite handles env vars natively)
+
+### 📝 Documentation
+
+- Updated GitHub labeler configuration to track `vite.config.js` changes instead of `rollup.config.js`
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.30.0
 
@@ -44,22 +81,22 @@ No changes have been made yet.
 - **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
 	- Dependencies
 		- `@codemirror/language` from `6.12.1` to `6.12.2`
-        - `@codemirror/merge` from `6.11.2` to `6.12.1`
-        - `@codemirror/state` from `6.5.4` to `6.6.0`
-        - `marked` from `17.0.1` to `17.0.5`
+		- `@codemirror/merge` from `6.11.2` to `6.12.1`
+		- `@codemirror/state` from `6.5.4` to `6.6.0`
+		- `marked` from `17.0.1` to `17.0.5`
 	- Dev Dependencies
 		- `@eslint/js` from `9.39.2` to `10.0.1`
-        - `@rollup/plugin-commonjs` from `29.0.0` to `29.0.2`
+		- `@rollup/plugin-commonjs` from `29.0.0` to `29.0.2`
 		- `@types/node` from `25.0.10` to `25.5.0`
-        - `@types/prismjs` from `1.26.5` to `1.26.6`
+		- `@types/prismjs` from `1.26.5` to `1.26.6`
 		- `cpy-cli` from `6.0.0` to `7.0.0`
-        - `dotenv` from `17.2.3` to `17.3.1`
+		- `dotenv` from `17.2.3` to `17.3.1`
 		- `eslint` from `9.39.2` to `10.1.0`
-        - `glob` from `13.0.0` to `13.00.6`
+		- `glob` from `13.0.0` to `13.00.6`
 		- `globals` from `17.1.0` to `17.4.0`
-        - `rimraf` from `6.1.2` to `6.1.3`
+		- `rimraf` from `6.1.2` to `6.1.3`
 		- `rollup` from `4.56.0` to `4.60.0`
-        - `semantic-release` from `25.0.2` to `25.0.3`
+		- `semantic-release` from `25.0.2` to `25.0.3`
 		- `typescript-eslint` from `8.53.1` to `8.57.2`
 - **Removed dependencies** — eliminated unused dependencies to reduce potential security risks and improve project
   maintainability.

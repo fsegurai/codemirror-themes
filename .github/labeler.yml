@@ -10,7 +10,7 @@ infra:
         'eslint*.js',
         'jest.config.js',
         'release.config.js',
-        'rollup.config.js',
+        'vite.config.js',
         'tsconfig*.json',
       ]
 
