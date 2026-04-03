@@ -6,7 +6,7 @@ const { NODE_ENV, HOST_URL } = process.env;
 export default defineConfig({
   root: './demo',
   build: {
-    chunkSizeWarningLimit: 600, // Increase threshold to 600 kB
+    chunkSizeWarningLimit: 600,
     outDir: '../demo/dist',
     emptyOutDir: true,
     target: 'es2022',
@@ -15,6 +15,20 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: './demo/index.html',
+        header: './demo/scripts/header.ts',
+        index: './demo/scripts/index.ts',
+        playground: './demo/scripts/playground.ts',
+      },
+      output: {
+        entryFileNames: 'scripts/[name].js',
+        chunkFileNames: 'chunks/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash][extname]',
+        manualChunks: (id) => {
+          // Don't chunk Prism components - keep them inline
+          if (id.includes('prismjs')) {
+            return undefined;
+          }
+        },
       },
     },
   },
