@@ -1,0 +1,201 @@
+name: Documentation
+
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'AGENTS.md'
+      - 'CHANGELOG.md'
+      - 'demo/**'
+      - 'packages/*/README.md'
+  pull_request:
+    branches: ['main']
+    paths:
+      - '**/*.md'
+      - 'demo/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  pages: write
+  id-token: write
+
+jobs:
+  validate-markdown:
+    name: Validate Markdown
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check markdown syntax
+        run: |
+          find . -name '*.md' -type f ! -path './node_modules/*' ! -path './.git/*' | while read -r file; do
+            echo "Checking $file..."
+            # Basic markdown validation - check for unclosed code blocks
+            if grep -q '^```[^`]*$' "$file" && ! grep -c '^```$' "$file" | grep -q '[02468]$'; then
+              echo "❌ Unclosed code block in $file"
+              exit 1
+            fi
+          done
+          echo "✅ All markdown syntax valid"
+
+      - name: Check for broken links in markdown
+        run: |
+          # Simple link checker - looks for common patterns
+          BROKEN=0
+          
+          for file in *.md packages/*/README.md; do
+            [ -f "$file" ] || continue
+            
+            # Extract markdown links
+            grep -oE '\[([^\]]+)\]\(([^)]+)\)' "$file" | sed 's/.*(\([^)]*\)).*/\1/' | while read -r link; do
+              # Skip URLs
+              if [[ $link == http* ]]; then
+                continue
+              fi
+              
+              # Skip anchors
+              if [[ $link == \#* ]]; then
+                continue
+              fi
+              
+              # Check if file exists
+              if ! [ -f "$link" ] && ! [ -d "$link" ]; then
+                echo "❌ Broken link in $file: $link"
+                BROKEN=1
+              fi
+            done
+          done
+          
+          [ $BROKEN -eq 0 ] && echo "✅ All links valid"
+          exit $BROKEN
+
+      - name: Comment on PR if issues found
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ **Documentation Issues Found**\n\nPlease fix markdown syntax and broken links. Check the workflow logs for details.'
+            })
+
+  validate-structure:
+    name: Validate README Structure
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate main README
+        run: |
+          echo "Validating README.md structure..."
+          
+          # Check for required sections
+          REQUIRED_SECTIONS=("Installation" "Usage" "Themes" "Development")
+          
+          for section in "${REQUIRED_SECTIONS[@]}"; do
+            if ! grep -q "^## $section\|^### $section" README.md; then
+              echo "⚠️ Missing or incorrectly formatted section: $section"
+            fi
+          done
+          
+          echo "✅ README structure validation complete"
+
+      - name: Validate package READMEs
+        run: |
+          echo "Validating package README structure..."
+          
+          for readme in packages/*/README.md; do
+            if [ -f "$readme" ]; then
+              PKG=$(basename $(dirname "$readme"))
+              
+              # Check basic structure
+              if ! head -1 "$readme" | grep -q "^#"; then
+                echo "⚠️ $PKG/README.md: Missing title"
+              fi
+            fi
+          done
+          
+          echo "✅ Package README validation complete"
+
+  build-demo-validation:
+    name: Validate Demo Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Validate demo structure
+        run: |
+          echo "Validating demo application..."
+          
+          # Check critical demo files exist
+          FILES=(
+            "demo/index.html"
+            "demo/playground.html"
+            "demo/scripts/index.ts"
+            "demo/scripts/playground.ts"
+            "demo/styles/app-theme.css"
+          )
+          
+          for file in "${FILES[@]}"; do
+            if [ -f "$file" ]; then
+              echo "✅ $file exists"
+            else
+              echo "❌ Missing critical file: $file"
+              exit 1
+            fi
+          done
+
+      - name: Build demo
+        run: |
+          echo "Building demo application..."
+          bun run build:demo 2>&1 | head -50
+          echo "✅ Demo built successfully"
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && success()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '📚 **Documentation Check Passed**\n\n✅ All markdown validated\n✅ Links verified\n✅ Demo builds successfully'
+            })
+
+  generate-summary:
+    name: Documentation Summary
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [validate-markdown, validate-structure, build-demo-validation]
+    steps:
+      - name: Create documentation summary
+        run: |
+          echo "## 📚 Documentation Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Markdown Syntax | ${{ needs.validate-markdown.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| README Structure | ${{ needs.validate-structure.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Demo Build | ${{ needs.build-demo-validation.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+

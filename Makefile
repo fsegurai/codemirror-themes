@@ -31,7 +31,10 @@ trivy-fast:
 	docker run --rm \
 		-v $(PWD):/app \
 		-v $(TRIVY_CACHE):/root/.cache/trivy \
-		$(TRIVY_IMAGE) fs --scanners vuln,misconfig /app/$(TARGET)
+		$(TRIVY_IMAGE) fs \
+		--scanners vuln,secret,misconfig \
+		--include-dev-deps \
+		/app/$(TARGET)
 
 # Full scan with all scanners, outputs JSON & SARIF
 trivy-full:
@@ -43,6 +46,7 @@ trivy-full:
 		-v $(TRIVY_CACHE):/root/.cache/trivy \
 		$(TRIVY_IMAGE) fs \
 		--scanners license,vuln,secret,misconfig \
+		--include-dev-deps \
 		-f json -o /app/trivy-reports/trivy-$(BASE_NAME).json \
 		/app/$(TARGET)
 	# SARIF report
@@ -51,6 +55,7 @@ trivy-full:
 		-v $(TRIVY_CACHE):/root/.cache/trivy \
 		$(TRIVY_IMAGE) fs \
 		--scanners license,vuln,secret,misconfig \
+		--include-dev-deps \
 		-f sarif -o /app/trivy-reports/trivy-$(BASE_NAME).sarif \
 		/app/$(TARGET)
 	@echo "Reports saved in $(REPORT_DIR)"

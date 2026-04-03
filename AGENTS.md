@@ -17,7 +17,7 @@ Root (workspace config, shared tsconfig, build tools)
 │   ├── scripts/index.ts           ← README renderer & demo UI
 │   ├── scripts/playground.ts      ← Interactive theme switcher
 │   └── styles/themes.css          ← Live theme preview styling
-└── build system (rollup, typescript, eslint)
+└── build system (vite, typescript, eslint)
 ```
 
 **Key Pattern**: Each theme is an **independent, publishable npm package** that exports:
@@ -28,8 +28,8 @@ Root (workspace config, shared tsconfig, build tools)
 
 ### Build & Publish Pipeline
 ```bash
-bun run build:packages     # Compiles all packages via cm-buildhelper (not rollup)
-bun run start              # Dev server with live reload (rollup + dev plugin)
+bun run build:packages     # Compiles all packages via cm-buildhelper (not vite)
+bun run start              # Dev server with live reload (vite)
 bun test                   # Runs tests across all packages
 bun run lint               # ESLint + TypeScript checking
 ```

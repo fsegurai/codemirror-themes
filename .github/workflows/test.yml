@@ -1,54 +1,99 @@
-name: Test Lib-Demo
-# Job will only run on push and pull requests to the main branch
+name: Code Quality
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: ['main']
     paths:
-      - '**'
-      - '.github/workflows/*.yml'
-      - '!.github/**'
-      - '!*.yml'
-      - '!*.config'
-      - '!*.md'
+      - 'packages/*/src/**'
+      - 'demo/scripts/**'
+      - '.github/workflows/test.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'packages/*/src/**'
+      - 'demo/scripts/**'
   workflow_dispatch:
-    inputs: { }
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
-  test_library:
+  lint-packages:
+    name: Lint - Packages
     runs-on: ubuntu-latest
-    timeout-minutes: 2
-    environment: FSI_DEP_NodeJs
+    timeout-minutes: 5
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Bun - Version ${{ vars.BUN_VERSION }}
+      - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: ${{ vars.BUN_VERSION }}
+          bun-version: latest
 
       - name: Install dependencies
         run: bun install
 
-      - name: Test Lint (Library)
+      - name: Lint Packages
         run: bun run lint:packages
 
-  test_demo:
+      - name: Comment on PR if failed
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ **Linting Failed - Packages**\n\nRun `bun run lint:fix` locally to fix formatting issues.'
+            })
+
+  lint-demo:
+    name: Lint - Demo
     runs-on: ubuntu-latest
-    timeout-minutes: 2
-    environment: FSI_DEP_NodeJs
+    timeout-minutes: 5
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Bun - Version ${{ vars.BUN_VERSION }}
+      - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: ${{ vars.BUN_VERSION }}
+          bun-version: latest
 
       - name: Install dependencies
         run: bun install
 
-      - name: Test Lint (Demo)
+      - name: Lint Demo
         run: bun run lint:demo
+
+      - name: Comment on PR if failed
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ **Linting Failed - Demo**\n\nRun `bun run lint:fix` locally to fix formatting issues.'
+            })
+
+  quality-summary:
+    name: Quality Check
+    if: always()
+    needs: [lint-packages, lint-demo]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report quality status
+        run: |
+          {
+            echo "## 📊 Code Quality Report"
+            echo ""
+            echo "| Component | Status |"
+            echo "|-----------|--------|"
+            echo "| Packages | ${{ needs.lint-packages.result == 'success' && '✅' || '❌' }} |"
+            echo "| Demo | ${{ needs.lint-demo.result == 'success' && '✅' || '❌' }} |"
+          } >> $GITHUB_STEP_SUMMARY

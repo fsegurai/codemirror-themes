@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-themes",
-  "version": "6.29.2",
+  "version": "6.30.0",
   "description": "Theme packages for the CodeMirror editor",
   "type": "module",
   "license": "MIT",
@@ -10,7 +10,8 @@
   },
   "engines": {
     "node": ">=20",
-    "bun": ">=1.1.0"
+    "bun": ">=1.3.0",
+    "npm": ">=10"
   },
   "keywords": [
     "code",
@@ -45,6 +46,7 @@
     "high-contrast-light",
     "material-dark",
     "material-light",
+    "material-ocean",
     "monokai",
     "nord",
     "palenight",
@@ -62,10 +64,11 @@
   ],
   "scripts": {
     "prebuild": "bun run clean",
-    "build": "bun run build:packages && bun run build:demo && bun run postbuild:demo",
-    "postbuild:demo": "cpy ./README.md ./demo && cpy ./LICENSE ./demo",
-    "build:packages": "bun run --filter '*' prepare",
-    "build:demo": "rollup -c rollup.config.js",
+    "build": "bun run build:packages && bun run postbuild:packages && bun run build:demo && bun run postbuild:demo",
+    "postbuild:demo": "cp ./README.md ./demo/README.md && cp ./LICENSE ./demo/LICENSE",
+    "build:packages": "bun run --filter '*' pkg:build",
+    "postbuild:packages": "find ./packages -maxdepth 1 -type d ! -name '.helper' ! -name 'packages' -exec cp ./LICENSE {} \\;",
+    "build:demo": "vite build",
     "build:doppler": "doppler run bun run build",
     "build:packages:doppler": "doppler run bun run build:packages",
     "build:demo:doppler": "doppler run bun run build:demo && bun run postbuild:demo",
@@ -73,7 +76,7 @@
     "clean:packages": "rimraf --glob ./packages/*/dist",
     "clean:demo": "rimraf --glob ./demo/dist ./demo/README.md ./demo/LICENSE",
     "clean:coverage": "rimraf --glob ./coverage",
-    "dev": "rollup -w -c rollup.config.js",
+    "dev": "portless run vite serve",
     "dev:doppler": "doppler run bun run dev",
     "start": "bun run dev",
     "start:doppler": "bun run dev:doppler",
@@ -90,7 +93,7 @@
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.0",
-    "@codemirror/language": "6.12.2",
+    "@codemirror/language": "6.12.3",
     "@codemirror/language-data": "^6.5.2",
     "@codemirror/legacy-modes": "^6.5.2",
     "@codemirror/merge": "^6.12.1",
@@ -106,26 +109,19 @@
   "devDependencies": {
     "@codemirror/buildhelper": "^1.0.2",
     "@eslint/js": "10.0.1",
-    "@rollup/plugin-commonjs": "^29.0.2",
-    "@rollup/plugin-node-resolve": "^16.0.3",
-    "@rollup/plugin-replace": "^6.0.3",
-    "@rollup/plugin-typescript": "^12.3.0",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/release-notes-generator": "^14.1.0",
     "@types/node": "25.5.0",
     "@types/prismjs": "^1.26.6",
-    "cpy-cli": "^7.0.0",
-    "dotenv": "^17.3.1",
     "eslint": "10.1.0",
     "glob": "^13.0.6",
     "globals": "17.4.0",
+    "portless": "^0.9.4",
     "rimraf": "^6.1.3",
-    "rollup": "4.60.0",
-    "rollup-plugin-dev": "^2.1.0",
-    "semantic-release": "^25.0.3",
+    "terser": "^5.46.1",
     "typescript": "6.0.2",
-    "typescript-eslint": "8.57.2"
+    "typescript-eslint": "8.58.0",
+    "vite": "^8.0.3"
+  },
+  "overrides": {
+    "serialize-javascript": "7.0.5"
   }
 }
