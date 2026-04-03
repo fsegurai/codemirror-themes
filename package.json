@@ -65,7 +65,7 @@
   "scripts": {
     "prebuild": "bun run clean",
     "build": "bun run build:packages && bun run postbuild:packages && bun run build:demo && bun run postbuild:demo",
-    "postbuild:demo": "cpy ./README.md ./demo && cpy ./LICENSE ./demo",
+    "postbuild:demo": "cp ./README.md ./demo/README.md && cp ./LICENSE ./demo/LICENSE",
     "build:packages": "bun run --filter '*' pkg:build",
     "postbuild:packages": "find ./packages -maxdepth 1 -type d ! -name '.helper' ! -name 'packages' -exec cp ./LICENSE {} \\;",
     "build:demo": "rollup -c rollup.config.js",
@@ -115,7 +115,6 @@
     "@rollup/plugin-typescript": "^12.3.0",
     "@types/node": "25.5.0",
     "@types/prismjs": "^1.26.6",
-    "cpy-cli": "^7.0.0",
     "dotenv": "^17.4.0",
     "eslint": "10.1.0",
     "glob": "^13.0.6",
@@ -125,5 +124,13 @@
     "rollup-plugin-dev": "^2.1.0",
     "typescript": "6.0.2",
     "typescript-eslint": "8.58.0"
+  },
+  "overrides": {
+    "@fastify/reply-from": "12.5.0",
+    "cookie": "0.7.0",
+    "fastify": "5.8.3",
+    "send": "0.19.0",
+    "serialize-javascript": "7.0.5",
+    "undici": "7.24.0"
   }
 }
