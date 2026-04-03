@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import process from 'node:process';
 
-const { NODE_ENV, HOST_URL } = process.env;
+const { NODE_ENV = 'development', HOST_URL = '' } = process.env;
 
 export default defineConfig({
   root: 'demo',
@@ -20,7 +20,7 @@ export default defineConfig({
     },
   },
   define: {
-    'NODE_ENV': JSON.stringify(NODE_ENV || 'development'),
-    'HOST_URL': JSON.stringify(HOST_URL || ''),
+    'NODE_ENV': JSON.stringify(NODE_ENV),
+    'HOST_URL': JSON.stringify(HOST_URL),
   },
 });
