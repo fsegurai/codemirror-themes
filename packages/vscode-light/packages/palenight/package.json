@@ -29,8 +29,8 @@
   },
   "license": "MIT",
   "scripts": {
-    "build:package": "cm-buildhelper src/index.ts",
-    "test": "cm-runtests"
+    "pkg:build": "cm-buildhelper src/index.ts",
+    "pkg:test": "cm-runtests"
   },
   "peerDependencies": {
     "@lezer/highlight": "^1.0.0",

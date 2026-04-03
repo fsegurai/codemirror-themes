@@ -1,25 +1,54 @@
 version: 2
 updates:
+  # Root dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "infra"
+      - "dependencies"
+    open-pull-requests-limit: 10
+    assignees:
+      - fsegurai
+    commit-message:
+      prefix: "npm(root)"
+    groups:
+      dev-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Theme packages
+  - package-ecosystem: "npm"
+    directory: "/packages"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "library"
+      - "dependencies"
+    open-pull-requests-limit: 20
+    assignees:
+      - fsegurai
+    commit-message:
+      prefix: "npm(packages)"
+
+  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "monthly"
     labels:
+      - "ci-cd"
       - "infra"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     assignees:
       - fsegurai
     commit-message:
-      prefix: "ci"
-
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "monthly"
-    labels:
-      - "infra"
-    open-pull-requests-limit: 10
-    assignees:
-      - fsegurai
-    commit-message:
-      prefix: "npm"
+      prefix: "ci(actions)"

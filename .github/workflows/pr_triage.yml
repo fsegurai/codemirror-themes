@@ -1,13 +1,14 @@
 name: "Pull Request Triage"
 on:
   pull_request_target:
-    types: [ opened, ready_for_review ]
+    types: [ opened, ready_for_review, reopened ]
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   triage:
-    permissions:
-      contents: read
-      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       # Grab sources to get latest labeler.yml
@@ -25,7 +26,7 @@ jobs:
           sync-labels: true
           dot: true
 
-      - name: Assign PR creator
+      - name: Assign PR creator and add welcome comment
         uses: actions/github-script@v6
         with:
           script: |
@@ -33,6 +34,7 @@ jobs:
             const assignees = pr.assignees.map(assignee => assignee.login);
             let assignee = pr.user.login;
 
+            // Assign PR creator
             if (!assignees.includes(assignee)) {
               if (assignee.includes('bot')) {
                 await github.rest.pulls.requestReviewers({
@@ -50,3 +52,120 @@ jobs:
                 });
               }
             }
+
+      - name: Add first-time contributor welcome
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+            
+            // Get all PRs from this author
+            const userPRs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              creator: author,
+              state: 'all'
+            });
+            
+            // If this is their first PR, send welcome message
+            if (userPRs.data.length === 1) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: `👋 **Welcome, @${author}!**
+
+Thank you for your contribution to codemirror-themes! Here's what to expect:
+
+- **Tests run automatically** - our CI pipeline validates linting and builds
+- **Reviews** - a maintainer will review your changes
+- **Labels** - we auto-tag PRs to help organize discussions
+- **Questions?** - feel free to ask in the comments
+
+📚 **Helpful Resources:**
+- [Contributing Guide](./CONTRIBUTING.md)
+- [AGENTS Guide](./AGENTS.md) - Project architecture
+- [Development Setup](./README.md#development)
+
+We appreciate your help! 🎉`
+              });
+            }
+
+      - name: Add Dependabot PR comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+            
+            // Check if this is a Dependabot PR
+            if (!author.includes('dependabot')) {
+              return;
+            }
+            
+            // Check if we already commented
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number
+            });
+            
+            const hasDepbotComment = comments.data.some(c => 
+              c.body.includes('Dependabot Update') || c.body.includes('@dependabot')
+            );
+            
+            if (!hasDepbotComment) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: `🤖 **Dependabot Update**
+
+This is an automated dependency update. A few things to know:
+
+- **Bun workspace**: All dependencies are managed through the root \`package.json\`
+- **Build checks**: The PR build validates all packages can compile
+- **Security**: Our security scan pipeline reviews all updates
+- **Merge**: Maintainers will review and merge periodically
+
+💡 Tip: Use \`@dependabot rebase\` to update this PR if conflicts occur.`
+              });
+            }
+
+      - name: Request specific reviewers for themes
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const files = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+            
+            // Check if it's a theme-specific change
+            const themeFiles = files.data.filter(f => f.filename.startsWith('packages/'));
+            
+            if (themeFiles.length > 0 && themeFiles.length <= 5) {
+              const themes = new Set();
+              themeFiles.forEach(f => {
+                const match = f.filename.match(/packages\/([^/]+)\//);
+                if (match) themes.add(match[1]);
+              });
+              
+              if (themes.size > 0) {
+                const body = `📦 **Theme(s) Modified:** ${Array.from(themes).join(', ')}`;
+                
+                // Add to PR body if not already there
+                if (!pr.body.includes(body)) {
+                  await github.rest.pulls.update({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: pr.number,
+                    body: pr.body ? pr.body + '\n\n' + body : body
+                  });
+                }
+              }
+            }
+
