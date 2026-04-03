@@ -31,7 +31,10 @@ trivy-fast:
 	docker run --rm \
 		-v $(PWD):/app \
 		-v $(TRIVY_CACHE):/root/.cache/trivy \
-		$(TRIVY_IMAGE) fs --scanners vuln,misconfig /app/$(TARGET)
+		$(TRIVY_IMAGE) fs \
+		--scanners vuln,secret,misconfig \
+		--include-dev-deps \
+		/app/$(TARGET)
 
 # Full scan with all scanners, outputs JSON & SARIF
 trivy-full:
