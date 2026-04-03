@@ -1,0 +1,180 @@
+name: Dependency Audit
+
+on:
+  schedule:
+    # Run weekly on Wednesday at 4 AM UTC
+    - cron: '0 4 * * 3'
+  pull_request:
+    paths:
+      - 'package.json'
+      - 'bun.lock'
+      - 'packages/*/package.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  audit:
+    name: Dependency Health Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run security audit
+        id: security
+        run: |
+          echo "Running security audit..."
+          bun audit --production > audit-security.txt 2>&1 || true
+          
+          if grep -q "vulnerabilities" audit-security.txt; then
+            echo "SECURITY_ISSUES=true" >> $GITHUB_ENV
+          else
+            echo "SECURITY_ISSUES=false" >> $GITHUB_ENV
+          fi
+
+      - name: Check outdated packages
+        id: outdated
+        run: |
+          echo "Checking for outdated packages..."
+          
+          # List all packages and their versions
+          {
+            echo "# Dependency Report"
+            echo ""
+            echo "## Root Dependencies"
+            echo "\`\`\`"
+            bun pm ls --depth=0
+            echo "\`\`\`"
+            echo ""
+            echo "## Top-level Outdated Packages"
+            echo "\`\`\`"
+            npm outdated --all 2>&1 || echo "All dependencies up to date"
+            echo "\`\`\`"
+          } > outdated-report.txt
+          
+          if grep -q "extraneous\|missing\|invalid" outdated-report.txt; then
+            echo "OUTDATED_ISSUES=true" >> $GITHUB_ENV
+          else
+            echo "OUTDATED_ISSUES=false" >> $GITHUB_ENV
+          fi
+
+      - name: Analyze dependency age
+        id: age
+        run: |
+          {
+            echo "## Dependency Age Analysis"
+            echo ""
+            echo "Last update timestamps for key dependencies:"
+            echo "\`\`\`"
+            
+            # Check key dependencies
+            for dep in "codemirror" "@codemirror/view" "@codemirror/state" "@lezer/highlight" "typescript" "eslint"; do
+              VERSION=$(npm view "$dep@latest" version 2>/dev/null || echo "unknown")
+              INSTALLED=$(grep -oP "\"$dep\":\s*\"\K[^\"]+?" package.json | head -1)
+              echo "$dep: installed=$INSTALLED, latest=$VERSION"
+            done
+            
+            echo "\`\`\`"
+          } > age-report.txt
+
+      - name: Generate audit comment
+        id: comment
+        run: |
+          {
+            echo "## 📦 Dependency Audit Report"
+            echo ""
+            echo "**Scan Date:** $(date -u +'%Y-%m-%d %H:%M UTC')"
+            echo ""
+            
+            if [ "${{ env.SECURITY_ISSUES }}" = "true" ]; then
+              echo "### ⚠️ Security Issues Found"
+              echo "\`\`\`"
+              cat audit-security.txt
+              echo "\`\`\`"
+            else
+              echo "### ✅ No Security Vulnerabilities"
+            fi
+            
+            echo ""
+            
+            if [ "${{ env.OUTDATED_ISSUES }}" = "true" ]; then
+              echo "### 🔄 Outdated Packages Detected"
+              tail -20 outdated-report.txt
+            else
+              echo "### ✅ All Dependencies Current"
+            fi
+            
+            echo ""
+            cat age-report.txt
+          } >> audit-comment.txt
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const comment = fs.readFileSync('audit-comment.txt', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            })
+
+      - name: Upload audit reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-audit-reports
+          path: |
+            audit-security.txt
+            outdated-report.txt
+            age-report.txt
+          retention-days: 30
+
+      - name: Create issue if vulnerabilities found
+        if: env.SECURITY_ISSUES == 'true' && github.event_name == 'schedule'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const audit = fs.readFileSync('audit-security.txt', 'utf8');
+            
+            // Check if issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'security',
+              state: 'open'
+            });
+            
+            const existingIssue = issues.data.find(issue => 
+              issue.title.includes('Dependency vulnerabilities')
+            );
+            
+            if (!existingIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '🔒 Dependency vulnerabilities detected',
+                body: '## Security Audit Alert\n\nDependency vulnerabilities detected in scheduled audit.\n\n' + audit,
+                labels: ['security', 'dependencies']
+              });
+            }
+

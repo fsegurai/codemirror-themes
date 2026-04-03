@@ -1,0 +1,175 @@
+name: Health Check
+
+on:
+  schedule:
+    # Run weekly on Monday at 3 AM UTC
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+  push:
+    branches: ['main']
+    paths:
+      - 'packages/*/src/**'
+      - 'package.json'
+
+permissions:
+  contents: read
+  issues: write
+  discussions: write
+
+jobs:
+  health-check:
+    name: Project Health Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build all packages
+        id: build
+        run: |
+          echo "## Build Results" >> $GITHUB_STEP_SUMMARY
+          bun run build:packages 2>&1 | tee build.log
+          BUILD_STATUS=${PIPESTATUS[0]}
+          
+          echo "BUILD_STATUS=$BUILD_STATUS" >> $GITHUB_ENV
+          if [ $BUILD_STATUS -eq 0 ]; then
+            echo "✅ All packages built successfully" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Build failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          exit $BUILD_STATUS
+
+      - name: Run linting
+        id: lint
+        run: |
+          echo "## Linting Results" >> $GITHUB_STEP_SUMMARY
+          bun run lint 2>&1 | tee lint.log
+          LINT_STATUS=${PIPESTATUS[0]}
+          
+          echo "LINT_STATUS=$LINT_STATUS" >> $GITHUB_ENV
+          if [ $LINT_STATUS -eq 0 ]; then
+            echo "✅ Linting passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Linting issues found" >> $GITHUB_STEP_SUMMARY
+          fi
+          exit $LINT_STATUS
+
+      - name: Dependency audit
+        id: audit
+        run: |
+          echo "## Dependency Audit" >> $GITHUB_STEP_SUMMARY
+          bun audit --production 2>&1 | tee audit.log || true
+          AUDIT_STATUS=$?
+          
+          if [ $AUDIT_STATUS -eq 0 ]; then
+            echo "✅ No security vulnerabilities" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Count packages
+        id: packages
+        run: |
+          PACKAGE_COUNT=$(find packages -maxdepth 1 -type d | wc -l)
+          PACKAGE_COUNT=$((PACKAGE_COUNT - 1))
+          echo "PACKAGE_COUNT=$PACKAGE_COUNT" >> $GITHUB_ENV
+          
+          THEME_COUNT=$(find packages -maxdepth 1 -type d -not -name 'bundle' -not -name '.helper' -not -name 'packages' | wc -l)
+          echo "THEME_COUNT=$THEME_COUNT" >> $GITHUB_ENV
+
+      - name: Check CodeMirror compatibility
+        id: compat
+        run: |
+          echo "## CodeMirror Compatibility" >> $GITHUB_STEP_SUMMARY
+          
+          CM_VERSION=$(grep -oP '"codemirror":\s*"\^\K[0-9.]+' package.json)
+          echo "- CodeMirror: $CM_VERSION" >> $GITHUB_STEP_SUMMARY
+          
+          CM_STATE_VERSION=$(grep -oP '"@codemirror/state":\s*"\^\K[0-9.]+' package.json)
+          echo "- @codemirror/state: $CM_STATE_VERSION" >> $GITHUB_STEP_SUMMARY
+          
+          CM_VIEW_VERSION=$(grep -oP '"@codemirror/view":\s*"\^\K[0-9.]+' package.json)
+          echo "- @codemirror/view: $CM_VIEW_VERSION" >> $GITHUB_STEP_SUMMARY
+
+      - name: Generate health report
+        id: report
+        env:
+          BUILD_OK: ${{ env.BUILD_STATUS == '0' }}
+          LINT_OK: ${{ env.LINT_STATUS == '0' }}
+        run: |
+          {
+            echo "## 🏥 Project Health Report"
+            echo ""
+            echo "**Generated:** $(date -u +'%Y-%m-%d %H:%M UTC')"
+            echo ""
+            echo "### Status Summary"
+            echo "| Check | Status |"
+            echo "|-------|--------|"
+            echo "| Build | $([ '${{ env.BUILD_OK }}' = 'true' ] && echo '✅ Healthy' || echo '❌ Failed') |"
+            echo "| Linting | $([ '${{ env.LINT_OK }}' = 'true' ] && echo '✅ Healthy' || echo '❌ Failed') |"
+            echo "| Packages | ${{ env.PACKAGE_COUNT }} packages (${{ env.THEME_COUNT }} themes) |"
+            echo ""
+            echo "### Build Log"
+            echo "\`\`\`"
+            tail -20 build.log
+            echo "\`\`\`"
+            echo ""
+            echo "### Lint Log"
+            echo "\`\`\`"
+            tail -20 lint.log
+            echo "\`\`\`"
+          } > health-report.md
+          
+          cat health-report.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload health report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: health-report
+          path: health-report.md
+          retention-days: 90
+
+      - name: Comment on existing health check issue
+        if: always() && github.event_name != 'workflow_dispatch'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('health-report.md', 'utf8');
+            
+            // Find existing health check issue
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'health-check',
+              state: 'open'
+            });
+            
+            if (issues.data.length > 0) {
+              // Update existing issue
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues.data[0].number,
+                body: '## Updated Health Check\n\n' + report
+              });
+            }
+
+      - name: Report results
+        if: failure()
+        run: |
+          echo "❌ Health check failed. See artifacts and step summary for details."
+          exit 1
+

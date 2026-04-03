@@ -3,23 +3,23 @@ infra:
       - any-glob-to-any-file: [
         '!.github/workflows/**',
         '.github/**',
-        'angular.json',
-        'package*.json',
-        'tsconfig*.json',
-        'eslint*.json',
         '.editorconfig',
+        '.env*',
+        'Makefile',
         'babel.config.js',
+        'eslint*.js',
         'jest.config.js',
         'release.config.js',
-        'rollup.config.js',
+        'vite.config.js',
+        'tsconfig*.json',
       ]
 
 dependencies:
   - changed-files:
       - any-glob-to-any-file: [
+        'bun.lock',
         'package-lock.json',
         'yarn.lock',
-        'bun.lockb',
       ]
 
 ci-cd:
@@ -36,10 +36,22 @@ demo:
         'demo/**'
       ]
 
-assets:
+demo-assets:
   - changed-files:
       - any-glob-to-any-file: [
         'demo/public/**'
+      ]
+
+demo-styles:
+  - changed-files:
+      - any-glob-to-any-file: [
+        'demo/styles/**',
+      ]
+
+demo-scripts:
+  - changed-files:
+      - any-glob-to-any-file: [
+        'demo/scripts/**',
       ]
 
 styles:
@@ -54,6 +66,134 @@ library:
       - any-glob-to-any-file: [
         'packages/**',
       ]
+
+theme-bundle:
+  - changed-files:
+      - any-glob-to-any-file: [
+        'packages/bundle/**'
+      ]
+
+theme-helper:
+  - changed-files:
+      - any-glob-to-any-file: [
+        'packages/.helper/**'
+      ]
+
+theme-abcdef:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/abcdef/**']
+
+theme-abyss:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/abyss/**']
+
+theme-android-studio:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/android-studio/**']
+
+theme-andromeda:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/andromeda/**']
+
+theme-basic-dark:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/basic-dark/**']
+
+theme-basic-light:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/basic-light/**']
+
+theme-catppuccin-mocha:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/catppuccin-mocha/**']
+
+theme-cobalt2:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/cobalt2/**']
+
+theme-forest:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/forest/**']
+
+theme-github-dark:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/github-dark/**']
+
+theme-github-light:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/github-light/**']
+
+theme-gruvbox-dark:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/gruvbox-dark/**']
+
+theme-gruvbox-light:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/gruvbox-light/**']
+
+theme-high-contrast-dark:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/high-contrast-dark/**']
+
+theme-high-contrast-light:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/high-contrast-light/**']
+
+theme-material-dark:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/material-dark/**']
+
+theme-material-light:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/material-light/**']
+
+theme-material-ocean:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/material-ocean/**']
+
+theme-monokai:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/monokai/**']
+
+theme-nord:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/nord/**']
+
+theme-palenight:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/palenight/**']
+
+theme-solarized-dark:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/solarized-dark/**']
+
+theme-solarized-light:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/solarized-light/**']
+
+theme-synthwave-84:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/synthwave-84/**']
+
+theme-tokyo-night-day:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/tokyo-night-day/**']
+
+theme-tokyo-night-storm:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/tokyo-night-storm/**']
+
+theme-volcano:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/volcano/**']
+
+theme-vscode-dark:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/vscode-dark/**']
+
+theme-vscode-light:
+  - changed-files:
+      - any-glob-to-any-file: ['packages/vscode-light/**']
 
 tests-library:
   - changed-files:
@@ -70,6 +210,7 @@ documentation:
   - changed-files:
       - any-glob-to-any-file: [
         'docs/**',
+        'AGENTS.md',
         'CHANGELOG.md',
         'CONTRIBUTING.md',
         'LICENSE',
