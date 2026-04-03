@@ -1,13 +1,13 @@
 import { defineConfig } from 'vite';
-import process from 'node:process';
 
-const { NODE_ENV = 'development', HOST_URL = '' } = process.env;
+const { NODE_ENV = 'development', HOST_URL = '' } = import.meta.env;
 
 export default defineConfig({
   root: 'demo',
   base: './',
   build: {
     outDir: 'dist',
+    assetsDir: 'assets',
     emptyOutDir: true,
     target: 'es2022',
     sourcemap: NODE_ENV === 'development',
@@ -20,7 +20,7 @@ export default defineConfig({
     },
   },
   define: {
-    'NODE_ENV': JSON.stringify(NODE_ENV),
-    'HOST_URL': JSON.stringify(HOST_URL),
+    '#NODE_ENV#': JSON.stringify(NODE_ENV),
+    '#HOST_URL#': JSON.stringify(HOST_URL),
   },
 });
