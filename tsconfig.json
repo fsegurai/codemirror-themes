@@ -23,7 +23,8 @@
       "dom"
     ],
     "types": [
-      "node"
+      "node",
+      "vite/client"
     ],
     "typeRoots": [
       "node_modules/@types"

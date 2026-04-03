@@ -1,6 +1,7 @@
 const ENV_REFERENCE = {
-  CMT_NODE_ENV: 'NODE_ENV',
-  CMT_HOST_URL_ENV: 'HOST_URL',
+  IS_PROD: import.meta.env.PROD,
+  MODE: import.meta.env.MODE,
+  HOST_URL: import.meta.env.VITE_HOST_URL,
 };
 
 export default ENV_REFERENCE;
