@@ -11,7 +11,7 @@ No changes have been made yet.
 
 ---
 
-## [6.30.0] - 2026-04-02
+## [6.30.0] - 2026-04-03
 
 ### 🚀 Features
 
@@ -27,6 +27,11 @@ No changes have been made yet.
 - **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
 	- Dependencies
 		- `@codemirror/language` from `6.12.2` to `6.12.3`
+	- Dev Dependencies
+		- `dotenv` from `17.3.1` to `17.4.0`
+		- `rollup` from `4.60.0` to `4.60.1`
+        - `typescript` from `5.9.3` to `6.0.2`
+        - `typescript-eslint` from `8.57.2` to `8.58.0`
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.30.0
 
