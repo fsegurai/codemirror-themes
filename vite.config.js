@@ -4,36 +4,20 @@ import process from 'node:process';
 const { NODE_ENV, HOST_URL } = process.env;
 
 export default defineConfig({
+  root: 'demo',
+  base: './',
   build: {
-    chunkSizeWarningLimit: 600,
-    outDir: './demo/dist',
+    outDir: 'dist',
     emptyOutDir: true,
     target: 'es2022',
-    sourcemap: true,
+    sourcemap: NODE_ENV === 'development',
     minify: 'terser',
     rollupOptions: {
-      input: [
-        './demo/scripts/index.ts',
-        './demo/scripts/header.ts',
-        './demo/scripts/playground.ts',
-      ],
-      output: {
-        format: 'esm',
-        dir: './demo/dist',
-        entryFileNames: '[name].js',
-        chunkFileNames: 'chunks/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash][extname]',
-        manualChunks: (id) => {
-          if (id.includes('prismjs')) {
-            return undefined;
-          }
-        },
+      input: {
+        main: 'demo/index.html',
+        playground: 'demo/playground.html',
       },
     },
-  },
-  server: {
-    port: 5173,
-    host: 'localhost',
   },
   define: {
     'NODE_ENV': JSON.stringify(NODE_ENV || 'development'),
