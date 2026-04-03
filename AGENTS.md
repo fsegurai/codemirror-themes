@@ -158,6 +158,6 @@ packages/[theme]/dist/
 - See `env.example` for configuration keys
 - `HOST_URL`: Demo server hostname (injected by rollup replace plugin)
 - `NODE_ENV`: Development/production mode (used by demo scripts)
-- Build system reads from process.env via dotenv
+- Build system reads from import.meta.env using vite/client (which is defined in tsconfig.json)
 
 
