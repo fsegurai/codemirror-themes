@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-theme-bundle",
-  "version": "6.3.2",
+  "version": "6.4.0",
   "description": "Bundle themes for the CodeMirror editor",
   "type": "module",
   "main": "dist/index.cjs",
