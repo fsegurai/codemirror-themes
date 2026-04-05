@@ -71,7 +71,7 @@
     "build:demo": "vite build",
     "build:demo:dev": "vite dev",
     "build:doppler": "doppler run bun run build",
-    "build:packages:doppler": "doppler run bun run build:packages",
+    "build:packages:doppler": "doppler run bun run build:packages && bun run postbuild:packages",
     "build:demo:doppler": "doppler run bun run build:demo && bun run postbuild:demo",
     "clean": "bun run clean:packages && bun run clean:demo",
     "clean:packages": "rimraf --glob ./packages/*/dist",
