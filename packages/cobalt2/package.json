@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-theme-cobalt2",
-  "version": "6.0.4",
+  "version": "6.0.5",
   "description": "Cobalt2 theme for the CodeMirror editor",
   "type": "module",
   "main": "dist/index.cjs",

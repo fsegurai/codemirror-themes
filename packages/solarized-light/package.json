@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-theme-solarized-light",
-  "version": "6.2.4",
+  "version": "6.2.5",
   "description": "Solarized Light theme for the CodeMirror editor",
   "type": "module",
   "main": "dist/index.cjs",
