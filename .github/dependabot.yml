@@ -1,6 +1,6 @@
 version: 2
 updates:
-  # Root dependencies
+  # Root dependencies (includes all monorepo workspaces)
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -12,7 +12,8 @@ updates:
     assignees:
       - fsegurai
     commit-message:
-      prefix: "npm(root)"
+      prefix: "npm"
+      include: "scope"
     groups:
       dev-dependencies:
         dependency-type: "development"
@@ -25,19 +26,6 @@ updates:
           - "minor"
           - "patch"
 
-  # Theme packages
-  - package-ecosystem: "npm"
-    directory: "/packages"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "library"
-      - "dependencies"
-    open-pull-requests-limit: 20
-    assignees:
-      - fsegurai
-    commit-message:
-      prefix: "npm(packages)"
 
   # GitHub Actions
   - package-ecosystem: "github-actions"

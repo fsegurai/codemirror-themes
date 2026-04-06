@@ -2,7 +2,7 @@ name: Documentation
 
 on:
   push:
-    branches: ['main']
+    branches: [ 'main' ]
     paths:
       - 'README.md'
       - 'CONTRIBUTING.md'
@@ -11,7 +11,7 @@ on:
       - 'demo/**'
       - 'packages/*/README.md'
   pull_request:
-    branches: ['main']
+    branches: [ 'main' ]
     paths:
       - '**/*.md'
       - 'demo/**'
@@ -34,7 +34,7 @@ jobs:
 
       - name: Check markdown syntax
         run: |
-          find . -name '*.md' -type f ! -path './node_modules/*' ! -path './.git/*' | while read -r file; do
+          find . -name '*.md' -type f -not -path '*/node_modules/*' -not -path '*/.*' -not -path '*/dist/*' | while read -r file; do
             echo "Checking $file..."
             # Basic markdown validation - check for unclosed code blocks
             if grep -q '^```[^`]*$' "$file" && ! grep -c '^```$' "$file" | grep -q '[02468]$'; then
@@ -49,21 +49,21 @@ jobs:
           # Simple link checker - looks for common patterns
           BROKEN=0
           
-          for file in *.md packages/*/README.md; do
-            [ -f "$file" ] || continue
-            
+          find . -name '*.md' -type f -not -path '*/node_modules/*' -not -path '*/.*' -not -path '*/dist/*' | while read -r file; do
             # Extract markdown links
-            grep -oE '\[([^\]]+)\]\(([^)]+)\)' "$file" | sed 's/.*(\([^)]*\)).*/\1/' | while read -r link; do
+            grep -oE '\[([^\]]+)\]\(([^)]+)\)' "$file" 2>/dev/null | sed 's/.*(\([^)]*\)).*/\1/' | while read -r link; do
+              [ -z "$link" ] && continue
+          
               # Skip URLs
               if [[ $link == http* ]]; then
                 continue
               fi
-              
+          
               # Skip anchors
               if [[ $link == \#* ]]; then
                 continue
               fi
-              
+          
               # Check if file exists
               if ! [ -f "$link" ] && ! [ -d "$link" ]; then
                 echo "❌ Broken link in $file: $link"
@@ -72,8 +72,7 @@ jobs:
             done
           done
           
-          [ $BROKEN -eq 0 ] && echo "✅ All links valid"
-          exit $BROKEN
+          [ $BROKEN -eq 0 ] && echo "✅ All links valid" || exit 1
 
       - name: Comment on PR if issues found
         if: failure() && github.event_name == 'pull_request'
@@ -117,7 +116,7 @@ jobs:
           for readme in packages/*/README.md; do
             if [ -f "$readme" ]; then
               PKG=$(basename $(dirname "$readme"))
-              
+          
               # Check basic structure
               if ! head -1 "$readme" | grep -q "^#"; then
                 echo "⚠️ $PKG/README.md: Missing title"
@@ -187,7 +186,7 @@ jobs:
     name: Documentation Summary
     runs-on: ubuntu-latest
     if: always()
-    needs: [validate-markdown, validate-structure, build-demo-validation]
+    needs: [ validate-markdown, validate-structure, build-demo-validation ]
     steps:
       - name: Create documentation summary
         run: |
