@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-theme-vscode-light",
-  "version": "6.2.5",
+  "version": "6.2.6",
   "description": "VSCode Light theme for the CodeMirror editor",
   "type": "module",
   "main": "dist/index.cjs",
