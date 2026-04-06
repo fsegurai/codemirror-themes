@@ -74,21 +74,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: pr.number,
-                body: `👋 **Welcome, @${author}!**
-
-Thank you for your contribution to codemirror-themes! Here's what to expect:
-
-- **Tests run automatically** - our CI pipeline validates linting and builds
-- **Reviews** - a maintainer will review your changes
-- **Labels** - we auto-tag PRs to help organize discussions
-- **Questions?** - feel free to ask in the comments
-
-📚 **Helpful Resources:**
-- [Contributing Guide](./CONTRIBUTING.md)
-- [AGENTS Guide](./AGENTS.md) - Project architecture
-- [Development Setup](./README.md#development)
-
-We appreciate your help! 🎉`
+                body: '👋 **Welcome, @' + author + '!**\n\nThank you for your contribution to codemirror-themes! Here\'s what to expect:\n\n- **Tests run automatically** - our CI pipeline validates linting and builds\n- **Reviews** - a maintainer will review your changes\n- **Labels** - we auto-tag PRs to help organize discussions\n- **Questions?** - feel free to ask in the comments\n\n📚 **Helpful Resources:**\n- [Contributing Guide](./CONTRIBUTING.md)\n- [AGENTS Guide](./AGENTS.md) - Project architecture\n- [Development Setup](./README.md#development)\n\nWe appreciate your help! 🎉'
               });
             }
 
@@ -120,16 +106,7 @@ We appreciate your help! 🎉`
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: pr.number,
-                body: `🤖 **Dependabot Update**
-
-This is an automated dependency update. A few things to know:
-
-- **Bun workspace**: All dependencies are managed through the root \`package.json\`
-- **Build checks**: The PR build validates all packages can compile
-- **Security**: Our security scan pipeline reviews all updates
-- **Merge**: Maintainers will review and merge periodically
-
-💡 Tip: Use \`@dependabot rebase\` to update this PR if conflicts occur.`
+                body: '🤖 **Dependabot Update**\n\nThis is an automated dependency update. A few things to know:\n\n- **Bun workspace**: All dependencies are managed through the root `package.json`\n- **Build checks**: The PR build validates all packages can compile\n- **Security**: Our security scan pipeline reviews all updates\n- **Merge**: Maintainers will review and merge periodically\n\n💡 Tip: Use `@dependabot rebase` to update this PR if conflicts occur.'
               });
             }
 
@@ -153,10 +130,10 @@ This is an automated dependency update. A few things to know:
                 const match = f.filename.match(/packages\/([^/]+)\//);
                 if (match) themes.add(match[1]);
               });
-              
+            
               if (themes.size > 0) {
                 const body = `📦 **Theme(s) Modified:** ${Array.from(themes).join(', ')}`;
-                
+            
                 // Add to PR body if not already there
                 if (!pr.body.includes(body)) {
                   await github.rest.pulls.update({
