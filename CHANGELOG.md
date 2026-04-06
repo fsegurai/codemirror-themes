@@ -11,6 +11,30 @@ No changes have been made yet.
 
 ---
 
+## [6.30.1] - 2026-04-05
+
+### 🐞 Fixes
+
+- Fixed `vscode-light` and remove duplicate directories.
+
+### 🔐 Security
+
+- **Added dependencies**.
+	- Dev Dependencies
+		- `@typescript-eslint/eslint-plugin` - `8.58.0` - needed for TypeScript linting.
+		  `@typescript-eslint/parser` - `8.58.0` - needed for TypeScript linting.
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `marked` from `17.0.5` to `17.0.6`
+	- Dev Dependencies
+		- `@types/node` from `25.5.0` to `25.5.2`
+		- `eslint` from `10.1.0` to `10.2.0`
+		- `portless` from `0.9.4` to `0.9.6`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.30.1
+
+---
+
 ## [6.30.0] - 2026-04-03
 
 ### 🚀 Features
@@ -28,7 +52,7 @@ No changes have been made yet.
 - **Added dependencies**.
 	- Dev Dependencies
 		- `portless` - `0.9.4` - needed for local development. Replace port numbers with stable names.
-        - `terser` - `5.46.1` - needed for production builds as part of Vite.
+		- `terser` - `5.46.1` - needed for production builds as part of Vite.
 		- `vite` - `8.0.3` - needed for development and build processes. Replacement of Rollup.
 - **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
 	- Dependencies
@@ -635,7 +659,9 @@ No changes have been made yet.
 
 ---
 
-[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.0...HEAD
+[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.1...HEAD
+
+[6.30.1]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.0...v6.30.1
 
 [6.30.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.29.2...v6.30.0
 
