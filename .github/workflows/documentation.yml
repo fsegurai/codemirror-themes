@@ -37,7 +37,9 @@ jobs:
           find . -name '*.md' -type f -not -path '*/node_modules/*' -not -path '*/.*' -not -path '*/dist/*' | while read -r file; do
             echo "Checking $file..."
             # Basic markdown validation - check for unclosed code blocks
-            if grep -q '^```[^`]*$' "$file" && ! grep -c '^```$' "$file" | grep -q '[02468]$'; then
+            # Count all code block markers (both opening and closing)
+            total_backticks=$(grep -c '^\`\`\`' "$file" 2>/dev/null || echo 0)
+            if [ $((total_backticks % 2)) -ne 0 ]; then
               echo "❌ Unclosed code block in $file"
               exit 1
             fi
