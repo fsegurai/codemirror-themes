@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-theme-high-contrast-dark",
-  "version": "6.0.1",
+  "version": "6.0.2",
   "description": "High Contrast Dark theme for the CodeMirror editor",
   "type": "module",
   "main": "dist/index.cjs",
