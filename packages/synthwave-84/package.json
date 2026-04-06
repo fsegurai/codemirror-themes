@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-theme-synthwave-84",
-  "version": "6.0.1",
+  "version": "6.0.2",
   "description": "Synthwave '84 theme for the CodeMirror editor",
   "type": "module",
   "main": "dist/index.cjs",

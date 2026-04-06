@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-theme-catppuccin-mocha",
-  "version": "6.0.1",
+  "version": "6.0.2",
   "description": "Catppuccin Mocha theme for the CodeMirror editor",
   "type": "module",
   "main": "dist/index.cjs",
