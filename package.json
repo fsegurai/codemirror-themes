@@ -111,9 +111,9 @@
   "devDependencies": {
     "@codemirror/buildhelper": "^1.0.2",
     "@eslint/js": "10.0.1",
-    "@types/node": "25.5.0",
+    "@types/node": "25.5.2",
     "@types/prismjs": "^1.26.6",
-    "eslint": "10.1.0",
+    "eslint": "10.2.0",
     "glob": "^13.0.6",
     "globals": "17.4.0",
     "portless": "^0.9.4",
