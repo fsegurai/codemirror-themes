@@ -1,3 +1,4 @@
+# Infrastructure & Configuration
 infra:
   - fsegurai
 
@@ -7,26 +8,129 @@ dependencies:
 ci-cd:
   - fsegurai
 
+# Demo Application
 demo:
   - fsegurai
 
-assets:
+demo-assets:
   - fsegurai
 
+demo-styles:
+  - fsegurai
+
+demo-scripts:
+  - fsegurai
+
+# Styling
 styles:
   - fsegurai
 
+# Library & Themes
 library:
   - fsegurai
 
+theme-bundle:
+  - fsegurai
+
+theme-helper:
+  - fsegurai
+
+# Individual Themes
+theme-abcdef:
+  - fsegurai
+
+theme-abyss:
+  - fsegurai
+
+theme-android-studio:
+  - fsegurai
+
+theme-andromeda:
+  - fsegurai
+
+theme-basic-dark:
+  - fsegurai
+
+theme-basic-light:
+  - fsegurai
+
+theme-catppuccin-mocha:
+  - fsegurai
+
+theme-cobalt2:
+  - fsegurai
+
+theme-forest:
+  - fsegurai
+
+theme-github-dark:
+  - fsegurai
+
+theme-github-light:
+  - fsegurai
+
+theme-gruvbox-dark:
+  - fsegurai
+
+theme-gruvbox-light:
+  - fsegurai
+
+theme-high-contrast-dark:
+  - fsegurai
+
+theme-high-contrast-light:
+  - fsegurai
+
+theme-material-dark:
+  - fsegurai
+
+theme-material-light:
+  - fsegurai
+
+theme-material-ocean:
+  - fsegurai
+
+theme-monokai:
+  - fsegurai
+
+theme-nord:
+  - fsegurai
+
+theme-palenight:
+  - fsegurai
+
+theme-solarized-dark:
+  - fsegurai
+
+theme-solarized-light:
+  - fsegurai
+
+theme-synthwave-84:
+  - fsegurai
+
+theme-tokyo-night-day:
+  - fsegurai
+
+theme-tokyo-night-storm:
+  - fsegurai
+
+theme-volcano:
+  - fsegurai
+
+theme-vscode-dark:
+  - fsegurai
+
+theme-vscode-light:
+  - fsegurai
+
+# Testing & Quality
 tests-library:
   - fsegurai
 
-tests-demo:
-  - fsegurai
-
+# Documentation & Contributing
 documentation:
   - fsegurai
 
+# Default fallback
 default:
-  - '@developers'
+  - fsegurai

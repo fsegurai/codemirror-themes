@@ -6,7 +6,7 @@ on:
     - cron: '0 3 * * 1'
   workflow_dispatch:
   push:
-    branches: ['main']
+    branches: [ 'main' ]
     paths:
       - 'packages/*/src/**'
       - 'package.json'
@@ -93,17 +93,18 @@ jobs:
         run: |
           echo "## CodeMirror Compatibility" >> $GITHUB_STEP_SUMMARY
           
-          CM_VERSION=$(grep -oP '"codemirror":\s*"\^\K[0-9.]+' package.json)
+          CM_VERSION=$(grep '"codemirror"' package.json | grep -oP '"\^\K[0-9.]+' || echo 'not found')
           echo "- CodeMirror: $CM_VERSION" >> $GITHUB_STEP_SUMMARY
           
-          CM_STATE_VERSION=$(grep -oP '"@codemirror/state":\s*"\^\K[0-9.]+' package.json)
+          CM_STATE_VERSION=$(grep '"@codemirror/state"' package.json | grep -oP '"\^\K[0-9.]+' || echo 'not found')
           echo "- @codemirror/state: $CM_STATE_VERSION" >> $GITHUB_STEP_SUMMARY
           
-          CM_VIEW_VERSION=$(grep -oP '"@codemirror/view":\s*"\^\K[0-9.]+' package.json)
-          echo "- @codemirror/view: $CM_VIEW_VERSION" >> $GITHUB_STEP_SUMMARY
+          CM_LANGUAGE_VERSION=$(grep '"@codemirror/language"' package.json | grep -oP '": "[0-9.]+' | grep -oP '[0-9.]+$' || echo 'not found')
+          echo "- @codemirror/language: $CM_LANGUAGE_VERSION" >> $GITHUB_STEP_SUMMARY
 
       - name: Generate health report
         id: report
+        if: always()
         env:
           BUILD_OK: ${{ env.BUILD_STATUS == '0' }}
           LINT_OK: ${{ env.LINT_STATUS == '0' }}
@@ -122,12 +123,12 @@ jobs:
             echo ""
             echo "### Build Log"
             echo "\`\`\`"
-            tail -20 build.log
+            if [ -f build.log ]; then tail -20 build.log; else echo "No build log available"; fi
             echo "\`\`\`"
             echo ""
             echo "### Lint Log"
             echo "\`\`\`"
-            tail -20 lint.log
+            if [ -f lint.log ]; then tail -20 lint.log; else echo "No lint log available"; fi
             echo "\`\`\`"
           } > health-report.md
           
@@ -147,6 +148,13 @@ jobs:
         with:
           script: |
             const fs = require('fs');
+            
+            // Check if health report exists
+            if (!fs.existsSync('health-report.md')) {
+              console.log('Health report not found, skipping issue comment');
+              return;
+            }
+            
             const report = fs.readFileSync('health-report.md', 'utf8');
             
             // Find existing health check issue
