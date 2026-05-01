@@ -78,7 +78,7 @@ jobs:
 
       - name: Comment on PR if issues found
         if: failure() && github.event_name == 'pull_request'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v9
         with:
           script: |
             github.rest.issues.createComment({
@@ -174,7 +174,7 @@ jobs:
 
       - name: Comment on PR
         if: github.event_name == 'pull_request' && success()
-        uses: actions/github-script@v6
+        uses: actions/github-script@v9
         with:
           script: |
             github.rest.issues.createComment({

@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Report validation status
-        uses: actions/github-script@v6
+        uses: actions/github-script@v9
         with:
           script: |
             const quickChecks = '${{ needs.quick-checks.result }}';

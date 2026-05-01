@@ -68,7 +68,7 @@ jobs:
 
       - name: Comment on PR if vulnerabilities found
         if: github.event_name == 'pull_request' && failure()
-        uses: actions/github-script@v6
+        uses: actions/github-script@v9
         with:
           script: |
             github.rest.issues.createComment({
@@ -117,7 +117,7 @@ jobs:
     if: always()
     steps:
       - name: Create security summary
-        uses: actions/github-script@v6
+        uses: actions/github-script@v9
         with:
           script: |
             const codeqlStatus = '${{ needs.codeql.result }}';
