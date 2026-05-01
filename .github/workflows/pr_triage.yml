@@ -27,7 +27,7 @@ jobs:
           dot: true
 
       - name: Assign PR creator and add welcome comment
-        uses: actions/github-script@v6
+        uses: actions/github-script@v9
         with:
           script: |
             const pr = context.payload.pull_request;
@@ -54,7 +54,7 @@ jobs:
             }
 
       - name: Add first-time contributor welcome
-        uses: actions/github-script@v6
+        uses: actions/github-script@v9
         with:
           script: |
             const pr = context.payload.pull_request;
@@ -79,7 +79,7 @@ jobs:
             }
 
       - name: Add Dependabot PR comment
-        uses: actions/github-script@v6
+        uses: actions/github-script@v9
         with:
           script: |
             const pr = context.payload.pull_request;
@@ -111,7 +111,7 @@ jobs:
             }
 
       - name: Request specific reviewers for themes
-        uses: actions/github-script@v6
+        uses: actions/github-script@v9
         with:
           script: |
             const pr = context.payload.pull_request;
