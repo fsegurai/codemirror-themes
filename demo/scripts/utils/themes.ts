@@ -58,7 +58,7 @@ import {
   vsCodeDarkMergeStyles,
   vsCodeLight,
   vsCodeLightMergeStyles,
-} from '../../../packages/bundle/src';
+} from '@fsegurai/codemirror-theme-bundle';
 
 const themes = [
   {
@@ -149,7 +149,7 @@ const themes = [
   {
     name: 'material-ocean',
     extension: materialOcean,
-    mergeStyles: materialOceanMergeStyles,  
+    mergeStyles: materialOceanMergeStyles,
   },
   {
     name: 'monokai',
