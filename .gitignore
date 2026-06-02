@@ -73,6 +73,7 @@ typings/
 .angular/cache
 .sass-cache/
 .history/
+.atl/
 
 # IDE and editor files
 .idea/
