@@ -38,7 +38,7 @@ jobs:
             echo "Checking $file..."
             # Basic markdown validation - check for unclosed code blocks
             # Count all code block markers (both opening and closing)
-            total_backticks=$(grep -c '^\`\`\`' "$file" 2>/dev/null || echo 0)
+            total_backticks=$(grep -c '^```' "$file" 2>/dev/null || true)
             if [ $((total_backticks % 2)) -ne 0 ]; then
               echo "❌ Unclosed code block in $file"
               exit 1
