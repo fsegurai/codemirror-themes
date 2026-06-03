@@ -410,6 +410,25 @@ const materialOceanHighlightStyle = HighlightStyle.define([
   { tag: t.monospace, color: base05 },
   { tag: [t.contentSeparator], color: base08 },
   { tag: t.quote, color: base03 },
+
+  { tag: t.integer, color: base0E },
+  { tag: t.float, color: base0E },
+  { tag: t.null, color: base0E },
+  { tag: t.attributeValue, color: base0B },
+  { tag: t.escape, color: base0B },
+  { tag: t.paren, color: base03 },
+  { tag: t.lineComment, color: base03, fontStyle: 'italic' },
+  { tag: t.blockComment, color: base03, fontStyle: 'italic' },
+  { tag: t.definitionKeyword, color: base08 },
+  { tag: t.arithmeticOperator, color: base09 },
+  { tag: t.logicOperator, color: base09 },
+  { tag: t.compareOperator, color: base09 },
+  { tag: t.bitwiseOperator, color: base09 },
+  { tag: t.updateOperator, color: base09 },
+  { tag: t.derefOperator, color: base09 },
+  { tag: t.local(t.variableName), color: base0D },
+  { tag: t.list, color: base11 },
+  { tag: t.unit, color: base0E },
 ]);
 
 const materialOcean: Extension = [

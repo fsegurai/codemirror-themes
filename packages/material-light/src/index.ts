@@ -463,6 +463,25 @@ const materialLightHighlightStyle = HighlightStyle.define([
   { tag: t.monospace, color: base02 },
   { tag: [t.contentSeparator], color: base0D },
   { tag: t.quote, color: base10 },
+
+  { tag: t.integer, color: base0C },
+  { tag: t.float, color: base0C },
+  { tag: t.null, color: base0C },
+  { tag: t.attributeValue, color: base10 },
+  { tag: t.escape, color: base10 },
+  { tag: t.paren, color: base0F },
+  { tag: t.lineComment, color: base03, fontStyle: 'italic' },
+  { tag: t.blockComment, color: base03, fontStyle: 'italic' },
+  { tag: t.definitionKeyword, color: base0D },
+  { tag: t.arithmeticOperator, color: base0E },
+  { tag: t.logicOperator, color: base0E },
+  { tag: t.compareOperator, color: base0E },
+  { tag: t.bitwiseOperator, color: base0E },
+  { tag: t.updateOperator, color: base0E },
+  { tag: t.derefOperator, color: base0E },
+  { tag: t.local(t.variableName), color: base0A },
+  { tag: t.list, color: base11 },
+  { tag: t.unit, color: base0C },
 ]);
 
 /**

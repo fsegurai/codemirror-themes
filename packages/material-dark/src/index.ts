@@ -457,6 +457,25 @@ const materialDarkHighlightStyle = HighlightStyle.define([
   { tag: t.monospace, color: base05 },
   { tag: [t.contentSeparator], color: base0E },
   { tag: t.quote, color: base03 },
+
+  { tag: t.integer, color: base0B },
+  { tag: t.float, color: base0B },
+  { tag: t.null, color: base0B },
+  { tag: t.attributeValue, color: base0C },
+  { tag: t.escape, color: base0C },
+  { tag: t.paren, color: base03 },
+  { tag: t.lineComment, color: base03, fontStyle: 'italic' },
+  { tag: t.blockComment, color: base03, fontStyle: 'italic' },
+  { tag: t.definitionKeyword, color: base08 },
+  { tag: t.arithmeticOperator, color: base05 },
+  { tag: t.logicOperator, color: base05 },
+  { tag: t.compareOperator, color: base05 },
+  { tag: t.bitwiseOperator, color: base05 },
+  { tag: t.updateOperator, color: base05 },
+  { tag: t.derefOperator, color: base05 },
+  { tag: t.local(t.variableName), color: base0E },
+  { tag: t.list, color: base12 },
+  { tag: t.unit, color: base0B },
 ]);
 
 /**

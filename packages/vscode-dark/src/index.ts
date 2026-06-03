@@ -454,6 +454,25 @@ const vsCodeDarkHighlightStyle = HighlightStyle.define([
   { tag: t.monospace, color: base05 },
   { tag: [t.contentSeparator], color: base05 },
   { tag: t.quote, color: base11 },
+
+  { tag: t.integer, color: base0D },
+  { tag: t.float, color: base0D },
+  { tag: t.null, color: base0D },
+  { tag: t.attributeValue, color: base0E },
+  { tag: t.escape, color: base0E },
+  { tag: t.paren, color: base05 },
+  { tag: t.lineComment, color: base11, fontStyle: 'italic' },
+  { tag: t.blockComment, color: base11, fontStyle: 'italic' },
+  { tag: t.definitionKeyword, color: base08 },
+  { tag: t.arithmeticOperator, color: base05 },
+  { tag: t.logicOperator, color: base05 },
+  { tag: t.compareOperator, color: base05 },
+  { tag: t.bitwiseOperator, color: base05 },
+  { tag: t.updateOperator, color: base05 },
+  { tag: t.derefOperator, color: base05 },
+  { tag: t.local(t.variableName), color: base0A },
+  { tag: t.list, color: base08 },
+  { tag: t.unit, color: base0D },
 ]);
 
 /**

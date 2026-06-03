@@ -330,11 +330,10 @@ const abcdefTheme = EditorView.theme(
 const abcdefHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
   { tag: t.keyword, color: base08, fontWeight: 'bold' },
-  { tag: t.controlKeyword, color: base08, fontWeight: 'bold' },
   { tag: t.moduleKeyword, color: base08, fontWeight: 'bold' },
 
   // Names and variables
-  { tag: [t.name, t.deleted, t.character, t.macroName], color: base09 },
+  { tag: [t.name, t.character, t.macroName], color: base09 },
   { tag: [t.variableName], color: base09 },
   { tag: [t.propertyName], color: base0D, fontStyle: 'normal' },
 
@@ -342,12 +341,6 @@ const abcdefHighlightStyle = HighlightStyle.define([
   { tag: t.typeName, color: base0E },
   { tag: t.className, color: base0D, fontStyle: 'italic' },
   { tag: t.namespace, color: '#78a0d3', opacity: 0.8 },
-
-  // Operators and punctuation - clearer blues
-  { tag: [t.operator, t.operatorKeyword], color: '#ff9cac' },
-  { tag: [t.bracket], color: '#d0d6e0' },
-  { tag: [t.brace], color: '#d0d6e0' },
-  { tag: [t.punctuation], color: '#d0d6e0' },
 
   // Functions and parameters
   { tag: t.function(t.variableName), color: base0C },
@@ -401,11 +394,40 @@ const abcdefHighlightStyle = HighlightStyle.define([
   { tag: t.strikethrough, color: invalid, textDecoration: 'line-through' },
 
   // Enhanced syntax highlighting
-  { tag: t.constant(t.name), color: base0B },
   { tag: t.controlKeyword, color: base08, fontWeight: 'bold' },
   { tag: t.deleted, color: invalid },
   { tag: t.labelName, color: '#ffad5c' },
   { tag: t.string, color: '#7aecb3' /* New mint green for strings */ },
+
+  { tag: t.integer, color: base0B },
+  { tag: t.float, color: base0B },
+  { tag: t.null, color: base0B },
+  { tag: t.attributeValue, color: '#7aecb3' },
+  { tag: t.escape, color: '#7aecb3' },
+  { tag: t.paren, color: '#d0d6e0' },
+  { tag: t.lineComment, color: base0A, fontStyle: 'italic' },
+  { tag: t.blockComment, color: base0A, fontStyle: 'italic' },
+  { tag: t.definitionKeyword, color: base08 },
+  { tag: t.arithmeticOperator, color: '#ff9cac' },
+  { tag: t.logicOperator, color: '#ff9cac' },
+  { tag: t.compareOperator, color: '#ff9cac' },
+  { tag: t.bitwiseOperator, color: '#ff9cac' },
+  { tag: t.updateOperator, color: '#ff9cac' },
+  { tag: t.derefOperator, color: '#ff9cac' },
+  { tag: t.local(t.variableName), color: base0C },
+  { tag: t.contentSeparator, color: base0E },
+  { tag: t.list, color: base0E },
+  { tag: t.unit, color: base0B },
+  { tag: t.squareBracket, color: '#d0d6e0' },
+  { tag: t.angleBracket, color: '#d0d6e0' },
+  { tag: t.heading1, color: base0E },
+  { tag: t.heading2, color: base0E },
+  { tag: t.heading3, color: base0E },
+  { tag: t.heading4, color: base0E },
+  { tag: t.heading5, color: base0E },
+  { tag: t.heading6, color: base0E },
+  { tag: t.monospace, color: base0E },
+  { tag: t.quote, color: '#7aecb3' },
 ]);
 
 /**
