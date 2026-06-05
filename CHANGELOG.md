@@ -726,7 +726,9 @@ No changes have been made yet.
 
 ---
 
-[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.2...HEAD
+[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.3...HEAD
+
+[6.30.3]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.2...v6.30.3
 
 [6.30.2]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.1...v6.30.2
 
