@@ -455,6 +455,25 @@ const solarizedLightHighlightStyle = HighlightStyle.define([
   { tag: t.monospace, color: base00 },
   { tag: [t.contentSeparator], color: base0B },
   { tag: t.quote, color: base0C },
+
+  { tag: t.integer, color: base10 },
+  { tag: t.float, color: base10 },
+  { tag: t.null, color: base10 },
+  { tag: t.attributeValue, color: base0B },
+  { tag: t.escape, color: base0B },
+  { tag: t.paren, color: base10 },
+  { tag: t.lineComment, color: base01, fontStyle: 'italic' },
+  { tag: t.blockComment, color: base01, fontStyle: 'italic' },
+  { tag: t.definitionKeyword, color: base0C },
+  { tag: t.arithmeticOperator, color: base0F },
+  { tag: t.logicOperator, color: base0F },
+  { tag: t.compareOperator, color: base0F },
+  { tag: t.bitwiseOperator, color: base0F },
+  { tag: t.updateOperator, color: base0F },
+  { tag: t.derefOperator, color: base0F },
+  { tag: t.local(t.variableName), color: base0D },
+  { tag: t.list, color: base0B },
+  { tag: t.unit, color: base10 },
 ]);
 
 /**

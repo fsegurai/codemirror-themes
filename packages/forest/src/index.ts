@@ -435,6 +435,25 @@ const forestHighlightStyle = HighlightStyle.define([
   { tag: t.monospace, color: base01 },
   { tag: [t.contentSeparator], color: base0C },
   { tag: t.quote, color: base03 },
+
+  { tag: t.integer, color: base09 },
+  { tag: t.float, color: base09 },
+  { tag: t.null, color: base09 },
+  { tag: t.attributeValue, color: base08 },
+  { tag: t.escape, color: base08 },
+  { tag: t.paren, color: base0E },
+  { tag: t.lineComment, color: base03, fontStyle: 'italic' },
+  { tag: t.blockComment, color: base03, fontStyle: 'italic' },
+  { tag: t.definitionKeyword, color: base05 },
+  { tag: t.arithmeticOperator, color: base0E },
+  { tag: t.logicOperator, color: base0E },
+  { tag: t.compareOperator, color: base0E },
+  { tag: t.bitwiseOperator, color: base0E },
+  { tag: t.updateOperator, color: base0E },
+  { tag: t.derefOperator, color: base0E },
+  { tag: t.local(t.variableName), color: base07 },
+  { tag: t.list, color: base0A },
+  { tag: t.unit, color: base09 },
 ]);
 
 /**

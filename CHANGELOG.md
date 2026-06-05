@@ -11,31 +11,68 @@ No changes have been made yet.
 
 ---
 
+## [6.30.3] - 2026-06-04
+
+### 🚀 Features
+
+- **Enhanced syntax highlighting coverage** — normalized Lezer tag coverage across all 29 themes to match the full
+  syntax tagging vocabulary. Every theme now includes:
+	- Number-family: `integer`, `float`, `bool`, `null`, `atom`
+	- String-family: `attributeValue`, `escape`
+	- Bracket-family: `paren`
+	- Comment-family: `lineComment`, `blockComment`
+	- Keyword-family: `definitionKeyword`
+	- Operator sub-tags: `arithmeticOperator`, `logicOperator`, `compareOperator`, `bitwiseOperator`,
+	  `updateOperator`, `derefOperator`
+	- Modifier: `local(t.variableName)`
+	- Content/utility: `url`, `regexp`, `contentSeparator`, `list`, `unit`, `monospace`, `quote`
+	- Expanded `heading1`–`heading6` in 16 themes that only had generic `heading`
+	- Added `squareBracket`, `angleBracket` to 3 themes that were missing them
+	- All new tags use each theme's existing palette, preserving visual consistency
+
+### 🐞 Fixes
+
+- **Removed duplicate rules** in `abcdef` theme — eliminated 4 dead rules that were shadowed by later identical
+  definitions.
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `marked` from `18.0.4` to `18.0.5`
+	- Dev Dependencies
+		- `portless` from `0.13.1` to `0.14.0`
+
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.30.3
+
+---
+
 ## [6.30.2] - 2026-06-02
 
 ### 🔐 Security
 
 - **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
 	- Dependencies
-        - `@codemirror/legacy-modes` from `6.5.2` to `6.5.3`
+		- `@codemirror/legacy-modes` from `6.5.2` to `6.5.3`
 		- `marked` from `17.0.6` to `18.0.4`
-        - `marked-highlight` from `2.2.3` to `2.2.4`
+		- `marked-highlight` from `2.2.3` to `2.2.4`
 	- Dev Dependencies
 		- `@types/node` from `25.5.2` to `25.9.1`
-        - `@typescript-eslint/eslint-plugin` from `8.58.0` to `8.60.1`
-        - `@typescript-eslint/parser` from `8.58.0` to `8.60.1`
-        - `eslint` from `10.2.0` to `10.4.1`
-        - `globals` from `17.4.0` to `17.6.0`
+		- `@typescript-eslint/eslint-plugin` from `8.58.0` to `8.60.1`
+		- `@typescript-eslint/parser` from `8.58.0` to `8.60.1`
+		- `eslint` from `10.2.0` to `10.4.1`
+		- `globals` from `17.4.0` to `17.6.0`
 		- `portless` from `0.9.6` to `0.13.1`
-        - `typescript` from `6.0.2` to `6.0.3`
-        - `typescript-eslint` from `8.58.0` to `8.60.1`
-        - `vite` from `8.0.8` to `8.0.16`b
+		- `typescript` from `6.0.2` to `6.0.3`
+		- `typescript-eslint` from `8.58.0` to `8.60.1`
+		- `vite` from `8.0.8` to `8.0.16`b
 
 - **Removed dependencies** — eliminated unused dependencies to reduce potential security risks and improve project
   maintainability.
 	- Removed Dependencies
 		- `@lezer/markdown`
-        - `glob`
+		- `glob`
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.30.2
 
@@ -52,7 +89,7 @@ No changes have been made yet.
 - **Added dependencies**.
 	- Dev Dependencies
 		- `@typescript-eslint/eslint-plugin` - `8.58.0` - needed for TypeScript linting.
-        - `@typescript-eslint/parser` - `8.58.0` - needed for TypeScript linting.
+		- `@typescript-eslint/parser` - `8.58.0` - needed for TypeScript linting.
 - **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
 	- Dependencies
 		- `marked` from `17.0.5` to `17.0.6`
@@ -691,7 +728,9 @@ No changes have been made yet.
 
 ---
 
-[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.2...HEAD
+[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.3...HEAD
+
+[6.30.3]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.2...v6.30.3
 
 [6.30.2]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.1...v6.30.2
 

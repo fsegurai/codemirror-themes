@@ -449,6 +449,25 @@ const tokyoNightStormHighlightStyle = HighlightStyle.define([
   { tag: t.monospace, color: base04 },
   { tag: [t.contentSeparator], color: base0C },
   { tag: t.quote, color: base03 },
+
+  { tag: t.integer, color: base08 },
+  { tag: t.float, color: base08 },
+  { tag: t.null, color: base08 },
+  { tag: t.attributeValue, color: base0A },
+  { tag: t.escape, color: base0A },
+  { tag: t.paren, color: base03 },
+  { tag: t.lineComment, color: base03, fontStyle: 'italic' },
+  { tag: t.blockComment, color: base03, fontStyle: 'italic' },
+  { tag: t.definitionKeyword, color: base0D },
+  { tag: t.arithmeticOperator, color: base0D },
+  { tag: t.logicOperator, color: base0D },
+  { tag: t.compareOperator, color: base0D },
+  { tag: t.bitwiseOperator, color: base0D },
+  { tag: t.updateOperator, color: base0D },
+  { tag: t.derefOperator, color: base0D },
+  { tag: t.local(t.variableName), color: base04 },
+  { tag: t.list, color: '#89ddff' },
+  { tag: t.unit, color: base08 },
 ]);
 
 /**

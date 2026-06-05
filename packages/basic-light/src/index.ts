@@ -451,6 +451,25 @@ const basicLightHighlightStyle = HighlightStyle.define([
   { tag: t.monospace, color: base00 },
   { tag: [t.contentSeparator], color: base0D },
   { tag: t.quote, color: base01 },
+
+  { tag: t.integer, color: base08 },
+  { tag: t.float, color: base08 },
+  { tag: t.null, color: base08 },
+  { tag: t.attributeValue, color: base0C },
+  { tag: t.escape, color: base0C },
+  { tag: t.paren, color: base07 },
+  { tag: t.lineComment, color: base03, fontStyle: 'italic' },
+  { tag: t.blockComment, color: base03, fontStyle: 'italic' },
+  { tag: t.definitionKeyword, color: base0A },
+  { tag: t.arithmeticOperator, color: base0E },
+  { tag: t.logicOperator, color: base0E },
+  { tag: t.compareOperator, color: base0E },
+  { tag: t.bitwiseOperator, color: base0E },
+  { tag: t.updateOperator, color: base0E },
+  { tag: t.derefOperator, color: base0E },
+  { tag: t.local(t.variableName), color: base09 },
+  { tag: t.list, color: base08 },
+  { tag: t.unit, color: base08 },
 ]);
 
 /**
