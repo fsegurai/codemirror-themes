@@ -38,12 +38,10 @@ jobs:
         run: bun install
 
       - name: TypeScript strict check
-        run: bun run --shell "tsc --noEmit 2>&1 | head -20"
-        continue-on-error: true
+        run: bun run -- tsc --noEmit
 
       - name: Lint check (fail on warnings)
         run: bun run lint:check
-        continue-on-error: true
 
   pr_integration:
     name: Build Integration Test
@@ -67,6 +65,30 @@ jobs:
           bun run build:packages 2>&1 | tail -20
           echo "✅ Build successful"
 
+      - name: Validate bundle exports
+        run: |
+          echo "Validating all themes are exported in bundle..."
+          error=0
+          for pkg in packages/*/; do
+            name=$(basename "$pkg")
+            [ "$name" = "bundle" ] || [ "$name" = ".helper" ] && continue
+            pkg_json="$pkg/package.json"
+            if [ -f "$pkg_json" ]; then
+              pkg_name=$(grep '"name":' "$pkg_json" | head -1 | sed 's/.*"name": "\(.*\)",.*/\1/')
+              if ! grep -q "$pkg_name" packages/bundle/src/index.ts; then
+                echo "❌ Missing export for $pkg_name in packages/bundle/src/index.ts"
+                error=1
+              else
+                echo "  ✓ $pkg_name"
+              fi
+            fi
+          done
+          if [ $error -eq 0 ]; then
+            echo "✅ All themes exported in bundle"
+          else
+            exit 1
+          fi
+
   validation-summary:
     name: Validation Summary
     if: always()
@@ -79,10 +101,10 @@ jobs:
           script: |
             const quickChecks = '${{ needs.quick-checks.result }}';
             const buildIntegration = '${{ needs.pr_integration.result }}';
-            
+
             let summary = '## ✅ PR Validation Summary\n\n';
             summary += `- Quick Checks: ${quickChecks === 'success' ? '✅' : '⚠️'}\n`;
             summary += `- Build Integration: ${buildIntegration === 'success' ? '✅' : '⚠️'}\n`;
             summary += '\n💡 Full build and tests run in Azure DevOps Pipelines';
-            
+
             console.log(summary);

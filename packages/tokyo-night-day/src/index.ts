@@ -454,6 +454,25 @@ const tokyoNightDayHighlightStyle = HighlightStyle.define([
   { tag: t.monospace, color: base01 },
   { tag: [t.contentSeparator], color: base_blue },
   { tag: t.quote, color: base03 },
+
+  { tag: t.integer, color: base_orange },
+  { tag: t.float, color: base_orange },
+  { tag: t.null, color: base_orange },
+  { tag: t.attributeValue, color: base_green },
+  { tag: t.escape, color: base_green },
+  { tag: t.paren, color: base03 },
+  { tag: t.lineComment, color: base03, fontStyle: 'italic' },
+  { tag: t.blockComment, color: base03, fontStyle: 'italic' },
+  { tag: t.definitionKeyword, color: base_cyan },
+  { tag: t.arithmeticOperator, color: base_purple },
+  { tag: t.logicOperator, color: base_purple },
+  { tag: t.compareOperator, color: base_purple },
+  { tag: t.bitwiseOperator, color: base_purple },
+  { tag: t.updateOperator, color: base_purple },
+  { tag: t.derefOperator, color: base_purple },
+  { tag: t.local(t.variableName), color: base_blue },
+  { tag: t.list, color: base_orange },
+  { tag: t.unit, color: base_orange },
 ]);
 
 /**

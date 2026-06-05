@@ -15,7 +15,7 @@
         "@material/web": "^2.4.1",
         "clipboard": "^2.0.11",
         "codemirror": "^6.0.2",
-        "marked": "^18.0.4",
+        "marked": "^18.0.5",
         "marked-highlight": "^2.2.4",
         "prismjs": "^1.30.0",
       },
@@ -28,7 +28,7 @@
         "@typescript-eslint/parser": "^8.60.1",
         "eslint": "10.4.1",
         "globals": "17.6.0",
-        "portless": "^0.13.1",
+        "portless": "^0.14.0",
         "rimraf": "^6.1.3",
         "terser": "^5.48.0",
         "typescript": "6.0.3",
@@ -38,7 +38,7 @@
     },
     "packages/abcdef": {
       "name": "@fsegurai/codemirror-theme-abcdef",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -51,7 +51,7 @@
     },
     "packages/abyss": {
       "name": "@fsegurai/codemirror-theme-abyss",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -64,7 +64,7 @@
     },
     "packages/android-studio": {
       "name": "@fsegurai/codemirror-theme-android-studio",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -77,7 +77,7 @@
     },
     "packages/andromeda": {
       "name": "@fsegurai/codemirror-theme-andromeda",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -90,7 +90,7 @@
     },
     "packages/basic-dark": {
       "name": "@fsegurai/codemirror-theme-basic-dark",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -103,7 +103,7 @@
     },
     "packages/basic-light": {
       "name": "@fsegurai/codemirror-theme-basic-light",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -116,7 +116,7 @@
     },
     "packages/bundle": {
       "name": "@fsegurai/codemirror-theme-bundle",
-      "version": "6.4.2",
+      "version": "6.4.3",
       "dependencies": {
         "@fsegurai/codemirror-theme-abcdef": "^6.2.5",
         "@fsegurai/codemirror-theme-abyss": "^6.2.5",
@@ -160,7 +160,7 @@
     },
     "packages/catppuccin-mocha": {
       "name": "@fsegurai/codemirror-theme-catppuccin-mocha",
-      "version": "6.0.2",
+      "version": "6.0.3",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -186,7 +186,7 @@
     },
     "packages/forest": {
       "name": "@fsegurai/codemirror-theme-forest",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -199,7 +199,7 @@
     },
     "packages/github-dark": {
       "name": "@fsegurai/codemirror-theme-github-dark",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -212,7 +212,7 @@
     },
     "packages/github-light": {
       "name": "@fsegurai/codemirror-theme-github-light",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -225,7 +225,7 @@
     },
     "packages/gruvbox-dark": {
       "name": "@fsegurai/codemirror-theme-gruvbox-dark",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -238,7 +238,7 @@
     },
     "packages/gruvbox-light": {
       "name": "@fsegurai/codemirror-theme-gruvbox-light",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -251,7 +251,7 @@
     },
     "packages/high-contrast-dark": {
       "name": "@fsegurai/codemirror-theme-high-contrast-dark",
-      "version": "6.0.2",
+      "version": "6.0.3",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -264,7 +264,7 @@
     },
     "packages/high-contrast-light": {
       "name": "@fsegurai/codemirror-theme-high-contrast-light",
-      "version": "6.0.2",
+      "version": "6.0.3",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -277,7 +277,7 @@
     },
     "packages/material-dark": {
       "name": "@fsegurai/codemirror-theme-material-dark",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -290,7 +290,7 @@
     },
     "packages/material-light": {
       "name": "@fsegurai/codemirror-theme-material-light",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -303,7 +303,7 @@
     },
     "packages/material-ocean": {
       "name": "@fsegurai/codemirror-theme-material-ocean",
-      "version": "6.0.1",
+      "version": "6.0.2",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -316,7 +316,7 @@
     },
     "packages/monokai": {
       "name": "@fsegurai/codemirror-theme-monokai",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -329,7 +329,7 @@
     },
     "packages/nord": {
       "name": "@fsegurai/codemirror-theme-nord",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -342,7 +342,7 @@
     },
     "packages/palenight": {
       "name": "@fsegurai/codemirror-theme-palenight",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -355,7 +355,7 @@
     },
     "packages/solarized-dark": {
       "name": "@fsegurai/codemirror-theme-solarized-dark",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -368,7 +368,7 @@
     },
     "packages/solarized-light": {
       "name": "@fsegurai/codemirror-theme-solarized-light",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -381,7 +381,7 @@
     },
     "packages/synthwave-84": {
       "name": "@fsegurai/codemirror-theme-synthwave-84",
-      "version": "6.0.2",
+      "version": "6.0.3",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -394,7 +394,7 @@
     },
     "packages/tokyo-night-day": {
       "name": "@fsegurai/codemirror-theme-tokyo-night-day",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -407,7 +407,7 @@
     },
     "packages/tokyo-night-storm": {
       "name": "@fsegurai/codemirror-theme-tokyo-night-storm",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -420,7 +420,7 @@
     },
     "packages/volcano": {
       "name": "@fsegurai/codemirror-theme-volcano",
-      "version": "6.2.5",
+      "version": "6.2.6",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -433,7 +433,7 @@
     },
     "packages/vscode-dark": {
       "name": "@fsegurai/codemirror-theme-vscode-dark",
-      "version": "6.2.6",
+      "version": "6.2.7",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -446,7 +446,7 @@
     },
     "packages/vscode-light": {
       "name": "@fsegurai/codemirror-theme-vscode-light",
-      "version": "6.2.6",
+      "version": "6.2.7",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -1044,7 +1044,7 @@
 
     "magic-string": ["magic-string@0.30.21", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.5" } }, "sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ=="],
 
-    "marked": ["marked@18.0.4", "", { "bin": { "marked": "bin/marked.js" } }, "sha512-c/BTaKzg0G6ezQx97DAkYU7k0HM6ys0FqYeKBL6hlBByZwy+ycA1+f0vDdjMHKKeEjdgkx0GOv9Il6D+85cOqA=="],
+    "marked": ["marked@18.0.5", "", { "bin": { "marked": "bin/marked.js" } }, "sha512-S6GcvALHg6K4ohtu4E7x0a1AqhAjp6cV8KhLSyN9qVapnzJkusVBxZRcIU9AeYsbe6P1hKDusSbEOzGyyuce6w=="],
 
     "marked-highlight": ["marked-highlight@2.2.4", "", { "peerDependencies": { "marked": ">=4 <19" } }, "sha512-PZxisNMJDduSjc0q6uvjsnqqHCXc9s0eyzxDO9sB1eNGJnd/H1/Fu+z6g/liC1dfJdFW4SftMwMlLvsBhUPrqQ=="],
 
@@ -1092,7 +1092,7 @@
 
     "picomatch": ["picomatch@4.0.4", "", {}, "sha512-QP88BAKvMam/3NxH6vj2o21R6MjxZUAd6nlwAS/pnGvN9IVLocLHxGYIzFhg6fUQ+5th6P4dv4eW9jX3DSIj7A=="],
 
-    "portless": ["portless@0.13.1", "", { "os": [ "linux", "win32", "darwin", ], "bin": { "portless": "dist/cli.js" } }, "sha512-1B+8Xd4tB1gOIkRHOUEi/LCOp8PIxUsL3ACBX5G2UkKw25TSRNUqAlQcBGxweJgdXb9DPQFX5utKLRUzPFhMnA=="],
+    "portless": ["portless@0.14.0", "", { "os": [ "linux", "win32", "darwin", ], "bin": { "portless": "dist/cli.js" } }, "sha512-kKxmxB1DQ9gI8t+V13VhuwTXu31io5nbFubvZAE82AxzXBsvcJV7qQJbmomrQUpbVxo2UVHqs14iX4YK0BClmQ=="],
 
     "postcss": ["postcss@8.5.15", "", { "dependencies": { "nanoid": "^3.3.12", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-FfR8sjd4em2T6fb3I2MwAJU7HWVMr9zba+enmQeeWFfCbm+UOC/0X4DS8XtpUTMwWMGbjKYP7xjfNekzyGmB3A=="],
 
@@ -1211,6 +1211,8 @@
     "ws": ["ws@8.20.0", "", { "peerDependencies": { "bufferutil": "^4.0.1", "utf-8-validate": ">=5.0.2" }, "optionalPeers": ["bufferutil", "utf-8-validate"] }, "sha512-sAt8BhgNbzCtgGbt2OxmpuryO63ZoDk/sqaB/znQm94T4fCEsy/yV+7CdC1kJhOU9lboAEU7R3kquuycDoibVA=="],
 
     "y18n": ["y18n@5.0.8", "", {}, "sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA=="],
+
+    "yaml": ["yaml@2.9.0", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA=="],
 
     "yargs": ["yargs@16.2.0", "", { "dependencies": { "cliui": "^7.0.2", "escalade": "^3.1.1", "get-caller-file": "^2.0.5", "require-directory": "^2.1.1", "string-width": "^4.2.0", "y18n": "^5.0.5", "yargs-parser": "^20.2.2" } }, "sha512-D1mvvtDG0L5ft/jGWkLpG1+m0eQxOfaBvTNELraWj22wSVUMWxZUvYgJYcKh6jGGIkJFhH4IZPQhR4TKpc8mBw=="],
 

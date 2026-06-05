@@ -454,6 +454,25 @@ const solarizedDarkHighlightStyle = HighlightStyle.define([
   { tag: t.monospace, color: base05 },
   { tag: [t.contentSeparator], color: base0A },
   { tag: t.quote, color: base0B },
+
+  { tag: t.integer, color: base0F },
+  { tag: t.float, color: base0F },
+  { tag: t.null, color: base0F },
+  { tag: t.attributeValue, color: base0A },
+  { tag: t.escape, color: base0A },
+  { tag: t.paren, color: base0F },
+  { tag: t.lineComment, color: base02, fontStyle: 'italic' },
+  { tag: t.blockComment, color: base02, fontStyle: 'italic' },
+  { tag: t.definitionKeyword, color: base0B },
+  { tag: t.arithmeticOperator, color: base0E },
+  { tag: t.logicOperator, color: base0E },
+  { tag: t.compareOperator, color: base0E },
+  { tag: t.bitwiseOperator, color: base0E },
+  { tag: t.updateOperator, color: base0E },
+  { tag: t.derefOperator, color: base0E },
+  { tag: t.local(t.variableName), color: base0C },
+  { tag: t.list, color: base0A },
+  { tag: t.unit, color: base0F },
 ]);
 
 /**
