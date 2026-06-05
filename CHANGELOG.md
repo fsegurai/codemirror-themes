@@ -35,6 +35,15 @@ No changes have been made yet.
 - **Removed duplicate rules** in `abcdef` theme — eliminated 4 dead rules that were shadowed by later identical
   definitions.
 
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `marked` from `18.0.4` to `18.0.5`
+	- Dev Dependencies
+		- `portless` from `0.13.1` to `0.14.0`
+
+
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.30.3
 
 ---
