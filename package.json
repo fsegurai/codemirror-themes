@@ -95,7 +95,7 @@
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.0",
-    "@codemirror/language": "6.12.3",
+    "@codemirror/language": "6.12.4",
     "@codemirror/language-data": "^6.5.2",
     "@codemirror/legacy-modes": "^6.5.3",
     "@codemirror/merge": "^6.12.1",
