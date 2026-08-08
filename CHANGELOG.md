@@ -11,7 +11,28 @@ No changes have been made yet.
 
 ---
 
-## [6.30.4] - 2026-08-07
+## [6.30.4] - 2026-08-08
+
+### 🐞 Fixes
+
+- Fixed `bun run build` — `build`, `build:packages:doppler`, and `build:demo:doppler` still called
+  `postbuild:packages`/`postbuild:demo`, which no longer existed after those scripts were renamed to
+  `build:packages:metadata`/`build:demo:metadata` during the Biome migration.
+- Fixed broken code samples baked into every generated `packages/*/README.md`:
+	- `vscode-dark`/`vscode-light` showed a nonexistent `vscodeDark`/`vscodeLight` import; the real exports are
+	  `vsCodeDark`/`vsCodeLight`.
+	- `bundle` showed `import { bundle } from '@fsegurai/codemirror-theme-bundle'`, but the bundle package has no
+	  `bundle` export — it now shows `abcdef` as a representative import.
+	- The Cobalt2 row in the "Available Themes" table linked to `@fsegurai/codemirror-theme-cobalt` (missing the `2`)
+	  instead of `codemirror-theme-cobalt2`.
+- Fixed `tsc --noEmit` failing on a fresh checkout (or after `bun run clean`) with
+  `TS2307: Cannot find module '@fsegurai/codemirror-theme-*'` in `packages/bundle/src/index.ts` and
+  `demo/scripts/utils/themes.ts` — added a `paths` mapping in `tsconfig.json` so cross-package imports resolve to
+  source during type-checking instead of requiring `dist/` to be built first.
+- Fixed `.github/workflows/dependency-audit.yml`'s age-report check comparing against the wrong dependency name
+  (`"biome"` instead of `@biomejs/biome`), which always reported an empty installed version.
+- Removed a dead `as unknown as` type-cast in `demo/scripts/playground.ts` that was working around a duplicate
+  `@codemirror/language` type resolution now fixed by the `overrides` pin.
 
 ### 🔧 Infrastructure
 
@@ -27,8 +48,26 @@ No changes have been made yet.
 	  `build`, `build:packages:doppler`, `build:demo:doppler` to match.
 	- Fixed inverted `start`/`start:prod` scripts: `start` now runs the Vite dev server, `start:prod` serves the
 	  production build.
-	- `pipelines/.github/workflows/dependency-audit.yml`: bumped `actions/github-script` to `v9` (Node 24 runtime) and
-	  added the `issues: write` permission needed to file security-audit issues.
+	- `.github/workflows/dependency-audit.yml`: bumped `actions/github-script` to `v9` (Node 24 runtime) and added the
+	  `issues: write` permission needed to file security-audit issues.
+	- Aligned `.editorconfig` with Biome's formatting rules (2-space indent, 120-char line width) across
+	  `.js`/`.ts`/`.json`/`.css`.
+- Generated `packages/*/README.md`'s "Available Themes" table from the live package list instead of a hardcoded
+  block, via `packages/.helper/docs/generate-readme.ts`.
+- Added `packages/.helper/utils/generate-bundle.ts` (`bun run generate:bundle`) to regenerate
+  `packages/bundle/src/index.ts` and its `package.json` dependencies from the current package list, so a new theme
+  can't be forgotten from the bundle.
+- Added `types` conditions to every package's `exports` map, replaced per-package `.npmignore` blocklists with
+  `"files": ["dist"]`, and added `repository.directory` across all 29 theme packages.
+- Simplified root `overrides` — removed the redundant `@codemirror/state`/`@codemirror/language` entries (both are
+  already exact-pinned as direct dependencies); kept `@codemirror/view` (no direct dependency of its own — this is
+  what prevents duplicate transitive copies) and `serialize-javascript`.
+
+### 📝 Documentation
+
+- Fixed stale script references in `CONTRIBUTING.md` (`utils.copy:helpers` → `generate:helpers`, etc.) and added the
+  new `generate:bundle` step to the "Adding a New Theme" guide.
+- Fixed `AGENTS.md`'s stale "rollup dev server" reference — the build system moved to Vite in an earlier release.
 
 ### 🔐 Security
 
@@ -53,6 +92,9 @@ No changes have been made yet.
 		- `vite` from `8.0.16` to `8.2.0`
 	- Removed: `@eslint/js`, `@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser`, `eslint`, `globals`,
 	  `typescript-eslint`
+	- Restored `serialize-javascript` pin to `7.0.5` via `overrides` — it had silently regressed to the older `6.0.2`
+	  (still patched for the known CVE, but not the intended pin) when the `overrides` block was rewritten for the
+	  CodeMirror core bumps.
 
 ---
 
