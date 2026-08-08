@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -60,8 +60,8 @@ const invalid = '#FF5370', // Error color - red
 // Diff/merge specific colors
 const addedBackground = '#2c3c2e80', // Dark green with transparency for insertions
   removedBackground = '#3e2e3180', // Dark red with transparency for deletions
-  addedText = '#C3E88D',         // Palenight green for added text
-  removedText = '#FF5370';       // Palenight red for removed text
+  addedText = '#C3E88D', // Palenight green for added text
+  removedText = '#FF5370'; // Palenight red for removed text
 
 /**
  * Enhanced editor theme styles for Palenight
@@ -473,10 +473,7 @@ const palenightHighlightStyle = HighlightStyle.define([
 /**
  * Combined Palenight theme extension
  */
-const palenight: Extension = [
-  palenightTheme,
-  syntaxHighlighting(palenightHighlightStyle),
-];
+const palenight: Extension = [palenightTheme, syntaxHighlighting(palenightHighlightStyle)];
 
 /**
  * Palenight merge revert styles configuration
@@ -488,4 +485,4 @@ const palenightMergeStyles: IMergeRevertStyles = {
   buttonHoverColor: '#3A4058',
 };
 
-export { palenight, palenightMergeStyles, applyMergeRevertStyles };
+export { applyMergeRevertStyles, palenight, palenightMergeStyles };

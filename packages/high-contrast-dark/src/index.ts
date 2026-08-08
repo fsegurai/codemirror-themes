@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -15,7 +15,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -31,7 +31,6 @@ const base00 = '#000000', // Background - pure black
   base03 = '#808080', // Comments - medium grey
   base04 = '#b0b0b0', // Dark grey
   base05 = '#ffffff', // Foreground - pure white
-
   // High contrast accent colors
   brightYellow = '#ffff00',
   brightCyan = '#00ffff',
@@ -491,10 +490,7 @@ const highContrastDarkHighlightStyle = HighlightStyle.define([
 /**
  * Combined High Contrast Dark theme extension
  */
-const highContrastDark: Extension = [
-  highContrastDarkTheme,
-  syntaxHighlighting(highContrastDarkHighlightStyle),
-];
+const highContrastDark: Extension = [highContrastDarkTheme, syntaxHighlighting(highContrastDarkHighlightStyle)];
 
 /**
  * High Contrast Dark merge revert styles configuration
@@ -506,4 +502,4 @@ const highContrastDarkMergeStyles: IMergeRevertStyles = {
   buttonHoverColor: brightYellow,
 };
 
-export { highContrastDark, highContrastDarkMergeStyles, applyMergeRevertStyles };
+export { applyMergeRevertStyles, highContrastDark, highContrastDarkMergeStyles };

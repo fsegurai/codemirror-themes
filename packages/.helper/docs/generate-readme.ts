@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { readmeTemplate } from './README';
 
 const packagesDir = path.resolve(process.cwd(), 'packages');
@@ -9,17 +9,15 @@ function deriveImportName(pkgName: string): string {
   const name = pkgName.replace(/^@.*\//, '').replace(/^codemirror-theme-/, '');
   return name
     .split(/[-_.]+/)
-    .map((part, i) =>
-      i === 0 ? part.toLowerCase() : part.charAt(0).toUpperCase() + part.slice(1),
-    )
+    .map((part, i) => (i === 0 ? part.toLowerCase() : part.charAt(0).toUpperCase() + part.slice(1)))
     .join('');
 }
 
 function fillTemplate(tpl: string, data: Record<string, string>) {
   return tpl
-    .replace(/{{NPM_PACKAGE}}/g, data['npmPackage'])
-    .replace(/{{IMPORT_NAME}}/g, data['importName'])
-    .replace(/{{IMPORT_PATH}}/g, data['importPath']);
+    .replace(/{{NPM_PACKAGE}}/g, data.npmPackage)
+    .replace(/{{IMPORT_NAME}}/g, data.importName)
+    .replace(/{{IMPORT_PATH}}/g, data.importPath);
 }
 
 if (!fs.existsSync(packagesDir)) {
@@ -55,21 +53,11 @@ for (const pkgFolder of packageNames) {
     }
 
     const pkg = parsed as Record<string, unknown>;
-    const npmPackage =
-      typeof pkg['name'] === 'string' ? pkg['name'] : `@scope/${pkgFolder}`;
-    const themeMeta =
-      typeof pkg['theme'] === 'object' && pkg['theme'] !== null
-        ? (pkg['theme'] as Record<string, unknown>)
-        : {};
+    const npmPackage = typeof pkg.name === 'string' ? pkg.name : `@scope/${pkgFolder}`;
+    const themeMeta = typeof pkg.theme === 'object' && pkg.theme !== null ? (pkg.theme as Record<string, unknown>) : {};
 
-    const importPath =
-      typeof themeMeta['importPath'] === 'string'
-        ? themeMeta['importPath']
-        : npmPackage;
-    const importName =
-      typeof themeMeta['importName'] === 'string'
-        ? themeMeta['importName']
-        : deriveImportName(npmPackage);
+    const importPath = typeof themeMeta.importPath === 'string' ? themeMeta.importPath : npmPackage;
+    const importName = typeof themeMeta.importName === 'string' ? themeMeta.importName : deriveImportName(npmPackage);
 
     const readme = fillTemplate(readmeTemplate, {
       npmPackage,

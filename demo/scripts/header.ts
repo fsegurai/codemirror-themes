@@ -6,9 +6,9 @@ const lsTheme = 'codemirror-themes:fsegurai';
 
 document.addEventListener('DOMContentLoaded', () => {
   interface Route {
-    path: string
-    label: string
-    icon: string
+    path: string;
+    label: string;
+    icon: string;
   }
 
   if (!hostUrl) console.warn('HOST_URL is not defined');
@@ -20,10 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
       icon: 'play_arrow',
     },
     {
-      path:
-        isProdEnv && hostUrl
-          ? `${hostUrl}/playground.html`
-          : '/playground.html',
+      path: isProdEnv && hostUrl ? `${hostUrl}/playground.html` : '/playground.html',
       label: 'Playground',
       icon: 'ar_stickers',
     },
@@ -32,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Function to render tabs
   const tabLinkContainer = document.querySelector('#tabLinkContent');
   if (tabLinkContainer) {
-    routes.forEach(route => {
+    routes.forEach((route) => {
       const link = document.createElement('a');
       link.className = 'tab-link';
       link.href = route.path;
@@ -66,10 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
       tabLinkContainer.appendChild(link);
 
       // Check if the current URL matches the link's href
-      if (
-        window.location.href
-        === new URL(route.path, window.location.origin).href
-      ) {
+      if (window.location.href === new URL(route.path, window.location.origin).href) {
         link.classList.toggle('active');
       }
     });

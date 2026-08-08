@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -62,8 +62,8 @@ const invalid = base08,
 // Diff/merge specific colors
 const addedBackground = '#32361a80', // Dark base09 with transparency for insertions
   removedBackground = '#3c1f1e80', // Dark base08 with transparency for deletions
-  addedText = '#b8bb26',         // Bright base09 for added text
-  removedText = '#fb4934';       // Bright base08 for removed text
+  addedText = '#b8bb26', // Bright base09 for added text
+  removedText = '#fb4934'; // Bright base08 for removed text
 
 /**
  * Enhanced editor theme styles for Gruvbox Dark
@@ -473,10 +473,7 @@ const gruvboxDarkHighlightStyle = HighlightStyle.define([
 /**
  * Combined Gruvbox Dark theme extension
  */
-const gruvboxDark: Extension = [
-  gruvboxDarkTheme,
-  syntaxHighlighting(gruvboxDarkHighlightStyle),
-];
+const gruvboxDark: Extension = [gruvboxDarkTheme, syntaxHighlighting(gruvboxDarkHighlightStyle)];
 
 /**
  * Gruvbox Dark merge revert styles configuration
@@ -488,4 +485,4 @@ const gruvboxDarkMergeStyles: IMergeRevertStyles = {
   buttonHoverColor: base02,
 };
 
-export { gruvboxDark, gruvboxDarkMergeStyles, applyMergeRevertStyles };
+export { applyMergeRevertStyles, gruvboxDark, gruvboxDarkMergeStyles };

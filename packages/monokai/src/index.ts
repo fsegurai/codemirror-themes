@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -55,8 +55,8 @@ const invalid = '#F44747', // Error color - Red
 // Diff/merge specific colors
 const addedBackground = '#3d4d3880', // Dark green with transparency for insertions
   removedBackground = '#4d393980', // Dark red with transparency for deletions
-  addedText = '#A6E22E',         // Monokai green for added text
-  removedText = '#F92672';       // Monokai pink/red for removed text
+  addedText = '#A6E22E', // Monokai green for added text
+  removedText = '#F92672'; // Monokai pink/red for removed text
 
 /**
  * Enhanced editor theme styles for Monokai
@@ -467,10 +467,7 @@ const monokaiHighlightStyle = HighlightStyle.define([
 /**
  * Combined Monokai theme extension
  */
-const monokai: Extension = [
-  monokaiTheme,
-  syntaxHighlighting(monokaiHighlightStyle),
-];
+const monokai: Extension = [monokaiTheme, syntaxHighlighting(monokaiHighlightStyle)];
 
 /**
  * Monokai merge revert styles configuration
@@ -482,4 +479,4 @@ const monokaiMergeStyles: IMergeRevertStyles = {
   buttonHoverColor: selection,
 };
 
-export { monokai, monokaiMergeStyles, applyMergeRevertStyles };
+export { applyMergeRevertStyles, monokai, monokaiMergeStyles };

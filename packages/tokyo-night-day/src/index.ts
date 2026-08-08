@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -62,8 +62,8 @@ const invalid = base_red,
 // Diff/merge specific colors
 const addedBackground = '#58753920', // Green with transparency for insertions
   removedBackground = '#f52a6520', // Red with transparency for deletions
-  addedText = '#587539',         // Tokyo Night Day green for added text
-  removedText = '#f52a65';       // Tokyo Night Day red for removed text
+  addedText = '#587539', // Tokyo Night Day green for added text
+  removedText = '#f52a65'; // Tokyo Night Day red for removed text
 
 /**
  * Enhanced editor theme styles for Tokyo Night Day
@@ -478,10 +478,7 @@ const tokyoNightDayHighlightStyle = HighlightStyle.define([
 /**
  * Combined Tokyo Night Day theme extension
  */
-const tokyoNightDay: Extension = [
-  tokyoNightDayTheme,
-  syntaxHighlighting(tokyoNightDayHighlightStyle),
-];
+const tokyoNightDay: Extension = [tokyoNightDayTheme, syntaxHighlighting(tokyoNightDayHighlightStyle)];
 
 /**
  * Tokyo Night Day merge revert styles configuration
@@ -493,4 +490,4 @@ const tokyoNightDayMergeStyles: IMergeRevertStyles = {
   buttonHoverColor: selectionMatch,
 };
 
-export { tokyoNightDay, tokyoNightDayMergeStyles, applyMergeRevertStyles };
+export { applyMergeRevertStyles, tokyoNightDay, tokyoNightDayMergeStyles };

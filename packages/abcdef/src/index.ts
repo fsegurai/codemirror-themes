@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 // Enhanced Abcdef theme colors with improved contrast and harmony
@@ -433,10 +433,7 @@ const abcdefHighlightStyle = HighlightStyle.define([
 /**
  * Combined Abcdef theme extension
  */
-const abcdef: Extension = [
-  abcdefTheme,
-  syntaxHighlighting(abcdefHighlightStyle),
-];
+const abcdef: Extension = [abcdefTheme, syntaxHighlighting(abcdefHighlightStyle)];
 
 /**
  * Abcdef merge revert styles configuration

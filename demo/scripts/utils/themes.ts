@@ -1,3 +1,4 @@
+import type { Extension } from '@codemirror/state';
 import {
   abcdef,
   abcdefMergeStyles,
@@ -60,7 +61,20 @@ import {
   vsCodeLightMergeStyles,
 } from '@fsegurai/codemirror-theme-bundle';
 
-const themes = [
+type ThemeMergeStyles = {
+  backgroundColor: string;
+  borderColor: string;
+  buttonColor: string;
+  buttonHoverColor: string;
+};
+
+type ThemeEntry = {
+  name: string;
+  extension: Extension;
+  mergeStyles: ThemeMergeStyles;
+};
+
+const themes: ThemeEntry[] = [
   {
     name: 'abcdef',
     extension: abcdef,

@@ -62,11 +62,14 @@ bun test --verbose
 
 ```bash
 bun run lint
+bun run format:check   # Read-only check (Biome)
 ```
 
 You can also lint specific parts:
 - Demo: `bun run lint:demo`
 - Packages: `bun run lint:packages`
+
+Run `bun run lint:fix` to auto-fix formatting issues before committing.
 
 ---
 
@@ -93,9 +96,9 @@ This project uses a monorepo structure with individual theme packages in the `pa
 Once you've finished working on your theme, run the following to build and verify your changes:
 
 ```bash
-bun run utils.copy:helpers
-bun run utils.copy:readme
-bun run utils.update:versions # You must update the `versions.json` file as it is the source of truth for the packages versions
+bun run generate:helpers
+bun run generate:readme
+bun run version:update # You must update the `versions.json` file as it is the source of truth for the packages versions
 ```
 
 ---

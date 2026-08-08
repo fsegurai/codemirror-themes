@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -63,8 +63,8 @@ const invalid = base0F,
 // Diff/merge specific colors
 const addedBackground = '#1e3f1e80', // Dark green with transparency for insertions
   removedBackground = '#4b1c1c80', // Dark red with transparency for deletions
-  addedText = '#6cc26f',         // VS Code green for added text
-  removedText = '#f14c4c';       // VS Code red for removed text
+  addedText = '#6cc26f', // VS Code green for added text
+  removedText = '#f14c4c'; // VS Code red for removed text
 
 /**
  * Enhanced editor theme styles for VSCode Dark
@@ -478,10 +478,7 @@ const vsCodeDarkHighlightStyle = HighlightStyle.define([
 /**
  * Combined VSCode Dark theme extension
  */
-const vsCodeDark: Extension = [
-  vsCodeDarkTheme,
-  syntaxHighlighting(vsCodeDarkHighlightStyle),
-];
+const vsCodeDark: Extension = [vsCodeDarkTheme, syntaxHighlighting(vsCodeDarkHighlightStyle)];
 
 /**
  * VS Code Dark merge revert styles configuration
@@ -493,4 +490,4 @@ const vsCodeDarkMergeStyles: IMergeRevertStyles = {
   buttonHoverColor: '#3a3a3a',
 };
 
-export { vsCodeDark, vsCodeDarkMergeStyles, applyMergeRevertStyles };
+export { applyMergeRevertStyles, vsCodeDark, vsCodeDarkMergeStyles };

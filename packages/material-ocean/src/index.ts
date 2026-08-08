@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 // Base colors derived from the original CM5 Material Ocean theme
@@ -84,9 +84,9 @@ const materialOceanTheme = EditorView.theme(
     },
 
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
-            {
-              backgroundColor: selection,
-            },
+      {
+        backgroundColor: selection,
+      },
 
     '.cm-selectionLayer': {
       zIndex: 100,
@@ -431,10 +431,7 @@ const materialOceanHighlightStyle = HighlightStyle.define([
   { tag: t.unit, color: base0E },
 ]);
 
-const materialOcean: Extension = [
-  materialOceanTheme,
-  syntaxHighlighting(materialOceanHighlightStyle),
-];
+const materialOcean: Extension = [materialOceanTheme, syntaxHighlighting(materialOceanHighlightStyle)];
 
 const materialOceanMergeStyles: IMergeRevertStyles = {
   backgroundColor: tooltipBackground,
@@ -443,4 +440,4 @@ const materialOceanMergeStyles: IMergeRevertStyles = {
   buttonHoverColor: base02,
 };
 
-export { materialOcean, materialOceanMergeStyles, applyMergeRevertStyles };
+export { applyMergeRevertStyles, materialOcean, materialOceanMergeStyles };

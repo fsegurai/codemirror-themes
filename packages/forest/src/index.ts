@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -46,16 +46,16 @@ const base0E = '#ba68c8'; // Operators - purple wildflowers
 // const base0F = '#f57f17'; // Metadata - autumn leaves
 
 // UI-specific colors
-const invalid = '#ff5252';           // Error highlight - warning red berry
-const darkBackground = '#233039';    // Panel background - shadowy forest
+const invalid = '#ff5252'; // Error highlight - warning red berry
+const darkBackground = '#233039'; // Panel background - shadowy forest
 const highlightBackground = '#314443aa'; // Active line - forest clearing with dappled light
-const tooltipBackground = '#2a3b42';  // Tooltip background - darker canopy shadow
-const cursor = base04;               // Cursor color
-const selection = '#2c5a3acc';       // Selection - translucent forest green
-const selectionMatch = '#5d482faa';  // Selection match - amber forest light
-const lineNumbers = '#607d8b90';     // Line numbers - faded tree bark
+const tooltipBackground = '#2a3b42'; // Tooltip background - darker canopy shadow
+const cursor = base04; // Cursor color
+const selection = '#2c5a3acc'; // Selection - translucent forest green
+const selectionMatch = '#5d482faa'; // Selection match - amber forest light
+const lineNumbers = '#607d8b90'; // Line numbers - faded tree bark
 const activeBracketBg = '#2c5a3a80'; // Active bracket - forest green
-const activeBracketBorder = base0A;  // Active bracket border - golden sunlight
+const activeBracketBorder = base0A; // Active bracket border - golden sunlight
 
 // Diff/merge specific colors
 const addedBackground = '#28513a80', // Forest green with transparency for insertions
@@ -459,10 +459,7 @@ const forestHighlightStyle = HighlightStyle.define([
 /**
  * Combined Forest theme extension
  */
-const forest: Extension = [
-  forestTheme,
-  syntaxHighlighting(forestHighlightStyle),
-];
+const forest: Extension = [forestTheme, syntaxHighlighting(forestHighlightStyle)];
 
 /**
  * Forest merge revert styles configuration
@@ -474,4 +471,4 @@ const forestMergeStyles: IMergeRevertStyles = {
   buttonHoverColor: '#2d3d47',
 };
 
-export { forest, forestMergeStyles, applyMergeRevertStyles };
+export { applyMergeRevertStyles, forest, forestMergeStyles };

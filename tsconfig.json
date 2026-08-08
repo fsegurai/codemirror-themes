@@ -1,7 +1,6 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "./",
     "outDir": "./dist/out-tsc",
     "strict": true,
     "noImplicitOverride": true,
@@ -18,16 +17,7 @@
     "target": "ES2022",
     "module": "ES2022",
     "useDefineForClassFields": false,
-    "lib": [
-      "ES2022",
-      "dom"
-    ],
-    "types": [
-      "node",
-      "vite/client"
-    ],
-    "typeRoots": [
-      "node_modules/@types"
-    ]
+    "lib": ["ES2022", "dom"],
+    "types": ["node", "vite/client"]
   }
 }

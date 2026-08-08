@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -62,8 +62,8 @@ const invalid = '#ffffff',
 // Diff/merge specific colors
 const addedBackground = '#2a4a0080', // Dark green with transparency for insertions
   removedBackground = '#750000a0', // Dark red with transparency for deletions
-  addedText = '#9df39f',         // Volcano green for added text
-  removedText = '#ec0d1e';       // Volcano red for removed text
+  addedText = '#9df39f', // Volcano green for added text
+  removedText = '#ec0d1e'; // Volcano red for removed text
 
 /**
  * Enhanced editor theme styles for Volcano
@@ -477,10 +477,7 @@ const volcanoHighlightStyle = HighlightStyle.define([
 /**
  * Combined Volcano theme extension
  */
-const volcano: Extension = [
-  volcanoTheme,
-  syntaxHighlighting(volcanoHighlightStyle),
-];
+const volcano: Extension = [volcanoTheme, syntaxHighlighting(volcanoHighlightStyle)];
 
 /**
  * Volcano merge revert styles configuration
@@ -492,4 +489,4 @@ const volcanoMergeStyles: IMergeRevertStyles = {
   buttonHoverColor: base08,
 };
 
-export { volcano, volcanoMergeStyles, applyMergeRevertStyles };
+export { applyMergeRevertStyles, volcano, volcanoMergeStyles };

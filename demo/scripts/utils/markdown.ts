@@ -1,8 +1,7 @@
+import ClipboardJS from 'clipboard';
 import { marked } from 'marked';
 import { markedHighlight } from 'marked-highlight';
-
 import prismjs from 'prismjs';
-import ClipboardJS from 'clipboard';
 import 'prismjs/plugins/highlight-keywords/prism-highlight-keywords';
 import 'prismjs/plugins/line-highlight/prism-line-highlight';
 import 'prismjs/plugins/line-numbers/prism-line-numbers';
@@ -67,7 +66,7 @@ const insertCopyElement = () => {
     let language = 'plaintext';
     if (codeElement) {
       const classList = Array.from(codeElement.classList);
-      const langClass = classList.find(cls => cls.startsWith('language-'));
+      const langClass = classList.find((cls) => cls.startsWith('language-'));
       if (langClass) {
         language = langClass.replace('language-', '');
       }
@@ -165,4 +164,3 @@ function showCopyError(button: HTMLElement): void {
     `;
   }, 2000);
 }
-

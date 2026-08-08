@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -63,8 +63,8 @@ const invalid = base0F,
 // Diff/merge specific colors
 const addedBackground = '#ddfbe0', // Light green with transparency for insertions
   removedBackground = '#ffebec', // Light red with transparency for deletions
-  addedText = '#22863a',        // VS Code Light green for added text
-  removedText = '#e51400';      // VS Code Light red for removed text
+  addedText = '#22863a', // VS Code Light green for added text
+  removedText = '#e51400'; // VS Code Light red for removed text
 
 /**
  * Enhanced editor theme styles for VSCode Light
@@ -478,10 +478,7 @@ const vsCodeLightHighlightStyle = HighlightStyle.define([
 /**
  * Combined VSCode Light theme extension
  */
-const vsCodeLight: Extension = [
-  vsCodeLightTheme,
-  syntaxHighlighting(vsCodeLightHighlightStyle),
-];
+const vsCodeLight: Extension = [vsCodeLightTheme, syntaxHighlighting(vsCodeLightHighlightStyle)];
 
 /**
  * VS Code Light merge revert styles configuration
@@ -493,4 +490,4 @@ const vsCodeLightMergeStyles: IMergeRevertStyles = {
   buttonHoverColor: '#e8e8e8',
 };
 
-export { vsCodeLight, vsCodeLightMergeStyles, applyMergeRevertStyles };
+export { applyMergeRevertStyles, vsCodeLight, vsCodeLightMergeStyles };

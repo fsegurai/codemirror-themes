@@ -68,10 +68,10 @@ export const generalTooltip = {
 
 // Interface for merge revert styling options
 export interface IMergeRevertStyles {
-  backgroundColor: string
-  borderColor: string
-  buttonColor: string
-  buttonHoverColor: string
+  backgroundColor: string;
+  borderColor: string;
+  buttonColor: string;
+  buttonHoverColor: string;
 }
 
 /**

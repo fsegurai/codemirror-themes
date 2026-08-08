@@ -1,15 +1,17 @@
-import { basicSetup, EditorView } from 'codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
+import { MergeView, unifiedMergeView } from '@codemirror/merge';
 import { Compartment, EditorState } from '@codemirror/state';
+import { basicSetup, EditorView } from 'codemirror';
 import { diffMdSample, mdSample } from './utils/markdown.example';
 import { applyMergeRevertStyles, themes } from './utils/themes';
-import { MergeView, unifiedMergeView } from '@codemirror/merge';
 
 const loadingSpinner = document.querySelector('#loadingSpinner') as HTMLElement;
 const elCM = document.querySelector('#codemirror')!;
 const elDCM = document.querySelector('#diff-codemirror')!;
 const elUDCM = document.querySelector('#undiff-codemirror')!;
+const elList = document.querySelector('#theme-list');
+const defaultOption = document.querySelector('#defaultOptionValue')!;
 const themeConfig = new Compartment();
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -43,11 +45,11 @@ const diffEditor = new MergeView({
         addKeymap: true,
         extensions: [],
       }),
-      themeConfig.of([themes[0]]),
+      themeConfig.of([themes[0].extension]),
     ],
   },
   b: {
-    doc: diffMdSample.replace(/t/g, 'T') + '\nSix',
+    doc: `${diffMdSample.replace(/t/g, 'T')}\nSix`,
     extensions: [
       basicSetup,
       markdown({
@@ -56,14 +58,14 @@ const diffEditor = new MergeView({
         addKeymap: true,
         extensions: [],
       }),
-      themeConfig.of([themes[0]]),
+      themeConfig.of([themes[0].extension]),
     ],
   },
   parent: elDCM,
 });
 
 const unifiedDiff = new EditorView({
-  doc: diffMdSample.replace(/t/g, 'T') + '\nSix',
+  doc: `${diffMdSample.replace(/t/g, 'T')}\nSix`,
   extensions: [
     basicSetup,
     unifiedMergeView({
@@ -75,7 +77,7 @@ const unifiedDiff = new EditorView({
       addKeymap: true,
       extensions: [],
     }),
-    themeConfig.of([themes[0]]),
+    themeConfig.of([themes[0].extension]),
   ],
   parent: elUDCM,
 });
@@ -90,13 +92,10 @@ const editor = new EditorView({
       addKeymap: true,
       extensions: [],
     }),
-    themeConfig.of([themes[0]]),
+    themeConfig.of([themes[0].extension]),
   ],
   parent: elCM,
 });
-
-const elList = document.querySelector('#theme-list');
-const defaultOption = document.querySelector('#defaultOptionValue')!;
 
 if (elList && defaultOption) {
   // Set the value attribute of the default option to "0" to match the first theme
@@ -104,12 +103,9 @@ if (elList && defaultOption) {
 
   for (let i = 0; i < themes.length; ++i) {
     // Create new options for the remaining themes
-    const elItem =
-            i === 0 ? defaultOption : document.createElement('md-select-option');
+    const elItem = i === 0 ? defaultOption : document.createElement('md-select-option');
     elItem.setAttribute('value', i.toString());
-    const themeItem = i === 0
-      ? defaultOption.querySelector('div[slot="headline"]')!
-      : document.createElement('div');
+    const themeItem = i === 0 ? defaultOption.querySelector('div[slot="headline"]')! : document.createElement('div');
     themeItem.slot = 'headline';
     themeItem.textContent = themes[i].name;
 
@@ -128,29 +124,30 @@ if (elList && defaultOption) {
 
   elList.classList.remove('hidden');
 
-  elList.addEventListener('change', e => {
+  elList.addEventListener('change', (e) => {
     const target = e.target as HTMLElement;
     if (target.tagName === 'MD-OUTLINED-SELECT') {
       const value = (target as unknown as { value: string }).value;
       const i = Number(value);
+      const selectedTheme = themes[i];
 
       diffEditor.a.dispatch({
-        effects: themeConfig.reconfigure([themes[i]]),
+        effects: themeConfig.reconfigure([selectedTheme.extension]),
       });
       diffEditor.b.dispatch({
-        effects: themeConfig.reconfigure([themes[i]]),
+        effects: themeConfig.reconfigure([selectedTheme.extension]),
       });
 
       unifiedDiff.dispatch({
-        effects: themeConfig.reconfigure([themes[i]]),
+        effects: themeConfig.reconfigure([selectedTheme.extension]),
       });
 
       editor.dispatch({
-        effects: themeConfig.reconfigure([themes[i]]),
+        effects: themeConfig.reconfigure([selectedTheme.extension]),
       });
 
       applyMergeRevertStyles(
-        themes[i].mergeStyles || {
+        selectedTheme.mergeStyles || {
           backgroundColor: '#f0f0f0',
           borderColor: '#ccc',
           buttonColor: '#333',
@@ -163,4 +160,4 @@ if (elList && defaultOption) {
   elList.classList.remove('hidden');
 }
 
-export { diffEditor, unifiedDiff, editor };
+export { diffEditor, editor, unifiedDiff };
