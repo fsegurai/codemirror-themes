@@ -88,8 +88,6 @@ This project uses a monorepo structure with individual theme packages in the `pa
 2. Copy the structure from an existing theme
 3. Update the theme colors and styles in `src/index.ts`
 4. Add appropriate metadata in `package.json`
-5. Create a README.md with theme preview and usage
-6. Update all packages `README.md` to include your new theme
 
 ### Post Build Steps
 
@@ -97,7 +95,8 @@ Once you've finished working on your theme, run the following to build and verif
 
 ```bash
 bun run generate:helpers
-bun run generate:readme
+bun run generate:bundle  # adds your theme to the @fsegurai/codemirror-theme-bundle re-exports
+bun run generate:readme  # regenerates every package's README.md, including the themes table
 bun run version:update # You must update the `versions.json` file as it is the source of truth for the packages versions
 ```
 
