@@ -88,6 +88,7 @@
     "format": "biome check --write",
     "format:check": "biome check",
     "generate:helpers": "bun packages/.helper/utils/generate-utils.ts",
+    "generate:bundle": "bun packages/.helper/utils/generate-bundle.ts",
     "generate:readme": "bun packages/.helper/docs/generate-readme.ts",
     "version:update": "bun packages/.helper/versions/update-packages-versions.ts --write",
     "version:preview": "bun packages/.helper/versions/update-packages-versions.ts --dry-run",

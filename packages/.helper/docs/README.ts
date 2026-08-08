@@ -70,38 +70,7 @@ Read the [CodeMirror documentation](https://codemirror.net/6/examples/styling/) 
 
 ### Available Themes
 
-| Theme               | Package                                                                                                                        | Version                                                                             |
-|---------------------|--------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
-| All - Bundle        | [@fsegurai/codemirror-theme-bundle](https://www.npmjs.com/package/@fsegurai/codemirror-theme-bundle)                           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-bundle)              |
-| Abcdef              | [@fsegurai/codemirror-theme-abcdef](https://www.npmjs.com/package/@fsegurai/codemirror-theme-abcdef)                           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-abcdef)              |
-| Abyss               | [@fsegurai/codemirror-theme-abyss](https://www.npmjs.com/package/@fsegurai/codemirror-theme-abyss)                             | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-abyss)               |
-| Android Studio      | [@fsegurai/codemirror-theme-android-studio](https://www.npmjs.com/package/@fsegurai/codemirror-theme-android-studio)           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-android-studio)      |
-| Andromeda           | [@fsegurai/codemirror-theme-andromeda](https://www.npmjs.com/package/@fsegurai/codemirror-theme-andromeda)                     | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-andromeda)           |
-| Basic Dark          | [@fsegurai/codemirror-theme-basic-dark](https://www.npmjs.com/package/@fsegurai/codemirror-theme-basic-dark)                   | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-basic-dark)          |
-| Basic Light         | [@fsegurai/codemirror-theme-basic-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-basic-light)                 | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-basic-light)         |
-| Catppuccin Mocha    | [@fsegurai/codemirror-theme-catppuccin-mocha](https://www.npmjs.com/package/@fsegurai/codemirror-theme-catppuccin-mocha)       | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-catppuccin-mocha)    |
-| Cobalt2             | [@fsegurai/codemirror-theme-cobalt](https://www.npmjs.com/package/@fsegurai/codemirror-theme-cobalt2)                          | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-cobalt2)             |
-| Forest              | [@fsegurai/codemirror-theme-forest](https://www.npmjs.com/package/@fsegurai/codemirror-theme-forest)                           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-forest)              |
-| GitHub Dark         | [@fsegurai/codemirror-theme-github-dark](https://www.npmjs.com/package/@fsegurai/codemirror-theme-github-dark)                 | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-github-dark)         |
-| GitHub Light        | [@fsegurai/codemirror-theme-github-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-github-light)               | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-github-light)        |
-| Gruvbox Dark        | [@fsegurai/codemirror-theme-gruvbox-dark](https://www.npmjs.com/package/@fsegurai/codemirror-theme-gruvbox-dark)               | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-gruvbox-dark)        |
-| Gruvbox Light       | [@fsegurai/codemirror-theme-gruvbox-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-gruvbox-light)             | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-gruvbox-light)       |
-| High Contrast Dark  | [@fsegurai/codemirror-theme-high-contrast-dark](https://www.npmjs.com/package/@fsegurai/codemirror-theme-high-contrast-dark)   | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-high-contrast-dark)  |
-| High Contrast Light | [@fsegurai/codemirror-theme-high-contrast-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-high-contrast-light) | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-high-contrast-light) |
-| Material Dark       | [@fsegurai/codemirror-theme-material-dark](https://www.npmjs.com/package/@fsegurai/codemirror-theme-material-dark)             | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-material-dark)       |
-| Material Light      | [@fsegurai/codemirror-theme-material-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-material-light)           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-material-light)      |
-| Material Ocean      | [@fsegurai/codemirror-theme-material-ocean](https://www.npmjs.com/package/@fsegurai/codemirror-theme-material-ocean)           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-material-ocean)      |
-| Monokai             | [@fsegurai/codemirror-theme-monokai](https://www.npmjs.com/package/@fsegurai/codemirror-theme-monokai)                         | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-monokai)             |
-| Nord                | [@fsegurai/codemirror-theme-nord](https://www.npmjs.com/package/@fsegurai/codemirror-theme-nord)                               | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-nord)                |
-| Palenight           | [@fsegurai/codemirror-theme-palenight](https://www.npmjs.com/package/@fsegurai/codemirror-theme-palenight)                     | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-palenight)           |
-| Solarized Dark      | [@fsegurai/codemirror-theme-solarized-dark](https://www.npmjs.com/package/@fsegurai/codemirror-theme-solarized-dark)           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-solarized-dark)      |
-| Solarized Light     | [@fsegurai/codemirror-theme-solarized-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-solarized-light)         | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-solarized-light)     |
-| Synthwave 84\t       | [@fsegurai/codemirror-theme-synthwave-84](https://www.npmjs.com/package/@fsegurai/codemirror-theme-synthwave-84)               | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-synthwave-84)        |
-| Tokyo Night Day     | [@fsegurai/codemirror-theme-tokyo-night-day](https://www.npmjs.com/package/@fsegurai/codemirror-theme-tokyo-night-day)         | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-tokyo-night-day)     |
-| Tokyo Night Storm   | [@fsegurai/codemirror-theme-tokyo-night-storm](https://www.npmjs.com/package/@fsegurai/codemirror-theme-tokyo-night-storm)     | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-tokyo-night-storm)   |
-| Volcano             | [@fsegurai/codemirror-theme-volcano](https://www.npmjs.com/package/@fsegurai/codemirror-theme-volcano)                         | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-volcano)             |
-| VS Code Light       | [@fsegurai/codemirror-theme-vscode-light](https://www.npmjs.com/package/@fsegurai/codemirror-theme-vscode-light)               | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-vscode-light)        |
-| VS Code Dark        | [@fsegurai/codemirror-theme-vscode-dark](https://www.npmjs.com/package/@fsegurai/codemirror-theme-vscode-dark)                 | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-vscode-dark)         |
+{{THEMES_TABLE}}
 
 ## Demo Application
 
