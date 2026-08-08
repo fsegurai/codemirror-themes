@@ -1,13 +1,58 @@
 # 📦 Changelog
 
-All notable changes to this project will be documented in this file.
-This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+All notable changes to this project will be documented in this file. This project adheres
+to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ---
 
 ## [Unreleased]
 
 No changes have been made yet.
+
+---
+
+## [6.30.4] - 2026-08-07
+
+### 🔧 Infrastructure
+
+- **Linting migration: ESLint → Biome** — replaced `eslint`, `@eslint/js`, `globals`,
+  `@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser`, and `typescript-eslint` with a single
+  `@biomejs/biome` dependency.
+	- Added `biome.json` (formatter + linter, single quotes, trailing commas, 120-char line width, import sorting).
+	- Removed `eslint.config.js`.
+	- `lint:check`/`lint:fix`/`lint:packages`/`lint:demo` now run Biome; added `format`/`format:check` aliases.
+	- Reformatted every `packages/*/src/{index,utils}.ts` file and the `demo/` scripts/styles with Biome — formatting
+	  and import-order only, no palette, tag, or behavioral changes.
+	- Renamed `postbuild:packages`/`postbuild:demo` to `build:packages:metadata`/`build:demo:metadata` and updated
+	  `build`, `build:packages:doppler`, `build:demo:doppler` to match.
+	- Fixed inverted `start`/`start:prod` scripts: `start` now runs the Vite dev server, `start:prod` serves the
+	  production build.
+	- `pipelines/.github/workflows/dependency-audit.yml`: bumped `actions/github-script` to `v9` (Node 24 runtime) and
+	  added the `issues: write` permission needed to file security-audit issues.
+
+### 🔐 Security
+
+- **Added dependencies**.
+	- Dev Dependencies
+		- `@biomejs/biome` - `2.5.6` - needed for linting and formatting.
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/lang-markdown` from `6.5.0` to `6.5.2`
+		- `@codemirror/language` from `6.12.3` to `6.12.4`
+		- `@codemirror/merge` from `6.12.1` to `6.12.2`
+		- `@codemirror/state` from `6.6.0` to `6.7.1`
+		- `@codemirror/view` pinned to `6.43.8` via `overrides` (dedupe transitive copies)
+		- `@material/web` from `2.4.1` to `2.5.0`
+		- `marked` from `18.0.5` to `18.0.9`
+	- Dev Dependencies
+		- `@biomejs/biome` `2.5.6` (new, replaces ESLint toolchain)
+		- `@types/node` from `25.9.1` to `26.1.2`
+		- `portless` from `0.14.0` to `0.15.5`
+		- `terser` from `5.48.0` to `5.49.2`
+		- `typescript` from `6.0.3` to `7.0.2`
+		- `vite` from `8.0.16` to `8.2.0`
+	- Removed: `@eslint/js`, `@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser`, `eslint`, `globals`,
+	  `typescript-eslint`
 
 ---
 
@@ -42,7 +87,6 @@ No changes have been made yet.
 		- `marked` from `18.0.4` to `18.0.5`
 	- Dev Dependencies
 		- `portless` from `0.13.1` to `0.14.0`
-
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.30.3
 
@@ -107,8 +151,7 @@ No changes have been made yet.
 ### 🚀 Features
 
 - **New Theme**: Added a new `material-ocean` theme to the collection. Thanks to [@Yug34](https://github.com/Yug34) for
-  the
-  contribution in [#114](https://github.com/fsegurai/codemirror-themes/pull/114)
+  the contribution in [#114](https://github.com/fsegurai/codemirror-themes/pull/114)
 
 ### 🐞 Fixes
 
