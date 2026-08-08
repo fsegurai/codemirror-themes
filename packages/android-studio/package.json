@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-theme-android-studio",
-  "version": "6.2.6",
+  "version": "6.2.7",
   "description": "Android Studio theme for the CodeMirror editor",
   "type": "module",
   "main": "dist/index.cjs",

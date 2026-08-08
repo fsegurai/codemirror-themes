@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-theme-vscode-dark",
-  "version": "6.2.7",
+  "version": "6.2.8",
   "description": "VSCode Dark theme for the CodeMirror editor",
   "type": "module",
   "main": "dist/index.cjs",
