@@ -73,7 +73,7 @@ No changes have been made yet.
 
 - **Added dependencies**.
 	- Dev Dependencies
-		- `@biomejs/biome` - `2.5.7` - needed for linting and formatting - replaces ESLint toolchain.
+		- `@biomejs/biome` - `2.5.10` - needed for linting and formatting - replaces ESLint toolchain.
 - **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
 	- Dependencies
 		- `@codemirror/lang-markdown` from `6.5.0` to `6.5.2`
@@ -82,13 +82,13 @@ No changes have been made yet.
 		- `@codemirror/state` from `6.6.0` to `6.7.1`
 		- `@codemirror/view` pinned to `6.43.8` via `overrides` (dedupe transitive copies)
 		- `@material/web` from `2.4.1` to `2.5.0`
-		- `marked` from `18.0.5` to `18.0.9`
+		- `marked` from `18.0.5` to `18.0.11`
 	- Dev Dependencies
-		- `@types/node` from `25.9.1` to `26.2.0`
-		- `portless` from `0.14.0` to `0.15.5`
-		- `terser` from `5.48.0` to `5.49.2`
+		- `@types/node` from `25.9.1` to `26.3.0`
+		- `portless` from `0.14.0` to `0.15.6`
+		- `terser` from `5.48.0` to `5.50.0`
 		- `typescript` from `6.0.3` to `7.0.2`
-		- `vite` from `8.0.16` to `8.2.1`
+		- `vite` from `8.0.16` to `8.2.2`
 	- Removed: `@eslint/js`, `@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser`, `eslint`, `globals`,
 	  `typescript-eslint`
 	- Restored `serialize-javascript` pin to `7.0.5` via `overrides` — it had silently regressed to the older `6.0.2`
