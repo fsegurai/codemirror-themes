@@ -1,0 +1,53 @@
+{
+  "name": "@fsegurai/codemirror-theme-monokai",
+  "version": "6.2.7",
+  "description": "Monokai theme for the CodeMirror editor",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    "import": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "require": {
+      "types": "./dist/index.d.cts",
+      "default": "./dist/index.cjs"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "editor",
+    "diff",
+    "diff-editor",
+    "code",
+    "codemirror",
+    "theme",
+    "themes",
+    "syntax",
+    "highlight",
+    "monokai"
+  ],
+  "author": {
+    "name": "Fabián Segura",
+    "url": "https://www.fsegurai.com/"
+  },
+  "license": "MIT",
+  "scripts": {
+    "pkg:build": "cm-buildhelper src/index.ts",
+    "pkg:test": "cm-runtests"
+  },
+  "peerDependencies": {
+    "@lezer/highlight": "^1.0.0",
+    "@codemirror/language": "^6.0.0",
+    "@codemirror/state": "^6.0.0",
+    "@codemirror/view": "^6.0.0"
+  },
+  "devDependencies": {
+    "@codemirror/buildhelper": "^1.0.2"
+  }
+}

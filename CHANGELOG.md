@@ -1,0 +1,872 @@
+# 📦 Changelog
+
+All notable changes to this project will be documented in this file. This project adheres
+to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+
+---
+
+## [Unreleased]
+
+No changes have been made yet.
+
+---
+
+## [6.30.4] - 2026-09-04
+
+### 🐞 Fixes
+
+- Fixed `bun run build` — `build`, `build:packages:doppler`, and `build:demo:doppler` still called
+  `postbuild:packages`/`postbuild:demo`, which no longer existed after those scripts were renamed to
+  `build:packages:metadata`/`build:demo:metadata` during the Biome migration.
+- Fixed broken code samples baked into every generated `packages/*/README.md`:
+	- `vscode-dark`/`vscode-light` showed a nonexistent `vscodeDark`/`vscodeLight` import; the real exports are
+	  `vsCodeDark`/`vsCodeLight`.
+	- `bundle` showed `import { bundle } from '@fsegurai/codemirror-theme-bundle'`, but the bundle package has no
+	  `bundle` export — it now shows `abcdef` as a representative import.
+	- The Cobalt2 row in the "Available Themes" table linked to `@fsegurai/codemirror-theme-cobalt` (missing the `2`)
+	  instead of `codemirror-theme-cobalt2`.
+- Fixed `tsc --noEmit` failing on a fresh checkout (or after `bun run clean`) with
+  `TS2307: Cannot find module '@fsegurai/codemirror-theme-*'` in `packages/bundle/src/index.ts` and
+  `demo/scripts/utils/themes.ts` — added a `paths` mapping in `tsconfig.json` so cross-package imports resolve to
+  source during type-checking instead of requiring `dist/` to be built first.
+- Fixed `.github/workflows/dependency-audit.yml`'s age-report check comparing against the wrong dependency name
+  (`"biome"` instead of `@biomejs/biome`), which always reported an empty installed version.
+- Removed a dead `as unknown as` type-cast in `demo/scripts/playground.ts` that was working around a duplicate
+  `@codemirror/language` type resolution now fixed by the `overrides` pin.
+
+### 🔧 Infrastructure
+
+- **Linting migration: ESLint → Biome** — replaced `eslint`, `@eslint/js`, `globals`,
+  `@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser`, and `typescript-eslint` with a single
+  `@biomejs/biome` dependency.
+	- Added `biome.json` (formatter + linter, single quotes, trailing commas, 120-char line width, import sorting).
+	- Removed `eslint.config.js`.
+	- `lint:check`/`lint:fix`/`lint:packages`/`lint:demo` now run Biome; added `format`/`format:check` aliases.
+	- Reformatted every `packages/*/src/{index,utils}.ts` file and the `demo/` scripts/styles with Biome — formatting
+	  and import-order only, no palette, tag, or behavioral changes.
+	- Renamed `postbuild:packages`/`postbuild:demo` to `build:packages:metadata`/`build:demo:metadata` and updated
+	  `build`, `build:packages:doppler`, `build:demo:doppler` to match.
+	- Fixed inverted `start`/`start:prod` scripts: `start` now runs the Vite dev server, `start:prod` serves the
+	  production build.
+	- `.github/workflows/dependency-audit.yml`: bumped `actions/github-script` to `v9` (Node 24 runtime) and added the
+	  `issues: write` permission needed to file security-audit issues.
+	- Aligned `.editorconfig` with Biome's formatting rules (2-space indent, 120-char line width) across
+	  `.js`/`.ts`/`.json`/`.css`.
+- Generated `packages/*/README.md`'s "Available Themes" table from the live package list instead of a hardcoded
+  block, via `packages/.helper/docs/generate-readme.ts`.
+- Added `packages/.helper/utils/generate-bundle.ts` (`bun run generate:bundle`) to regenerate
+  `packages/bundle/src/index.ts` and its `package.json` dependencies from the current package list, so a new theme
+  can't be forgotten from the bundle.
+- Added `types` conditions to every package's `exports` map, replaced per-package `.npmignore` blocklists with
+  `"files": ["dist"]`, and added `repository.directory` across all 29 theme packages.
+- Simplified root `overrides` — removed the redundant `@codemirror/state`/`@codemirror/language` entries (both are
+  already exact-pinned as direct dependencies); kept `@codemirror/view` (no direct dependency of its own — this is
+  what prevents duplicate transitive copies) and `serialize-javascript`.
+
+### 📝 Documentation
+
+- Fixed stale script references in `CONTRIBUTING.md` (`utils.copy:helpers` → `generate:helpers`, etc.) and added the
+  new `generate:bundle` step to the "Adding a New Theme" guide.
+- Fixed `AGENTS.md`'s stale "rollup dev server" reference — the build system moved to Vite in an earlier release.
+
+### 🔐 Security
+
+- **Added dependencies**.
+	- Dev Dependencies
+		- `@biomejs/biome` - `2.5.12` - needed for linting and formatting - replaces ESLint toolchain.
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/lang-markdown` from `6.5.0` to `6.5.2`
+		- `@codemirror/language` from `6.12.3` to `6.12.4`
+        - `@codemirror/legacy-modes` from `6.5.3` to `6.5.4`
+		- `@codemirror/merge` from `6.12.1` to `6.12.2`
+		- `@codemirror/state` from `6.6.0` to `6.7.4`
+		- `@codemirror/view` pinned to `6.43.8` via `overrides` (dedupe transitive copies)
+		- `@material/web` from `2.4.1` to `2.5.0`
+		- `marked` from `18.0.5` to `18.0.11`
+	- Dev Dependencies
+		- `@types/node` from `25.9.1` to `26.4.1`
+		- `portless` from `0.14.0` to `0.15.6`
+		- `terser` from `5.48.0` to `5.51.2`
+		- `typescript` from `6.0.3` to `7.0.2`
+		- `vite` from `8.0.16` to `8.2.2`
+	- Removed: `@eslint/js`, `@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser`, `eslint`, `globals`,
+	  `typescript-eslint`
+	- Restored `serialize-javascript` pin to `7.0.5` via `overrides` — it had silently regressed to the older `6.0.2`
+	  (still patched for the known CVE, but not the intended pin) when the `overrides` block was rewritten for the
+	  CodeMirror core bumps.
+
+---
+
+## [6.30.3] - 2026-06-04
+
+### 🚀 Features
+
+- **Enhanced syntax highlighting coverage** — normalized Lezer tag coverage across all 29 themes to match the full
+  syntax tagging vocabulary. Every theme now includes:
+	- Number-family: `integer`, `float`, `bool`, `null`, `atom`
+	- String-family: `attributeValue`, `escape`
+	- Bracket-family: `paren`
+	- Comment-family: `lineComment`, `blockComment`
+	- Keyword-family: `definitionKeyword`
+	- Operator sub-tags: `arithmeticOperator`, `logicOperator`, `compareOperator`, `bitwiseOperator`,
+	  `updateOperator`, `derefOperator`
+	- Modifier: `local(t.variableName)`
+	- Content/utility: `url`, `regexp`, `contentSeparator`, `list`, `unit`, `monospace`, `quote`
+	- Expanded `heading1`–`heading6` in 16 themes that only had generic `heading`
+	- Added `squareBracket`, `angleBracket` to 3 themes that were missing them
+	- All new tags use each theme's existing palette, preserving visual consistency
+
+### 🐞 Fixes
+
+- **Removed duplicate rules** in `abcdef` theme — eliminated 4 dead rules that were shadowed by later identical
+  definitions.
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `marked` from `18.0.4` to `18.0.5`
+	- Dev Dependencies
+		- `portless` from `0.13.1` to `0.14.0`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.30.3
+
+---
+
+## [6.30.2] - 2026-06-02
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/legacy-modes` from `6.5.2` to `6.5.3`
+		- `marked` from `17.0.6` to `18.0.4`
+		- `marked-highlight` from `2.2.3` to `2.2.4`
+	- Dev Dependencies
+		- `@types/node` from `25.5.2` to `25.9.1`
+		- `@typescript-eslint/eslint-plugin` from `8.58.0` to `8.60.1`
+		- `@typescript-eslint/parser` from `8.58.0` to `8.60.1`
+		- `eslint` from `10.2.0` to `10.4.1`
+		- `globals` from `17.4.0` to `17.6.0`
+		- `portless` from `0.9.6` to `0.13.1`
+		- `typescript` from `6.0.2` to `6.0.3`
+		- `typescript-eslint` from `8.58.0` to `8.60.1`
+		- `vite` from `8.0.8` to `8.0.16`b
+
+- **Removed dependencies** — eliminated unused dependencies to reduce potential security risks and improve project
+  maintainability.
+	- Removed Dependencies
+		- `@lezer/markdown`
+		- `glob`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.30.2
+
+---
+
+## [6.30.1] - 2026-04-05
+
+### 🐞 Fixes
+
+- Fixed `vscode-light` and remove duplicate directories.
+
+### 🔐 Security
+
+- **Added dependencies**.
+	- Dev Dependencies
+		- `@typescript-eslint/eslint-plugin` - `8.58.0` - needed for TypeScript linting.
+		- `@typescript-eslint/parser` - `8.58.0` - needed for TypeScript linting.
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `marked` from `17.0.5` to `17.0.6`
+	- Dev Dependencies
+		- `@types/node` from `25.5.0` to `25.5.2`
+		- `eslint` from `10.1.0` to `10.2.0`
+		- `portless` from `0.9.4` to `0.9.6`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.30.1
+
+---
+
+## [6.30.0] - 2026-04-03
+
+### 🚀 Features
+
+- **New Theme**: Added a new `material-ocean` theme to the collection. Thanks to [@Yug34](https://github.com/Yug34) for
+  the contribution in [#114](https://github.com/fsegurai/codemirror-themes/pull/114)
+
+### 🐞 Fixes
+
+- Fixed a typo in all themes utilities.
+
+### 🔐 Security
+
+- **Added dependencies**.
+	- Dev Dependencies
+		- `portless` - `0.9.4` - needed for local development. Replace port numbers with stable names.
+		- `terser` - `5.46.1` - needed for production builds as part of Vite.
+		- `vite` - `8.0.3` - needed for development and build processes. Replacement of Rollup.
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/language` from `6.12.2` to `6.12.3`
+	- Dev Dependencies
+		- `typescript` from `5.9.3` to `6.0.2`
+		- `typescript-eslint` from `8.57.2` to `8.58.0`
+- **Removed dependencies** — eliminated unused dependencies to reduce potential security risks and improve project
+  maintainability.
+	- Removed Dependencies
+		- `@rollup/plugin-commonjs`
+		- `@rollup/plugin-node-resolve`
+		- `@rollup/plugin-replace`
+		- `@rollup/plugin-typescript`
+		- `cpy-cli`
+		- `dotenv`
+		- `rollup`
+		- `rollup-plugin-dev`
+
+### 🔧 Infrastructure
+
+- **Build System Migration**: Migrated from Rollup to Vite
+	- Replaced `rollup` + `rollup-plugin-dev` with `vite`
+	- Removed all Rollup plugins (`@rollup/plugin-*`)
+	- Added `vite.config.ts` for cleaner configuration
+	- Benefits:
+		- Faster dev server with better HMR (Hot Module Replacement)
+		- Built-in environment variable support (`.env` files)
+		- Native TypeScript compilation
+		- Better CSS/asset handling for future scalability
+		- Simplified build configuration
+	- Updated dev commands:
+		- `bun run dev` now uses `vite serve` (was `rollup -w`)
+		- `bun run build:demo` now uses `vite build` (was `rollup -c`)
+	- Removed `rollup.config.js` (replaced by `vite.config.ts`)
+	- Removed build helper script `scripts/build-demo.mjs` (Vite handles env vars natively)
+
+### 📝 Documentation
+
+- Updated GitHub labeler configuration to track `vite.config.ts` changes instead of `rollup.config.js`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.30.0
+
+---
+
+## [6.29.2] - 2026-03-24
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/language` from `6.12.1` to `6.12.2`
+		- `@codemirror/merge` from `6.11.2` to `6.12.1`
+		- `@codemirror/state` from `6.5.4` to `6.6.0`
+		- `marked` from `17.0.1` to `17.0.5`
+	- Dev Dependencies
+		- `@eslint/js` from `9.39.2` to `10.0.1`
+		- `@rollup/plugin-commonjs` from `29.0.0` to `29.0.2`
+		- `@types/node` from `25.0.10` to `25.5.0`
+		- `@types/prismjs` from `1.26.5` to `1.26.6`
+		- `cpy-cli` from `6.0.0` to `7.0.0`
+		- `dotenv` from `17.2.3` to `17.3.1`
+		- `eslint` from `9.39.2` to `10.1.0`
+		- `glob` from `13.0.0` to `13.00.6`
+		- `globals` from `17.1.0` to `17.4.0`
+		- `rimraf` from `6.1.2` to `6.1.3`
+		- `rollup` from `4.56.0` to `4.60.0`
+		- `semantic-release` from `25.0.2` to `25.0.3`
+		- `typescript-eslint` from `8.53.1` to `8.57.2`
+- **Removed dependencies** — eliminated unused dependencies to reduce potential security risks and improve project
+  maintainability.
+	- Removed Dependencies
+		- `@semantic-release/changelog`
+		- `@semantic-release/commit-analyzer`
+		- `@semantic-release/git`
+		- `@semantic-release/release-notes-generator`
+		- `semantic-release`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.29.2
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.29.2
+
+---
+
+## [6.29.1] - 2026-01-24
+
+### 🔧 Changes
+
+- Changed the project logo for a more accurate one.
+- Improved a util script to support Linux and Windows paths.
+
+### 🐞 Fixes
+
+- Fixed Visual Studio Code Dark & Light themes README files. Thanks to [@blurfx](https://github.com/blurfx) for the
+  contribution in [#102](https://github.com/fsegurai/codemirror-themes/pull/102)
+
+### 🔐 Security
+
+- **Added dependencies**.
+	- Dependencies
+		- `@codemirror/state` - `6.5.4` - needed for demo playground.
+	- Dev Dependencies
+		- `glob` - `13.0.0` - needed for packages utilities.
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/language` from `6.11.3` to `6.12.1`
+		- `@lezer/markdown` from `1.6.0` to `1.6.3`
+	- Dev Dependencies
+		- `@eslint/js` from `9.39.1` to `9.39.2`
+		- `@types/node` from `24.10.1` to `25.0.10`
+		- `eslint` from `9.39.1` to `9.39.2`
+		- `globals` from `16.5.0` to `17.1.0`
+		- `rollup` from `4.53.3` to `4.56.0`
+		- `typescript-eslint` from `8.48.1` to `8.53.1`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.29.1
+
+---
+
+## [6.29.0] - 2025-12-02
+
+### ⚠️ BREAKING CHANGES ⚠️
+
+- **Theme Declaration**: Changed VS Code theme declaration to be more consistent with the rest of the themes.
+	- Visual Studio Code Dark Theme from `vscodeDark` to `vsCodeDark`
+	- Visual Studio Code Light Theme from `vscodeLight` to `vsCodeLight`
+
+### 🚀 Features
+
+- **New Theme**: Added a new `catppuccin-mocha` theme to the collection.
+- **New Theme**: Added a new `high-contrast-dark` theme to the collection.
+- **New Theme**: Added a new `high-contrast-light` theme to the collection.
+- **New Theme**: Added a new `synthwave-84` theme to the collection.
+
+### 🔧 Changes
+
+- Refactored the local storage theme keyword to a more accurate one based on the project.
+- Improved keywords declared in the `package.json` files.
+
+### 🐞 Fixes
+
+- For rollout configuration file, fixed `process` import reference to point to `node:process` directly.
+- Fixed inconsistent line-height between editor content and line numbers across all themes. Line numbers now properly
+  align with their corresponding code rows.
+	- <img alt="Comparison 1" src="https://raw.githubusercontent.com/fsegurai/codemirror-themes/main/demo/public/releases/6.29.0/fix/6.29.0-fix-lineheight-1.png">
+	- <img alt="Comparison 2" src="https://raw.githubusercontent.com/fsegurai/codemirror-themes/main/demo/public/releases/6.29.0/fix/6.29.0-fix-lineheight-2.png">
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/lang-markdown` from `6.3.4` to `6.5.0`
+		- `@codemirror/language` from `6.11.2` to `6.11.3`
+		- `@codemirror/language-data` from `6.5.1` to `6.5.2`
+		- `@codemirror/legacy-modes` from `6.5.1` to `6.5.2`
+		- `@codemirror/merge` from `6.10.2` to `6.11.2`
+		- `@lezer/markdown` from `1.4.3` to `1.6.0`
+		- `@material/web` from `2.3.0` to `2.4.1`
+		- `marked` from `16.1.2` to `17.0.1`
+		- `marked-highlight` from `2.2.2` to `2.2.3`
+	- Dev Dependencies
+		- `@eslint/js` from `9.33.0` to `9.39.1`
+		  -`@rollup/plugin-commonjs` from `28.0.6` to `29.0.0`
+		- `@rollup/plugin-node-resolve` from `16.0.1` to `16.0.3`
+		- `@rollup/plugin-replace` from `6.0.2` to `6.0.3`
+		- `@rollup/plugin-typescript` from `12.1.4` to `12.3.0`
+		- `@semantic-release/release-notes-generator` from `14.0.3` from `14.1.0`
+		- `cpy-cli` from `5.0.0` to `6.0.0`
+		- `dotenv` from `17.2.1` to `17.2.3`
+		- `eslint` from `9.33.0` to `9.39.1`
+		- `globals` from `16.3.0` to `16.5.0`
+		- `rimraf` from `6.0.1` to `6.1.2`
+		- `rollup` from `4.46.2` to `4.53.3`
+		- `semantic-release` from `24.2.7` to `25.0.2`
+		- `typescript` from `5.9.2` to `5.9.3`
+		- `typescript-eslint` from `8.39.1` to `8.48.0`
+- **Removed dependencies** — removed unused dependencies.
+	- Dev Dependencies
+		- Removed `prettier` dependency.
+		- Removed `ts-node` dependency.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.29.0
+
+---
+
+## [6.25.0] - 2025-08-11
+
+### 🚀 Features
+
+- **New Theme**: Added a new `cobalt2` theme to the collection.
+- **Utils Declaration**: Added new utils scripts for better propagation across themes.
+- Improved overall project documentation, including `CHANGELOG.md` and `CONTRIBUTING.md`.
+
+### 🔧 Changes
+
+- Enhanced helper utilities for easier theme development and testing.
+- Removed unused methods from the rollup configuration.
+- Refactored demo playground for better usability and maintainability.
+- Updated all package `README.md` files to include the new theme.
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@lezer/markdown` from `1.4.2` to `1.4.3`
+		- `marked` from `15.0.9` to `15.0.12`
+	- Dev Dependencies
+		- `@eslint/js` from `9.25.1` to `9.27.0`
+		- `eslint` from `9.25.1` to `9.27.0`
+		- `globals` from `16.0.0` to `16.2.0`
+		- `rollup` from `4.40.0` to `4.41.1`
+		- `semantic-release` from `24.2.3` to `24.2.5`
+		- `typescript-eslint` from `8.31.0` to `8.33.0`
+
+### 🐞 Fixes
+
+- Improved demo playground and logic.
+- Refined overall themes structure styles.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.25.0
+
+---
+
+## [6.24.0] - 2025-06-02
+
+### 🚀 Features
+
+- **Utils Declaration**: Added utils declaration across themes.
+- **Editor Support**: Added theme support for diff editor and unified editor.
+
+### 🔧 Changes
+
+- Improved demo playground and logic.
+- Enhanced package keywords reference.
+- Refined overall themes, structure styles, and documentation for a better visualization and usability.
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/language` from `6.10.8` to `6.11.0`
+		- `@codemirror/legacy-modes` from `6.4.3` to `6.5.1`
+		- `@material/web` from `2.2.0` to `2.3.0`
+		- `marked` from `15.0.7` to `15.0.9`
+		- `prismjs` from `1.29.0` to `1.30.0`
+	- Dev Dependencies
+		- `@eslint/js` from `9.21.0` to `9.25.1`
+		- `@rollup/plugin-commonjs` from `28.0.2` to `28.0.3`
+		- `@rollup/plugin-node-resolve` from `16.0.0` to `16.0.1`
+		- `dotenv` from `16.4.7` to `16.5.0`
+		- `eslint` from `9.21.0` to `9.25.1`
+		- `rollup` from `4.34.9` to `4.40.0`
+		- `typescript` from `5.7.3` to `5.8.3`
+		- `typescript-eslint` from `8.25.0` to `8.31.0`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.24.0
+
+---
+
+## [6.1.4.0] - 2025-04-22
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@lezer/markdown` from `1.4.1` to `1.4.2`
+	- Dev Dependencies
+
+### 🐞 Fixes
+
+- Minor fixes and improvements.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.4.0
+
+---
+
+## [6.1.3.8] - 2025-03-02
+
+### 🔧 Changes
+
+- Improved project README.
+
+### 🐞 Fixes
+
+- Fixed release setup files.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.8
+
+---
+
+## [6.1.3.7] - 2025-02-16
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dev Dependencies
+		- `prettier` from `3.5.0` to `3.5.1`
+		- `rollup` from `4.34.6` to `4.34.7`
+		- `semantic-release` from `24.2.2` to `24.2.3`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.7
+
+---
+
+## [6.1.3.6] - 2025-02-14
+
+### 🐞 Fixes
+
+- Fixed release setup files.
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/legacy-modes` from `6.4.2` to `6.4.3`
+		- `@lezer/markdown` from `1.4.0` to `1.4.1`
+		- `marked` from `15.0.6` to `15.0.7`
+	- Dev Dependencies
+		- `@eslint/js` from `9.19.0` to `9.20.1`
+		- `eslint` from `9.19.0` to `9.20.1
+		- `prettier` from `3.4.2` to `3.5.0`
+		- `rollup` from `4.34.1` to `4.34.6`
+		- `semantic-release` from `24.2.1` to `24.2.2`
+		- `typescript-eslint` from `8.23.1` to `8.24.0`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.6
+
+---
+
+## [6.1.3.5] - 2025-02-04
+
+### 🐞 Fixes
+
+- Fixed release setup files.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.5
+
+---
+
+## [6.1.3.4] - 2025-02-02
+
+### 🔧 Changes
+
+- Improved `bundle` theme packages versioning.
+
+### 🐞 Fixes
+
+- Fixed release setup files.
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dev Dependencies
+		- `rollup` from `4.34.0` to `4.34.1`
+		- `typescript-eslint` from `8.22.0` to `8.23.0`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.4
+
+---
+
+## [6.1.3.3] - 2025-01-13
+
+### 🔧 Changes
+
+- Migrated workflows package manager to Bun.js.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.3
+
+---
+
+## [6.1.3.2] - 2024-11-26
+
+### 🔧 Changes
+
+- Improved header theme local storage reference.
+- Improved index logic.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.2
+
+---
+
+## [6.1.3.1] - 2024-11-22
+
+### 🚀 Features
+
+- Added code block clipboard and highlight.
+
+### 🔧 Changes
+
+- Improved README, pipelines, and styles.
+- Enhanced project structure.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.1
+
+---
+
+## [6.1.3.0] - 2024-11-15
+
+### 🔧 Changes
+
+- Refactored demo project.
+
+### 🐞 Fixes
+
+- Fixed local links redirect due to host URL.
+- Fixed header current URL validation.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.3.0
+
+---
+
+## [6.1.0.0] - 2024-11-12
+
+### 🚀 Features
+
+- **New Theme**: Added a new `palenight` theme to the collection.
+- **New Theme**: Added a new `vscode-light` theme to the collection.
+- **New Theme**: Added a new `vscode-dark` theme to the collection.
+
+### 🔧 Changes
+
+- Improved README files.
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/legacy-modes` from `6.5.0` to `6.5.1`
+		- `marked` from `15.0.8` to `15.0.9`
+	- Dev Dependencies
+		- `@eslint/js` from `9.25.0` to `9.25.1`
+		- `eslint` from `9.25.0` to `9.25.1`
+		- `typescript-eslint` from `8.30.1` to `8.31.0`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.1.0.0
+
+---
+
+## [6.0.3] - 2024-11-11
+
+### 🚀 Features
+
+- Added ESLint support.
+
+### 🔧 Changes
+
+- Improved pipelines workflows and README.
+- Enhanced library release pipeline and dependencies.
+
+### 🐞 Fixes
+
+- Fixed demo pipeline issues.
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/lang-markdown` from `6.3.0` to `6.3.1`
+		- `@codemirror/legacy-modes` from `6.4.1` to `6.4.2`
+		- `@lezer/markdown` from `1.3.1` to `1.3.2`
+	- Dev Dependencies
+		- `rollup` from `4.24.0` to `4.25.0`
+		- `typescript-eslint` from `8.13.0` to `8.14.0`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.0.3
+
+---
+
+## [1.3.2] - 2024-10-23
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/lang-markdown` from `6.2.5` to `6.3.0`
+		- `@codemirror/language` from `6.10.2` to `6.10.3`
+		- `@codemirror/legacy-modes` from `6.4.0` to `6.4.1`
+		- `@lezer/markdown` from `1.3.0` to `1.3.1`
+	- Dev Dependencies
+		- `@codemirror/buildhelper` from `1.0.1` to `1.0.2`
+		- `@rollup/plugin-commonjs` from `26.0.1` to `28.0.1`
+		- `@rollup/plugin-node-resolve` from `15.2.3` to `15.3.0`
+		- `prettier` from `3.3.2` to `3.3.3`
+		- `rimraf` from `5.0.7` to `6.0.1`
+		- `rollup` from `4.18.0` to `4.24.0`
+		- `rollup-plugin-dev` from `2.0.4` to `2.0.5`
+		- `typescript` from `5.4.5` to `5.6.3`
+
+### 🐞 Fixes
+
+- Fixed README.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v1.3.2
+
+---
+
+## [1.3.1] - 2024-10-21
+
+### 🚀 Features
+
+- Added Dependabot actions file.
+
+### 🐞 Fixes
+
+- Fixed demo deployment pipeline.
+- Fixed npm publish pipeline.
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/language` from `6.10.1` to `6.10.2`
+	- Dev Dependencies
+		- `@rollup/plugin-commonjs` from `25.0.7` to `26.0.1`
+		- `prettier` from `3.2.5` to `3.3.2`
+		- `rimraf` from `5.0.5` to `5.0.7`
+		- `rollup` from `4.17.0` to `4.18.0`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v1.3.1
+
+---
+
+## [1.2.2] - 2024-06-11
+
+### 🔧 Changes
+
+- Improved main package file.
+- Updated demo pipeline setup.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v1.2.2
+
+---
+
+## [1.2.0] - 2024-05-21
+
+### 🚀 Features
+
+- **New Theme**: Added a new `bundle` theme to the collection.
+
+### 🔧 Changes
+
+- Improved selection styles.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v1.2.0
+
+---
+
+## [1.1.1] - 2024-04-30
+
+### 🐞 Fixes
+
+- Fixed packages README.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v1.1.1
+
+---
+
+## [1.1.0] - 2024-04-29
+
+### 🚀 Features
+
+- Added demo pipeline setup.
+- Created reference to the demo website.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v1.1.0
+
+---
+
+## [1.0.0] - 2024-04-29
+
+### 🚀 Features
+
+- Added 20 new themes for CodeMirror version 6.
+- **New Theme**: Added a new `abcdef` theme to the collection.
+- **New Theme**: Added a new `abyss` theme to the collection.
+- **New Theme**: Added a new `android-studio` theme to the collection.
+- **New Theme**: Added a new `andromeda` theme to the collection.
+- **New Theme**: Added a new `basic-dark` theme to the collection.
+- **New Theme**: Added a new `basic-light` theme to the collection.
+- **New Theme**: Added a new `forest` theme to the collection.
+- **New Theme**: Added a new `github-dark` theme to the collection.
+- **New Theme**: Added a new `github-light` theme to the collection.
+- **New Theme**: Added a new `gruvbox-dark` theme to the collection.
+- **New Theme**: Added a new `gruvbox-light` theme to the collection.
+- **New Theme**: Added a new `material-dark` theme to the collection.
+- **New Theme**: Added a new `material-light` theme to the collection.
+- **New Theme**: Added a new `monokai` theme to the collection.
+- **New Theme**: Added a new `nord` theme to the collection.
+- **New Theme**: Added a new `solarized-dark` theme to the collection.
+- **New Theme**: Added a new `solarized-light` theme to the collection.
+- **New Theme**: Added a new `tokyo-night-day` theme to the collection.
+- **New Theme**: Added a new `tokyo-night-storm` theme to the collection.
+- **New Theme**: Added a new `volcano` theme to the collection.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v1.0.0
+
+---
+
+## ✅ Compatibility
+
+- ✅ Chrome
+- ✅ Firefox
+- ✅ Safari
+- ✅ Edge
+- ⚠️ Internet Explorer is **not supported**
+
+---
+
+[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.3...HEAD
+
+[6.30.3]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.2...v6.30.3
+
+[6.30.2]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.1...v6.30.2
+
+[6.30.1]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.0...v6.30.1
+
+[6.30.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.29.2...v6.30.0
+
+[6.29.2]: https://github.com/fsegurai/codemirror-themes/compare/v6.29.1...v6.29.2
+
+[6.29.1]: https://github.com/fsegurai/codemirror-themes/compare/v6.29.0...v6.29.1
+
+[6.29.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.25.0...v6.29.0
+
+[6.25.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.24.0...v6.25.0
+
+[6.24.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.4.0...v6.24.0
+
+[6.1.4.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.8...v6.1.4.0
+
+[6.1.3.8]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.7...v6.1.3.8
+
+[6.1.3.7]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.6...v6.1.3.7
+
+[6.1.3.6]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.5...v6.1.3.6
+
+[6.1.3.5]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.4...v6.1.3.5
+
+[6.1.3.4]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.3...v6.1.3.4
+
+[6.1.3.3]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.2...v6.1.3.3
+
+[6.1.3.2]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.1...v6.1.3.2
+
+[6.1.3.1]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.3.0...v6.1.3.1
+
+[6.1.3.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.1.0.0...v6.1.3.0
+
+[6.1.0.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.0.3...v6.1.0.0
+
+[6.0.3]: https://github.com/fsegurai/codemirror-themes/compare/v1.3.2...v6.0.3
+
+[1.3.2]: https://github.com/fsegurai/codemirror-themes/compare/v1.3.1...v1.3.2
+
+[1.3.1]: https://github.com/fsegurai/codemirror-themes/compare/v1.2.2...v1.3.1
+
+[1.2.2]: https://github.com/fsegurai/codemirror-themes/compare/v1.2.0...v1.2.2
+
+[1.2.0]: https://github.com/fsegurai/codemirror-themes/compare/v1.1.1...v1.2.0
+
+[1.1.1]: https://github.com/fsegurai/codemirror-themes/compare/v1.1.0...v1.1.1
+
+[1.1.0]: https://github.com/fsegurai/codemirror-themes/compare/v1.0.0...v1.1.0
+
+[1.0.0]: https://github.com/fsegurai/codemirror-themes/releases/tag/v1.0.0

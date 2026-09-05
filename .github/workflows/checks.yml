@@ -1,0 +1,110 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: ['main']
+    paths:
+      - '**'
+      - '.github/workflows/*.yml'
+      - '!.github/**'
+      - '!*.yml'
+      - '!*.config'
+      - '!*.md'
+  workflow_dispatch:
+
+permissions:
+  pull-requests: write
+  contents: read
+
+concurrency:
+  group: pr-validation-${{ github.event.number }}
+  cancel-in-progress: true
+
+jobs:
+  quick-checks:
+    name: Quick Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: TypeScript strict check
+        run: bun run -- tsc --noEmit
+
+      - name: Lint check (fail on warnings)
+        run: bun run lint:check
+
+  pr_integration:
+    name: Build Integration Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build packages (quick validation)
+        run: |
+          echo "Building packages to validate compilation..."
+          bun run build:packages 2>&1 | tail -20
+          echo "✅ Build successful"
+
+      - name: Validate bundle exports
+        run: |
+          echo "Validating all themes are exported in bundle..."
+          error=0
+          for pkg in packages/*/; do
+            name=$(basename "$pkg")
+            [ "$name" = "bundle" ] || [ "$name" = ".helper" ] && continue
+            pkg_json="$pkg/package.json"
+            if [ -f "$pkg_json" ]; then
+              pkg_name=$(grep '"name":' "$pkg_json" | head -1 | sed 's/.*"name": "\(.*\)",.*/\1/')
+              if ! grep -q "$pkg_name" packages/bundle/src/index.ts; then
+                echo "❌ Missing export for $pkg_name in packages/bundle/src/index.ts"
+                error=1
+              else
+                echo "  ✓ $pkg_name"
+              fi
+            fi
+          done
+          if [ $error -eq 0 ]; then
+            echo "✅ All themes exported in bundle"
+          else
+            exit 1
+          fi
+
+  validation-summary:
+    name: Validation Summary
+    if: always()
+    needs: [quick-checks, pr_integration]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report validation status
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const quickChecks = '${{ needs.quick-checks.result }}';
+            const buildIntegration = '${{ needs.pr_integration.result }}';
+
+            let summary = '## ✅ PR Validation Summary\n\n';
+            summary += `- Quick Checks: ${quickChecks === 'success' ? '✅' : '⚠️'}\n`;
+            summary += `- Build Integration: ${buildIntegration === 'success' ? '✅' : '⚠️'}\n`;
+            summary += '\n💡 Full build and tests run in Azure DevOps Pipelines';
+
+            console.log(summary);

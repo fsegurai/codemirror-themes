@@ -1,0 +1,42 @@
+version: 2
+updates:
+  # Root dependencies (includes all monorepo workspaces)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "infra"
+      - "dependencies"
+    open-pull-requests-limit: 10
+    assignees:
+      - fsegurai
+    commit-message:
+      prefix: "npm"
+      include: "scope"
+    groups:
+      dev-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "ci-cd"
+      - "infra"
+    open-pull-requests-limit: 5
+    assignees:
+      - fsegurai
+    commit-message:
+      prefix: "ci(actions)"

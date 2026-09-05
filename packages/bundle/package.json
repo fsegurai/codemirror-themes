@@ -1,0 +1,84 @@
+{
+  "name": "@fsegurai/codemirror-theme-bundle",
+  "version": "6.4.4",
+  "description": "Bundle themes for the CodeMirror editor",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    "import": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "require": {
+      "types": "./dist/index.d.cts",
+      "default": "./dist/index.cjs"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "editor",
+    "diff",
+    "diff-editor",
+    "code",
+    "codemirror",
+    "theme",
+    "themes",
+    "syntax",
+    "highlight",
+    "bundle"
+  ],
+  "author": {
+    "name": "Fabián Segura",
+    "url": "https://www.fsegurai.com/"
+  },
+  "license": "MIT",
+  "scripts": {
+    "pkg:build": "cm-buildhelper src/index.ts",
+    "pkg:test": "cm-runtests"
+  },
+  "peerDependencies": {
+    "@lezer/highlight": "^1.0.0",
+    "@codemirror/language": "^6.0.0",
+    "@codemirror/state": "^6.0.0",
+    "@codemirror/view": "^6.0.0"
+  },
+  "dependencies": {
+    "@fsegurai/codemirror-theme-abcdef": "6.2.7",
+    "@fsegurai/codemirror-theme-abyss": "6.2.7",
+    "@fsegurai/codemirror-theme-android-studio": "6.2.7",
+    "@fsegurai/codemirror-theme-andromeda": "6.2.7",
+    "@fsegurai/codemirror-theme-basic-dark": "6.2.7",
+    "@fsegurai/codemirror-theme-basic-light": "6.2.7",
+    "@fsegurai/codemirror-theme-catppuccin-mocha": "6.0.4",
+    "@fsegurai/codemirror-theme-cobalt2": "6.0.6",
+    "@fsegurai/codemirror-theme-forest": "6.2.7",
+    "@fsegurai/codemirror-theme-github-dark": "6.2.7",
+    "@fsegurai/codemirror-theme-github-light": "6.2.7",
+    "@fsegurai/codemirror-theme-gruvbox-dark": "6.2.7",
+    "@fsegurai/codemirror-theme-gruvbox-light": "6.2.7",
+    "@fsegurai/codemirror-theme-high-contrast-dark": "6.0.4",
+    "@fsegurai/codemirror-theme-high-contrast-light": "6.0.4",
+    "@fsegurai/codemirror-theme-material-dark": "6.2.7",
+    "@fsegurai/codemirror-theme-material-light": "6.2.7",
+    "@fsegurai/codemirror-theme-material-ocean": "6.0.3",
+    "@fsegurai/codemirror-theme-monokai": "6.2.7",
+    "@fsegurai/codemirror-theme-nord": "6.2.7",
+    "@fsegurai/codemirror-theme-palenight": "6.2.7",
+    "@fsegurai/codemirror-theme-solarized-dark": "6.2.7",
+    "@fsegurai/codemirror-theme-solarized-light": "6.2.7",
+    "@fsegurai/codemirror-theme-synthwave-84": "6.0.4",
+    "@fsegurai/codemirror-theme-tokyo-night-day": "6.2.7",
+    "@fsegurai/codemirror-theme-tokyo-night-storm": "6.2.7",
+    "@fsegurai/codemirror-theme-volcano": "6.2.7",
+    "@fsegurai/codemirror-theme-vscode-dark": "6.2.8",
+    "@fsegurai/codemirror-theme-vscode-light": "6.2.8"
+  },
+  "devDependencies": {
+    "@codemirror/buildhelper": "^1.0.2"
+  }
+}
