@@ -11,7 +11,7 @@ No changes have been made yet.
 
 ---
 
-## [6.30.4] - 2026-09-04
+## [6.30.4] - 2026-09-05
 
 ### 🐞 Fixes
 
@@ -813,7 +813,9 @@ No changes have been made yet.
 
 ---
 
-[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.3...HEAD
+[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.4...HEAD
+
+[6.30.4]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.3...v6.30.4
 
 [6.30.3]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.2...v6.30.3
 
