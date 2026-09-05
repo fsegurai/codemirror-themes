@@ -229,7 +229,7 @@ No changes have been made yet.
 - **Build System Migration**: Migrated from Rollup to Vite
 	- Replaced `rollup` + `rollup-plugin-dev` with `vite`
 	- Removed all Rollup plugins (`@rollup/plugin-*`)
-	- Added `vite.config.js` for cleaner configuration
+	- Added `vite.config.ts` for cleaner configuration
 	- Benefits:
 		- Faster dev server with better HMR (Hot Module Replacement)
 		- Built-in environment variable support (`.env` files)
@@ -239,12 +239,12 @@ No changes have been made yet.
 	- Updated dev commands:
 		- `bun run dev` now uses `vite serve` (was `rollup -w`)
 		- `bun run build:demo` now uses `vite build` (was `rollup -c`)
-	- Removed `rollup.config.js` (replaced by `vite.config.js`)
+	- Removed `rollup.config.js` (replaced by `vite.config.ts`)
 	- Removed build helper script `scripts/build-demo.mjs` (Vite handles env vars natively)
 
 ### 📝 Documentation
 
-- Updated GitHub labeler configuration to track `vite.config.js` changes instead of `rollup.config.js`
+- Updated GitHub labeler configuration to track `vite.config.ts` changes instead of `rollup.config.js`
 
 **Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.30.0
 

@@ -1,6 +1,6 @@
 import ENV_REFERENCE from './const/const-env-reference';
 
-const isProdEnv = ENV_REFERENCE.MODE === 'production';
+const isProdEnv = ENV_REFERENCE.IS_PROD;
 const hostUrl = ENV_REFERENCE.HOST_URL;
 const lsTheme = 'codemirror-themes:fsegurai';
 

@@ -1,6 +1,7 @@
 const ENV_REFERENCE = {
+  APP_NAME: import.meta.env.VITE_APP_NAME,
+  BUILD_ID: import.meta.env.VITE_BUILD_ID,
   IS_PROD: import.meta.env.PROD,
-  MODE: import.meta.env.MODE,
   HOST_URL: import.meta.env.VITE_HOST_URL,
 };
 
