@@ -11,7 +11,7 @@ No changes have been made yet.
 
 ---
 
-## [6.30.4] - 2026-08-xx
+## [6.30.4] - 2026-09-xx
 
 ### 🐞 Fixes
 
@@ -73,20 +73,21 @@ No changes have been made yet.
 
 - **Added dependencies**.
 	- Dev Dependencies
-		- `@biomejs/biome` - `2.5.10` - needed for linting and formatting - replaces ESLint toolchain.
+		- `@biomejs/biome` - `2.5.12` - needed for linting and formatting - replaces ESLint toolchain.
 - **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
 	- Dependencies
 		- `@codemirror/lang-markdown` from `6.5.0` to `6.5.2`
 		- `@codemirror/language` from `6.12.3` to `6.12.4`
+        - `@codemirror/legacy-modes` from `6.5.3` to `6.5.4`
 		- `@codemirror/merge` from `6.12.1` to `6.12.2`
-		- `@codemirror/state` from `6.6.0` to `6.7.1`
+		- `@codemirror/state` from `6.6.0` to `6.7.4`
 		- `@codemirror/view` pinned to `6.43.8` via `overrides` (dedupe transitive copies)
 		- `@material/web` from `2.4.1` to `2.5.0`
 		- `marked` from `18.0.5` to `18.0.11`
 	- Dev Dependencies
-		- `@types/node` from `25.9.1` to `26.3.0`
+		- `@types/node` from `25.9.1` to `26.4.1`
 		- `portless` from `0.14.0` to `0.15.6`
-		- `terser` from `5.48.0` to `5.50.0`
+		- `terser` from `5.48.0` to `5.51.2`
 		- `typescript` from `6.0.3` to `7.0.2`
 		- `vite` from `8.0.16` to `8.2.2`
 	- Removed: `@eslint/js`, `@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser`, `eslint`, `globals`,
