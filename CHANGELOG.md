@@ -11,7 +11,7 @@ No changes have been made yet.
 
 ---
 
-## [6.30.4] - 2026-09-xx
+## [6.30.4] - 2026-09-04
 
 ### 🐞 Fixes
 
