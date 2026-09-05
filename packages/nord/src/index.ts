@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -63,8 +63,8 @@ const invalid = '#d30102', // Bright red for errors
 // Diff/merge specific colors
 const addedBackground = '#3b4a3880', // Dark green with transparency for insertions
   removedBackground = '#4a393a80', // Dark red with transparency for deletions
-  addedText = '#a3be8c',         // Nord green for added text
-  removedText = '#bf616a';       // Nord red for removed text
+  addedText = '#a3be8c', // Nord green for added text
+  removedText = '#bf616a'; // Nord red for removed text
 
 /**
  * Enhanced editor theme styles for Nord
@@ -476,10 +476,7 @@ const nordHighlightStyle = HighlightStyle.define([
 /**
  * Combined Nord theme extension
  */
-const nord: Extension = [
-  nordTheme,
-  syntaxHighlighting(nordHighlightStyle),
-];
+const nord: Extension = [nordTheme, syntaxHighlighting(nordHighlightStyle)];
 
 /**
  * Nord merge revert styles configuration
@@ -491,4 +488,4 @@ const nordMergeStyles: IMergeRevertStyles = {
   buttonHoverColor: base02,
 };
 
-export { nord, nordMergeStyles, applyMergeRevertStyles };
+export { applyMergeRevertStyles, nord, nordMergeStyles };

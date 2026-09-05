@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -62,8 +62,8 @@ const invalid = '#d30102', // Bright red for errors
 // Diff/merge specific colors
 const addedBackground = '#85990020', // Solarized green with transparency for insertions
   removedBackground = '#dc322f20', // Solarized red with transparency for deletions
-  addedText = '#859900',         // Solarized green for added text
-  removedText = '#dc322f';       // Solarized red for removed text
+  addedText = '#859900', // Solarized green for added text
+  removedText = '#dc322f'; // Solarized red for removed text
 
 /**
  * Enhanced editor theme styles for Solarized Light
@@ -479,10 +479,7 @@ const solarizedLightHighlightStyle = HighlightStyle.define([
 /**
  * Combined Solarized Light theme extension
  */
-const solarizedLight: Extension = [
-  solarizedLightTheme,
-  syntaxHighlighting(solarizedLightHighlightStyle),
-];
+const solarizedLight: Extension = [solarizedLightTheme, syntaxHighlighting(solarizedLightHighlightStyle)];
 
 /**
  * Solarized Light merge revert styles configuration
@@ -494,4 +491,4 @@ const solarizedLightMergeStyles: IMergeRevertStyles = {
   buttonHoverColor: `${base05}40`,
 };
 
-export { solarizedLight, solarizedLightMergeStyles, applyMergeRevertStyles };
+export { applyMergeRevertStyles, solarizedLight, solarizedLightMergeStyles };

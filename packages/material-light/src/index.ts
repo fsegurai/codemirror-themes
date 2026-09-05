@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -65,8 +65,8 @@ const invalid = base08,
 // Diff/merge specific colors
 const addedBackground = '#e6ffed80', // Light green with transparency for insertions
   removedBackground = '#ffebe980', // Light red with transparency for deletions
-  addedText = '#28a745',         // Bright green for added text
-  removedText = '#d73a49';       // Bright red for removed text
+  addedText = '#28a745', // Bright green for added text
+  removedText = '#d73a49'; // Bright red for removed text
 
 /**
  * Enhanced editor theme styles for Material Light
@@ -233,7 +233,7 @@ const materialLightTheme = EditorView.theme(
     'del .cm-deletedText, del .cm-changedText': {
       background: 'transparent !important',
     },
-    
+
     // Tooltips and autocomplete
     '.cm-tooltip': {
       backgroundColor: tooltipBackground,
@@ -487,10 +487,7 @@ const materialLightHighlightStyle = HighlightStyle.define([
 /**
  * Combined Material Light theme extension
  */
-const materialLight: Extension = [
-  materialLightTheme,
-  syntaxHighlighting(materialLightHighlightStyle),
-];
+const materialLight: Extension = [materialLightTheme, syntaxHighlighting(materialLightHighlightStyle)];
 
 /**
  * Material Light merge revert styles configuration
@@ -502,4 +499,4 @@ const materialLightMergeStyles: IMergeRevertStyles = {
   buttonHoverColor: '#CFD8DC',
 };
 
-export { materialLight, materialLightMergeStyles, applyMergeRevertStyles };
+export { applyMergeRevertStyles, materialLight, materialLightMergeStyles };

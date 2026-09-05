@@ -17,7 +17,7 @@ Root (workspace config, shared tsconfig, build tools)
 │   ├── scripts/index.ts           ← README renderer & demo UI
 │   ├── scripts/playground.ts      ← Interactive theme switcher
 │   └── styles/themes.css          ← Live theme preview styling
-└── build system (vite, typescript, eslint)
+└── build system (vite, typescript, biome)
 ```
 
 **Key Pattern**: Each theme is an **independent, publishable npm package** that exports:
@@ -31,7 +31,7 @@ Root (workspace config, shared tsconfig, build tools)
 bun run build:packages     # Compiles all packages via cm-buildhelper (not vite)
 bun run start              # Dev server with live reload (vite)
 bun test                   # Runs tests across all packages
-bun run lint               # ESLint + TypeScript checking
+bun run lint               # Biome lint + format check
 ```
 
 **Important**: Theme packages use **cm-buildhelper** (a CodeMirror-specific build tool), NOT rollup. This happens automatically via the `prepare` script in each package.json.
@@ -87,8 +87,8 @@ All themes share **standardized UI element styling** in utils.ts:
 
 These are imported and used in index.ts to maintain consistency. **DO NOT change general* exports** without coordinating across all themes.
 
-### ESLint Rules (Important!)
-The project uses single quotes, 2-space indent, and enforces operator-linebreak='before':
+### Biome Rules (Important!)
+The project uses Biome for both formatting and linting (single quotes, 2-space indent, 120 line width):
 ```javascript
 // ✓ Correct
 const colors = {
@@ -101,7 +101,7 @@ const colors = {
 };
 ```
 
-See eslint.config.js for full rules. Run `bun run lint` before commits.
+See biome.json for full rules. Run `bun run lint` before commits. Biome owns formatting - do not hand-format to satisfy legacy ESLint rules.
 
 ### TypeScript Configuration
 - Target: ES2022
@@ -148,7 +148,7 @@ packages/[theme]/dist/
 
 ## Development Server & Testing
 
-- **Demo Server**: `bun run start` starts rollup dev server on localhost:8000
+- **Demo Server**: `bun run start` starts the Vite dev server on localhost:8000
 - **Live Reload**: Changes to demo/ files auto-reload; package changes require `bun run build:packages`
 - **Theme Switching**: Use `demo/scripts/playground.ts` to test all themes in one interface
 - **Security Scanning**: `make trivy-full` runs container-based vulnerability scan (outputs JSON/SARIF)
@@ -188,7 +188,7 @@ codemirror-themes/
 │       └── variables.css      ← CSS custom properties
 ├── vite.config.js             ← Vite dev server & build config
 ├── tsconfig.json              ← TypeScript configuration
-├── eslint.config.js           ← ESLint rules (single quotes, 2-space indent)
+├── biome.json               ← Formatter & linter config (Biome, single quotes, 2-space indent)
 ├── package.json               ← Root workspace config with script shortcuts
 ├── bunfig.toml                ← Bun package manager config
 ├── AGENTS.md                  ← This file (guidance for AI agents)
@@ -201,7 +201,7 @@ codemirror-themes/
 
 ### Configuration Files
 - **tsconfig.json**: ES2022 target, ESM-only, strict mode, bundler resolution
-- **eslint.config.js**: Enforces single quotes, 2-space indent, `before` operator-linebreak
+- **biome.json**: Formatter & linter config (Biome, single quotes, 2-space indent, 120 line width)
 - **vite.config.js**: Dev server on port 8000, handles demo build and theme imports
 - **package.json**: Workspace configuration with bun workspaces, custom scripts
 
@@ -233,7 +233,7 @@ bun run start                             # Start vite dev server (localhost:800
 bun run build:packages && bun run start   # Full rebuild + dev server
 
 # 4. Quality checks before commit
-bun run lint                              # ESLint + TypeScript check
+bun run lint                              # Biome lint + format check
 bun test                                  # Run all tests
 
 # 5. Build for production
@@ -270,7 +270,7 @@ bun run start
 
 ### Testing & Quality
 ```bash
-bun run lint                              # Check ESLint rules + TypeScript
+bun run lint                              # Check Biome rules + TypeScript
 bun test                                  # Run all tests (if any)
 bun run build:packages                    # Verify cm-buildhelper succeeds
 ```
@@ -335,18 +335,17 @@ These are defined in each theme's `utils.ts`:
 - **If new theme not in bundle, it won't be available in demo**
 - Demo loads themes dynamically from bundle
 
-### 8. ESLint Rules (Non-Negotiable)
+### 8. Biome Rules (Non-Negotiable)
 ```javascript
 // ✓ CORRECT
 const colors = { base00: '#0a0e14', base01: '#0f1017' };
 const rule = { color: base00 } // single quotes, 2-space indent
-operators positioned before line break
 
 // ✗ WRONG
 const colors = { base00: "#0a0e14" }; // double quotes
 const rule={color:base00}             // spacing
 ```
-Run `bun run lint` frequently to catch violations early.
+Run `bun run lint` frequently to catch violations early. Biome owns formatting - do not hand-format to satisfy legacy ESLint rules.
 
 ## Common Tasks & Solutions
 
@@ -399,12 +398,12 @@ bun run build:packages
 - Check: export names match usage in bundle
 - Clear: browser cache or restart `bun run start`
 
-### "Build fails with ESLint errors"
+### "Build fails with Biome lint errors"
 - Run `bun run lint` to see full list
 - Fix: double quotes → single quotes
 - Fix: indent to 2 spaces
-- Fix: operator position (before line break)
-- Common: forgot semicolon or used `any` type
+- Run `bun run lint:fix` to auto-format and auto-fix what Biome can
+- Common: forgot semicolon, used `any` type, or formatting drift
 
 ### "Markdown validation fails in CI"
 - Count `` ` `` `` ` `` `` ` `` markers in file
@@ -439,7 +438,7 @@ bun run build:packages
 3. ❌ Change export names - breaks user code depending on theme
 4. ❌ Hardcode colors - always use color constants
 5. ❌ Forget to run `bun run build:packages` after editing src/
-6. ❌ Use double quotes (ESLint will fail)
+6. ❌ Use double quotes (Biome will fail)
 7. ❌ Use TypeScript `any` type (strict mode blocks it)
 8. ❌ Add theme without updating `packages/bundle/src/index.ts`
 9. ❌ Modify general* utilities without coordinating across all themes

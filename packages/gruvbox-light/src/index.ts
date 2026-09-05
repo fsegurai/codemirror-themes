@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -64,8 +64,8 @@ const invalid = base0A,
 // Diff/merge specific colors
 const addedBackground = '#d8e5bc80', // Light base0B with transparency for insertions
   removedBackground = '#f7cfcf80', // Light base0A with transparency for deletions
-  addedText = '#79740e',         // Gruvbox base0B for added text
-  removedText = '#9d0006';       // Gruvbox base0A for removed text
+  addedText = '#79740e', // Gruvbox base0B for added text
+  removedText = '#9d0006'; // Gruvbox base0A for removed text
 
 /**
  * Enhanced editor theme styles for Gruvbox Light
@@ -231,7 +231,7 @@ const gruvboxLightTheme = EditorView.theme(
     'del .cm-deletedText, del .cm-changedText': {
       background: 'transparent !important',
     },
-    
+
     // Tooltips and autocomplete
     '.cm-tooltip': {
       backgroundColor: tooltipBackground,
@@ -250,12 +250,12 @@ const gruvboxLightTheme = EditorView.theme(
         lineHeight: generalTooltip.lineHeight,
       },
       '& > ul > li[aria-selected]': {
-        backgroundColor: base10 + '30',
+        backgroundColor: `${base10}30`,
         color: base00,
         borderRadius: generalTooltip.borderRadiusSelected,
       },
       '& > ul > li:hover': {
-        backgroundColor: base10 + '15',
+        backgroundColor: `${base10}15`,
       },
       '& > ul > li > span.cm-completionIcon': {
         color: base03,
@@ -479,10 +479,7 @@ const gruvboxLightHighlightStyle = HighlightStyle.define([
 /**
  * Combined Gruvbox Light theme extension
  */
-const gruvboxLight: Extension = [
-  gruvboxLightTheme,
-  syntaxHighlighting(gruvboxLightHighlightStyle),
-];
+const gruvboxLight: Extension = [gruvboxLightTheme, syntaxHighlighting(gruvboxLightHighlightStyle)];
 
 /**
  * Gruvbox Light merge revert styles configuration
@@ -494,4 +491,4 @@ const gruvboxLightMergeStyles: IMergeRevertStyles = {
   buttonHoverColor: base07,
 };
 
-export { gruvboxLight, gruvboxLightMergeStyles, applyMergeRevertStyles };
+export { applyMergeRevertStyles, gruvboxLight, gruvboxLightMergeStyles };

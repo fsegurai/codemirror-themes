@@ -5,7 +5,7 @@ on:
     branches: ['main']
     paths:
       - 'packages/*/src/**'
-      - 'vite.config.js'
+      - 'vite.config.ts'
       - '.github/workflows/perf-monitor.yml'
   workflow_dispatch:
 
@@ -59,15 +59,15 @@ jobs:
           echo "" >> /tmp/sizes.txt
           echo "=== PR Branch ===" >> /tmp/sizes.txt
           du -sh /tmp/pr-dist/* >> /tmp/sizes.txt 2>&1
-          
+
           # Calculate total sizes
           BASE_SIZE=$(du -sb /tmp/base-dist 2>/dev/null | awk '{print $1}' || echo 0)
           PR_SIZE=$(du -sb /tmp/pr-dist 2>/dev/null | awk '{print $1}' || echo 0)
-          
+
           if [ "$BASE_SIZE" -gt 0 ]; then
             DIFF=$((PR_SIZE - BASE_SIZE))
             PERCENT=$(( (DIFF * 100) / BASE_SIZE ))
-            
+
             echo "BASE_SIZE=$BASE_SIZE" >> $GITHUB_ENV
             echo "PR_SIZE=$PR_SIZE" >> $GITHUB_ENV
             echo "DIFF=$DIFF" >> $GITHUB_ENV
@@ -83,14 +83,14 @@ jobs:
             echo ""
             echo "| Metric | Size |"
             echo "|--------|------|"
-            
+
             if [ ! -z "${{ env.BASE_SIZE }}" ] && [ "${{ env.BASE_SIZE }}" != "0" ]; then
               BASE_MB=$(echo "scale=2; ${{ env.BASE_SIZE }} / 1024 / 1024" | bc)
               PR_MB=$(echo "scale=2; ${{ env.PR_SIZE }} / 1024 / 1024" | bc)
-              
+
               echo "| Base Branch | ${BASE_MB} MB |"
               echo "| PR Branch | ${PR_MB} MB |"
-              
+
               DIFF_MB=$(echo "scale=2; ${{ env.DIFF }} / 1024 / 1024" | bc)
               if [ "${{ env.DIFF }}" -gt 0 ]; then
                 echo "| **Change** | **+${DIFF_MB} MB (${{ env.PERCENT }}%)** ⚠️ |"
@@ -102,7 +102,7 @@ jobs:
             else
               echo "| Status | Unable to calculate (fresh build) |"
             fi
-            
+
             echo ""
             echo "### Detailed Breakdown"
             echo "\`\`\`"

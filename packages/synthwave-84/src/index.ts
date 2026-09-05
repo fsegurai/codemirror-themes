@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -32,7 +32,6 @@ const base00 = '#262335', // Background - deep purple-black
   base03 = '#495495', // Comments - muted blue
   base04 = '#848bbd', // Dark foreground
   base05 = '#ffffff', // Foreground - white
-
   // Neon colors
   neonPink = '#ff7edb',
   neonCyan = '#72f1b8',
@@ -482,10 +481,7 @@ const synthwave84HighlightStyle = HighlightStyle.define([
 /**
  * Combined Synthwave '84 theme extension
  */
-const synthwave84: Extension = [
-  synthwave84Theme,
-  syntaxHighlighting(synthwave84HighlightStyle),
-];
+const synthwave84: Extension = [synthwave84Theme, syntaxHighlighting(synthwave84HighlightStyle)];
 
 /**
  * Synthwave '84 merge revert styles configuration
@@ -497,5 +493,4 @@ const synthwave84MergeStyles: IMergeRevertStyles = {
   buttonHoverColor: base02,
 };
 
-export { synthwave84, synthwave84MergeStyles, applyMergeRevertStyles };
-
+export { applyMergeRevertStyles, synthwave84, synthwave84MergeStyles };

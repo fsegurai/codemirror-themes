@@ -1,16 +1,25 @@
 {
   "name": "@fsegurai/codemirror-theme-synthwave-84",
-  "version": "6.0.3",
+  "version": "6.0.4",
   "description": "Synthwave '84 theme for the CodeMirror editor",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    "import": "./dist/index.js",
-    "require": "./dist/index.cjs"
+    "import": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "require": {
+      "types": "./dist/index.d.cts",
+      "default": "./dist/index.cjs"
+    }
   },
   "sideEffects": false,
+  "files": [
+    "dist"
+  ],
   "keywords": [
     "editor",
     "diff",

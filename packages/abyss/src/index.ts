@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 // Base colors - Ocean depths
@@ -331,9 +331,8 @@ const abyssTheme = EditorView.theme(
 const abyssHighlightStyle = HighlightStyle.define([
   // Keywords and control flow
   { tag: t.keyword, color: base07, fontWeight: 'bold' },
-  { tag: t.controlKeyword, color:base0F, fontWeight: 'bold' },
+  { tag: t.controlKeyword, color: base0F, fontWeight: 'bold' },
   { tag: t.moduleKeyword, color: base07, fontWeight: 'bold' },
-
 
   // Names and variables
   { tag: [t.name, t.deleted, t.character, t.macroName], color: base08 },
@@ -376,7 +375,7 @@ const abyssHighlightStyle = HighlightStyle.define([
   { tag: [t.punctuation], color: '#8da0bf' },
 
   // Comments and documentation
-  { tag: t.meta,  color: base09 },
+  { tag: t.meta, color: base09 },
   { tag: t.comment, fontStyle: 'italic', color: base09 },
   { tag: t.docComment, fontStyle: 'italic', color: base09 },
 
@@ -400,7 +399,7 @@ const abyssHighlightStyle = HighlightStyle.define([
 
   // Special states
   { tag: [t.invalid], color: invalid, textDecoration: 'underline wavy' },
-  { tag: [t.strikethrough], color:invalid, textDecoration: 'line-through' },
+  { tag: [t.strikethrough], color: invalid, textDecoration: 'line-through' },
 
   // Enhanced syntax highlighting
   { tag: t.constant(t.name), color: base0C },
@@ -443,16 +442,13 @@ const abyssHighlightStyle = HighlightStyle.define([
 /**
  * Combined Abyss theme extension
  */
-const abyss: Extension = [
-  abyssTheme,
-  syntaxHighlighting(abyssHighlightStyle),
-];
+const abyss: Extension = [abyssTheme, syntaxHighlighting(abyssHighlightStyle)];
 
 /**
  * Abyss merge revert styles configuration
  */
 const abyssMergeStyles: IMergeRevertStyles = {
-  backgroundColor: darkBackground, 
+  backgroundColor: darkBackground,
   borderColor: '#084671',
   buttonColor: base01,
   buttonHoverColor: '#0a3555',

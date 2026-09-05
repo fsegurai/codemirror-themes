@@ -1,8 +1,0 @@
-/packages
-/src
-/test
-/node_modules
-.tern-*
-vite.config.js
-tsconfig.json
-*.map

@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -32,7 +32,6 @@ const base00 = '#1e1e2e', // Background - dark navy
   base03 = '#585b70', // Dark grey
   base04 = '#cdd6f4', // Foreground - light blue
   base05 = '#f5e0dc', // Light foreground
-
   // Catppuccin Mocha colors
   rosewater = '#f5e0dc',
   flamingo = '#f2cdcd',
@@ -478,10 +477,7 @@ const catppuccinMochaHighlightStyle = HighlightStyle.define([
 /**
  * Combined Catppuccin Mocha theme extension
  */
-const catppuccinMocha: Extension = [
-  catppuccinMochaTheme,
-  syntaxHighlighting(catppuccinMochaHighlightStyle),
-];
+const catppuccinMocha: Extension = [catppuccinMochaTheme, syntaxHighlighting(catppuccinMochaHighlightStyle)];
 
 /**
  * Catppuccin Mocha merge revert styles configuration
@@ -493,5 +489,4 @@ const catppuccinMochaMergeStyles: IMergeRevertStyles = {
   buttonHoverColor: base01,
 };
 
-export { catppuccinMocha, catppuccinMochaMergeStyles, applyMergeRevertStyles };
-
+export { applyMergeRevertStyles, catppuccinMocha, catppuccinMochaMergeStyles };

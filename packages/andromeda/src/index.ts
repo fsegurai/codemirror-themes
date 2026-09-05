@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -26,23 +26,23 @@ import {
  */
 
 // Base colors
-const base00 = '#1b1e26',  // Background (slightly darker for better contrast)
-  base01 = '#e4dff0',  // Foreground (slightly brighter for better readability)
+const base00 = '#1b1e26', // Background (slightly darker for better contrast)
+  base01 = '#e4dff0', // Foreground (slightly brighter for better readability)
   base02 = '#db45a270', // Selection and Selection Match (reduced opacity)
-  base03 = '#2b303b',   // Dropdown Background
-  base04 = '#ffffff',   // Cursor (pure white for better visibility)
-  base05 = '#d667ff',   // Keyword, Storage (brighter purple)
-  base06 = '#24e3c3',   // Variable, Parameter (slightly desaturated teal)
-  base07 = '#ffdd80',   // Function, Type, Class (warmer yellow)
-  base08 = '#a6e07a',   // String, RegExp (slightly muted green for better readability)
-  base09 = '#ff7057',   // Constant, Number (brighter orange-red)
-  base0A = '#a8aab9',   // Comment (higher contrast gray)
-  base0B = '#ff40b3',   // Heading (slightly desaturated magenta)
-  base0C = '#fd3681',   // Tag (adjusted pink)
-  base0D = '#c7c7ff',   // New color for brackets/punctuation
-  base0E = '#6ae4b9',   // New color for special elements
-  base0F = '#3c94ff',   // New color for attributes and links
-  invalid = '#ff3162',  // Invalid (more visible red)
+  base03 = '#2b303b', // Dropdown Background
+  base04 = '#ffffff', // Cursor (pure white for better visibility)
+  base05 = '#d667ff', // Keyword, Storage (brighter purple)
+  base06 = '#24e3c3', // Variable, Parameter (slightly desaturated teal)
+  base07 = '#ffdd80', // Function, Type, Class (warmer yellow)
+  base08 = '#a6e07a', // String, RegExp (slightly muted green for better readability)
+  base09 = '#ff7057', // Constant, Number (brighter orange-red)
+  base0A = '#a8aab9', // Comment (higher contrast gray)
+  base0B = '#ff40b3', // Heading (slightly desaturated magenta)
+  base0C = '#fd3681', // Tag (adjusted pink)
+  base0D = '#c7c7ff', // New color for brackets/punctuation
+  base0E = '#6ae4b9', // New color for special elements
+  base0F = '#3c94ff', // New color for attributes and links
+  invalid = '#ff3162', // Invalid (more visible red)
   // UI-specific colors
   darkBackground = '#242830',
   selectionBackground = base02,
@@ -453,10 +453,7 @@ const andromedaHighlightStyle = HighlightStyle.define([
 /**
  * Combined Andromeda theme extension
  */
-const andromeda: Extension = [
-  andromedaTheme,
-  syntaxHighlighting(andromedaHighlightStyle),
-];
+const andromeda: Extension = [andromedaTheme, syntaxHighlighting(andromedaHighlightStyle)];
 
 /**
  * Andromeda merge revert styles configuration

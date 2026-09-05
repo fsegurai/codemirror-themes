@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const helperDir = path.resolve(__dirname); // helper files live next to this script
 const packagesDir = path.resolve(process.cwd(), 'packages'); // repo packages folder
@@ -21,8 +21,8 @@ if (!fs.existsSync(packagesDir)) {
 
 // validate requested helper files and keep only existing regular files
 const helperFiles = filesToCopy
-  .map(f => path.join(helperDir, f))
-  .filter(p => {
+  .map((f) => path.join(helperDir, f))
+  .filter((p) => {
     try {
       return fs.statSync(p).isFile() && path.basename(p) !== scriptName;
     } catch {
@@ -30,14 +30,14 @@ const helperFiles = filesToCopy
       return false;
     }
   })
-  .map(p => path.basename(p)); // store basenames for copying
+  .map((p) => path.basename(p)); // store basenames for copying
 
 if (helperFiles.length === 0) {
   console.error('No valid helper files to copy. Provide filenames or ensure defaults exist.');
   process.exit(1);
 }
 
-const packageNames = fs.readdirSync(packagesDir).filter(name => {
+const packageNames = fs.readdirSync(packagesDir).filter((name) => {
   const p = path.join(packagesDir, name);
   try {
     return fs.statSync(p).isDirectory();

@@ -62,11 +62,14 @@ bun test --verbose
 
 ```bash
 bun run lint
+bun run format:check   # Read-only check (Biome)
 ```
 
 You can also lint specific parts:
 - Demo: `bun run lint:demo`
 - Packages: `bun run lint:packages`
+
+Run `bun run lint:fix` to auto-fix formatting issues before committing.
 
 ---
 
@@ -85,17 +88,16 @@ This project uses a monorepo structure with individual theme packages in the `pa
 2. Copy the structure from an existing theme
 3. Update the theme colors and styles in `src/index.ts`
 4. Add appropriate metadata in `package.json`
-5. Create a README.md with theme preview and usage
-6. Update all packages `README.md` to include your new theme
 
 ### Post Build Steps
 
 Once you've finished working on your theme, run the following to build and verify your changes:
 
 ```bash
-bun run utils.copy:helpers
-bun run utils.copy:readme
-bun run utils.update:versions # You must update the `versions.json` file as it is the source of truth for the packages versions
+bun run generate:helpers
+bun run generate:bundle  # adds your theme to the @fsegurai/codemirror-theme-bundle re-exports
+bun run generate:readme  # regenerates every package's README.md, including the themes table
+bun run version:update # You must update the `versions.json` file as it is the source of truth for the packages versions
 ```
 
 ---

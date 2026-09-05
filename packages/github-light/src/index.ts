@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -61,8 +61,8 @@ const invalid = '#cb2431', // Invalid color - error red
 // Diff/merge specific colors
 const addedBackground = '#e6ffec80', // GitHub light green with transparency
   removedBackground = '#ffebe980', // GitHub light red with transparency
-  addedText = '#0f6d31',         // GitHub dark green for added text
-  removedText = '#cf222e';       // GitHub red for removed text
+  addedText = '#0f6d31', // GitHub dark green for added text
+  removedText = '#cf222e'; // GitHub red for removed text
 
 /**
  * Enhanced editor theme styles for GitHub Light
@@ -476,10 +476,7 @@ const githubLightHighlightStyle = HighlightStyle.define([
 /**
  * Combined GitHub Light theme extension
  */
-const githubLight: Extension = [
-  githubLightTheme,
-  syntaxHighlighting(githubLightHighlightStyle),
-];
+const githubLight: Extension = [githubLightTheme, syntaxHighlighting(githubLightHighlightStyle)];
 
 /**
  * GitHub Light merge revert styles configuration
@@ -491,4 +488,4 @@ const githubLightMergeStyles: IMergeRevertStyles = {
   buttonHoverColor: '#f5f5f5',
 };
 
-export { githubLight, githubLightMergeStyles, applyMergeRevertStyles };
+export { applyMergeRevertStyles, githubLight, githubLightMergeStyles };

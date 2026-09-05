@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -506,7 +506,6 @@ const cobalt2HighlightStyle = HighlightStyle.define([
   // Language-specific: CSS
   { tag: t.unit, color: parameterYellow }, // CSS units
 
-
   // Entity names
   { tag: t.labelName, color: yellow },
   { tag: t.escape, color: yellow },
@@ -515,10 +514,7 @@ const cobalt2HighlightStyle = HighlightStyle.define([
 /**
  * Combined Cobalt2 theme extension
  */
-const cobalt2: Extension = [
-  cobalt2Theme,
-  syntaxHighlighting(cobalt2HighlightStyle),
-];
+const cobalt2: Extension = [cobalt2Theme, syntaxHighlighting(cobalt2HighlightStyle)];
 
 /**
  * Cobalt2 merge revert styles configuration
@@ -530,4 +526,4 @@ const cobalt2MergeStyles: IMergeRevertStyles = {
   buttonHoverColor: darkGray,
 };
 
-export { cobalt2, cobalt2MergeStyles, applyMergeRevertStyles };
+export { applyMergeRevertStyles, cobalt2, cobalt2MergeStyles };

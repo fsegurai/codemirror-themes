@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
 import {
@@ -16,7 +16,7 @@ import {
   generalScroller,
   generalSearchField,
   generalTooltip,
-  IMergeRevertStyles,
+  type IMergeRevertStyles,
 } from './utils';
 
 /**
@@ -61,8 +61,8 @@ const invalid = '#e53e3e', //  bright red - errors (more visible)
 // Diff/merge specific colors
 const addedBackground = '#e6ffec60', // Light green with transparency for insertions
   removedBackground = '#ffebe9a0', // Light red with transparency for deletions
-  addedText = '#24783b',          // Dark green for added text
-  removedText = '#cf222e';        // Dark red for removed text
+  addedText = '#24783b', // Dark green for added text
+  removedText = '#cf222e'; // Dark red for removed text
 
 /**
  * Enhanced editor theme styles for Basic Light
@@ -475,10 +475,7 @@ const basicLightHighlightStyle = HighlightStyle.define([
 /**
  * Combined Basic Light theme extension
  */
-const basicLight: Extension = [
-  basicLightTheme,
-  syntaxHighlighting(basicLightHighlightStyle),
-];
+const basicLight: Extension = [basicLightTheme, syntaxHighlighting(basicLightHighlightStyle)];
 
 /**
  * Basic Light merge revert styles configuration
@@ -490,4 +487,4 @@ const basicLightMergeStyles: IMergeRevertStyles = {
   buttonHoverColor: '#e2e8f0',
 };
 
-export { basicLight, basicLightMergeStyles, applyMergeRevertStyles };
+export { applyMergeRevertStyles, basicLight, basicLightMergeStyles };
