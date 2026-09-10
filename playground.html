@@ -36,15 +36,18 @@
           }
         }
     </script>
-  <script type="module" crossorigin src="./assets/main-C7w9K2wD.js"></script>
+  <script type="module" crossorigin src="./assets/playground-DNH0Koer.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/header-CcQU30GQ.js">
+  <link rel="modulepreload" crossorigin href="./assets/main-C7w9K2wD.js">
+  <link rel="modulepreload" crossorigin href="./assets/dist-C1d1W_3Q.js">
   <link rel="stylesheet" crossorigin href="./assets/header-PRBG0-r9.css">
+  <link rel="stylesheet" crossorigin href="./assets/playground-C1ZOQ2Zv.css">
 </head>
 <body>
 <!-- Loading Spinner -->
 <div id="loadingSpinner" class="loading-spinner">
     <div class="spinner-circle"></div>
-    <p>Loading content...</p>
+    <p>Loading playground...</p>
 </div>
 
 <header class="header">
@@ -64,8 +67,7 @@
                         id="github"
                         href="https://github.com/fsegurai/codemirror-themes"
                         target="_blank"
-                        aria-label="View on GitHub"
-                >
+                        aria-label="View on GitHub">
                     <md-icon>
                         <svg
                                 class="custom-icon"
@@ -95,8 +97,52 @@
     </md-icon-button>
 </nav>
 
-<main class="main-index">
-    <div id="markdown-body" class="markdown-body"></div>
+<main class="main-playground">
+    <!-- Theme Picker Section -->
+    <div class="playground-controls">
+        <div id="theme-picker" class="theme-picker-wrapper">
+            <label for="theme-list" class="theme-picker-label">
+                <span>Theme</span>
+                <md-icon>palette</md-icon>
+            </label>
+            <md-outlined-select
+                    id="theme-list"
+                    label="Select a theme"
+                    name="themes"
+            >
+                <md-select-option id="defaultOptionValue" selected value="">
+                    <div slot="headline">Select an option</div>
+                </md-select-option>
+            </md-outlined-select>
+        </div>
+    </div>
+
+    <!-- Diff View Section -->
+    <section class="playground-section playground-section-diff">
+        <div class="section-header">
+            <h2 class="section-title">Diff View</h2>
+            <p class="section-description">Side-by-side comparison with revert controls</p>
+        </div>
+        <div id="diff-codemirror" class="codemirror codemirror-diff"></div>
+    </section>
+
+    <!-- Unified Diff Section -->
+    <section class="playground-section playground-section-unified">
+        <div class="section-header">
+            <h2 class="section-title">Unified Diff View</h2>
+            <p class="section-description">Inline comparison with change highlighting</p>
+        </div>
+        <div id="undiff-codemirror" class="codemirror codemirror-unified"></div>
+    </section>
+
+    <!-- Editor Showcase Section -->
+    <section class="playground-section">
+        <div class="section-header">
+            <h2 class="section-title">Standard Editor</h2>
+            <p class="section-description">Basic CodeMirror editor with syntax highlighting</p>
+        </div>
+        <div id="codemirror" class="codemirror codemirror-standard"></div>
+    </section>
 </main>
 </body>
 </html>
