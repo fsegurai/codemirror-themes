@@ -1,0 +1,3 @@
+set -e
+bun run lint:fix
+git add -u

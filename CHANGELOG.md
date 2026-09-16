@@ -11,6 +11,25 @@ No changes have been made yet.
 
 ---
 
+## [6.30.5] - 2026-09-15
+
+### 🔐 Security
+
+- **Added dependencies**.
+	- Dev Dependencies
+		- `husky` - `9.1.7` - needed for Git hooks to enforce code quality and pre-commit checks.
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `@codemirror/state` from `6.7.4` to `6.7.5`
+		- `marked` from `18.0.11` to `18.0.13`
+	- Dev Dependencies
+        - `@biomejs/biome` from `2.5.12` to `2.5.13`
+		- `vite` from `8.2.2` to `8.3.0`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.30.5
+
+---
+
 ## [6.30.4] - 2026-09-10
 
 ### 🐞 Fixes
@@ -78,7 +97,7 @@ No changes have been made yet.
 	- Dependencies
 		- `@codemirror/lang-markdown` from `6.5.0` to `6.5.2`
 		- `@codemirror/language` from `6.12.3` to `6.12.4`
-        - `@codemirror/legacy-modes` from `6.5.3` to `6.5.4`
+		- `@codemirror/legacy-modes` from `6.5.3` to `6.5.4`
 		- `@codemirror/merge` from `6.12.1` to `6.12.2`
 		- `@codemirror/state` from `6.6.0` to `6.7.4`
 		- `@codemirror/view` pinned to `6.43.8` via `overrides` (dedupe transitive copies)
@@ -95,6 +114,8 @@ No changes have been made yet.
 	- Restored `serialize-javascript` pin to `7.0.5` via `overrides` — it had silently regressed to the older `6.0.2`
 	  (still patched for the known CVE, but not the intended pin) when the `overrides` block was rewritten for the
 	  CodeMirror core bumps.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.30.4
 
 ---
 
@@ -813,7 +834,9 @@ No changes have been made yet.
 
 ---
 
-[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.4...HEAD
+[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.5...HEAD
+
+[6.30.5]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.4...v6.30.5
 
 [6.30.4]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.3...v6.30.4
 
