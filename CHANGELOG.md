@@ -15,6 +15,9 @@ No changes have been made yet.
 
 ### 🔐 Security
 
+- **Added dependencies**.
+	- Dev Dependencies
+		- `husky` - `9.1.7` - needed for Git hooks to enforce code quality and pre-commit checks.
 - **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
 	- Dependencies
 		- `@codemirror/state` from `6.7.4` to `6.7.5`

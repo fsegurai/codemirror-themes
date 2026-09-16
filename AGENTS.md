@@ -232,13 +232,21 @@ bun run start                             # Start vite dev server (localhost:800
 # 3. For multiple theme changes
 bun run build:packages && bun run start   # Full rebuild + dev server
 
-# 4. Quality checks before commit
+# 4. Quality checks (Husky enforces these automatically)
 bun run lint                              # Biome lint + format check
 bun test                                  # Run all tests
 
 # 5. Build for production
 bun run build:demo                        # Vite build output to dist/
 ```
+
+### Git Hooks (Husky)
+Hooks are installed automatically by the `prepare` script on `bun install` (Husky wires `core.hooksPath` to `.husky/_`).
+
+- **`pre-commit`**: runs `bun run lint:fix` (Biome `check --write`, the same command as `format`) and re-stages files, so fixes are baked into the commit.
+- **`pre-push`**: runs `bun run format:audit` (read-only `biome check`) — the gate that proves the pushed commit is clean. Auto-fixes must happen at commit time because a push never re-commits working-tree mutations.
+- Bypass single commands with `git commit -n` / `git push -n`, or all hooks with `HUSKY=0`.
+- CI should set `HUSKY=0` so hooks aren't installed there.
 
 ### Adding a New Theme (Step-by-Step)
 ```bash

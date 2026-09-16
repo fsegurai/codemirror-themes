@@ -62,14 +62,19 @@ bun test --verbose
 
 ```bash
 bun run lint
-bun run format:check   # Read-only check (Biome)
+bun run format:audit   # Read-only check (Biome, covers lint + format)
 ```
 
 You can also lint specific parts:
 - Demo: `bun run lint:demo`
 - Packages: `bun run lint:packages`
 
-Run `bun run lint:fix` to auto-fix formatting issues before committing.
+Run `bun run lint:fix` to auto-fix formatting issues before committing (it is the same command as `format`).
+
+**Git hooks (Husky)** are installed automatically via the `prepare` script on `bun install`:
+- `pre-commit` runs `bun run lint:fix` and re-stages your files, so fixes land inside the commit.
+- `pre-push` runs `bun run format:audit` as a read-only gate that blocks the push if anything is dirty.
+- Bypass with `git commit -n` / `git push -n` (or `HUSKY=0` for everything).
 
 ---
 
