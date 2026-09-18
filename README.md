@@ -4,7 +4,7 @@
 
 <p align="center" class="intro">
   <a href="https://github.com/fsegurai/codemirror-themes">
-      <img src="https://img.shields.io/azure-devops/build/fsegurai/93779823-473d-4fb3-a5b1-27aaa1a88ea2/16/main?label=Build%20Status&"
+      <img src="https://img.shields.io/github/actions/workflow/status/fsegurai/codemirror-themes/health-check.yml?branch=main&label=build"
           alt="Build Main Status">
   </a>
   <a href="https://github.com/fsegurai/codemirror-themes/releases/latest">
