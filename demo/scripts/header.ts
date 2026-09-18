@@ -4,6 +4,9 @@ const isProdEnv = ENV_REFERENCE.IS_PROD;
 const hostUrl = ENV_REFERENCE.HOST_URL;
 const lsTheme = 'codemirror-themes:fsegurai';
 
+// Generate URL based on environment
+const urlGenerator = (path: string) => (isProdEnv && hostUrl ? `${hostUrl}${path}` : path);
+
 document.addEventListener('DOMContentLoaded', () => {
   interface Route {
     path: string;
@@ -15,14 +18,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const routes: Route[] = [
     {
-      path: isProdEnv && hostUrl ? `${hostUrl}/` : '/',
+      path: urlGenerator('/'),
       label: 'Get Started',
       icon: 'play_arrow',
     },
     {
-      path: isProdEnv && hostUrl ? `${hostUrl}/playground.html` : '/playground.html',
+      path: urlGenerator('/playground.html'),
       label: 'Playground',
       icon: 'ar_stickers',
+    },
+    {
+      path: urlGenerator('/changelog.html'),
+      label: 'Changelog',
+      icon: 'history',
     },
   ];
 
