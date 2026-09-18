@@ -11,6 +11,25 @@ No changes have been made yet.
 
 ---
 
+## [6.30.6] - 2026-09-18
+
+### 🔧 Changes
+
+- **Raised minimum engine requirements** — Node.js ≥ v24, npm ≥ 11 and Bun ≥ 1.4.0 in
+  `package.json`, with matching prerequisites in `CONTRIBUTING.md`; also fixed `tsconfig.json`
+  property formatting.
+- **Added a changelog page to the demo** — new `demo/changelog.html` renders the project
+  CHANGELOG dynamically, with the route added to the demo navigation.
+- **Added Husky pre-commit and pre-push hooks** — pre-commit runs `bun run lint:fix` and
+  re-stages fixes; pre-push runs the read-only `bun run format:audit` gate.
+- **Updated demo README generation** — refreshed the demo section formatting and setup
+  instructions produced by the README generator.
+- **Fixed formatting of the import statement in `vite.config.ts`** — cosmetic change only.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/commits/v6.30.6
+
+---
+
 ## [6.30.5] - 2026-09-15
 
 ### 🔐 Security
@@ -834,7 +853,9 @@ No changes have been made yet.
 
 ---
 
-[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.5...HEAD
+[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.6...HEAD
+
+[6.30.6]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.5...v6.30.6
 
 [6.30.5]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.4...v6.30.5
 

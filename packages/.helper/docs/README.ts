@@ -74,10 +74,9 @@ Read the [CodeMirror documentation](https://codemirror.net/6/examples/styling/) 
 
 ## Demo Application
 
-To see all themes in action, check out the
-demo: [https://fsegurai.github.io/codemirror-themes](https://fsegurai.github.io/codemirror-themes).
+To see all themes in action, check out the [[DEMO]](https://fsegurai.github.io/codemirror-themes).
 
-To set up the demo locally:
+To set up the demo locally, follow the next steps:
 
 \`\`\`bash
 git clone https://github.com/fsegurai/codemirror-themes.git

@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => {
         input: {
           main: 'demo/index.html',
           playground: 'demo/playground.html',
+          changelog: 'demo/changelog.html',
         },
       },
     },
