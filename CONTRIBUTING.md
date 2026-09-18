@@ -7,7 +7,7 @@ Thanks for your interest in improving the **codemirror-themes** project! Whether
 ## 🚀 Getting Started
 
 > **Requirements**
-> Ensure you're using **Node.js v22.x** and **Bun v1.4.x** or higher.
+> Ensure you're using **Node.js v24.x** and **Bun v1.4.x** or higher.
 
 ### 1. Clone the Repository
 
