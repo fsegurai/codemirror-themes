@@ -109,9 +109,9 @@
     "prismjs": "^1.30.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.12",
+    "@biomejs/biome": "2.5.13",
     "@codemirror/buildhelper": "^1.0.2",
-    "@types/node": "26.4.1",
+    "@types/node": "26.5.1",
     "@types/prismjs": "^1.26.6",
     "@typescript/typescript6": "^6.0.2",
     "husky": "^9.1.7",
