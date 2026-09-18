@@ -9,9 +9,9 @@
     "url": "https://www.fsegurai.com/"
   },
   "engines": {
-    "node": ">=22",
+    "node": ">=24",
     "bun": ">=1.4.0",
-    "npm": ">=10"
+    "npm": ">=11"
   },
   "keywords": [
     "code",
