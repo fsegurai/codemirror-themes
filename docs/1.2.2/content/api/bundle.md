@@ -1,0 +1,41 @@
+---
+label: Bundle
+description: What @fsegurai/codemirror-theme-bundle re-exports and how it relates to the individual theme packages.
+order: 3
+tags: [ "api", "bundle", "re-exports" ]
+keywords: [ "codemirror-theme-bundle", "tree-shaking", "dependencies" ]
+---
+
+# Bundle
+
+`@fsegurai/codemirror-theme-bundle` (6.0.0) has no code of its own. Its entry point re-exports from the 20 theme
+packages, which it lists as dependencies with caret ranges from `^6.0.2` to `^6.0.4`
+(`^6.0.3` for the Nord package).
+
+## Exports
+
+| Group | Count | Examples |
+|-------|-------|----------|
+| Theme extensions | 20 | `abcdef`, `nord`, `volcano` |
+| **Total** | **20** | |
+
+The `<theme>Theme` and `<theme>HighlightStyle` exports of the individual packages are not re-exported.
+
+The bundle does **not** export a combined `bundle` value. Import the theme you want by name:
+
+```ts
+import { abcdef, nord } from '@fsegurai/codemirror-theme-bundle';
+```
+
+## Bundle or single package?
+
+| Choose | When |
+|--------|------|
+| Single package | You ship one or two fixed themes and want the smallest dependency tree. |
+| Bundle | You build a theme picker or want every theme available with one install. |
+
+Both declare `"sideEffects": false`, so bundlers drop themes you never reference.
+
+## Peer dependencies
+
+`@codemirror/language ^6.0.0`, `@codemirror/state ^6.0.0`, `@codemirror/view ^6.0.0`, `@lezer/highlight ^1.0.0`.

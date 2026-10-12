@@ -1,0 +1,647 @@
+[
+  {
+    "label": "Documentation Home",
+    "description": "Documentation for @fsegurai/codemirror-themes 6.29.2, a collection of 28 CodeMirror 6 themes published as individual packages and one bundle.",
+    "route": "content/README",
+    "tags": ["documentation", "overview", "codemirror"],
+    "order": 0,
+    "breadcrumbTitle": "Home",
+    "publishedAt": "2026-03-24",
+    "keywords": ["codemirror 6", "editor theme", "syntax highlighting", "6.29.2"],
+    "breadcrumb": [
+      {
+        "label": "Home",
+        "route": "content/README"
+      }
+    ]
+  },
+  {
+    "label": "Getting Started",
+    "route": "content/getting-started",
+    "isParent": true,
+    "breadcrumb": [
+      {
+        "label": "Getting Started",
+        "route": "content/getting-started"
+      }
+    ],
+    "order": 1,
+    "children": [
+      {
+        "label": "Getting Started",
+        "description": "Install a CodeMirror 6 theme package or the bundle and apply it to an editor.",
+        "route": "content/getting-started/README",
+        "tags": ["getting-started", "overview"],
+        "order": 1,
+        "breadcrumbTitle": "Getting Started",
+        "breadcrumb": [
+          {
+            "label": "Getting Started",
+            "route": "content/getting-started"
+          },
+          {
+            "label": "Getting Started",
+            "route": "content/getting-started/README"
+          }
+        ]
+      },
+      {
+        "label": "Installation",
+        "description": "Install a single theme package or the bundle that re-exports all 28 themes.",
+        "route": "content/getting-started/installation",
+        "tags": ["installation", "npm", "setup"],
+        "order": 1,
+        "keywords": ["bun", "pnpm", "peer dependencies", "esm", "cjs"],
+        "breadcrumb": [
+          {
+            "label": "Getting Started",
+            "route": "content/getting-started"
+          },
+          {
+            "label": "Installation",
+            "route": "content/getting-started/installation"
+          }
+        ]
+      },
+      {
+        "label": "Quick Start",
+        "description": "Add a theme extension to a CodeMirror 6 EditorView in three steps.",
+        "route": "content/getting-started/quick-start",
+        "tags": ["quick-start", "usage", "tutorial"],
+        "order": 2,
+        "keywords": ["EditorView", "extensions", "basicSetup"],
+        "breadcrumb": [
+          {
+            "label": "Getting Started",
+            "route": "content/getting-started"
+          },
+          {
+            "label": "Quick Start",
+            "route": "content/getting-started/quick-start"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Themes",
+    "route": "content/themes",
+    "isParent": true,
+    "breadcrumb": [
+      {
+        "label": "Themes",
+        "route": "content/themes"
+      }
+    ],
+    "order": 2,
+    "children": [
+      {
+        "label": "Basic",
+        "description": "Basic Dark and Basic Light, neutral themes with a plain palette.",
+        "route": "content/themes/basic",
+        "tags": ["themes", "basic", "neutral"],
+        "order": 1,
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Basic",
+            "route": "content/themes/basic"
+          }
+        ]
+      },
+      {
+        "label": "GitHub",
+        "description": "GitHub Dark and GitHub Light, themes inspired by the GitHub code view.",
+        "route": "content/themes/github",
+        "tags": ["themes", "github"],
+        "order": 2,
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "GitHub",
+            "route": "content/themes/github"
+          }
+        ]
+      },
+      {
+        "label": "Themes",
+        "description": "Catalog of all 28 themes with package names, export names and light or dark mode.",
+        "route": "content/themes/README",
+        "tags": ["themes", "catalog"],
+        "order": 2,
+        "breadcrumbTitle": "Themes",
+        "keywords": ["packages", "exports", "light", "dark"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Themes",
+            "route": "content/themes/README"
+          }
+        ]
+      },
+      {
+        "label": "Gruvbox",
+        "description": "Gruvbox Dark and Gruvbox Light, warm retro themes based on the Gruvbox palette.",
+        "route": "content/themes/gruvbox",
+        "tags": ["themes", "gruvbox", "retro"],
+        "order": 3,
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Gruvbox",
+            "route": "content/themes/gruvbox"
+          }
+        ]
+      },
+      {
+        "label": "High Contrast",
+        "description": "High Contrast Dark and High Contrast Light, maximum-contrast themes for accessibility.",
+        "route": "content/themes/high-contrast",
+        "tags": ["themes", "high-contrast", "accessibility"],
+        "order": 4,
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "High Contrast",
+            "route": "content/themes/high-contrast"
+          }
+        ]
+      },
+      {
+        "label": "Material",
+        "description": "Material Dark and Material Light, themes based on the Material palette.",
+        "route": "content/themes/material",
+        "tags": ["themes", "material"],
+        "order": 5,
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Material",
+            "route": "content/themes/material"
+          }
+        ]
+      },
+      {
+        "label": "Solarized",
+        "description": "Solarized Dark and Solarized Light, themes based on the Solarized palette.",
+        "route": "content/themes/solarized",
+        "tags": ["themes", "solarized"],
+        "order": 6,
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Solarized",
+            "route": "content/themes/solarized"
+          }
+        ]
+      },
+      {
+        "label": "Tokyo Night",
+        "description": "Tokyo Night Day and Tokyo Night Storm, themes based on the Tokyo Night palette.",
+        "route": "content/themes/tokyo-night",
+        "tags": ["themes", "tokyo-night"],
+        "order": 7,
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Tokyo Night",
+            "route": "content/themes/tokyo-night"
+          }
+        ]
+      },
+      {
+        "label": "VS Code",
+        "description": "VS Code Dark and VS Code Light, themes inspired by the Visual Studio Code defaults.",
+        "route": "content/themes/vscode",
+        "tags": ["themes", "vscode"],
+        "order": 8,
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "VS Code",
+            "route": "content/themes/vscode"
+          }
+        ]
+      },
+      {
+        "label": "Standalone Dark Themes",
+        "description": "Twelve single-variant dark themes, from Abcdef to Volcano.",
+        "route": "content/themes/standalone",
+        "tags": ["themes", "dark", "standalone"],
+        "order": 9,
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Standalone Dark Themes",
+            "route": "content/themes/standalone"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Guides",
+    "route": "content/guides",
+    "isParent": true,
+    "breadcrumb": [
+      {
+        "label": "Guides",
+        "route": "content/guides"
+      }
+    ],
+    "order": 3,
+    "children": [
+      {
+        "label": "Switching Themes at Runtime",
+        "description": "Swap the theme of a running EditorView by wrapping the theme extension in a Compartment.",
+        "route": "content/guides/switching-themes",
+        "tags": ["guides", "compartment", "runtime"],
+        "order": 1,
+        "keywords": ["reconfigure", "dispatch", "theme picker"],
+        "breadcrumb": [
+          {
+            "label": "Guides",
+            "route": "content/guides"
+          },
+          {
+            "label": "Switching Themes at Runtime",
+            "route": "content/guides/switching-themes"
+          }
+        ]
+      },
+      {
+        "label": "Following the System Color Scheme",
+        "description": "Choose a light or a dark theme from prefers-color-scheme and update it when the system setting changes.",
+        "route": "content/guides/light-dark-mode",
+        "tags": ["guides", "dark-mode", "light-mode"],
+        "order": 2,
+        "keywords": ["prefers-color-scheme", "matchMedia", "compartment"],
+        "breadcrumb": [
+          {
+            "label": "Guides",
+            "route": "content/guides"
+          },
+          {
+            "label": "Following the System Color Scheme",
+            "route": "content/guides/light-dark-mode"
+          }
+        ]
+      },
+      {
+        "label": "Guides",
+        "description": "Task-focused guides for switching themes, following the system color scheme, styling merge views and customizing themes.",
+        "route": "content/guides/README",
+        "tags": ["guides", "how-to"],
+        "order": 3,
+        "breadcrumbTitle": "Guides",
+        "breadcrumb": [
+          {
+            "label": "Guides",
+            "route": "content/guides"
+          },
+          {
+            "label": "Guides",
+            "route": "content/guides/README"
+          }
+        ]
+      },
+      {
+        "label": "Styling Merge Views",
+        "description": "Apply a theme to @codemirror/merge views and color the revert buttons with the MergeStyles export.",
+        "route": "content/guides/merge-views",
+        "tags": ["guides", "merge", "diff"],
+        "order": 3,
+        "keywords": ["MergeView", "unifiedMergeView", "revert controls", "applyMergeRevertStyles"],
+        "breadcrumb": [
+          {
+            "label": "Guides",
+            "route": "content/guides"
+          },
+          {
+            "label": "Styling Merge Views",
+            "route": "content/guides/merge-views"
+          }
+        ]
+      },
+      {
+        "label": "Overriding Theme Styles",
+        "description": "Change the font, font size, line height or individual colors on top of a packaged theme.",
+        "route": "content/guides/overriding-styles",
+        "tags": ["guides", "customization", "css"],
+        "order": 4,
+        "keywords": ["font family", "font size", "Prec.highest", "EditorView.theme"],
+        "breadcrumb": [
+          {
+            "label": "Guides",
+            "route": "content/guides"
+          },
+          {
+            "label": "Overriding Theme Styles",
+            "route": "content/guides/overriding-styles"
+          }
+        ]
+      },
+      {
+        "label": "Creating a Custom Theme",
+        "description": "Build a CodeMirror 6 theme with the same structure the packages use, an EditorView theme and a HighlightStyle.",
+        "route": "content/guides/custom-theme",
+        "tags": ["guides", "custom-theme", "highlight-style"],
+        "order": 5,
+        "keywords": ["EditorView.theme", "HighlightStyle", "syntaxHighlighting", "lezer tags"],
+        "breadcrumb": [
+          {
+            "label": "Guides",
+            "route": "content/guides"
+          },
+          {
+            "label": "Creating a Custom Theme",
+            "route": "content/guides/custom-theme"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "API",
+    "route": "content/api",
+    "isParent": true,
+    "breadcrumb": [
+      {
+        "label": "API",
+        "route": "content/api"
+      }
+    ],
+    "order": 4,
+    "children": [
+      {
+        "label": "Theme Extensions",
+        "description": "The Extension exported by each theme package, what it contains and the full list of export names.",
+        "route": "content/api/theme-extensions",
+        "tags": ["api", "extension", "themes"],
+        "order": 1,
+        "keywords": ["EditorView.theme", "syntaxHighlighting", "dark flag"],
+        "breadcrumb": [
+          {
+            "label": "API",
+            "route": "content/api"
+          },
+          {
+            "label": "Theme Extensions",
+            "route": "content/api/theme-extensions"
+          }
+        ]
+      },
+      {
+        "label": "Merge Styles",
+        "description": "The IMergeRevertStyles shape, the MergeStyles export of each theme and the applyMergeRevertStyles function.",
+        "route": "content/api/merge-styles",
+        "tags": ["api", "merge", "styles"],
+        "order": 2,
+        "keywords": ["IMergeRevertStyles", "applyMergeRevertStyles", "revert buttons"],
+        "breadcrumb": [
+          {
+            "label": "API",
+            "route": "content/api"
+          },
+          {
+            "label": "Merge Styles",
+            "route": "content/api/merge-styles"
+          }
+        ]
+      },
+      {
+        "label": "Bundle",
+        "description": "What @fsegurai/codemirror-theme-bundle re-exports and how it relates to the individual theme packages.",
+        "route": "content/api/bundle",
+        "tags": ["api", "bundle", "re-exports"],
+        "order": 3,
+        "keywords": ["codemirror-theme-bundle", "tree-shaking", "dependencies"],
+        "breadcrumb": [
+          {
+            "label": "API",
+            "route": "content/api"
+          },
+          {
+            "label": "Bundle",
+            "route": "content/api/bundle"
+          }
+        ]
+      },
+      {
+        "label": "API Reference",
+        "description": "Exact exports of every theme package and of the bundle, with their TypeScript types.",
+        "route": "content/api/README",
+        "tags": ["api", "reference"],
+        "order": 4,
+        "breadcrumbTitle": "API",
+        "breadcrumb": [
+          {
+            "label": "API",
+            "route": "content/api"
+          },
+          {
+            "label": "API",
+            "route": "content/api/README"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Examples",
+    "route": "content/examples",
+    "isParent": true,
+    "breadcrumb": [
+      {
+        "label": "Examples",
+        "route": "content/examples"
+      }
+    ],
+    "order": 5,
+    "children": [
+      {
+        "label": "Basic Editor",
+        "description": "A Markdown editor themed with Tokyo Night Storm.",
+        "route": "content/examples/basic-editor",
+        "tags": ["examples", "editor", "markdown"],
+        "order": 1,
+        "breadcrumb": [
+          {
+            "label": "Examples",
+            "route": "content/examples"
+          },
+          {
+            "label": "Basic Editor",
+            "route": "content/examples/basic-editor"
+          }
+        ]
+      },
+      {
+        "label": "Theme Picker",
+        "description": "A select element that switches an editor between bundle themes with a Compartment.",
+        "route": "content/examples/theme-picker",
+        "tags": ["examples", "picker", "compartment"],
+        "order": 2,
+        "breadcrumb": [
+          {
+            "label": "Examples",
+            "route": "content/examples"
+          },
+          {
+            "label": "Theme Picker",
+            "route": "content/examples/theme-picker"
+          }
+        ]
+      },
+      {
+        "label": "Merge View",
+        "description": "A side-by-side MergeView whose editors and revert buttons follow the selected theme.",
+        "route": "content/examples/merge-view",
+        "tags": ["examples", "merge", "diff"],
+        "order": 3,
+        "breadcrumb": [
+          {
+            "label": "Examples",
+            "route": "content/examples"
+          },
+          {
+            "label": "Merge View",
+            "route": "content/examples/merge-view"
+          }
+        ]
+      },
+      {
+        "label": "Examples",
+        "description": "Complete, copyable setups for a themed editor, a theme picker and a themed merge view.",
+        "route": "content/examples/README",
+        "tags": ["examples", "samples"],
+        "order": 5,
+        "breadcrumbTitle": "Examples",
+        "breadcrumb": [
+          {
+            "label": "Examples",
+            "route": "content/examples"
+          },
+          {
+            "label": "Examples",
+            "route": "content/examples/README"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Help",
+    "route": "content/help",
+    "isParent": true,
+    "breadcrumb": [
+      {
+        "label": "Help",
+        "route": "content/help"
+      }
+    ],
+    "order": 6,
+    "children": [
+      {
+        "label": "What's New in 6.29.2",
+        "description": "Release notes for @fsegurai/codemirror-themes 6.29.2, a dependency maintenance release.",
+        "route": "content/help/whats-new",
+        "tags": ["help", "changelog", "release-notes"],
+        "order": 1,
+        "keywords": ["6.29.2", "dependencies", "security"],
+        "breadcrumb": [
+          {
+            "label": "Help",
+            "route": "content/help"
+          },
+          {
+            "label": "What's New in 6.29.2",
+            "route": "content/help/whats-new"
+          }
+        ]
+      },
+      {
+        "label": "FAQ",
+        "description": "Frequently asked questions about theme packages, the bundle, versions, fonts and framework use.",
+        "route": "content/help/faq",
+        "tags": ["help", "faq", "questions"],
+        "order": 2,
+        "breadcrumb": [
+          {
+            "label": "Help",
+            "route": "content/help"
+          },
+          {
+            "label": "FAQ",
+            "route": "content/help/faq"
+          }
+        ]
+      },
+      {
+        "label": "Troubleshooting",
+        "description": "Symptoms, causes and fixes for missing token colors, wrong fonts, merge buttons and theme switching.",
+        "route": "content/help/troubleshooting",
+        "tags": ["help", "troubleshooting", "debugging"],
+        "order": 3,
+        "breadcrumb": [
+          {
+            "label": "Help",
+            "route": "content/help"
+          },
+          {
+            "label": "Troubleshooting",
+            "route": "content/help/troubleshooting"
+          }
+        ]
+      },
+      {
+        "label": "Help",
+        "description": "Release notes, answers to common questions, fixes for common problems and links to project resources.",
+        "route": "content/help/README",
+        "tags": ["help", "support"],
+        "order": 6,
+        "breadcrumbTitle": "Help",
+        "breadcrumb": [
+          {
+            "label": "Help",
+            "route": "content/help"
+          },
+          {
+            "label": "Help",
+            "route": "content/help/README"
+          }
+        ]
+      }
+    ]
+  }
+]
