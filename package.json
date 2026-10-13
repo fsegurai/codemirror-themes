@@ -89,6 +89,7 @@
     "generate:helpers": "bun packages/.helper/utils/generate-utils.ts",
     "generate:bundle": "bun packages/.helper/utils/generate-bundle.ts",
     "generate:readme": "bun packages/.helper/docs/generate-readme.ts",
+    "generate:manifest": "manifest-generator --route ./docs/$npm_package_version/content --output ./docs/$npm_package_version",
     "version:update": "bun packages/.helper/versions/update-packages-versions.ts --write",
     "version:preview": "bun packages/.helper/versions/update-packages-versions.ts --dry-run",
     "version:skip": "bun packages/.helper/versions/update-packages-versions.ts --dry-run --skip '@fsegurai/codemirror-theme-bundle'"
@@ -111,6 +112,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.12",
     "@codemirror/buildhelper": "^1.0.2",
+    "@fsegurai/manifest-generator": "^1.1.0",
     "@types/node": "26.4.1",
     "@types/prismjs": "^1.26.6",
     "@typescript/typescript6": "^6.0.2",
