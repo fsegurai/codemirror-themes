@@ -1,14 +1,62 @@
 body {
-  margin: 0;
-  padding: 16px;
-  font-family: system-ui, sans-serif;
+  font-family: var(--pg-font);
 }
 
+/* Page chrome uses the --pg-* variables of the preview, so it reads well in light and dark. */
 .toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
   margin-bottom: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--pg-border);
+  border-radius: var(--pg-radius);
+  background: var(--pg-surface);
+  color: var(--pg-text);
+}
+
+.toolbar label {
+  color: var(--pg-text-muted);
+  font-weight: 600;
+}
+
+.toolbar select {
+  min-width: 12rem;
+}
+
+.toolbar button:focus-visible,
+.toolbar select:focus-visible {
+  outline: 2px solid var(--pg-accent);
+  outline-offset: 2px;
+}
+
+.badge {
+  padding: 2px 10px;
+  border: 1px solid var(--pg-border);
+  border-radius: 999px;
+  background: var(--pg-surface-alt);
+  color: var(--pg-text-muted);
+  font-size: 0.85em;
+}
+
+/* The frame around the editor; the CodeMirror theme colors everything inside it. */
+.frame {
+  overflow: hidden;
+  border: 1px solid var(--pg-border);
+  border-radius: var(--pg-radius);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--pg-text) 12%, transparent);
+}
+
+.frame:focus-within {
+  border-color: var(--pg-primary);
+}
+
+.frame .cm-editor.cm-focused {
+  outline: none;
 }
 
 /* Each side of the MergeView is a regular .cm-editor; the themes color them. */
-.cm-mergeView {
-  border-radius: 6px;
+.frame .cm-mergeView {
+  max-height: 360px;
 }
