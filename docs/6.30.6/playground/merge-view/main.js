@@ -11,9 +11,12 @@ const themes = {
 };
 
 const themeConfig = new Compartment();
+const modeLabel = document.querySelector('#mode');
+// Start in the preview's theme (<html data-theme>); the button switches between both.
+let mode = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
 const merge = new MergeView({
-  a: { doc: 'one\ntwo\nthree\n', extensions: [basicSetup, themeConfig.of(themes.dark.extension)] },
-  b: { doc: 'one\nTwo\nthree\nfour\n', extensions: [basicSetup, themeConfig.of(themes.dark.extension)] },
+  a: { doc: 'one\ntwo\nthree\n', extensions: [basicSetup, themeConfig.of(themes[mode].extension)] },
+  b: { doc: 'one\nTwo\nthree\nfour\n', extensions: [basicSetup, themeConfig.of(themes[mode].extension)] },
   orientation: 'b-a',
   revertControls: 'b-to-a',
   highlightChanges: true,
@@ -21,7 +24,6 @@ const merge = new MergeView({
   parent: document.querySelector('#merge'),
 });
 
-let mode = 'dark';
 function useTheme(next) {
   mode = next;
   const { extension, mergeStyles } = themes[mode];
@@ -29,8 +31,9 @@ function useTheme(next) {
   merge.b.dispatch({ effects: themeConfig.reconfigure(extension) });
   // Injects <style id="cm-merge-revert-styles"> into the page, replacing the previous one.
   applyMergeRevertStyles(mergeStyles);
+  modeLabel.textContent = mode === 'dark' ? 'GitHub Dark' : 'GitHub Light';
   console.log(`Merge view theme: ${mode}`);
 }
 
-useTheme('dark');
+useTheme(mode);
 document.querySelector('#toggle').addEventListener('click', () => useTheme(mode === 'dark' ? 'light' : 'dark'));
