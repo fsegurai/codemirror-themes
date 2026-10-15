@@ -1,0 +1,64 @@
+{
+  "imports": {
+    "@fsegurai/codemirror-theme-github-dark": "https://cdn.jsdelivr.net/npm/@fsegurai/codemirror-theme-github-dark@6.2.7/dist/index.js",
+    "@fsegurai/codemirror-theme-github-light": "https://cdn.jsdelivr.net/npm/@fsegurai/codemirror-theme-github-light@6.2.7/dist/index.js",
+    "@fsegurai/codemirror-theme-tokyo-night-storm": "https://cdn.jsdelivr.net/npm/@fsegurai/codemirror-theme-tokyo-night-storm@6.2.7/dist/index.js",
+    "@fsegurai/codemirror-theme-tokyo-night-day": "https://cdn.jsdelivr.net/npm/@fsegurai/codemirror-theme-tokyo-night-day@6.2.7/dist/index.js",
+    "@fsegurai/codemirror-theme-nord": "https://cdn.jsdelivr.net/npm/@fsegurai/codemirror-theme-nord@6.2.7/dist/index.js",
+    "@fsegurai/codemirror-theme-vscode-dark": "https://cdn.jsdelivr.net/npm/@fsegurai/codemirror-theme-vscode-dark@6.2.8/dist/index.js",
+    "@fsegurai/codemirror-theme-gruvbox-light": "https://cdn.jsdelivr.net/npm/@fsegurai/codemirror-theme-gruvbox-light@6.2.7/dist/index.js",
+    "@fsegurai/codemirror-theme-catppuccin-mocha": "https://cdn.jsdelivr.net/npm/@fsegurai/codemirror-theme-catppuccin-mocha@6.0.4/dist/index.js",
+    "@fsegurai/codemirror-theme-solarized-light": "https://cdn.jsdelivr.net/npm/@fsegurai/codemirror-theme-solarized-light@6.2.7/dist/index.js",
+    "codemirror": "https://cdn.jsdelivr.net/npm/codemirror@6.0.2/dist/index.js",
+    "@codemirror/lang-javascript": "https://cdn.jsdelivr.net/npm/@codemirror/lang-javascript@6.2.5/dist/index.js",
+    "@codemirror/lang-markdown": "https://cdn.jsdelivr.net/npm/@codemirror/lang-markdown@6.5.2/dist/index.js",
+    "@codemirror/merge": "https://cdn.jsdelivr.net/npm/@codemirror/merge@6.12.2/dist/index.js",
+    "@codemirror/view": "https://cdn.jsdelivr.net/npm/@codemirror/view@6.43.14/dist/index.js",
+    "@codemirror/state": "https://cdn.jsdelivr.net/npm/@codemirror/state@6.7.6/dist/index.js",
+    "@codemirror/language": "https://cdn.jsdelivr.net/npm/@codemirror/language@6.13.1/dist/index.js",
+    "@codemirror/lang-html": "https://cdn.jsdelivr.net/npm/@codemirror/lang-html@6.4.12/dist/index.js",
+    "@codemirror/lang-css": "https://cdn.jsdelivr.net/npm/@codemirror/lang-css@6.3.1/dist/index.js",
+    "@codemirror/commands": "https://cdn.jsdelivr.net/npm/@codemirror/commands@6.11.1/dist/index.js",
+    "@codemirror/search": "https://cdn.jsdelivr.net/npm/@codemirror/search@6.7.2/dist/index.js",
+    "@codemirror/autocomplete": "https://cdn.jsdelivr.net/npm/@codemirror/autocomplete@6.20.3/dist/index.js",
+    "@codemirror/lint": "https://cdn.jsdelivr.net/npm/@codemirror/lint@6.9.7/dist/index.js",
+    "@lezer/javascript": "https://cdn.jsdelivr.net/npm/@lezer/javascript@1.5.6/dist/index.js",
+    "@lezer/common": "https://cdn.jsdelivr.net/npm/@lezer/common@1.5.3/dist/index.js",
+    "@lezer/markdown": "https://cdn.jsdelivr.net/npm/@lezer/markdown@1.8.0/dist/index.js",
+    "style-mod": "https://cdn.jsdelivr.net/npm/style-mod@4.1.4/src/style-mod.js",
+    "@lezer/highlight": "https://cdn.jsdelivr.net/npm/@lezer/highlight@1.2.5/dist/index.js",
+    "w3c-keyname": "https://cdn.jsdelivr.net/npm/w3c-keyname@2.2.8/index.js",
+    "crelt": "https://cdn.jsdelivr.net/npm/crelt@1.0.7/index.js",
+    "@marijn/find-cluster-break": "https://cdn.jsdelivr.net/npm/@marijn/find-cluster-break@1.0.4/src/index.js",
+    "@codemirror/streamparser": "https://cdn.jsdelivr.net/npm/@codemirror/streamparser@6.0.0/dist/index.js",
+    "@lezer/lr": "https://cdn.jsdelivr.net/npm/@lezer/lr@1.4.11/dist/index.js",
+    "@lezer/html": "https://cdn.jsdelivr.net/npm/@lezer/html@1.3.13/dist/index.js",
+    "@lezer/css": "https://cdn.jsdelivr.net/npm/@lezer/css@1.3.9/dist/index.js"
+  },
+  "samples": [
+    {
+      "id": "themed-editor",
+      "label": "Themed editor",
+      "description": "A Markdown editor styled with the Tokyo Night Storm theme.",
+      "files": ["main.js", "styles.css", "index.html"]
+    },
+    {
+      "id": "theme-switcher",
+      "label": "Theme switcher",
+      "description": "Switches one editor between several themes at runtime with a Compartment.",
+      "files": ["main.js", "styles.css", "index.html"]
+    },
+    {
+      "id": "light-dark",
+      "label": "Light and dark pair",
+      "description": "Follows the system color scheme with the GitHub Light and GitHub Dark themes.",
+      "files": ["main.js", "styles.css", "index.html"]
+    },
+    {
+      "id": "merge-view",
+      "label": "Merge view",
+      "description": "A side-by-side MergeView whose editors and revert buttons follow the selected theme.",
+      "files": ["main.js", "styles.css", "index.html"]
+    }
+  ]
+}

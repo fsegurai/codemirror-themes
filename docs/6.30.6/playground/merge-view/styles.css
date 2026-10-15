@@ -1,0 +1,14 @@
+body {
+  margin: 0;
+  padding: 16px;
+  font-family: system-ui, sans-serif;
+}
+
+.toolbar {
+  margin-bottom: 12px;
+}
+
+/* Each side of the MergeView is a regular .cm-editor; the themes color them. */
+.cm-mergeView {
+  border-radius: 6px;
+}
