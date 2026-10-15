@@ -40,41 +40,25 @@
       "id": "themed-editor",
       "label": "Themed editor",
       "description": "A Markdown editor styled with the Tokyo Night Storm theme.",
-      "files": [
-        "main.js",
-        "styles.css",
-        "index.html"
-      ]
+      "files": ["main.js", "styles.css", "index.html"]
     },
     {
       "id": "theme-switcher",
       "label": "Theme switcher",
       "description": "Switches one editor between several themes at runtime with a Compartment.",
-      "files": [
-        "main.js",
-        "styles.css",
-        "index.html"
-      ]
+      "files": ["main.js", "styles.css", "index.html"]
     },
     {
       "id": "light-dark",
       "label": "Light and dark pair",
       "description": "Follows the system color scheme with the GitHub Light and GitHub Dark themes.",
-      "files": [
-        "main.js",
-        "styles.css",
-        "index.html"
-      ]
+      "files": ["main.js", "styles.css", "index.html"]
     },
     {
       "id": "merge-view",
       "label": "Merge view",
       "description": "A side-by-side MergeView whose editors and revert buttons follow the selected theme.",
-      "files": [
-        "main.js",
-        "styles.css",
-        "index.html"
-      ]
+      "files": ["main.js", "styles.css", "index.html"]
     }
   ]
 }
