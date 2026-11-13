@@ -10,13 +10,15 @@ Branch: `feat/a11y-release-6.31.0` (from `development`) · Delivery: `ask-on-ris
 - S5 "improve project structure to avoid duplicating logic (when possible) without breaking packages" — every package keeps its export names and types; shared code has one source (`packages/.helper`) generated into each package; bundle, demo registry and playground import map are generated or checked from the package list.
 - S6 "implementing a design pattern so every theme has the same structure and each of implements their respective palette and colors, etc? - without breaking packages" + "the idea is to have the most complete structure and rules and just have different themes/palettes" — `ThemeDefinition` (complete required `ui` palette + `syntax` roles, fine roles derived from parent roles) + one canonical tag→role table covering every Lezer tag and every styled CodeMirror UI part; no per-theme escape hatch in the end state.
 - S8 "also update dependencies if possible" — update root and package dependencies to current compatible versions (respecting `minimumReleaseAge`); generated theme CSS and exports must stay identical (T1 snapshots), build, lint and tests pass.
+- S9 "improve files under .github folder" — workflows, labeler and templates reviewed and improved; YAML stays valid and CI behavior is preserved unless an improvement is intended.
 - S7 "improve documentation based on current manifest-generator library implementation - also provide kind sandbox/demo on docs so that arkodex (other local project) can consume these docs" — `docs/6.31.0/` validated by manifest-generator 1.1.0 with 0 warnings; generated per-theme pages; accessibility section; playground samples in Arkodex's `playground/playground.json` contract.
 
 ## Tasks
 | ID | Specs | Route | Status | Commit |
 |---|---|---|---|---|
-| T1 Safety net: resolved-style + UI CSS snapshots, export-surface snapshot, contrast ratchet test, playground pin check | S1, S2, S5, S6 | inline | in progress | — |
-| T10 Dependency updates (after T1 so snapshots prove no output change) | S8 | inline | pending | — |
+| T1 Safety net: resolved-style + UI CSS snapshots, export-surface snapshot, contrast ratchet test, playground pin check | S1, S2, S5, S6 | inline | done (90 tests green) | `3155ac1` |
+| T10 Dependency updates (after T1 so snapshots prove no output change) | S8 | inline | done | (this commit, see L7) |
+| T11 Improve `.github` files (valid YAML incl. `labeler.yml`, workflows, templates) | S9 | inline | pending | — |
 | T2 github-light #140 | S1 | inline | pending | — |
 | T3a Shared core (`ThemeDefinition`, `defineTheme`) generated into packages; migrate 29 themes with exact snapshot equality | S5, S6 | inline | pending | — |
 | T3b Completion: all Lezer tags + 21 unstyled UI parts, migration overrides removed; visual changes recorded | S6 | inline | pending | — |
@@ -35,4 +37,6 @@ Route evidence: no Writer trigger — phases are sequential (each depends on the
 - L3 (2026-11-12) User decisions: S2, S3, S4, S5, S6 quotes above; "proceed".
 - L4 (2026-11-12) Structure evidence: all themes share the same 44 UI selectors; 73/90 tag expressions shared; every theme has dead duplicate rules for `t.constant(t.name)` and `t.deleted` (last rule wins); 7 Lezer base tags and 21 UI parts unstyled everywhere. `utils.ts` is already generated into packages from `packages/.helper/utils/utils.ts` (`generate:helpers`), so the shared core follows the same copy convention instead of out-of-package relative imports (no build or `.d.ts` risk).
 - L6 (2026-11-12) "also update dependencies if possible" → S8/T10, scheduled right after T1. T1 adds root devDependencies `@codemirror/view@6.43.8` and `@lezer/highlight@1.2.3` (same store versions the packages use) so tests load the same module instances as the themes.
+- L7 (2026-11-12) T10: root deps updated (language 6.13.1 exact, state 6.7.6, merge 6.12.3, legacy-modes 6.5.5, marked 18.2.0, biome 2.6.6, @types/node 26.6.6, vite 8.3.6, rimraf 6.1.4, portless kept in 0.15 range); `overrides` `@codemirror/view` 6.43.8 → 6.43.15 (override exists to dedupe copies, CHANGELOG:122); `@lezer/highlight` 1.2.5. Peer ranges `^6.0.0` untouched (public contract). Biome 2.6 newly parses YAML and formats Markdown (334 md files) → excluded `**/*.yml`, `**/*.yaml`, `**/*.md` to keep pre-upgrade scope; `biome migrate` bumped the schema. Evidence: 90 tests green with all 87 snapshots unchanged, root/tests typecheck 0 errors, `format:audit` passes, `build:packages` exit 0 (30 d.ts), `build:demo` exit 0.
+- L8 (2026-11-12) "improve files under .github folder" → S9/T11.
 - L5 Arkodex suggestions recorded separately in `ARK/Arkodex/odd/tasks/arkodex-docs-consumer-improvements.md`.
