@@ -12,15 +12,23 @@ on:
 
 permissions:
   contents: read
-  security-events: write
-  pull-requests: write
-  issues: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   codeql:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
     strategy:
       fail-fast: false
       matrix:
@@ -33,9 +41,8 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v4
+          # JavaScript/TypeScript is analyzed from source; no build is needed.
+          build-mode: none
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
@@ -46,6 +53,11 @@ jobs:
     name: Dependency Vulnerability Scan
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    outputs:
+      audit: ${{ steps.audit.outcome }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -60,34 +72,49 @@ jobs:
 
       - name: Run bun audit
         id: audit
+        # Intentionally non-blocking: advisories are reported (summary, PR comment, job output)
+        # but do not fail the workflow, since fixes often depend on upstream releases.
+        # The step outcome stays "failure" so the reporting steps below can react to it.
+        continue-on-error: true
         run: |
           echo "Running dependency audit..."
-          bun audit --production || EXIT_CODE=$?
-          exit ${EXIT_CODE:-0}
-        continue-on-error: true
+          bun audit --audit-level=high
+
+      - name: Report vulnerabilities
+        if: steps.audit.outcome == 'failure'
+        run: |
+          {
+            echo "## ⚠️ Dependency Audit Warning"
+            echo ""
+            echo "High or critical vulnerabilities detected in dependencies. Run \`bun audit\` locally for details."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Comment on PR if vulnerabilities found
-        if: github.event_name == 'pull_request' && failure()
-        uses: actions/github-script@v6
+        # Fork PRs get a read-only token; they rely on the step summary above.
+        if: steps.audit.outcome == 'failure' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v9
         with:
           script: |
-            github.rest.issues.createComment({
+            await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '⚠️ **Dependency Audit Warning**\n\nVulnerabilities detected in dependencies. Run `bun audit` locally for details.'
-            })
+              body: '⚠️ **Dependency Audit Warning**\n\nHigh or critical vulnerabilities detected in dependencies. Run `bun audit` locally for details.'
+            });
 
   trivy-fs-scan:
     name: Trivy Filesystem Scan
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
 
       - name: Run Trivy filesystem scan
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -113,32 +140,38 @@ jobs:
   security-summary:
     name: Security Summary
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: [codeql, dependency-check, trivy-fs-scan]
     if: always()
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Create security summary
-        uses: actions/github-script@v6
+        env:
+          CODEQL_STATUS: ${{ needs.codeql.result }}
+          DEP_STATUS: ${{ needs.dependency-check.result }}
+          AUDIT_OUTCOME: ${{ needs.dependency-check.outputs.audit }}
+          TRIVY_STATUS: ${{ needs.trivy-fs-scan.result }}
+        run: |
+          icon() { [ "$1" = "success" ] && echo '✅' || echo "⚠️ ($1)"; }
+          {
+            echo "## 🔒 Security Scan Summary"
+            echo ""
+            echo "- CodeQL: $(icon "$CODEQL_STATUS")"
+            echo "- Dependency Audit: $(icon "${AUDIT_OUTCOME:-$DEP_STATUS}")"
+            echo "- Trivy Scan: $(icon "$TRIVY_STATUS")"
+          } | tee security-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v9
         with:
           script: |
-            const codeqlStatus = '${{ needs.codeql.result }}';
-            const depStatus = '${{ needs.dependency-check.result }}';
-            const trivyStatus = '${{ needs.trivy-fs-scan.result }}';
-            
-            let summary = '## 🔒 Security Scan Summary\n\n';
-            summary += `- CodeQL: ${codeqlStatus === 'success' ? '✅' : '⚠️'}\n`;
-            summary += `- Dependency Audit: ${depStatus === 'success' ? '✅' : '⚠️'}\n`;
-            summary += `- Trivy Scan: ${trivyStatus === 'success' ? '✅' : '⚠️'}\n`;
-            
-            if (context.eventName === 'pull_request') {
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: summary
-              });
-            }
-
-      - name: Report job status
-        if: failure()
-        run: echo "Security scan failed. Check GitHub Security tab for details."
-
+            const fs = require('fs');
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: fs.readFileSync('security-summary.md', 'utf8')
+            });

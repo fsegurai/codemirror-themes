@@ -11,6 +11,90 @@ No changes have been made yet.
 
 ---
 
+## [6.31.0] - 2026-11-13
+
+Theme packages move to the next minor version (most to `6.3.0`; `catppuccin-mocha`, `cobalt2`, `high-contrast-dark`,
+`high-contrast-light`, `material-ocean` and `synthwave-84` to `6.1.0`) and the bundle to `6.5.0`. Public exports are unchanged; colors change on purpose (see Visual changes).
+
+### 🚀 Features
+
+- **WCAG AA in every theme** — syntax text, base text and line numbers reach 4.5:1 on the background, the active line
+  and the selection; cursor, focus ring, matching-bracket and search indicators reach 3:1. Palettes keep their hue:
+  selections became calmer tints and failing colors changed lightness only, comments stay dimmer than code (#140).
+- **Four new themes** — `@fsegurai/codemirror-theme-dracula`, `-one-dark`, `-catppuccin-latte` and `-rose-pine-dawn`,
+  built from their official palettes (MIT) and AA from the start. `oneDark` has the same name as the export of
+  `@codemirror/theme-one-dark`; alias one import when using both.
+- **One complete structure for all themes** — every theme is a palette plus syntax roles on a shared, internal
+  `ThemeDefinition`: all Lezer tags are mapped once (no conflicting duplicate rules) and all CodeMirror UI parts are
+  styled, including lint markers and tooltips, completion info, merge-view gutters, panel buttons and text fields.
+- **Docs 6.31.0** — generated per-theme pages with color and contrast tables, accessibility and integration
+  (vanilla, Angular, React) sections, a What's New page, and nine Arkodex playground samples (theme gallery, contrast
+  inspector, custom theme, override styles, keyboard focus and more).
+
+### 🐞 Fixes
+
+- **github-light keyword and number contrast** — `#cf222e` and `#953800` (GitHub Primer) replace `#d73a49` and
+  `#e36209` (#140).
+- **Focus visible in forced-colors mode** — a 2px transparent outline keeps a focus indicator in Windows High Contrast,
+  which removes box shadows.
+- **Merge-view `del` styles scoped** — they no longer style `del` elements inside panels and tooltips.
+- **Panel buttons and text fields** use the theme colors (CodeMirror's default button gradient is cleared).
+- **High-contrast fold placeholders** keep a solid border.
+
+### 🔐 Security
+
+- **Added dependencies**.
+	- Dev Dependencies
+		- `@codemirror/view` - `6.43.15` - pinned at the root so tests resolve the same copy as the dedupe override.
+		- `@lezer/highlight` - `1.2.5` - needed by the theme output and contrast tests.
+		- `@types/bun` - `^1.4.4` - types for the Bun test suite.
+- **Update dependencies** — address potential vulnerabilities and/or improvements in dependencies.
+	- Dependencies
+		- `@codemirror/language` from `6.12.4` to `6.13.1`
+		- `@codemirror/legacy-modes` from `6.5.4` to `6.5.5`
+		- `@codemirror/merge` from `6.12.2` to `6.12.3`
+		- `@codemirror/state` from `6.7.4` to `6.7.6`
+		- `marked` from `18.0.11` to `18.2.0`
+	- Dev Dependencies
+		- `@biomejs/biome` from `2.5.12` to `2.6.7`
+		- `@types/node` from `26.4.1` to `26.6.6`
+		- `portless` from `0.15.6` to `0.17.0`
+		- `rimraf` from `6.1.3` to `6.1.4`
+		- `vite` from `8.2.2` to `8.3.8`
+	- Overrides
+		- `@codemirror/view` from `6.43.8` to `6.43.15` (keeps a single copy of the editor view across packages)
+- **Supply chain** — Dependabot watches the `bun` lockfile with a 3-day cooldown before proposing new releases;
+  `CODEOWNERS` requests owner review; the Trivy action is pinned.
+- **CI hardening** — workflows run with least-privilege `permissions`; dependency-audit and security-scan steps fail on
+  real findings instead of being masked (`|| true`, missing `pipefail`); PR comments are fork-safe.
+- **Known advisory** — `bun audit` reports one low-severity issue,
+  [GHSA-m5mm-p8h7-m29v](https://github.com/advisories/GHSA-m5mm-p8h7-m29v) in `serialize-javascript` 7.0.5. It is
+  pulled in only by the build tooling (`@codemirror/buildhelper` → `@marijn/testtool` → `mocha`) and is not shipped in
+  any published package.
+
+### 🔧 Changes
+
+- **Visual changes** — per-theme before/after colors are listed on the docs page
+  `docs/6.31.0/content/releases/6.31.0.md`. Removed non-CodeMirror classes from cobalt2 (`.cm-hoverHighlight`,
+  `.cm-wordHighlight`, `.cm-indentGuide`).
+- **Tests** — output snapshots per theme (resolved tag styles, UI rules, exports), WCAG contrast, structure and
+  type-contract tests; `bun run test` and `bun run test:types` run in CI.
+- **Dependencies** — updates are listed under Security; YAML and Markdown stay outside Biome.
+- **READMEs** — npm download badges for every package.
+- **Tooling** — `generate:theme-docs`, `generate:playground-pins`; generated helpers (`theme-core.ts`) are checked
+  for sync; `packages/.helper` is type-checked.
+
+### 🔧 Infrastructure
+
+- **GitHub workflows** — tests run in PR validation; build, link-check and audit steps can fail again (pipefail, real
+  exit codes); least-privilege permissions, concurrency and timeouts; `actions/github-script@v9`; pinned Trivy action;
+  fork-safe comments with step summaries; fixed labeler globs, issue-template config and PR triage.
+- **Dependabot** uses the `bun` ecosystem with a 3-day cooldown; `CODEOWNERS` replaces `reviewers.yml`.
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.30.6...v6.31.0
+
+---
+
 ## [6.30.6] - 2026-09-18
 
 ### 🔧 Changes

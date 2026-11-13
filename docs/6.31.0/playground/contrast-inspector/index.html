@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <div class="toolbar">
+      <label for="theme">Theme</label>
+      <select id="theme"></select>
+      <button id="measure" type="button">Measure again</button>
+      <span id="summary" class="badge" role="status"></span>
+    </div>
+    <div id="editor" class="frame"></div>
+    <p class="hint">
+      Ratios are computed from the computed styles of the editor above. Text needs at least 4.5:1 and non-text parts
+      (cursor, focus ring, bracket outline) at least 3:1 (WCAG 2.2 SC 1.4.3 and 1.4.11). Focus the editor to also
+      measure the focus ring and the focused selection.
+    </p>
+    <table>
+      <caption>
+        Syntax tokens
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Tokens</th>
+          <th scope="col">Color</th>
+          <th scope="col">Background</th>
+          <th scope="col">Active line</th>
+          <th scope="col">Selection</th>
+        </tr>
+      </thead>
+      <tbody id="tokens"></tbody>
+    </table>
+    <table>
+      <caption>
+        Editor surfaces
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Part</th>
+          <th scope="col">Color</th>
+          <th scope="col">Against</th>
+          <th scope="col">Ratio</th>
+        </tr>
+      </thead>
+      <tbody id="surfaces"></tbody>
+    </table>
+  </body>
+</html>

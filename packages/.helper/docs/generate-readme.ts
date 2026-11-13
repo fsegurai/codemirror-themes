@@ -20,6 +20,7 @@ const THEME_TITLE_OVERRIDES: Record<string, string> = {
   bundle: 'All - Bundle',
   'github-dark': 'GitHub Dark',
   'github-light': 'GitHub Light',
+  'rose-pine-dawn': 'Rosé Pine Dawn',
   'vscode-dark': 'VS Code Dark',
   'vscode-light': 'VS Code Light',
 };
@@ -84,11 +85,11 @@ for (const pkgFolder of packageNames) {
 themeEntries.sort((a, b) => a.folder.localeCompare(b.folder));
 
 const themesTable = [
-  '| Theme               | Package                                                                | Version                                          |',
-  '|---------------------|-------------------------------------------------------------------------|---------------------------------------------------|',
+  '| Theme | Package | Version | Downloads |',
+  '|-------|---------|---------|-----------|',
   ...themeEntries.map(({ folder, npmPackage }) => {
     const title = deriveThemeTitle(folder);
-    return `| ${title} | [${npmPackage}](https://www.npmjs.com/package/${npmPackage}) | ![npm](https://img.shields.io/npm/v/${npmPackage}) |`;
+    return `| ${title} | [${npmPackage}](https://www.npmjs.com/package/${npmPackage}) | ![npm](https://img.shields.io/npm/v/${npmPackage}) | ![downloads](https://img.shields.io/npm/dt/${npmPackage}) |`;
   }),
 ].join('\n');
 

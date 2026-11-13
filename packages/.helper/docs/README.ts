@@ -11,6 +11,10 @@ const readmeTemplate = `<p align="center">
       <img src="https://img.shields.io/npm/v/{{NPM_PACKAGE}}.svg"
           alt="Latest Release">
   </a>
+  <a href="https://www.npmjs.com/package/{{NPM_PACKAGE}}">
+      <img src="https://img.shields.io/npm/dt/{{NPM_PACKAGE}}"
+          alt="Total npm downloads">
+  </a>
   <br>
   <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/fsegurai/codemirror-themes">
   <img alt="Dependency status for repo" src="https://img.shields.io/librariesio/github/fsegurai/codemirror-themes">
@@ -74,9 +78,10 @@ Read the [CodeMirror documentation](https://codemirror.net/6/examples/styling/) 
 
 ## Demo Application
 
-To see all themes in action, check out the [[DEMO]](https://fsegurai.github.io/codemirror-themes).
+To see all themes in action, check out the
+demo: [https://fsegurai.github.io/codemirror-themes](https://fsegurai.github.io/codemirror-themes).
 
-To set up the demo locally, follow the next steps:
+To set up the demo locally:
 
 \`\`\`bash
 git clone https://github.com/fsegurai/codemirror-themes.git

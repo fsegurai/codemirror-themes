@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-theme-tokyo-night-day",
-  "version": "6.2.7",
+  "version": "6.3.0",
   "description": "Tokyo Night Day theme for the CodeMirror editor",
   "type": "module",
   "main": "dist/index.cjs",

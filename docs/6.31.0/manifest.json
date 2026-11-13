@@ -1,0 +1,1294 @@
+[
+  {
+    "label": "Documentation Home",
+    "description": "Documentation for @fsegurai/codemirror-themes 6.31.0, a collection of 33 accessible CodeMirror 6 themes published as individual packages and one bundle.",
+    "route": "content/README",
+    "tags": ["documentation", "overview", "codemirror"],
+    "order": 0,
+    "breadcrumbTitle": "Home",
+    "keywords": ["codemirror 6", "editor theme", "syntax highlighting", "merge view", "wcag"],
+    "breadcrumb": [
+      {
+        "label": "Home",
+        "route": "content/README"
+      }
+    ]
+  },
+  {
+    "label": "Getting Started",
+    "route": "content/getting-started",
+    "isParent": true,
+    "breadcrumb": [
+      {
+        "label": "Getting Started",
+        "route": "content/getting-started"
+      }
+    ],
+    "order": 1,
+    "children": [
+      {
+        "label": "Getting Started",
+        "description": "Install a CodeMirror 6 theme package or the bundle and apply it to an editor.",
+        "route": "content/getting-started/README",
+        "tags": ["getting-started", "overview"],
+        "order": 1,
+        "breadcrumbTitle": "Getting Started",
+        "breadcrumb": [
+          {
+            "label": "Getting Started",
+            "route": "content/getting-started"
+          },
+          {
+            "label": "Getting Started",
+            "route": "content/getting-started/README"
+          }
+        ]
+      },
+      {
+        "label": "Installation",
+        "description": "Install a single theme package or the bundle that re-exports all 33 themes.",
+        "route": "content/getting-started/installation",
+        "tags": ["installation", "npm", "setup"],
+        "order": 2,
+        "keywords": ["bun", "pnpm", "peer dependencies", "esm", "cjs"],
+        "breadcrumb": [
+          {
+            "label": "Getting Started",
+            "route": "content/getting-started"
+          },
+          {
+            "label": "Installation",
+            "route": "content/getting-started/installation"
+          }
+        ]
+      },
+      {
+        "label": "Quick Start",
+        "description": "Add a theme extension to a CodeMirror 6 EditorView in three steps.",
+        "route": "content/getting-started/quick-start",
+        "tags": ["quick-start", "usage", "tutorial"],
+        "order": 3,
+        "keywords": ["EditorView", "extensions", "basicSetup"],
+        "breadcrumb": [
+          {
+            "label": "Getting Started",
+            "route": "content/getting-started"
+          },
+          {
+            "label": "Quick Start",
+            "route": "content/getting-started/quick-start"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Themes",
+    "route": "content/themes",
+    "isParent": true,
+    "breadcrumb": [
+      {
+        "label": "Themes",
+        "route": "content/themes"
+      }
+    ],
+    "order": 2,
+    "children": [
+      {
+        "label": "Themes",
+        "description": "Catalog of all 33 themes with package names, export names, light or dark mode and editor colors.",
+        "route": "content/themes/README",
+        "tags": ["themes", "catalog"],
+        "order": 2,
+        "breadcrumbTitle": "Themes",
+        "keywords": ["packages", "exports", "light", "dark"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Themes",
+            "route": "content/themes/README"
+          }
+        ]
+      },
+      {
+        "label": "Abcdef",
+        "description": "Abcdef, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/abcdef",
+        "tags": ["themes", "abcdef", "dark"],
+        "order": 3,
+        "keywords": ["@fsegurai/codemirror-theme-abcdef", "abcdefMergeStyles", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Abcdef",
+            "route": "content/themes/abcdef"
+          }
+        ]
+      },
+      {
+        "label": "Abyss",
+        "description": "Abyss, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/abyss",
+        "tags": ["themes", "abyss", "dark"],
+        "order": 4,
+        "keywords": ["@fsegurai/codemirror-theme-abyss", "abyssMergeStyles", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Abyss",
+            "route": "content/themes/abyss"
+          }
+        ]
+      },
+      {
+        "label": "Android Studio",
+        "description": "Android Studio, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/android-studio",
+        "tags": ["themes", "android-studio", "dark"],
+        "order": 5,
+        "keywords": ["@fsegurai/codemirror-theme-android-studio", "androidStudio", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Android Studio",
+            "route": "content/themes/android-studio"
+          }
+        ]
+      },
+      {
+        "label": "Andromeda",
+        "description": "Andromeda, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/andromeda",
+        "tags": ["themes", "andromeda", "dark"],
+        "order": 6,
+        "keywords": ["@fsegurai/codemirror-theme-andromeda", "andromedaMergeStyles", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Andromeda",
+            "route": "content/themes/andromeda"
+          }
+        ]
+      },
+      {
+        "label": "Basic Dark",
+        "description": "Basic Dark, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/basic-dark",
+        "tags": ["themes", "basic-dark", "dark"],
+        "order": 7,
+        "keywords": ["@fsegurai/codemirror-theme-basic-dark", "basicDark", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Basic Dark",
+            "route": "content/themes/basic-dark"
+          }
+        ]
+      },
+      {
+        "label": "Basic Light",
+        "description": "Basic Light, a light CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/basic-light",
+        "tags": ["themes", "basic-light", "light"],
+        "order": 8,
+        "keywords": ["@fsegurai/codemirror-theme-basic-light", "basicLight", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Basic Light",
+            "route": "content/themes/basic-light"
+          }
+        ]
+      },
+      {
+        "label": "Catppuccin Latte",
+        "description": "Catppuccin Latte, a light CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/catppuccin-latte",
+        "tags": ["themes", "catppuccin-latte", "light"],
+        "order": 9,
+        "keywords": ["@fsegurai/codemirror-theme-catppuccin-latte", "catppuccinLatte", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Catppuccin Latte",
+            "route": "content/themes/catppuccin-latte"
+          }
+        ]
+      },
+      {
+        "label": "Catppuccin Mocha",
+        "description": "Catppuccin Mocha, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/catppuccin-mocha",
+        "tags": ["themes", "catppuccin-mocha", "dark"],
+        "order": 10,
+        "keywords": ["@fsegurai/codemirror-theme-catppuccin-mocha", "catppuccinMocha", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Catppuccin Mocha",
+            "route": "content/themes/catppuccin-mocha"
+          }
+        ]
+      },
+      {
+        "label": "Cobalt2",
+        "description": "Cobalt2, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/cobalt2",
+        "tags": ["themes", "cobalt2", "dark"],
+        "order": 11,
+        "keywords": ["@fsegurai/codemirror-theme-cobalt2", "cobalt2MergeStyles", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Cobalt2",
+            "route": "content/themes/cobalt2"
+          }
+        ]
+      },
+      {
+        "label": "Dracula",
+        "description": "Dracula, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/dracula",
+        "tags": ["themes", "dracula", "dark"],
+        "order": 12,
+        "keywords": ["@fsegurai/codemirror-theme-dracula", "draculaMergeStyles", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Dracula",
+            "route": "content/themes/dracula"
+          }
+        ]
+      },
+      {
+        "label": "Forest",
+        "description": "Forest, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/forest",
+        "tags": ["themes", "forest", "dark"],
+        "order": 13,
+        "keywords": ["@fsegurai/codemirror-theme-forest", "forestMergeStyles", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Forest",
+            "route": "content/themes/forest"
+          }
+        ]
+      },
+      {
+        "label": "GitHub Dark",
+        "description": "GitHub Dark, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/github-dark",
+        "tags": ["themes", "github-dark", "dark"],
+        "order": 14,
+        "keywords": ["@fsegurai/codemirror-theme-github-dark", "githubDark", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "GitHub Dark",
+            "route": "content/themes/github-dark"
+          }
+        ]
+      },
+      {
+        "label": "GitHub Light",
+        "description": "GitHub Light, a light CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/github-light",
+        "tags": ["themes", "github-light", "light"],
+        "order": 15,
+        "keywords": ["@fsegurai/codemirror-theme-github-light", "githubLight", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "GitHub Light",
+            "route": "content/themes/github-light"
+          }
+        ]
+      },
+      {
+        "label": "Gruvbox Dark",
+        "description": "Gruvbox Dark, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/gruvbox-dark",
+        "tags": ["themes", "gruvbox-dark", "dark"],
+        "order": 16,
+        "keywords": ["@fsegurai/codemirror-theme-gruvbox-dark", "gruvboxDark", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Gruvbox Dark",
+            "route": "content/themes/gruvbox-dark"
+          }
+        ]
+      },
+      {
+        "label": "Gruvbox Light",
+        "description": "Gruvbox Light, a light CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/gruvbox-light",
+        "tags": ["themes", "gruvbox-light", "light"],
+        "order": 17,
+        "keywords": ["@fsegurai/codemirror-theme-gruvbox-light", "gruvboxLight", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Gruvbox Light",
+            "route": "content/themes/gruvbox-light"
+          }
+        ]
+      },
+      {
+        "label": "High Contrast Dark",
+        "description": "High Contrast Dark, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/high-contrast-dark",
+        "tags": ["themes", "high-contrast-dark", "dark"],
+        "order": 18,
+        "keywords": ["@fsegurai/codemirror-theme-high-contrast-dark", "highContrastDark", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "High Contrast Dark",
+            "route": "content/themes/high-contrast-dark"
+          }
+        ]
+      },
+      {
+        "label": "High Contrast Light",
+        "description": "High Contrast Light, a light CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/high-contrast-light",
+        "tags": ["themes", "high-contrast-light", "light"],
+        "order": 19,
+        "keywords": ["@fsegurai/codemirror-theme-high-contrast-light", "highContrastLight", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "High Contrast Light",
+            "route": "content/themes/high-contrast-light"
+          }
+        ]
+      },
+      {
+        "label": "Material Dark",
+        "description": "Material Dark, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/material-dark",
+        "tags": ["themes", "material-dark", "dark"],
+        "order": 20,
+        "keywords": ["@fsegurai/codemirror-theme-material-dark", "materialDark", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Material Dark",
+            "route": "content/themes/material-dark"
+          }
+        ]
+      },
+      {
+        "label": "Material Light",
+        "description": "Material Light, a light CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/material-light",
+        "tags": ["themes", "material-light", "light"],
+        "order": 21,
+        "keywords": ["@fsegurai/codemirror-theme-material-light", "materialLight", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Material Light",
+            "route": "content/themes/material-light"
+          }
+        ]
+      },
+      {
+        "label": "Material Ocean",
+        "description": "Material Ocean, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/material-ocean",
+        "tags": ["themes", "material-ocean", "dark"],
+        "order": 22,
+        "keywords": ["@fsegurai/codemirror-theme-material-ocean", "materialOcean", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Material Ocean",
+            "route": "content/themes/material-ocean"
+          }
+        ]
+      },
+      {
+        "label": "Monokai",
+        "description": "Monokai, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/monokai",
+        "tags": ["themes", "monokai", "dark"],
+        "order": 23,
+        "keywords": ["@fsegurai/codemirror-theme-monokai", "monokaiMergeStyles", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Monokai",
+            "route": "content/themes/monokai"
+          }
+        ]
+      },
+      {
+        "label": "Nord",
+        "description": "Nord, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/nord",
+        "tags": ["themes", "nord", "dark"],
+        "order": 24,
+        "keywords": ["@fsegurai/codemirror-theme-nord", "nordMergeStyles", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Nord",
+            "route": "content/themes/nord"
+          }
+        ]
+      },
+      {
+        "label": "One Dark",
+        "description": "One Dark, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/one-dark",
+        "tags": ["themes", "one-dark", "dark"],
+        "order": 25,
+        "keywords": ["@fsegurai/codemirror-theme-one-dark", "oneDark", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "One Dark",
+            "route": "content/themes/one-dark"
+          }
+        ]
+      },
+      {
+        "label": "Palenight",
+        "description": "Palenight, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/palenight",
+        "tags": ["themes", "palenight", "dark"],
+        "order": 26,
+        "keywords": ["@fsegurai/codemirror-theme-palenight", "palenightMergeStyles", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Palenight",
+            "route": "content/themes/palenight"
+          }
+        ]
+      },
+      {
+        "label": "Rosé Pine Dawn",
+        "description": "Rosé Pine Dawn, a light CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/rose-pine-dawn",
+        "tags": ["themes", "rose-pine-dawn", "light"],
+        "order": 27,
+        "keywords": ["@fsegurai/codemirror-theme-rose-pine-dawn", "rosePineDawn", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Rosé Pine Dawn",
+            "route": "content/themes/rose-pine-dawn"
+          }
+        ]
+      },
+      {
+        "label": "Solarized Dark",
+        "description": "Solarized Dark, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/solarized-dark",
+        "tags": ["themes", "solarized-dark", "dark"],
+        "order": 28,
+        "keywords": ["@fsegurai/codemirror-theme-solarized-dark", "solarizedDark", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Solarized Dark",
+            "route": "content/themes/solarized-dark"
+          }
+        ]
+      },
+      {
+        "label": "Solarized Light",
+        "description": "Solarized Light, a light CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/solarized-light",
+        "tags": ["themes", "solarized-light", "light"],
+        "order": 29,
+        "keywords": ["@fsegurai/codemirror-theme-solarized-light", "solarizedLight", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Solarized Light",
+            "route": "content/themes/solarized-light"
+          }
+        ]
+      },
+      {
+        "label": "Synthwave '84",
+        "description": "Synthwave '84, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/synthwave-84",
+        "tags": ["themes", "synthwave-84", "dark"],
+        "order": 30,
+        "keywords": ["@fsegurai/codemirror-theme-synthwave-84", "synthwave84", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Synthwave '84",
+            "route": "content/themes/synthwave-84"
+          }
+        ]
+      },
+      {
+        "label": "Tokyo Night Day",
+        "description": "Tokyo Night Day, a light CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/tokyo-night-day",
+        "tags": ["themes", "tokyo-night-day", "light"],
+        "order": 31,
+        "keywords": ["@fsegurai/codemirror-theme-tokyo-night-day", "tokyoNightDay", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Tokyo Night Day",
+            "route": "content/themes/tokyo-night-day"
+          }
+        ]
+      },
+      {
+        "label": "Tokyo Night Storm",
+        "description": "Tokyo Night Storm, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/tokyo-night-storm",
+        "tags": ["themes", "tokyo-night-storm", "dark"],
+        "order": 32,
+        "keywords": ["@fsegurai/codemirror-theme-tokyo-night-storm", "tokyoNightStorm", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Tokyo Night Storm",
+            "route": "content/themes/tokyo-night-storm"
+          }
+        ]
+      },
+      {
+        "label": "Volcano",
+        "description": "Volcano, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/volcano",
+        "tags": ["themes", "volcano", "dark"],
+        "order": 33,
+        "keywords": ["@fsegurai/codemirror-theme-volcano", "volcanoMergeStyles", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "Volcano",
+            "route": "content/themes/volcano"
+          }
+        ]
+      },
+      {
+        "label": "VS Code Dark",
+        "description": "VS Code Dark, a dark CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/vscode-dark",
+        "tags": ["themes", "vscode-dark", "dark"],
+        "order": 34,
+        "keywords": ["@fsegurai/codemirror-theme-vscode-dark", "vsCodeDark", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "VS Code Dark",
+            "route": "content/themes/vscode-dark"
+          }
+        ]
+      },
+      {
+        "label": "VS Code Light",
+        "description": "VS Code Light, a light CodeMirror 6 theme: install, usage, syntax and editor colors with WCAG contrast ratios.",
+        "route": "content/themes/vscode-light",
+        "tags": ["themes", "vscode-light", "light"],
+        "order": 35,
+        "keywords": ["@fsegurai/codemirror-theme-vscode-light", "vsCodeLight", "wcag contrast"],
+        "breadcrumb": [
+          {
+            "label": "Themes",
+            "route": "content/themes"
+          },
+          {
+            "label": "VS Code Light",
+            "route": "content/themes/vscode-light"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Accessibility",
+    "route": "content/accessibility",
+    "isParent": true,
+    "breadcrumb": [
+      {
+        "label": "Accessibility",
+        "route": "content/accessibility"
+      }
+    ],
+    "order": 3,
+    "children": [
+      {
+        "label": "Accessibility",
+        "description": "The WCAG 2.2 AA contrast rules every theme follows, which editor surfaces are checked and what changed to reach them.",
+        "route": "content/accessibility/README",
+        "tags": ["accessibility", "wcag", "overview"],
+        "order": 3,
+        "breadcrumbTitle": "Accessibility",
+        "keywords": ["contrast ratio", "color contrast", "low vision", "forced colors"],
+        "breadcrumb": [
+          {
+            "label": "Accessibility",
+            "route": "content/accessibility"
+          },
+          {
+            "label": "Accessibility",
+            "route": "content/accessibility/README"
+          }
+        ]
+      },
+      {
+        "label": "How Themes Are Tested",
+        "description": "The automated contrast, focus and structure tests that every theme passes, and how to run them locally.",
+        "route": "content/accessibility/testing",
+        "tags": ["accessibility", "testing"],
+        "order": 4,
+        "keywords": ["bun test", "contrast tests", "snapshots", "regression"],
+        "breadcrumb": [
+          {
+            "label": "Accessibility",
+            "route": "content/accessibility"
+          },
+          {
+            "label": "How Themes Are Tested",
+            "route": "content/accessibility/testing"
+          }
+        ]
+      },
+      {
+        "label": "Focus, Selection and Forced Colors",
+        "description": "How the themes show keyboard focus, keep the selection visible on the active line and behave in Windows High Contrast mode.",
+        "route": "content/accessibility/focus-and-forced-colors",
+        "tags": ["accessibility", "focus", "forced-colors"],
+        "order": 5,
+        "keywords": ["keyboard navigation", "focus ring", "high contrast mode", "selection visibility"],
+        "breadcrumb": [
+          {
+            "label": "Accessibility",
+            "route": "content/accessibility"
+          },
+          {
+            "label": "Focus, Selection and Forced Colors",
+            "route": "content/accessibility/focus-and-forced-colors"
+          }
+        ]
+      },
+      {
+        "label": "Contrast Summary",
+        "description": "Lowest WCAG contrast ratios of all 33 themes for text, line numbers, cursor, focus ring, brackets and selection.",
+        "route": "content/accessibility/contrast-summary",
+        "tags": ["accessibility", "contrast", "summary"],
+        "order": 6,
+        "keywords": ["wcag 2.2", "contrast ratio", "non-text contrast", "themes table"],
+        "breadcrumb": [
+          {
+            "label": "Accessibility",
+            "route": "content/accessibility"
+          },
+          {
+            "label": "Contrast Summary",
+            "route": "content/accessibility/contrast-summary"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Guides",
+    "route": "content/guides",
+    "isParent": true,
+    "breadcrumb": [
+      {
+        "label": "Guides",
+        "route": "content/guides"
+      }
+    ],
+    "order": 4,
+    "children": [
+      {
+        "label": "Guides",
+        "description": "Task-focused guides for switching themes, following the system color scheme, styling merge views and customizing themes.",
+        "route": "content/guides/README",
+        "tags": ["guides", "how-to"],
+        "order": 4,
+        "breadcrumbTitle": "Guides",
+        "breadcrumb": [
+          {
+            "label": "Guides",
+            "route": "content/guides"
+          },
+          {
+            "label": "Guides",
+            "route": "content/guides/README"
+          }
+        ]
+      },
+      {
+        "label": "Switching Themes at Runtime",
+        "description": "Swap the theme of a running EditorView by wrapping the theme extension in a Compartment.",
+        "route": "content/guides/switching-themes",
+        "tags": ["guides", "compartment", "runtime"],
+        "order": 5,
+        "keywords": ["reconfigure", "dispatch", "theme picker"],
+        "breadcrumb": [
+          {
+            "label": "Guides",
+            "route": "content/guides"
+          },
+          {
+            "label": "Switching Themes at Runtime",
+            "route": "content/guides/switching-themes"
+          }
+        ]
+      },
+      {
+        "label": "Following the System Color Scheme",
+        "description": "Choose a light or a dark theme from prefers-color-scheme and update it when the system setting changes.",
+        "route": "content/guides/light-dark-mode",
+        "tags": ["guides", "dark-mode", "light-mode"],
+        "order": 6,
+        "keywords": ["prefers-color-scheme", "matchMedia", "compartment"],
+        "breadcrumb": [
+          {
+            "label": "Guides",
+            "route": "content/guides"
+          },
+          {
+            "label": "Following the System Color Scheme",
+            "route": "content/guides/light-dark-mode"
+          }
+        ]
+      },
+      {
+        "label": "Styling Merge Views",
+        "description": "Apply a theme to @codemirror/merge views and color the revert buttons with the MergeStyles export.",
+        "route": "content/guides/merge-views",
+        "tags": ["guides", "merge", "diff"],
+        "order": 7,
+        "keywords": ["MergeView", "unifiedMergeView", "revert controls", "applyMergeRevertStyles"],
+        "breadcrumb": [
+          {
+            "label": "Guides",
+            "route": "content/guides"
+          },
+          {
+            "label": "Styling Merge Views",
+            "route": "content/guides/merge-views"
+          }
+        ]
+      },
+      {
+        "label": "Overriding Theme Styles",
+        "description": "Change the font, font size, line height or individual colors on top of a packaged theme.",
+        "route": "content/guides/overriding-styles",
+        "tags": ["guides", "customization", "css"],
+        "order": 8,
+        "keywords": ["font family", "font size", "Prec.highest", "EditorView.theme"],
+        "breadcrumb": [
+          {
+            "label": "Guides",
+            "route": "content/guides"
+          },
+          {
+            "label": "Overriding Theme Styles",
+            "route": "content/guides/overriding-styles"
+          }
+        ]
+      },
+      {
+        "label": "Creating a Custom Theme",
+        "description": "Build a CodeMirror 6 theme with the same structure the packages use - an EditorView theme, a HighlightStyle and merge styles.",
+        "route": "content/guides/custom-theme",
+        "tags": ["guides", "custom-theme", "highlight-style"],
+        "order": 9,
+        "keywords": ["EditorView.theme", "HighlightStyle", "syntaxHighlighting", "lezer tags"],
+        "breadcrumb": [
+          {
+            "label": "Guides",
+            "route": "content/guides"
+          },
+          {
+            "label": "Creating a Custom Theme",
+            "route": "content/guides/custom-theme"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Integration",
+    "route": "content/integration",
+    "isParent": true,
+    "breadcrumb": [
+      {
+        "label": "Integration",
+        "route": "content/integration"
+      }
+    ],
+    "order": 5,
+    "children": [
+      {
+        "label": "Integration",
+        "description": "Use the theme packages from plain JavaScript, Angular or React, with runtime switching and merge views.",
+        "route": "content/integration/README",
+        "tags": ["integration", "frameworks"],
+        "order": 5,
+        "breadcrumbTitle": "Integration",
+        "keywords": ["vanilla javascript", "angular", "react", "ssr"],
+        "breadcrumb": [
+          {
+            "label": "Integration",
+            "route": "content/integration"
+          },
+          {
+            "label": "Integration",
+            "route": "content/integration/README"
+          }
+        ]
+      },
+      {
+        "label": "Vanilla JavaScript",
+        "description": "Use a theme from plain JavaScript modules with a bundler or with an import map and a CDN, without a build step.",
+        "route": "content/integration/vanilla",
+        "tags": ["integration", "vanilla", "javascript"],
+        "order": 6,
+        "keywords": ["import map", "cdn", "esm", "vite"],
+        "breadcrumb": [
+          {
+            "label": "Integration",
+            "route": "content/integration"
+          },
+          {
+            "label": "Vanilla JavaScript",
+            "route": "content/integration/vanilla"
+          }
+        ]
+      },
+      {
+        "label": "Angular",
+        "description": "A standalone Angular component that creates a themed CodeMirror editor, switches themes with signals and cleans up on destroy.",
+        "route": "content/integration/angular",
+        "tags": ["integration", "angular"],
+        "order": 7,
+        "keywords": ["standalone component", "signals", "viewChild", "DestroyRef"],
+        "breadcrumb": [
+          {
+            "label": "Integration",
+            "route": "content/integration"
+          },
+          {
+            "label": "Angular",
+            "route": "content/integration/angular"
+          }
+        ]
+      },
+      {
+        "label": "React",
+        "description": "A React component that creates a themed CodeMirror editor with useRef and useEffect, and the same setup with @uiw/react-codemirror.",
+        "route": "content/integration/react",
+        "tags": ["integration", "react"],
+        "order": 8,
+        "keywords": ["useEffect", "useRef", "hooks", "@uiw/react-codemirror"],
+        "breadcrumb": [
+          {
+            "label": "Integration",
+            "route": "content/integration"
+          },
+          {
+            "label": "React",
+            "route": "content/integration/react"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "API",
+    "route": "content/api",
+    "isParent": true,
+    "breadcrumb": [
+      {
+        "label": "API",
+        "route": "content/api"
+      }
+    ],
+    "order": 6,
+    "children": [
+      {
+        "label": "API Reference",
+        "description": "Exact exports of every theme package and of the bundle, with their TypeScript types.",
+        "route": "content/api/README",
+        "tags": ["api", "reference"],
+        "order": 6,
+        "breadcrumbTitle": "API",
+        "breadcrumb": [
+          {
+            "label": "API",
+            "route": "content/api"
+          },
+          {
+            "label": "API",
+            "route": "content/api/README"
+          }
+        ]
+      },
+      {
+        "label": "Theme Extensions",
+        "description": "The Extension exported by each theme package, what it contains and the full list of export names.",
+        "route": "content/api/theme-extensions",
+        "tags": ["api", "extension", "themes"],
+        "order": 7,
+        "keywords": ["EditorView.theme", "syntaxHighlighting", "dark flag"],
+        "breadcrumb": [
+          {
+            "label": "API",
+            "route": "content/api"
+          },
+          {
+            "label": "Theme Extensions",
+            "route": "content/api/theme-extensions"
+          }
+        ]
+      },
+      {
+        "label": "Merge Styles",
+        "description": "The IMergeRevertStyles shape, the MergeStyles export of each theme and the applyMergeRevertStyles function.",
+        "route": "content/api/merge-styles",
+        "tags": ["api", "merge", "styles"],
+        "order": 8,
+        "keywords": ["IMergeRevertStyles", "applyMergeRevertStyles", "revert buttons"],
+        "breadcrumb": [
+          {
+            "label": "API",
+            "route": "content/api"
+          },
+          {
+            "label": "Merge Styles",
+            "route": "content/api/merge-styles"
+          }
+        ]
+      },
+      {
+        "label": "Bundle",
+        "description": "What @fsegurai/codemirror-theme-bundle re-exports and how it relates to the individual theme packages.",
+        "route": "content/api/bundle",
+        "tags": ["api", "bundle", "re-exports"],
+        "order": 9,
+        "keywords": ["codemirror-theme-bundle", "tree-shaking", "dependencies"],
+        "breadcrumb": [
+          {
+            "label": "API",
+            "route": "content/api"
+          },
+          {
+            "label": "Bundle",
+            "route": "content/api/bundle"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Examples",
+    "route": "content/examples",
+    "isParent": true,
+    "breadcrumb": [
+      {
+        "label": "Examples",
+        "route": "content/examples"
+      }
+    ],
+    "order": 7,
+    "children": [
+      {
+        "label": "Examples",
+        "description": "Complete, copyable setups for a themed editor, a theme picker and a themed merge view, plus runnable playground samples.",
+        "route": "content/examples/README",
+        "tags": ["examples", "samples"],
+        "order": 7,
+        "breadcrumbTitle": "Examples",
+        "breadcrumb": [
+          {
+            "label": "Examples",
+            "route": "content/examples"
+          },
+          {
+            "label": "Examples",
+            "route": "content/examples/README"
+          }
+        ]
+      },
+      {
+        "label": "Basic Editor",
+        "description": "A Markdown editor themed with Tokyo Night Storm.",
+        "route": "content/examples/basic-editor",
+        "tags": ["examples", "editor", "markdown"],
+        "order": 8,
+        "breadcrumb": [
+          {
+            "label": "Examples",
+            "route": "content/examples"
+          },
+          {
+            "label": "Basic Editor",
+            "route": "content/examples/basic-editor"
+          }
+        ]
+      },
+      {
+        "label": "Theme Picker",
+        "description": "A select element that switches an editor between bundle themes with a Compartment.",
+        "route": "content/examples/theme-picker",
+        "tags": ["examples", "picker", "compartment"],
+        "order": 9,
+        "breadcrumb": [
+          {
+            "label": "Examples",
+            "route": "content/examples"
+          },
+          {
+            "label": "Theme Picker",
+            "route": "content/examples/theme-picker"
+          }
+        ]
+      },
+      {
+        "label": "Merge View",
+        "description": "A side-by-side MergeView whose editors and revert buttons follow the selected theme.",
+        "route": "content/examples/merge-view",
+        "tags": ["examples", "merge", "diff"],
+        "order": 10,
+        "breadcrumb": [
+          {
+            "label": "Examples",
+            "route": "content/examples"
+          },
+          {
+            "label": "Merge View",
+            "route": "content/examples/merge-view"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Releases",
+    "route": "content/releases",
+    "isParent": true,
+    "breadcrumb": [
+      {
+        "label": "Releases",
+        "route": "content/releases"
+      }
+    ],
+    "order": 8,
+    "children": [
+      {
+        "label": "Releases",
+        "description": "Release notes of the documentation versions, with the visual changes per theme and upgrade notes.",
+        "route": "content/releases/README",
+        "tags": ["releases", "overview"],
+        "order": 8,
+        "breadcrumbTitle": "Releases",
+        "keywords": ["release notes", "versions", "upgrade"],
+        "breadcrumb": [
+          {
+            "label": "Releases",
+            "route": "content/releases"
+          },
+          {
+            "label": "Releases",
+            "route": "content/releases/README"
+          }
+        ]
+      },
+      {
+        "label": "What Is New in 6.31.0",
+        "description": "Accessible palettes for all themes, four new themes, one shared theme structure and the visual changes per theme in release 6.31.0.",
+        "route": "content/releases/6.31.0",
+        "tags": ["releases", "changelog", "6.31.0"],
+        "order": 9,
+        "keywords": ["visual changes", "wcag aa", "new themes", "upgrade notes"],
+        "breadcrumb": [
+          {
+            "label": "Releases",
+            "route": "content/releases"
+          },
+          {
+            "label": "What Is New in 6.31.0",
+            "route": "content/releases/6.31.0"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Help",
+    "route": "content/help",
+    "isParent": true,
+    "breadcrumb": [
+      {
+        "label": "Help",
+        "route": "content/help"
+      }
+    ],
+    "order": 9,
+    "children": [
+      {
+        "label": "Help",
+        "description": "Answers to common questions, fixes for common problems and links to project resources.",
+        "route": "content/help/README",
+        "tags": ["help", "support"],
+        "order": 9,
+        "breadcrumbTitle": "Help",
+        "breadcrumb": [
+          {
+            "label": "Help",
+            "route": "content/help"
+          },
+          {
+            "label": "Help",
+            "route": "content/help/README"
+          }
+        ]
+      },
+      {
+        "label": "FAQ",
+        "description": "Frequently asked questions about theme packages, the bundle, versions, fonts and framework use.",
+        "route": "content/help/faq",
+        "tags": ["help", "faq", "questions"],
+        "order": 10,
+        "breadcrumb": [
+          {
+            "label": "Help",
+            "route": "content/help"
+          },
+          {
+            "label": "FAQ",
+            "route": "content/help/faq"
+          }
+        ]
+      },
+      {
+        "label": "Troubleshooting",
+        "description": "Symptoms, causes and fixes for missing token colors, wrong fonts, merge buttons and theme switching.",
+        "route": "content/help/troubleshooting",
+        "tags": ["help", "troubleshooting", "debugging"],
+        "order": 11,
+        "breadcrumb": [
+          {
+            "label": "Help",
+            "route": "content/help"
+          },
+          {
+            "label": "Troubleshooting",
+            "route": "content/help/troubleshooting"
+          }
+        ]
+      }
+    ]
+  }
+]

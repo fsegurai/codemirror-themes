@@ -11,13 +11,23 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   bundle-size:
     name: Monitor Bundle Sizes
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Checkout base branch
         uses: actions/checkout@v6
@@ -40,38 +50,61 @@ jobs:
         run: |
           bun install
           bun run build:packages
+          # One folder per package (packages/<name>/dist only, never nested node_modules dists).
           mkdir -p /tmp/base-dist
-          find packages -name "dist" -type d | xargs -I {} cp -r {} /tmp/base-dist/
+          for dist in packages/*/dist; do
+            [ -d "$dist" ] || continue
+            cp -r "$dist" "/tmp/base-dist/$(basename "$(dirname "$dist")")"
+          done
 
       - name: Build PR branch
         working-directory: pr
         run: |
           bun install
           bun run build:packages
+          # One folder per package (packages/<name>/dist only, never nested node_modules dists).
           mkdir -p /tmp/pr-dist
-          find packages -name "dist" -type d | xargs -I {} cp -r {} /tmp/pr-dist/
+          for dist in packages/*/dist; do
+            [ -d "$dist" ] || continue
+            cp -r "$dist" "/tmp/pr-dist/$(basename "$(dirname "$dist")")"
+          done
 
       - name: Calculate size differences
         id: sizes
         run: |
-          echo "=== Base Branch ===" > /tmp/sizes.txt
-          du -sh /tmp/base-dist/* >> /tmp/sizes.txt 2>&1
-          echo "" >> /tmp/sizes.txt
-          echo "=== PR Branch ===" >> /tmp/sizes.txt
-          du -sh /tmp/pr-dist/* >> /tmp/sizes.txt 2>&1
+          size_of() { if [ -d "$1" ]; then du -sb "$1" | awk '{print $1}'; else echo 0; fi; }
+
+          # Per-package comparison (bytes). Packages only present on one side show 0 on the other.
+          {
+            printf '%-24s %12s %12s %12s %8s\n' "Package" "Base" "PR" "Diff" "Change"
+            for pkg in $( (ls /tmp/base-dist; ls /tmp/pr-dist) 2>/dev/null | sort -u); do
+              base=$(size_of "/tmp/base-dist/$pkg")
+              pr=$(size_of "/tmp/pr-dist/$pkg")
+              diff=$((pr - base))
+              if [ "$base" -gt 0 ]; then
+                change=$(awk -v d="$diff" -v b="$base" 'BEGIN { printf "%+.1f%%", d * 100 / b }')
+              else
+                change="new"
+              fi
+              printf '%-24s %12s %12s %12s %8s\n' "$pkg" "$base" "$pr" "$diff" "$change"
+            done
+          } > /tmp/sizes.txt
 
           # Calculate total sizes
-          BASE_SIZE=$(du -sb /tmp/base-dist 2>/dev/null | awk '{print $1}' || echo 0)
-          PR_SIZE=$(du -sb /tmp/pr-dist 2>/dev/null | awk '{print $1}' || echo 0)
+          BASE_SIZE=$(size_of /tmp/base-dist)
+          PR_SIZE=$(size_of /tmp/pr-dist)
 
           if [ "$BASE_SIZE" -gt 0 ]; then
             DIFF=$((PR_SIZE - BASE_SIZE))
-            PERCENT=$(( (DIFF * 100) / BASE_SIZE ))
+            # One decimal place; the regression check below compares it numerically.
+            PERCENT=$(awk -v d="$DIFF" -v b="$BASE_SIZE" 'BEGIN { printf "%.1f", d * 100 / b }')
 
-            echo "BASE_SIZE=$BASE_SIZE" >> $GITHUB_ENV
-            echo "PR_SIZE=$PR_SIZE" >> $GITHUB_ENV
-            echo "DIFF=$DIFF" >> $GITHUB_ENV
-            echo "PERCENT=$PERCENT" >> $GITHUB_ENV
+            {
+              echo "BASE_SIZE=$BASE_SIZE"
+              echo "PR_SIZE=$PR_SIZE"
+              echo "DIFF=$DIFF"
+              echo "PERCENT=$PERCENT"
+            } >> "$GITHUB_ENV"
           fi
 
       - name: Format bundle report
@@ -84,18 +117,18 @@ jobs:
             echo "| Metric | Size |"
             echo "|--------|------|"
 
-            if [ ! -z "${{ env.BASE_SIZE }}" ] && [ "${{ env.BASE_SIZE }}" != "0" ]; then
-              BASE_MB=$(echo "scale=2; ${{ env.BASE_SIZE }} / 1024 / 1024" | bc)
-              PR_MB=$(echo "scale=2; ${{ env.PR_SIZE }} / 1024 / 1024" | bc)
+            if [ -n "${BASE_SIZE:-}" ] && [ "$BASE_SIZE" != "0" ]; then
+              BASE_MB=$(echo "scale=2; $BASE_SIZE / 1024 / 1024" | bc)
+              PR_MB=$(echo "scale=2; $PR_SIZE / 1024 / 1024" | bc)
 
               echo "| Base Branch | ${BASE_MB} MB |"
               echo "| PR Branch | ${PR_MB} MB |"
 
-              DIFF_MB=$(echo "scale=2; ${{ env.DIFF }} / 1024 / 1024" | bc)
-              if [ "${{ env.DIFF }}" -gt 0 ]; then
-                echo "| **Change** | **+${DIFF_MB} MB (${{ env.PERCENT }}%)** ⚠️ |"
-              elif [ "${{ env.DIFF }}" -lt 0 ]; then
-                echo "| **Change** | **${DIFF_MB} MB (${{ env.PERCENT }}%)** ✅ |"
+              DIFF_MB=$(echo "scale=2; $DIFF / 1024 / 1024" | bc)
+              if [ "$DIFF" -gt 0 ]; then
+                echo "| **Change** | **+${DIFF_MB} MB (${PERCENT}%)** ⚠️ |"
+              elif [ "$DIFF" -lt 0 ]; then
+                echo "| **Change** | **${DIFF_MB} MB (${PERCENT}%)** ✅ |"
               else
                 echo "| **Change** | **No change** |"
               fi
@@ -109,14 +142,18 @@ jobs:
             cat /tmp/sizes.txt
             echo "\`\`\`"
             echo "EOF"
-          } >> $GITHUB_ENV
+          } >> "$GITHUB_ENV"
+
+      - name: Write bundle summary
+        run: printf '%s\n' "$REPORT" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Comment on PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v6
+        # Fork PRs get a read-only token; they rely on the step summary above.
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v9
         with:
           script: |
-            github.rest.issues.createComment({
+            await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -124,10 +161,13 @@ jobs:
             })
 
       - name: Check for size regression
-        if: env.PERCENT != '' && env.PERCENT > 10
+        if: env.PERCENT != ''
         run: |
-          echo "⚠️ Bundle size increased by more than 10% (${{ env.PERCENT }}%)"
-          exit 1
+          if awk -v p="$PERCENT" 'BEGIN { exit !(p > 10) }'; then
+            echo "⚠️ Bundle size increased by more than 10% (${PERCENT}%)"
+            exit 1
+          fi
+          echo "Bundle size change: ${PERCENT}%"
 
       - name: Save bundle report
         if: always()

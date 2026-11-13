@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <form class="toolbar" id="filter">
+      <fieldset>
+        <legend>Show</legend>
+        <label><input type="radio" name="kind" value="all" checked /> All</label>
+        <label><input type="radio" name="kind" value="dark" /> Dark</label>
+        <label><input type="radio" name="kind" value="light" /> Light</label>
+      </fieldset>
+      <span id="count" class="badge" aria-live="polite"></span>
+    </form>
+    <ul id="gallery" class="gallery" aria-label="Themes"></ul>
+  </body>
+</html>
