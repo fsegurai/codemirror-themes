@@ -937,7 +937,9 @@ Theme packages move to the next minor version (most to `6.3.0`; `catppuccin-moch
 
 ---
 
-[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.6...HEAD
+[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.31.0...HEAD
+
+[6.31.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.6...v6.31.0
 
 [6.30.6]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.5...v6.30.6
 
