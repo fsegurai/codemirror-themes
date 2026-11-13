@@ -13,8 +13,8 @@ No changes have been made yet.
 
 ## [6.31.0] - 2026-11-12
 
-Theme packages move to the next minor version (most to `6.3.0`, `catppuccin-mocha` and `cobalt2` to `6.1.0`) and the
-bundle to `6.5.0`. Public exports are unchanged; colors change on purpose (see Visual changes).
+Theme packages move to the next minor version (most to `6.3.0`; `catppuccin-mocha`, `cobalt2`, `high-contrast-dark`,
+`high-contrast-light`, `material-ocean` and `synthwave-84` to `6.1.0`) and the bundle to `6.5.0`. Public exports are unchanged; colors change on purpose (see Visual changes).
 
 ### 🚀 Features
 
