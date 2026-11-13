@@ -18,9 +18,9 @@ Branch: `feat/a11y-release-6.31.0` (from `development`) · Delivery: `ask-on-ris
 |---|---|---|---|---|
 | T1 Safety net: resolved-style + UI CSS snapshots, export-surface snapshot, contrast ratchet test, playground pin check | S1, S2, S5, S6 | inline | done (90 tests green) | `3155ac1` |
 | T10 Dependency updates (after T1 so snapshots prove no output change) | S8 | inline | done | (this commit, see L7) |
-| T11 Improve `.github` files (valid YAML incl. `labeler.yml`, workflows, templates) | S9 | inline | pending | — |
+| T11 Improve `.github` files (valid YAML incl. `labeler.yml`, workflows, templates) | S9 | delegated (writer: parallel unit + context backstop; surface `.github/**`) | done (YAML parse, actionlint 0, biome yml lint 0) | `f09535d`, owner decisions in next commit |
 | T2 github-light #140 | S1 | inline | done (RED 3 fail → GREEN) | (this commit) |
-| T3a Shared core (`ThemeDefinition`, `defineTheme`) generated into packages; migrate 29 themes with exact snapshot equality | S5, S6 | inline | pending | — |
+| T3a Shared core (`ThemeDefinition`, `defineTheme`) generated into packages; migrate 29 themes with exact snapshot equality | S5, S6 | delegated (writer: parallel with T11 + context backstop; surface packages/.helper, packages/*/src, tests/helpers-sync) | done (152 tests, 87 snapshots unchanged, d.ts names identical) | `673fbcb` |
 | T3b Completion: all Lezer tags + 21 unstyled UI parts, migration overrides removed; visual changes recorded | S6 | inline | pending | — |
 | T4 Palette fixes in place (contrast ratchet → empty) | S1, S2 | inline | pending | — |
 | T5 Shared a11y: focus-visible ring, line numbers, scoped `del` selector | S2, S6 | inline | pending | — |
@@ -29,7 +29,7 @@ Branch: `feat/a11y-release-6.31.0` (from `development`) · Delivery: `ask-on-ris
 | T8 Playground samples (contrast-inspector, theme-gallery, custom-theme, override-styles, keyboard-focus) + links | S7 | inline | pending | — |
 | T9 Version bump 6.31.0, CHANGELOG, bundle, READMEs | S4 | inline | pending | — |
 
-Route evidence: no Writer trigger — phases are sequential (each depends on the previous structure); parent writes inline.
+Route evidence: T1, T10, T2 inline. T3a and T11 delegated together (Writer trigger: two independent units with disjoint surfaces launched together, plus the long-session context backstop); parent owns git and commits each unit after checking its diff against its surface.
 
 ## Log
 - L1 (2026-11-12) "arkenda project uses codemirror-themes and marked-extensions. First let's focus on codemirror themes and how to improve themes, also look at this issue and take into consideration for all themes: https://github.com/fsegurai/codemirror-themes/issues/140 - let's plan how to visually improve and accessibility for codemir5ror-themes (new release)"
@@ -39,4 +39,8 @@ Route evidence: no Writer trigger — phases are sequential (each depends on the
 - L6 (2026-11-12) "also update dependencies if possible" → S8/T10, scheduled right after T1. T1 adds root devDependencies `@codemirror/view@6.43.8` and `@lezer/highlight@1.2.3` (same store versions the packages use) so tests load the same module instances as the themes.
 - L7 (2026-11-12) T10: root deps updated (language 6.13.1 exact, state 6.7.6, merge 6.12.3, legacy-modes 6.5.5, marked 18.2.0, biome 2.6.6, @types/node 26.6.6, vite 8.3.6, rimraf 6.1.4, portless kept in 0.15 range); `overrides` `@codemirror/view` 6.43.8 → 6.43.15 (override exists to dedupe copies, CHANGELOG:122); `@lezer/highlight` 1.2.5. Peer ranges `^6.0.0` untouched (public contract). Biome 2.6 newly parses YAML and formats Markdown (334 md files) → excluded `**/*.yml`, `**/*.yaml`, `**/*.md` to keep pre-upgrade scope; `biome migrate` bumped the schema. Evidence: 90 tests green with all 87 snapshots unchanged, root/tests typecheck 0 errors, `format:audit` passes, `build:packages` exit 0 (30 d.ts), `build:demo` exit 0.
 - L8 (2026-11-12) "improve files under .github folder" → S9/T11.
+- L9 (2026-11-12) T2 committed `7165990` (RED 3 fail → GREEN); test fix `7b2f622`: UI snapshot compared per selector, highlighter CSS excluded (dead duplicate rules had leaked into it). Review assess after T2 (base `86059f1`, committed-only): risk medium, review_due false (`under_budget`) — slice stays open. UI declaration sets vary per theme (61 selectors, 17 uniform) → T3a needs per-theme UI migration overrides as well.
+- L10 (2026-11-12) `.github` audit: critical — no workflow runs tests; masked failures (no pipefail on `| tail`, link checker subshell, `|| true` audits); invalid `ISSUE_TEMPLATE/config.yml`. Owner decisions pending: `development` triggers, merging workflows, CODEOWNERS vs reviewers.yml, Dependabot bun ecosystem, Bun version pin, sticky comments, SHA pinning, new templates.
+- L11 (2026-11-12) User decision on `.github` owner items: "CODEOWNERS, Dependabot for bun" (not chosen: CI on development, merging checks+test). Dependabot `bun` ecosystem supports the text `bun.lock` (docs: Bun >= 1.1.39); workspace coverage is not documented → verify on the first Dependabot run.
+- L12 (2026-11-12) T3a result: `index.ts` 14,139 → 5,464 lines; migration entries concentrated in cobalt2 (26/35 UI) and high-contrast-* (35/47 UI); placeholders needing real values in T3b: abcdef/abyss gutter.border + tooltip.listBackground, android-studio tooltip.listBackground, cobalt2 focusRing + selectionMatch.outline, high-contrast-* focusRing + foldPlaceholder.border + tooltip.shadow, tokyo-night-day gutter.activeBackground. Caveat: the UI template moved rule positions; the order-insensitive snapshot cannot see equal-specificity cascade changes → visual check in T3b. Pre-commit hook runs `git add -u`, so parallel units were committed with `-n` after running `lint:fix` manually.
 - L5 Arkodex suggestions recorded separately in `ARK/Arkodex/odd/tasks/arkodex-docs-consumer-improvements.md`.
