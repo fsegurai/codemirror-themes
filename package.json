@@ -114,7 +114,7 @@
     "prismjs": "^1.30.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.6",
+    "@biomejs/biome": "2.6.7",
     "@codemirror/buildhelper": "^1.0.2",
     "@codemirror/view": "6.43.15",
     "@fsegurai/manifest-generator": "^1.1.0",
@@ -124,11 +124,11 @@
     "@types/prismjs": "^1.26.6",
     "@typescript/typescript6": "^6.0.2",
     "husky": "^9.1.7",
-    "portless": "^0.15.13",
+    "portless": "^0.17.0",
     "rimraf": "^6.1.4",
     "terser": "^5.51.2",
     "typescript": "7.0.2",
-    "vite": "^8.3.6"
+    "vite": "^8.3.8"
   },
   "overrides": {
     "@codemirror/view": "6.43.15",

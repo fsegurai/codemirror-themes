@@ -48,8 +48,8 @@ Theme packages move to the next minor version (most to `6.3.0`; `catppuccin-moch
   `.cm-wordHighlight`, `.cm-indentGuide`).
 - **Tests** — output snapshots per theme (resolved tag styles, UI rules, exports), WCAG contrast, structure and
   type-contract tests; `bun run test` and `bun run test:types` run in CI.
-- **Dependencies** — CodeMirror view `6.43.15` (dedupe override), language `6.13.1`, Biome `2.6.6`, Vite `8.3.6` and
-  other updates; YAML and Markdown stay outside Biome.
+- **Dependencies** — CodeMirror view `6.43.15` (dedupe override), language `6.13.1`, Biome `2.6.7`, Vite `8.3.8`, portless
+  `0.17.0` and other updates; YAML and Markdown stay outside Biome.
 - **READMEs** — npm download badges for every package.
 - **Tooling** — `generate:theme-docs`, `generate:playground-pins`; generated helpers (`theme-core.ts`) are checked
   for sync; `packages/.helper` is type-checked.
