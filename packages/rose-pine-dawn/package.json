@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-theme-rose-pine-dawn",
-  "version": "6.2.7",
+  "version": "6.3.0",
   "description": "Rosé Pine Dawn theme for the CodeMirror editor",
   "type": "module",
   "main": "dist/index.cjs",

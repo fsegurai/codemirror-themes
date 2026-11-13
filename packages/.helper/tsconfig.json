@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "bun"],
+    "noEmit": true,
+    "noPropertyAccessFromIndexSignature": false,
+    "rootDir": "../.."
+  },
+  "include": ["./**/*.ts"],
+  "exclude": []
+}

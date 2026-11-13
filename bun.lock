@@ -39,7 +39,7 @@
     },
     "packages/abcdef": {
       "name": "@fsegurai/codemirror-theme-abcdef",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -52,7 +52,7 @@
     },
     "packages/abyss": {
       "name": "@fsegurai/codemirror-theme-abyss",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -65,7 +65,7 @@
     },
     "packages/android-studio": {
       "name": "@fsegurai/codemirror-theme-android-studio",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -78,7 +78,7 @@
     },
     "packages/andromeda": {
       "name": "@fsegurai/codemirror-theme-andromeda",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -91,7 +91,7 @@
     },
     "packages/basic-dark": {
       "name": "@fsegurai/codemirror-theme-basic-dark",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -104,7 +104,7 @@
     },
     "packages/basic-light": {
       "name": "@fsegurai/codemirror-theme-basic-light",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -117,7 +117,7 @@
     },
     "packages/bundle": {
       "name": "@fsegurai/codemirror-theme-bundle",
-      "version": "6.4.4",
+      "version": "6.5.0",
       "dependencies": {
         "@fsegurai/codemirror-theme-abcdef": "6.2.7",
         "@fsegurai/codemirror-theme-abyss": "6.2.7",
@@ -165,7 +165,7 @@
     },
     "packages/catppuccin-latte": {
       "name": "@fsegurai/codemirror-theme-catppuccin-latte",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -178,7 +178,7 @@
     },
     "packages/catppuccin-mocha": {
       "name": "@fsegurai/codemirror-theme-catppuccin-mocha",
-      "version": "6.0.4",
+      "version": "6.1.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -191,7 +191,7 @@
     },
     "packages/cobalt2": {
       "name": "@fsegurai/codemirror-theme-cobalt2",
-      "version": "6.0.6",
+      "version": "6.1.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -204,7 +204,7 @@
     },
     "packages/dracula": {
       "name": "@fsegurai/codemirror-theme-dracula",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -217,7 +217,7 @@
     },
     "packages/forest": {
       "name": "@fsegurai/codemirror-theme-forest",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -230,7 +230,7 @@
     },
     "packages/github-dark": {
       "name": "@fsegurai/codemirror-theme-github-dark",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -243,7 +243,7 @@
     },
     "packages/github-light": {
       "name": "@fsegurai/codemirror-theme-github-light",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -256,7 +256,7 @@
     },
     "packages/gruvbox-dark": {
       "name": "@fsegurai/codemirror-theme-gruvbox-dark",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -269,7 +269,7 @@
     },
     "packages/gruvbox-light": {
       "name": "@fsegurai/codemirror-theme-gruvbox-light",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -282,7 +282,7 @@
     },
     "packages/high-contrast-dark": {
       "name": "@fsegurai/codemirror-theme-high-contrast-dark",
-      "version": "6.0.4",
+      "version": "6.1.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -295,7 +295,7 @@
     },
     "packages/high-contrast-light": {
       "name": "@fsegurai/codemirror-theme-high-contrast-light",
-      "version": "6.0.4",
+      "version": "6.1.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -308,7 +308,7 @@
     },
     "packages/material-dark": {
       "name": "@fsegurai/codemirror-theme-material-dark",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -321,7 +321,7 @@
     },
     "packages/material-light": {
       "name": "@fsegurai/codemirror-theme-material-light",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -334,7 +334,7 @@
     },
     "packages/material-ocean": {
       "name": "@fsegurai/codemirror-theme-material-ocean",
-      "version": "6.0.3",
+      "version": "6.1.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -347,7 +347,7 @@
     },
     "packages/monokai": {
       "name": "@fsegurai/codemirror-theme-monokai",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -360,7 +360,7 @@
     },
     "packages/nord": {
       "name": "@fsegurai/codemirror-theme-nord",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -373,7 +373,7 @@
     },
     "packages/one-dark": {
       "name": "@fsegurai/codemirror-theme-one-dark",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -386,7 +386,7 @@
     },
     "packages/palenight": {
       "name": "@fsegurai/codemirror-theme-palenight",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -399,7 +399,7 @@
     },
     "packages/rose-pine-dawn": {
       "name": "@fsegurai/codemirror-theme-rose-pine-dawn",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -412,7 +412,7 @@
     },
     "packages/solarized-dark": {
       "name": "@fsegurai/codemirror-theme-solarized-dark",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -425,7 +425,7 @@
     },
     "packages/solarized-light": {
       "name": "@fsegurai/codemirror-theme-solarized-light",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -438,7 +438,7 @@
     },
     "packages/synthwave-84": {
       "name": "@fsegurai/codemirror-theme-synthwave-84",
-      "version": "6.0.4",
+      "version": "6.1.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -451,7 +451,7 @@
     },
     "packages/tokyo-night-day": {
       "name": "@fsegurai/codemirror-theme-tokyo-night-day",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -464,7 +464,7 @@
     },
     "packages/tokyo-night-storm": {
       "name": "@fsegurai/codemirror-theme-tokyo-night-storm",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -477,7 +477,7 @@
     },
     "packages/volcano": {
       "name": "@fsegurai/codemirror-theme-volcano",
-      "version": "6.2.7",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -490,7 +490,7 @@
     },
     "packages/vscode-dark": {
       "name": "@fsegurai/codemirror-theme-vscode-dark",
-      "version": "6.2.8",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -503,7 +503,7 @@
     },
     "packages/vscode-light": {
       "name": "@fsegurai/codemirror-theme-vscode-light",
-      "version": "6.2.8",
+      "version": "6.3.0",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },

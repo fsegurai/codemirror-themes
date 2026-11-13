@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-themes",
-  "version": "6.30.6",
+  "version": "6.31.0",
   "description": "Theme packages for the CodeMirror editor",
   "type": "module",
   "license": "MIT",
@@ -95,7 +95,8 @@
     "version:preview": "bun packages/.helper/versions/update-packages-versions.ts --dry-run",
     "version:skip": "bun packages/.helper/versions/update-packages-versions.ts --dry-run --skip '@fsegurai/codemirror-theme-bundle'",
     "test": "bun test",
-    "test:types": "tsc --noEmit -p tests"
+    "test:types": "tsc --noEmit -p tests && tsc --noEmit -p packages/.helper",
+    "generate:playground-pins": "bun packages/.helper/docs/sync-playground-pins.ts && biome format --write docs/$npm_package_version/playground/playground.json"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.2",

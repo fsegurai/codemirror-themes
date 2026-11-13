@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-theme-dracula",
-  "version": "6.2.7",
+  "version": "6.3.0",
   "description": "Dracula theme for the CodeMirror editor",
   "type": "module",
   "main": "dist/index.cjs",
