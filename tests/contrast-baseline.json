@@ -166,11 +166,7 @@
     "#6a737d on selection (3.47)",
     "#8250df on selection (3.63)",
     "#cb2431 on selection (3.94)",
-    "#d73a49 on active-line (4.39)",
-    "#d73a49 on selection (3.29)",
-    "#e36209 on active-line (3.35)",
-    "#e36209 on background (3.49)",
-    "#e36209 on selection (2.51)",
+    "#cf222e on selection (3.85)",
     "gutter #6e7781 on gutter (4.27)"
   ],
   "gruvbox-dark": [

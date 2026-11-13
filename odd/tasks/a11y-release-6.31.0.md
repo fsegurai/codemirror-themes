@@ -19,7 +19,7 @@ Branch: `feat/a11y-release-6.31.0` (from `development`) · Delivery: `ask-on-ris
 | T1 Safety net: resolved-style + UI CSS snapshots, export-surface snapshot, contrast ratchet test, playground pin check | S1, S2, S5, S6 | inline | done (90 tests green) | `3155ac1` |
 | T10 Dependency updates (after T1 so snapshots prove no output change) | S8 | inline | done | (this commit, see L7) |
 | T11 Improve `.github` files (valid YAML incl. `labeler.yml`, workflows, templates) | S9 | inline | pending | — |
-| T2 github-light #140 | S1 | inline | pending | — |
+| T2 github-light #140 | S1 | inline | done (RED 3 fail → GREEN) | (this commit) |
 | T3a Shared core (`ThemeDefinition`, `defineTheme`) generated into packages; migrate 29 themes with exact snapshot equality | S5, S6 | inline | pending | — |
 | T3b Completion: all Lezer tags + 21 unstyled UI parts, migration overrides removed; visual changes recorded | S6 | inline | pending | — |
 | T4 Palette fixes in place (contrast ratchet → empty) | S1, S2 | inline | pending | — |

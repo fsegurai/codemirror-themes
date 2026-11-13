@@ -36,10 +36,10 @@ const base00 = '#ffffff', // Background (GitHub light mode background)
   base06 = '#6a737d', // Comments, brackets - GitHub gray
   base07 = '#6f42c1', // Classes, properties - GitHub purple
   base08 = '#005cc5', // Variables, attributes - GitHub blue
-  base09 = '#d73a49', // Keywords, types - GitHub red
+  base09 = '#cf222e', // Keywords, types - GitHub red
   base0A = '#032f62', // Strings, regexps - GitHub navy
   base0B = '#22863a', // Names, quotes - GitHub green
-  base0C = '#e36209', // Atoms, booleans - GitHub orange
+  base0C = '#953800', // Atoms, booleans - GitHub orange
   // Background variants
   base0D = '#f1f8ff', // Active line gutter background
   base0E = '#e1e4e8', // Panel and tooltip border color
