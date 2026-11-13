@@ -35,7 +35,7 @@ jobs:
         language: ['javascript']
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
@@ -60,7 +60,7 @@ jobs:
       audit: ${{ steps.audit.outcome }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -111,7 +111,7 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Run Trivy filesystem scan
         uses: aquasecurity/trivy-action@v0.36.0
