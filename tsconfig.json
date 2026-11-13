@@ -22,5 +22,6 @@
     },
     "lib": ["ES2022", "dom"],
     "types": ["node", "vite/client"]
-  }
+  },
+  "exclude": ["node_modules", "**/dist", "tests"]
 }

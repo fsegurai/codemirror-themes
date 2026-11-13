@@ -1,0 +1,38 @@
+# Feature: a11y-release-6.31.0
+Objective: release 6.31.0 — WCAG AA contrast in every theme (issue #140 included), one complete shared theme structure (themes differ only by palette), 4 new themes, docs and Arkodex playground samples.
+Branch: `feat/a11y-release-6.31.0` (from `development`) · Delivery: `ask-on-risk` (chain strategy asked before PR creation) · Test runner: `bun test`.
+
+## Specs
+- S1 Issue #140 (github-light): `#d73a49` (keywords, types) and `#e36209` (numbers, atoms, booleans, constants) are below WCAG AA 4.5:1; suggested Primer replacements `#cf222e` and `#953800`. "take into consideration for all themes".
+- S2 "don't break palettes, but improve them while keeping their spirit" — failing colors are fixed in place (no variant packages): keep hue, adjust lightness only until text reaches 4.5:1 and non-text UI reaches 3:1 against the background, the active line and the selection; colors that pass stay unchanged; comments stay visually muted.
+- S3 "also add 2 new themes" → "then let's plan for 3 new themes" → user selected "Rosé Pine Dawn, One Dark, Catppuccin Latte, Dracula" → "keep all 4". Each passes AA from its first commit.
+- S4 Release version 6.31.0 ("yes, that release sounds good").
+- S5 "improve project structure to avoid duplicating logic (when possible) without breaking packages" — every package keeps its export names and types; shared code has one source (`packages/.helper`) generated into each package; bundle, demo registry and playground import map are generated or checked from the package list.
+- S6 "implementing a design pattern so every theme has the same structure and each of implements their respective palette and colors, etc? - without breaking packages" + "the idea is to have the most complete structure and rules and just have different themes/palettes" — `ThemeDefinition` (complete required `ui` palette + `syntax` roles, fine roles derived from parent roles) + one canonical tag→role table covering every Lezer tag and every styled CodeMirror UI part; no per-theme escape hatch in the end state.
+- S8 "also update dependencies if possible" — update root and package dependencies to current compatible versions (respecting `minimumReleaseAge`); generated theme CSS and exports must stay identical (T1 snapshots), build, lint and tests pass.
+- S7 "improve documentation based on current manifest-generator library implementation - also provide kind sandbox/demo on docs so that arkodex (other local project) can consume these docs" — `docs/6.31.0/` validated by manifest-generator 1.1.0 with 0 warnings; generated per-theme pages; accessibility section; playground samples in Arkodex's `playground/playground.json` contract.
+
+## Tasks
+| ID | Specs | Route | Status | Commit |
+|---|---|---|---|---|
+| T1 Safety net: resolved-style + UI CSS snapshots, export-surface snapshot, contrast ratchet test, playground pin check | S1, S2, S5, S6 | inline | in progress | — |
+| T10 Dependency updates (after T1 so snapshots prove no output change) | S8 | inline | pending | — |
+| T2 github-light #140 | S1 | inline | pending | — |
+| T3a Shared core (`ThemeDefinition`, `defineTheme`) generated into packages; migrate 29 themes with exact snapshot equality | S5, S6 | inline | pending | — |
+| T3b Completion: all Lezer tags + 21 unstyled UI parts, migration overrides removed; visual changes recorded | S6 | inline | pending | — |
+| T4 Palette fixes in place (contrast ratchet → empty) | S1, S2 | inline | pending | — |
+| T5 Shared a11y: focus-visible ring, line numbers, scoped `del` selector | S2, S6 | inline | pending | — |
+| T6 New themes: dracula, one-dark, catppuccin-latte, rose-pine-dawn (scaffold script) | S3, S5 | inline | pending | — |
+| T7 Docs 6.31.0 (generated theme pages, accessibility, integration, visual changes) | S7 | inline | pending | — |
+| T8 Playground samples (contrast-inspector, theme-gallery, custom-theme, override-styles, keyboard-focus) + links | S7 | inline | pending | — |
+| T9 Version bump 6.31.0, CHANGELOG, bundle, READMEs | S4 | inline | pending | — |
+
+Route evidence: no Writer trigger — phases are sequential (each depends on the previous structure); parent writes inline.
+
+## Log
+- L1 (2026-11-12) "arkenda project uses codemirror-themes and marked-extensions. First let's focus on codemirror themes and how to improve themes, also look at this issue and take into consideration for all themes: https://github.com/fsegurai/codemirror-themes/issues/140 - let's plan how to visually improve and accessibility for codemir5ror-themes (new release)"
+- L2 (2026-11-12) Audit: 22/29 themes have syntax colors below 4.5:1 (worst solarized-light, tokyo-night-day, material-light, android-studio, solarized-dark, nord); gutter numbers < 3:1 in 7 themes; `#d73a49` is 4.57 on white (the reporter's 4.45 is likely on a tinted surface), so checks include the composited active line and selection.
+- L3 (2026-11-12) User decisions: S2, S3, S4, S5, S6 quotes above; "proceed".
+- L4 (2026-11-12) Structure evidence: all themes share the same 44 UI selectors; 73/90 tag expressions shared; every theme has dead duplicate rules for `t.constant(t.name)` and `t.deleted` (last rule wins); 7 Lezer base tags and 21 UI parts unstyled everywhere. `utils.ts` is already generated into packages from `packages/.helper/utils/utils.ts` (`generate:helpers`), so the shared core follows the same copy convention instead of out-of-package relative imports (no build or `.d.ts` risk).
+- L6 (2026-11-12) "also update dependencies if possible" → S8/T10, scheduled right after T1. T1 adds root devDependencies `@codemirror/view@6.43.8` and `@lezer/highlight@1.2.3` (same store versions the packages use) so tests load the same module instances as the themes.
+- L5 Arkodex suggestions recorded separately in `ARK/Arkodex/odd/tasks/arkodex-docs-consumer-improvements.md`.
