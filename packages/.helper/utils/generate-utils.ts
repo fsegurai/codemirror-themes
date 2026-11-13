@@ -5,9 +5,9 @@ const helperDir = path.resolve(__dirname); // helper files live next to this scr
 const packagesDir = path.resolve(process.cwd(), 'packages'); // repo packages folder
 const scriptName = path.basename(__filename);
 
-// CLI args: list of filenames relative to `helperDir`. Default to `utils.ts`
+// CLI args: list of filenames relative to `helperDir`. Defaults to every shared helper (`utils.ts`, `theme-core.ts`)
 const requestedFiles = process.argv.slice(2);
-const filesToCopy = requestedFiles.length > 0 ? requestedFiles : ['utils.ts'];
+const filesToCopy = requestedFiles.length > 0 ? requestedFiles : ['utils.ts', 'theme-core.ts'];
 
 if (!fs.existsSync(helperDir)) {
   console.error('Helper directory not found:', `\`${helperDir}\``);

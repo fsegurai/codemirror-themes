@@ -1,23 +1,8 @@
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import type { Extension } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
-import {
-  applyMergeRevertStyles,
-  generalContent,
-  generalCursor,
-  generalDiff,
-  generalGutter,
-  generalLine,
-  generalMatching,
-  generalPanel,
-  generalPlaceholder,
-  generalScroller,
-  generalSearchField,
-  generalTooltip,
-  type IMergeRevertStyles,
-} from './utils';
+import { defineTheme, type ThemeMigration } from './theme-core';
+import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 
 /**
  * Enhanced GitHub Dark theme color definitions
@@ -48,9 +33,6 @@ const base00 = '#0d1117', // Background (GitHub dark mode background)
 // UI-specific colors
 const invalid = '#f97583', // Invalid color - error red
   highlightBackground = '#2d333b1a', // Line highlight (GitHub selection color)
-  tooltipBackground = '#21262d', // Tooltip background
-  cursor = base04, // Caret color
-  selection = base02, // Selection color
   activeBracketBg = '#3a587a75', // Active bracket background
   activeBracketBorder = '#4d90fe', // Active bracket border
   diagnosticWarning = '#d29922', // Warning color
@@ -60,423 +42,138 @@ const invalid = '#f97583', // Invalid color - error red
 
 // Diff/merge specific colors
 const addedBackground = '#2ea04350', // GitHub green with transparency
-  removedBackground = '#f8514940', // GitHub red with transparency
-  addedText = '#7ee787', // GitHub green for added text
-  removedText = '#ff7b72'; // GitHub red for removed text
+  removedBackground = '#f8514940'; // GitHub red with transparency
 
 /**
- * Enhanced editor theme styles for GitHub Dark
+ * TEMPORARY: differences between the canonical structure and this theme's pre-6.31 output, kept so the move onto
+ * `defineTheme` changes nothing visually. To be removed when the theme is completed on the shared structure.
  */
-const githubDarkTheme = EditorView.theme(
-  {
-    // Base editor styles
-    '&': {
-      color: base01,
-      backgroundColor: base00,
-      fontSize: generalContent.fontSize,
-      fontFamily: generalContent.fontFamily,
-    },
+const migration: ThemeMigration = {
+  highlight: [{ tag: t.definition(t.function(t.variableName)), color: base07 }],
+};
 
-    // Content and cursor
-    '.cm-content': {
-      caretColor: cursor,
-      lineHeight: generalContent.lineHeight,
+const theme = defineTheme({
+  name: 'GitHub Dark',
+  dark: true,
+  ui: {
+    background: base00,
+    foreground: base01,
+    cursor: base04,
+    selection: base02,
+    activeLine: highlightBackground,
+    ghostText: base03,
+    focusRing: `0 0 0 2px ${base00}, 0 0 0 3px ${linkColor}40`,
+    searchMatch: {
+      background: '#3a587a',
+      outline: base07,
+      foreground: base01,
+      selectedBackground: activeBracketBorder,
+      selectedForeground: base04,
     },
-    '.cm-cursor, .cm-dropCursor': {
-      borderLeftColor: cursor,
-      borderLeftWidth: generalCursor.borderLeftWidth,
+    selectionMatch: { background: selectionMatch, outline: `${base02}50` },
+    matchingBracket: { background: activeBracketBg, outline: activeBracketBorder },
+    nonMatchingBracket: { background: `${invalid}40`, outline: invalid },
+    panel: {
+      background: base0F,
+      foreground: base01,
+      border: base0E,
+      buttonBackground: base0F,
+      buttonForeground: base01,
+      buttonHoverBackground: base0A,
     },
-    '.cm-fat-cursor': {
-      backgroundColor: `${cursor}99`,
-      color: base00,
-    },
-
-    // Selection
-    '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
-      {
-        backgroundColor: selection,
-      },
-
-    // Make sure selection appears above active line
-    '.cm-selectionLayer': {
-      zIndex: 100,
-    },
-
-    // Search functionality
-    '.cm-searchMatch': {
-      backgroundColor: '#3a587a',
-      outline: `1px solid ${base07}`,
-      color: base01,
-      borderRadius: generalSearchField.borderRadius,
-
-      '& span': {
-        color: base01,
-      },
-    },
-    '.cm-searchMatch.cm-searchMatch-selected': {
-      backgroundColor: activeBracketBorder,
-      color: base04,
-      padding: generalSearchField.padding,
-
-      '& span': {
-        color: base04,
-      },
-    },
-    '.cm-search.cm-panel.cm-textfield': {
-      color: base01,
-      borderRadius: generalSearchField.borderRadius,
-      padding: generalSearchField.padding,
-    },
-
-    // Panels
-    '.cm-panels': {
-      backgroundColor: tooltipBackground,
-      color: base01,
-      borderRadius: '4px',
-    },
-    '.cm-panels.cm-panels-top': {
-      borderBottom: `1px solid ${base0E}`,
-    },
-    '.cm-panels.cm-panels-bottom': {
-      borderTop: `1px solid ${base0E}`,
-    },
-    '.cm-panel button': {
-      backgroundColor: tooltipBackground,
-      color: base01,
-      border: generalPanel.border,
-      borderRadius: generalPanel.borderRadius,
-      padding: generalPanel.padding,
-    },
-    '.cm-panel button:hover': {
-      backgroundColor: base0A,
-    },
-
-    // Line highlighting
-    '.cm-activeLine': {
-      backgroundColor: highlightBackground,
-      borderRadius: generalLine.borderRadius,
-      zIndex: 1,
-    },
-
-    // Gutters
-    '.cm-gutters': {
-      backgroundColor: base0D,
-      color: base03,
-      border: generalGutter.border,
-      borderRight: '1px solid #30363d',
-      paddingRight: generalGutter.paddingRight,
-    },
-    '.cm-activeLineGutter': {
-      backgroundColor: base0F,
-      color: base01,
-      fontWeight: generalGutter.fontWeight,
-    },
-    '.cm-lineNumbers': {
-      fontSize: generalGutter.fontSize,
-      lineHeight: generalGutter.lineHeight,
-    },
-    '.cm-foldGutter': {
-      fontSize: generalGutter.fontSize,
-      lineHeight: generalGutter.lineHeight,
-    },
-    '.cm-foldGutter .cm-gutterElement': {
-      color: base03,
-      cursor: 'pointer',
-    },
-    '.cm-foldGutter .cm-gutterElement:hover': {
-      color: base01,
-    },
-
-    // Diff/Merge View Styles
-    // Inserted/Added Content
-    '.cm-insertedLine': {
-      textDecoration: generalDiff.insertedTextDecoration,
-      backgroundColor: addedBackground,
-      color: addedText,
-      padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadius,
-    },
-    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
-      textDecoration: generalDiff.insertedTextDecoration,
-      backgroundColor: `${addedBackground} !important`,
-      color: addedText,
-      padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadius,
-      border: `1px solid ${addedText}40`,
-    },
-    'ins.cm-insertedLine .cm-changedText': {
-      background: 'transparent !important',
-    },
-
-    // Deleted/Removed Content
-    '.cm-deletedLine': {
-      textDecoration: generalDiff.deletedTextDecoration,
-      backgroundColor: removedBackground,
-      color: removedText,
-      padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadius,
-    },
-    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
-      textDecoration: generalDiff.deletedTextDecoration,
-      backgroundColor: `${removedBackground} !important`,
-      color: removedText,
-      padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadius,
-      border: `1px solid ${removedText}40`,
-    },
-    'del .cm-deletedText, del .cm-changedText': {
-      background: 'transparent !important',
-    },
-
-    // Tooltips and autocomplete
-    '.cm-tooltip': {
-      backgroundColor: tooltipBackground,
-      border: `1px solid ${base0E}`,
-      borderRadius: generalTooltip.borderRadius,
-      padding: generalTooltip.padding,
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
-    },
-    '.cm-tooltip-autocomplete': {
-      '& > ul': {
-        backgroundColor: tooltipBackground,
-        border: 'none',
-      },
-      '& > ul > li': {
-        padding: generalTooltip.padding,
-        lineHeight: generalTooltip.lineHeight,
-      },
-      '& > ul > li[aria-selected]': {
-        backgroundColor: selection,
-        color: base04,
-        borderRadius: generalTooltip.borderRadiusSelected,
-      },
-      '& > ul > li > span.cm-completionIcon': {
-        color: base03,
-        paddingRight: generalTooltip.paddingRight,
-      },
-      '& > ul > li > span.cm-completionDetail': {
-        color: base03,
-        fontStyle: 'italic',
-      },
-    },
-    '.cm-tooltip .cm-tooltip-arrow:before': {
-      borderTopColor: 'transparent',
-      borderBottomColor: 'transparent',
-    },
-    '.cm-tooltip .cm-tooltip-arrow:after': {
-      borderTopColor: tooltipBackground,
-      borderBottomColor: tooltipBackground,
-    },
-
-    // Diagnostics styling
-    '.cm-diagnostic': {
-      '&-error': {
-        borderLeft: `3px solid ${invalid}`,
-      },
-      '&-warning': {
-        borderLeft: `3px solid ${diagnosticWarning}`,
-      },
-      '&-info': {
-        borderLeft: `3px solid ${linkColor}`,
-      },
-    },
-    '.cm-lintPoint-error': {
-      borderBottom: `2px wavy ${invalid}`,
-    },
-    '.cm-lintPoint-warning': {
-      borderBottom: `2px wavy ${diagnosticWarning}`,
-    },
-
-    // Matching brackets
-    '.cm-matchingBracket': {
-      backgroundColor: activeBracketBg,
-      outline: `1px solid ${activeBracketBorder}`,
-      borderRadius: generalMatching.borderRadius,
-    },
-    '.cm-nonmatchingBracket': {
-      backgroundColor: '#f9758340',
-      outline: `1px solid ${invalid}`,
-      borderRadius: generalMatching.borderRadius,
-    },
-
-    // Selection matches
-    '.cm-selectionMatch': {
-      backgroundColor: selectionMatch,
-      outline: `1px solid ${base02}50`,
-      borderRadius: generalMatching.borderRadius,
-    },
-
-    // Fold placeholder
-    '.cm-foldPlaceholder': {
-      backgroundColor: tooltipBackground,
-      color: base03,
-      border: `1px dotted ${base0E}70`,
-      borderRadius: generalPlaceholder.borderRadius,
-      padding: generalPlaceholder.padding,
-      margin: generalPlaceholder.margin,
-    },
-
-    // Focus outline
-    '&.cm-focused': {
-      outline: 'none',
-      boxShadow: `0 0 0 2px ${base00}, 0 0 0 3px ${linkColor}40`,
-    },
-
-    // Scrollbars
-    '& .cm-scroller::-webkit-scrollbar': {
-      width: generalScroller.width,
-      height: generalScroller.height,
-    },
-    '& .cm-scroller::-webkit-scrollbar-track': {
+    gutter: {
       background: base0D,
+      foreground: base03,
+      border: base0E,
+      activeBackground: base0F,
+      activeForeground: base01,
+      foldHover: base01,
     },
-    '& .cm-scroller::-webkit-scrollbar-thumb': {
-      backgroundColor: base0E,
-      borderRadius: generalScroller.borderRadius,
-      border: `3px solid ${base0D}`,
+    foldPlaceholder: { background: base0F, foreground: base03, border: `${base0E}70` },
+    tooltip: {
+      background: base0F,
+      border: base0E,
+      shadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+      listBackground: base0F,
+      selectedBackground: base02,
+      selectedForeground: base04,
+      icon: base03,
+      detail: base03,
     },
-    '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-      backgroundColor: base0B,
+    diff: {
+      insertedBackground: addedBackground,
+      insertedForeground: base05,
+      deletedBackground: removedBackground,
+      deletedForeground: base08,
     },
-
-    // Ghost text
-    '.cm-ghostText': {
-      opacity: '0.5',
-      color: base03,
+    diagnostic: { error: invalid, warning: diagnosticWarning, info: linkColor },
+    scrollbar: { track: base0D, thumb: base0E, thumbHover: base0B },
+    merge: {
+      backgroundColor: base0F,
+      borderColor: base0E,
+      buttonColor: base01,
+      buttonHoverColor: base0A,
     },
   },
-  { dark: true },
-);
-
-/**
- * Enhanced syntax highlighting for GitHub Dark theme
- */
-const githubDarkHighlightStyle = HighlightStyle.define([
-  // Keywords and control flow
-  { tag: t.keyword, color: base08, fontWeight: 'bold' },
-  { tag: t.controlKeyword, color: base08, fontWeight: 'bold' },
-  { tag: t.moduleKeyword, color: base08, fontWeight: 'bold' },
-
-  // Names and variables
-  { tag: [t.name, t.deleted, t.character, t.macroName], color: base07 },
-  { tag: [t.variableName], color: base07 },
-  { tag: [t.propertyName], color: base06, fontStyle: 'normal' },
-
-  // Classes and types
-  { tag: [t.typeName], color: base08 },
-  { tag: [t.className], color: base06, fontStyle: 'italic' },
-  { tag: [t.namespace], color: base07, fontStyle: 'italic' },
-
-  // Operators and punctuation
-  { tag: [t.operator, t.operatorKeyword], color: base01 },
-  { tag: [t.bracket], color: base03 },
-  { tag: [t.brace], color: base03 },
-  { tag: [t.punctuation], color: base03 },
-
-  // Functions and parameters
-  { tag: [t.function(t.variableName), t.labelName], color: base05 },
-  { tag: [t.definition(t.variableName)], color: base07 },
-
-  // Constants and literals
-  { tag: t.number, color: base0C },
-  { tag: t.changed, color: base0C },
-  { tag: t.annotation, color: invalid, fontStyle: 'italic' },
-  { tag: t.modifier, color: base0C, fontStyle: 'italic' },
-  { tag: t.self, color: base0C },
-  { tag: [t.color, t.constant(t.name), t.standard(t.name)], color: base0C },
-  { tag: [t.atom, t.bool, t.special(t.variableName)], color: base0C },
-
-  // Strings and regex
-  { tag: [t.processingInstruction, t.inserted], color: base05 },
-  { tag: [t.special(t.string), t.regexp], color: base09 },
-  { tag: t.string, color: base09 },
-
-  // Punctuation and structure
-  { tag: t.definition(t.typeName), color: base08, fontWeight: 'bold' },
-
-  // Comments and documentation
-  { tag: t.meta, color: base03 },
-  { tag: t.comment, fontStyle: 'italic', color: base03 },
-  { tag: t.docComment, fontStyle: 'italic', color: base03 },
-
-  // HTML/XML elements
-  { tag: [t.tagName], color: base05 },
-  { tag: [t.attributeName], color: base06 },
-
-  // Markdown and text formatting
-  { tag: [t.heading], fontWeight: 'bold', color: base07 },
-  { tag: [t.strong], fontWeight: 'bold', color: base07 },
-  { tag: [t.emphasis], fontStyle: 'italic', color: base09 },
-
-  // Links and URLs
-  {
-    tag: [t.link],
-    color: visitedLinkColor,
-    fontWeight: '500',
-    textDecoration: 'underline',
-    textUnderlinePosition: 'under',
+  syntax: {
+    keyword: { color: base08, fontWeight: 'bold' },
+    definitionKeyword: { color: base08 },
+    modifier: { color: base0C, fontStyle: 'italic' },
+    operator: { color: base01 },
+    punctuation: { color: base03 },
+    name: { color: base07 },
+    function: { color: base05 },
+    self: { color: base0C },
+    label: { color: base05 },
+    property: { color: base06, fontStyle: 'normal' },
+    type: { color: base08 },
+    typeDefinition: { color: base08, fontWeight: 'bold' },
+    className: { color: base06, fontStyle: 'italic' },
+    namespace: { color: base07, fontStyle: 'italic' },
+    tag: { color: base05 },
+    attribute: { color: base06 },
+    string: { color: base09 },
+    number: { color: base0C },
+    constant: { color: base0C },
+    comment: { fontStyle: 'italic', color: base03 },
+    meta: { color: base03 },
+    processingInstruction: { color: base05 },
+    annotation: { color: invalid, fontStyle: 'italic' },
+    heading: { fontWeight: 'bold', color: base07 },
+    headingLevel: { color: base07 },
+    quote: { color: base03 },
+    monospace: { color: base01 },
+    contentSeparator: { color: base07 },
+    link: {
+      color: visitedLinkColor,
+      fontWeight: '500',
+      textDecoration: 'underline',
+      textUnderlinePosition: 'under',
+    },
+    url: { color: linkColor, textDecoration: 'underline', textUnderlineOffset: '2px' },
+    emphasis: { fontStyle: 'italic', color: base09 },
+    strong: { fontWeight: 'bold', color: base07 },
+    strikethrough: { color: invalid, textDecoration: 'line-through' },
+    invalid: {
+      color: base01,
+      textDecoration: 'underline wavy',
+      borderBottom: `1px wavy ${invalid}`,
+    },
+    inserted: { color: base05 },
+    deleted: { color: invalid },
+    changed: { color: base0C },
   },
-  {
-    tag: [t.url],
-    color: linkColor,
-    textDecoration: 'underline',
-    textUnderlineOffset: '2px',
-  },
-
-  // Special states
-  { tag: [t.invalid], color: base01, textDecoration: 'underline wavy', borderBottom: `1px wavy ${invalid}` },
-  { tag: [t.strikethrough], color: invalid, textDecoration: 'line-through' },
-
-  // Enhanced syntax highlighting
-  { tag: t.constant(t.name), color: base0C },
-  { tag: t.deleted, color: invalid },
-  { tag: t.squareBracket, color: base03 },
-  { tag: t.angleBracket, color: base03 },
-
-  // Additional specific styles
-  { tag: t.monospace, color: base01 },
-  { tag: [t.contentSeparator], color: base07 },
-  { tag: t.quote, color: base03 },
-
-  { tag: t.integer, color: base0C },
-  { tag: t.float, color: base0C },
-  { tag: t.null, color: base0C },
-  { tag: t.attributeValue, color: base09 },
-  { tag: t.escape, color: base09 },
-  { tag: t.paren, color: base03 },
-  { tag: t.lineComment, color: base03, fontStyle: 'italic' },
-  { tag: t.blockComment, color: base03, fontStyle: 'italic' },
-  { tag: t.definitionKeyword, color: base08 },
-  { tag: t.arithmeticOperator, color: base01 },
-  { tag: t.logicOperator, color: base01 },
-  { tag: t.compareOperator, color: base01 },
-  { tag: t.bitwiseOperator, color: base01 },
-  { tag: t.updateOperator, color: base01 },
-  { tag: t.derefOperator, color: base01 },
-  { tag: t.local(t.variableName), color: base07 },
-  { tag: t.list, color: base07 },
-  { tag: t.unit, color: base0C },
-  { tag: t.heading1, color: base07 },
-  { tag: t.heading2, color: base07 },
-  { tag: t.heading3, color: base07 },
-  { tag: t.heading4, color: base07 },
-  { tag: t.heading5, color: base07 },
-  { tag: t.heading6, color: base07 },
-]);
+  migration,
+});
 
 /**
  * Combined GitHub Dark theme extension
  */
-const githubDark: Extension = [githubDarkTheme, syntaxHighlighting(githubDarkHighlightStyle)];
+const githubDark: Extension = theme.extension;
 
 /**
  * GitHub Dark merge revert styles configuration
  */
-const githubDarkMergeStyles: IMergeRevertStyles = {
-  backgroundColor: tooltipBackground,
-  borderColor: base0E,
-  buttonColor: base01,
-  buttonHoverColor: base0A,
-};
+const githubDarkMergeStyles: IMergeRevertStyles = theme.mergeStyles;
 
 export { applyMergeRevertStyles, githubDark, githubDarkMergeStyles };

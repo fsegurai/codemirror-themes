@@ -1,22 +1,8 @@
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import type { Extension } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
-import {
-  applyMergeRevertStyles,
-  generalContent,
-  generalDiff,
-  generalGutter,
-  generalLine,
-  generalMatching,
-  generalPanel,
-  generalPlaceholder,
-  generalScroller,
-  generalSearchField,
-  generalTooltip,
-  type IMergeRevertStyles,
-} from './utils';
+import { defineTheme, type ThemeMigration } from './theme-core';
+import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 
 /**
  * High Contrast Light theme color definitions
@@ -41,461 +27,195 @@ const base00 = '#ffffff', // Background - pure white
   darkBrown = '#7c3400';
 
 // UI specific colors
-const invalid = darkRed,
-  lightBackground = base00,
-  background = base00,
-  tooltipBackground = '#f0f0f0',
+const tooltipBackground = '#f0f0f0',
   selection = '#0078d4',
-  selectionMatch = '#0078d480',
-  cursor = darkBlue,
-  activeBracketBg = '#e0e0e0',
-  activeBracketBorder = darkCyan,
-  diagnosticWarning = darkOrange,
-  linkColor = darkBlue,
-  visitedLinkColor = darkPurple;
+  selectionMatch = '#0078d480';
 
 // Diff/merge specific colors
 const addedBackground = '#00800040',
-  removedBackground = '#c8000040',
-  addedText = darkGreen,
-  removedText = darkRed;
+  removedBackground = '#c8000040';
 
 /**
- * Enhanced editor theme styles for High Contrast Light
+ * TEMPORARY: differences between the canonical structure and this theme's pre-6.31 output, kept so the move onto
+ * `defineTheme` changes nothing visually. To be removed when the theme is completed on the shared structure.
  */
-const highContrastLightTheme = EditorView.theme(
-  {
-    // Base editor styles
-    '&': {
-      color: base04,
-      backgroundColor: background,
-      fontSize: generalContent.fontSize,
-      fontFamily: generalContent.fontFamily,
-      border: `2px solid ${base04}`,
-    },
-
-    // Content and cursor
-    '.cm-content': {
-      caretColor: cursor,
-      lineHeight: generalContent.lineHeight,
-    },
-    '.cm-cursor, .cm-dropCursor': {
-      borderLeftColor: cursor,
-      borderLeftWidth: '3px',
-    },
-    '.cm-fat-cursor': {
-      backgroundColor: cursor,
-      color: background,
-      border: `2px solid ${base04}`,
-    },
-
-    // Selection
+const migration: ThemeMigration = {
+  ui: {
+    '&': { border: `2px solid ${base04}` },
+    '.cm-cursor, .cm-dropCursor': { borderLeftWidth: '3px' },
+    '.cm-fat-cursor': { backgroundColor: darkBlue, border: `2px solid ${base04}` },
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
-      {
-        backgroundColor: '#4d90fe',
-        outline: `2px solid ${darkBlue}`,
-      },
-
-    // Make sure selection appears above active line
-    '.cm-selectionLayer': {
-      zIndex: 100,
-    },
-
-    // Search functionality
-    '.cm-searchMatch': {
-      backgroundColor: '#ffff00',
-      outline: `2px solid ${darkOrange}`,
-      color: base04,
-      borderRadius: generalSearchField.borderRadius,
-
-      '& span': {
-        color: base04,
-      },
-    },
-    '.cm-searchMatch.cm-searchMatch-selected': {
-      backgroundColor: darkOrange,
-      color: base00,
-      padding: generalSearchField.padding,
-      outline: `2px solid ${base04}`,
-
-      '& span': {
-        color: base00,
-      },
-    },
-    '.cm-search.cm-panel.cm-textfield': {
-      color: base04,
-      backgroundColor: base00,
-      border: `2px solid ${base04}`,
-      borderRadius: generalSearchField.borderRadius,
-      padding: generalSearchField.padding,
-    },
-
-    // Panels
-    '.cm-panels': {
-      backgroundColor: lightBackground,
-      color: base04,
-      borderRadius: '4px',
-      border: `2px solid ${base04}`,
-    },
-    '.cm-panels.cm-panels-top': {
-      borderBottom: `2px solid ${base04}`,
-    },
-    '.cm-panels.cm-panels-bottom': {
-      borderTop: `2px solid ${base04}`,
-    },
-    '.cm-panel button': {
-      backgroundColor: tooltipBackground,
-      color: darkBlue,
-      border: `2px solid ${base04}`,
-      borderRadius: generalPanel.borderRadius,
-      padding: generalPanel.padding,
-    },
-    '.cm-panel button:hover': {
-      backgroundColor: base01,
-      border: `2px solid ${darkBlue}`,
-    },
-
-    // Line highlighting
-    '.cm-activeLine': {
-      backgroundColor: '#ffffccba',
-      borderRadius: generalLine.borderRadius,
-      borderLeft: `3px solid ${darkBlue}`,
-      borderRight: `1px solid ${base02}`,
-      zIndex: 1,
-    },
-
-    // Gutters
-    '.cm-gutters': {
-      backgroundColor: lightBackground,
-      color: base03,
-      border: generalGutter.border,
-      borderRight: `2px solid ${base04}`,
-      paddingRight: generalGutter.paddingRight,
-    },
-    '.cm-activeLineGutter': {
-      backgroundColor: base01,
-      color: darkBlue,
-      fontWeight: 'bold',
-      border: `1px solid ${base02}`,
-    },
-    '.cm-lineNumbers': {
-      fontSize: generalGutter.fontSize,
-      lineHeight: generalGutter.lineHeight,
-    },
-    '.cm-foldGutter': {
-      fontSize: generalGutter.fontSize,
-      lineHeight: generalGutter.lineHeight,
-    },
-    '.cm-foldGutter .cm-gutterElement': {
-      color: base03,
-      cursor: 'pointer',
-    },
-    '.cm-foldGutter .cm-gutterElement:hover': {
-      color: darkCyan,
-    },
-
-    // Diff/Merge View Styles
-    '.cm-insertedLine': {
-      textDecoration: generalDiff.insertedTextDecoration,
-      backgroundColor: addedBackground,
-      color: addedText,
-      padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadius,
-      border: `2px solid ${addedText}`,
-    },
-    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
-      textDecoration: generalDiff.insertedTextDecoration,
-      backgroundColor: `${addedBackground} !important`,
-      color: addedText,
-      padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadius,
-      border: `2px solid ${addedText}`,
-    },
-    'ins.cm-insertedLine .cm-changedText': {
-      background: 'transparent !important',
-    },
-
-    '.cm-deletedLine': {
-      textDecoration: generalDiff.deletedTextDecoration,
-      backgroundColor: removedBackground,
-      color: removedText,
-      padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadius,
-      border: `2px solid ${removedText}`,
-    },
-    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
-      textDecoration: generalDiff.deletedTextDecoration,
-      backgroundColor: `${removedBackground} !important`,
-      color: removedText,
-      padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadius,
-      border: `2px solid ${removedText}`,
-    },
-    'del .cm-deletedText, del .cm-changedText': {
-      background: 'transparent !important',
-    },
-
-    // Tooltips and autocomplete
+      { outline: `2px solid ${darkBlue}` },
+    '.cm-searchMatch': { outline: `2px solid ${darkOrange}` },
+    '.cm-searchMatch.cm-searchMatch-selected': { outline: `2px solid ${base04}` },
+    '.cm-search.cm-panel.cm-textfield': { backgroundColor: base00, border: `2px solid ${base04}` },
+    '.cm-panels': { border: `2px solid ${base04}` },
+    '.cm-panels.cm-panels-top': { borderBottom: `2px solid ${base04}` },
+    '.cm-panels.cm-panels-bottom': { borderTop: `2px solid ${base04}` },
+    '.cm-panel button': { border: `2px solid ${base04}` },
+    '.cm-panel button:hover': { border: `2px solid ${darkBlue}` },
+    '.cm-activeLine': { borderLeft: `3px solid ${darkBlue}`, borderRight: `1px solid ${base02}` },
+    '.cm-gutters': { borderRight: `2px solid ${base04}` },
+    '.cm-activeLineGutter': { fontWeight: 'bold', border: `1px solid ${base02}` },
+    '.cm-insertedLine': { border: `2px solid ${darkGreen}` },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': { border: `2px solid ${darkGreen}` },
+    '.cm-deletedLine': { border: `2px solid ${darkRed}` },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': { border: `2px solid ${darkRed}` },
     '.cm-tooltip': {
       backgroundColor: tooltipBackground,
       border: `2px solid ${darkBlue}`,
-      borderRadius: generalTooltip.borderRadius,
-      padding: generalTooltip.padding,
+      boxShadow: null,
       color: base04,
     },
-    '.cm-tooltip-autocomplete': {
-      '& > ul': {
-        backgroundColor: tooltipBackground,
-        border: `2px solid ${base04}`,
-      },
-      '& > ul > li': {
-        padding: generalTooltip.padding,
-        lineHeight: generalTooltip.lineHeight,
-      },
-      '& > ul > li[aria-selected]': {
-        backgroundColor: selection,
-        color: base00,
-        borderRadius: generalTooltip.borderRadiusSelected,
-        border: `2px solid ${darkBlue}`,
-      },
-      '& > ul > li > span.cm-completionIcon': {
-        color: darkCyan,
-        paddingRight: generalTooltip.paddingRight,
-      },
-      '& > ul > li > span.cm-completionDetail': {
-        color: darkOrange,
-        fontStyle: 'italic',
-      },
-    },
-    '.cm-tooltip .cm-tooltip-arrow:before': {
-      borderTopColor: 'transparent',
-      borderBottomColor: 'transparent',
-    },
-    '.cm-tooltip .cm-tooltip-arrow:after': {
-      borderTopColor: darkBlue,
-      borderBottomColor: darkBlue,
-    },
+    '.cm-tooltip-autocomplete > ul': { border: `2px solid ${base04}` },
+    '.cm-tooltip-autocomplete > ul > li[aria-selected]': { border: `2px solid ${darkBlue}` },
+    '.cm-diagnostic-error': { borderLeft: `4px solid ${darkRed}`, backgroundColor: '#ff000020' },
+    '.cm-diagnostic-warning': { borderLeft: `4px solid ${darkOrange}`, backgroundColor: '#ff990020' },
+    '.cm-diagnostic-info': { borderLeft: `4px solid ${darkBlue}`, backgroundColor: `${darkBlue}20` },
+    '.cm-lintPoint-error': { borderBottom: `3px wavy ${darkRed}` },
+    '.cm-lintPoint-warning': { borderBottom: `3px wavy ${darkOrange}` },
+    '.cm-matchingBracket': { outline: `2px solid ${darkCyan}` },
+    '.cm-nonmatchingBracket': { outline: `2px solid ${darkRed}` },
+    '.cm-selectionMatch': { outline: `2px solid ${darkBlue}50` },
+    '.cm-foldPlaceholder': { border: `2px solid ${darkBlue}` },
+    '&.cm-focused': { outline: `3px solid ${darkBlue}`, boxShadow: null, outlineOffset: '2px' },
+    '& .cm-scroller::-webkit-scrollbar-track': { border: `2px solid ${base04}` },
+    '& .cm-scroller::-webkit-scrollbar-thumb': { border: `2px solid ${base04}` },
+    '.cm-ghostText': { opacity: '0.7' },
+  },
+  highlight: [
+    { tag: [t.separator, t.definition(t.name)], color: darkBlue },
+    { tag: [t.angleBracket, t.brace], color: darkCyan },
+  ],
+};
 
-    // Diagnostics styling
-    '.cm-diagnostic': {
-      '&-error': {
-        borderLeft: `4px solid ${darkRed}`,
-        backgroundColor: '#ff000020',
-      },
-      '&-warning': {
-        borderLeft: `4px solid ${diagnosticWarning}`,
-        backgroundColor: '#ff990020',
-      },
-      '&-info': {
-        borderLeft: `4px solid ${linkColor}`,
-        backgroundColor: '#0000ff20',
-      },
+const theme = defineTheme({
+  name: 'High Contrast Light',
+  dark: false,
+  ui: {
+    background: base00,
+    foreground: base04,
+    cursor: darkBlue,
+    selection: '#4d90fe',
+    activeLine: '#ffffccba',
+    ghostText: base02,
+    searchMatch: {
+      background: '#ffff00',
+      outline: darkOrange,
+      foreground: base04,
+      selectedBackground: darkOrange,
+      selectedForeground: base00,
     },
-    '.cm-lintPoint-error': {
-      borderBottom: `3px wavy ${darkRed}`,
+    selectionMatch: { background: selectionMatch, outline: `${darkBlue}50` },
+    matchingBracket: { background: base01, outline: darkCyan },
+    nonMatchingBracket: { background: '#ff000030', outline: darkRed },
+    panel: {
+      background: base00,
+      foreground: base04,
+      border: base04,
+      buttonBackground: tooltipBackground,
+      buttonForeground: darkBlue,
+      buttonHoverBackground: base01,
     },
-    '.cm-lintPoint-warning': {
-      borderBottom: `3px wavy ${diagnosticWarning}`,
+    gutter: {
+      background: base00,
+      foreground: base03,
+      border: base04,
+      activeBackground: base01,
+      activeForeground: darkBlue,
+      foldHover: darkCyan,
     },
-
-    // Matching brackets
-    '.cm-matchingBracket': {
-      backgroundColor: activeBracketBg,
-      outline: `2px solid ${activeBracketBorder}`,
-      borderRadius: generalMatching.borderRadius,
+    foldPlaceholder: { background: tooltipBackground, foreground: darkBlue, border: darkBlue },
+    tooltip: {
+      background: darkBlue,
+      border: darkBlue,
+      listBackground: tooltipBackground,
+      selectedBackground: selection,
+      selectedForeground: base00,
+      icon: darkCyan,
+      detail: darkOrange,
+      shadow: 'none',
     },
-    '.cm-nonmatchingBracket': {
-      backgroundColor: '#ff000030',
-      outline: `2px solid ${invalid}`,
-      borderRadius: generalMatching.borderRadius,
+    diff: {
+      insertedBackground: addedBackground,
+      insertedForeground: darkGreen,
+      deletedBackground: removedBackground,
+      deletedForeground: darkRed,
     },
-
-    // Selection matches
-    '.cm-selectionMatch': {
-      backgroundColor: selectionMatch,
-      outline: `2px solid ${darkBlue}50`,
-      borderRadius: generalMatching.borderRadius,
-    },
-
-    // Fold placeholder
-    '.cm-foldPlaceholder': {
-      backgroundColor: tooltipBackground,
-      color: darkBlue,
-      border: `2px solid ${darkBlue}`,
-      borderRadius: generalPlaceholder.borderRadius,
-      padding: generalPlaceholder.padding,
-      margin: generalPlaceholder.margin,
-    },
-
-    // Focus outline
-    '&.cm-focused': {
-      outline: `3px solid ${darkBlue}`,
-      outlineOffset: '2px',
-    },
-
-    // Scrollbars
-    '& .cm-scroller::-webkit-scrollbar': {
-      width: generalScroller.width,
-      height: generalScroller.height,
-    },
-    '& .cm-scroller::-webkit-scrollbar-track': {
-      background: lightBackground,
-      border: `2px solid ${base04}`,
-    },
-    '& .cm-scroller::-webkit-scrollbar-thumb': {
-      backgroundColor: base03,
-      border: `2px solid ${base04}`,
-      borderRadius: generalScroller.borderRadius,
-    },
-    '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-      backgroundColor: darkBlue,
-    },
-
-    // Ghost text
-    '.cm-ghostText': {
-      opacity: '0.7',
-      color: base02,
+    diagnostic: { error: darkRed, warning: darkOrange, info: darkBlue },
+    scrollbar: { track: base00, thumb: base03, thumbHover: darkBlue },
+    focusRing: 'none',
+    merge: {
+      backgroundColor: base00,
+      borderColor: darkBlue,
+      buttonColor: darkBlue,
+      buttonHoverColor: darkOrange,
     },
   },
-  { dark: false },
-);
-
-/**
- * Enhanced syntax highlighting for High Contrast Light theme
- */
-const highContrastLightHighlightStyle = HighlightStyle.define([
-  // Keywords and control flow
-  { tag: t.keyword, color: darkMagenta, fontWeight: 'bold' },
-  { tag: t.controlKeyword, color: darkMagenta, fontWeight: 'bold' },
-  { tag: t.moduleKeyword, color: darkMagenta, fontWeight: 'bold' },
-
-  // Names and variables
-  { tag: [t.name, t.deleted, t.character, t.macroName], color: base04 },
-  { tag: [t.variableName], color: base04 },
-  { tag: [t.propertyName], color: darkBlue, fontStyle: 'normal' },
-
-  // Classes and types
-  { tag: [t.typeName], color: darkCyan },
-  { tag: [t.className], color: darkCyan, fontStyle: 'italic' },
-  { tag: [t.namespace], color: darkOrange, fontStyle: 'italic' },
-
-  // Operators and punctuation
-  { tag: [t.operator, t.operatorKeyword], color: darkCyan },
-  { tag: [t.bracket], color: darkBrown },
-  { tag: [t.brace], color: darkCyan },
-  { tag: [t.punctuation], color: base04 },
-
-  // Functions and parameters
-  { tag: [t.function(t.variableName), t.labelName], color: darkBlue },
-  { tag: [t.definition(t.function(t.variableName))], color: darkBlue },
-  { tag: [t.definition(t.variableName)], color: darkOrange },
-
-  // Constants and literals
-  { tag: t.number, color: darkOrange },
-  { tag: t.changed, color: darkOrange },
-  { tag: t.annotation, color: darkRed, fontStyle: 'italic' },
-  { tag: t.modifier, color: darkPurple, fontStyle: 'italic' },
-  { tag: t.self, color: darkRed },
-  { tag: [t.color, t.constant(t.name), t.standard(t.name)], color: darkOrange },
-  { tag: [t.atom, t.bool, t.special(t.variableName)], color: darkOrange },
-
-  // Strings and regex
-  { tag: [t.processingInstruction, t.inserted], color: darkGreen },
-  { tag: [t.special(t.string), t.regexp], color: darkMagenta },
-  { tag: t.string, color: darkGreen },
-
-  // Punctuation and structure
-  { tag: t.definition(t.typeName), color: darkCyan, fontWeight: 'bold' },
-  { tag: [t.definition(t.name), t.separator], color: darkBlue },
-
-  // Comments and documentation
-  { tag: t.meta, color: base02 },
-  { tag: t.comment, fontStyle: 'italic', color: base02 },
-  { tag: t.docComment, fontStyle: 'italic', color: base02 },
-
-  // HTML/XML elements
-  { tag: [t.tagName], color: darkMagenta },
-  { tag: [t.attributeName], color: darkCyan },
-
-  // Markdown and text formatting
-  { tag: [t.heading], fontWeight: 'bold', color: darkMagenta },
-  { tag: [t.strong], fontWeight: 'bold', color: darkOrange },
-  { tag: [t.emphasis], fontStyle: 'italic', color: darkMagenta },
-
-  // Links and URLs
-  {
-    tag: [t.link],
-    color: visitedLinkColor,
-    fontWeight: '500',
-    textDecoration: 'underline',
-    textUnderlinePosition: 'under',
+  syntax: {
+    keyword: { color: darkMagenta, fontWeight: 'bold' },
+    definitionKeyword: { color: darkMagenta },
+    modifier: { color: darkPurple, fontStyle: 'italic' },
+    operator: { color: darkCyan },
+    punctuation: { color: base04 },
+    bracket: { color: darkBrown },
+    name: { color: base04 },
+    localVariable: { color: darkOrange },
+    variableDefinition: { color: darkOrange },
+    function: { color: darkBlue },
+    self: { color: darkRed },
+    label: { color: darkBlue },
+    property: { color: darkBlue, fontStyle: 'normal' },
+    type: { color: darkCyan },
+    typeDefinition: { color: darkCyan, fontWeight: 'bold' },
+    className: { color: darkCyan, fontStyle: 'italic' },
+    namespace: { color: darkOrange, fontStyle: 'italic' },
+    tag: { color: darkMagenta },
+    attribute: { color: darkCyan },
+    string: { color: darkGreen },
+    regexp: { color: darkMagenta },
+    number: { color: darkOrange },
+    constant: { color: darkOrange },
+    comment: { fontStyle: 'italic', color: base02 },
+    meta: { color: base02 },
+    processingInstruction: { color: darkGreen },
+    annotation: { color: darkRed, fontStyle: 'italic' },
+    heading: { fontWeight: 'bold', color: darkMagenta },
+    headingLevel: { color: darkMagenta },
+    list: { color: darkMagenta },
+    quote: { color: darkPurple },
+    monospace: { color: darkBlue, fontStyle: 'italic' },
+    contentSeparator: { color: darkPurple },
+    link: {
+      color: darkPurple,
+      fontWeight: '500',
+      textDecoration: 'underline',
+      textUnderlinePosition: 'under',
+    },
+    url: { color: darkBlue, textDecoration: 'underline', textUnderlineOffset: '2px' },
+    emphasis: { fontStyle: 'italic', color: darkMagenta },
+    strong: { fontWeight: 'bold', color: darkOrange },
+    strikethrough: { color: darkRed, textDecoration: 'line-through' },
+    invalid: {
+      color: darkRed,
+      textDecoration: 'underline wavy',
+      borderBottom: `2px wavy ${darkRed}`,
+    },
+    inserted: { color: darkGreen },
+    deleted: { color: darkRed },
+    changed: { color: darkOrange },
   },
-  {
-    tag: [t.url],
-    color: linkColor,
-    textDecoration: 'underline',
-    textUnderlineOffset: '2px',
-  },
-
-  // Special states
-  {
-    tag: [t.invalid],
-    color: darkRed,
-    textDecoration: 'underline wavy',
-    borderBottom: `2px wavy ${darkRed}`,
-  },
-  { tag: [t.strikethrough], color: darkRed, textDecoration: 'line-through' },
-
-  // Enhanced syntax highlighting
-  { tag: t.constant(t.name), color: darkOrange },
-  { tag: t.deleted, color: darkRed },
-  { tag: t.squareBracket, color: darkBrown },
-  { tag: t.angleBracket, color: darkCyan },
-
-  // Additional specific styles
-  { tag: t.monospace, color: darkBlue, fontStyle: 'italic' },
-  { tag: [t.contentSeparator], color: darkPurple },
-  { tag: t.quote, color: darkPurple },
-
-  { tag: t.integer, color: darkOrange },
-  { tag: t.float, color: darkOrange },
-  { tag: t.null, color: darkOrange },
-  { tag: t.attributeValue, color: darkGreen },
-  { tag: t.escape, color: darkGreen },
-  { tag: t.paren, color: darkBrown },
-  { tag: t.lineComment, color: base02, fontStyle: 'italic' },
-  { tag: t.blockComment, color: base02, fontStyle: 'italic' },
-  { tag: t.definitionKeyword, color: darkMagenta },
-  { tag: t.arithmeticOperator, color: darkCyan },
-  { tag: t.logicOperator, color: darkCyan },
-  { tag: t.compareOperator, color: darkCyan },
-  { tag: t.bitwiseOperator, color: darkCyan },
-  { tag: t.updateOperator, color: darkCyan },
-  { tag: t.derefOperator, color: darkCyan },
-  { tag: t.local(t.variableName), color: darkOrange },
-  { tag: t.list, color: darkMagenta },
-  { tag: t.unit, color: darkOrange },
-  { tag: t.heading1, color: darkMagenta },
-  { tag: t.heading2, color: darkMagenta },
-  { tag: t.heading3, color: darkMagenta },
-  { tag: t.heading4, color: darkMagenta },
-  { tag: t.heading5, color: darkMagenta },
-  { tag: t.heading6, color: darkMagenta },
-]);
+  migration,
+});
 
 /**
  * Combined High Contrast Light theme extension
  */
-const highContrastLight: Extension = [highContrastLightTheme, syntaxHighlighting(highContrastLightHighlightStyle)];
+const highContrastLight: Extension = theme.extension;
 
 /**
  * High Contrast Light merge revert styles configuration
  */
-const highContrastLightMergeStyles: IMergeRevertStyles = {
-  backgroundColor: lightBackground,
-  borderColor: darkBlue,
-  buttonColor: darkBlue,
-  buttonHoverColor: darkOrange,
-};
+const highContrastLightMergeStyles: IMergeRevertStyles = theme.mergeStyles;
 
 export { applyMergeRevertStyles, highContrastLight, highContrastLightMergeStyles };

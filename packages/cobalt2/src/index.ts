@@ -1,23 +1,8 @@
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import type { Extension } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
-import {
-  applyMergeRevertStyles,
-  generalContent,
-  generalCursor,
-  generalDiff,
-  generalGutter,
-  generalLine,
-  generalMatching,
-  generalPanel,
-  generalPlaceholder,
-  generalScroller,
-  generalSearchField,
-  generalTooltip,
-  type IMergeRevertStyles,
-} from './utils';
+import { defineTheme, type ThemeMigration } from './theme-core';
+import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 
 /**
  * Cobalt2 theme color palette
@@ -47,7 +32,6 @@ const background = '#193549', // Main editor background
   blue = '#0088ff', // Comments, links
   cyan = '#80fcff', // Special keywords, module exports
   lightBlue = '#9effff', // Meta, variables, properties
-  yellow = '#ffc600', // Entities, storage, functions
   orange = '#ff9d00', // Keywords, support functions
   pink = '#ff628c', // Constants, deleted text
   hotPink = '#fb94ff', // Language variables, storage.type.function
@@ -66,464 +50,181 @@ const background = '#193549', // Main editor background
 
 // Diff/merge specific colors (exact from original)
 const addedBackground = '#3ad90033', // Light green with transparency for insertions
-  removedBackground = '#ee3a4333', // Light red with transparency for deletions
-  addedText = lightGreen, // Green for added text
-  removedText = pink; // Pink for removed text
+  removedBackground = '#ee3a4333'; // Light red with transparency for deletions
 
 /**
- * Enhanced editor theme styles for Cobalt2
+ * TEMPORARY: differences between the canonical structure and this theme's pre-6.31 output, kept so the move onto
+ * `defineTheme` changes nothing visually. To be removed when the theme is completed on the shared structure.
  */
-const cobalt2Theme = EditorView.theme(
-  {
-    // Base editor styles
-    '&': {
-      color: foreground,
-      backgroundColor: background,
-      fontSize: generalContent.fontSize,
-      fontFamily: generalContent.fontFamily,
-    },
-
-    // Content and cursor
-    '.cm-content': {
-      caretColor: cursor,
-      lineHeight: generalContent.lineHeight,
-    },
-    '.cm-cursor, .cm-dropCursor': {
-      borderLeftColor: cursor,
-      borderLeftWidth: generalCursor.borderLeftWidth,
-    },
-    '.cm-fat-cursor': {
-      backgroundColor: `${cursor}99`,
-      color: background,
-    },
-
-    // Selection
+const migration: ThemeMigration = {
+  ui: {
     '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
-      {
-        backgroundColor: selection,
-        color: foreground,
-      },
-
-    // Make sure selection appears above active line
-    '.cm-selectionLayer': {
-      zIndex: 100,
-    },
-
+      { color: foreground },
+    '.cm-searchMatch span': { color: null },
+    '.cm-searchMatch.cm-searchMatch-selected': { padding: null },
+    '.cm-searchMatch.cm-searchMatch-selected span': { color: null },
+    '.cm-search.cm-panel.cm-textfield': { backgroundColor: background, border: `1px solid ${darkGray}` },
+    '.cm-panels': { color: gray },
+    '.cm-panel button': { border: `1px solid ${darkGray}` },
+    '.cm-panel button:hover': { color: foreground },
+    '.cm-activeLine': { zIndex: null },
+    '.cm-lineNumbers': { color: gray },
+    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': { border: `1px solid ${lightGreen}30` },
+    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': { border: `1px solid ${pink}30` },
+    '.cm-tooltip': { color: gray },
+    '.cm-tooltip-autocomplete > ul > li': { color: gray },
+    '.cm-tooltip .cm-tooltip-arrow:before': { borderTopColor: null, borderBottomColor: null },
+    '.cm-tooltip .cm-tooltip-arrow:after': { borderTopColor: null, borderBottomColor: null },
+    '.cm-selectionMatch': { outline: null },
+    '&.cm-focused': { boxShadow: null },
     '.cm-activeLine .cm-selectionBackground': {
       backgroundColor: `${selection}DD`,
       border: `1px solid ${cyan}40`,
       borderRadius: '2px',
     },
-
     '&.cm-focused .cm-activeLine .cm-selectionBackground': {
       backgroundColor: `${selection}FF`,
       border: `1px solid ${cyan}60`,
       boxShadow: `0 0 3px ${cyan}30`,
     },
-
-    '&:not(.cm-focused) .cm-selectionBackground': {
-      backgroundColor: selectionInactive,
-    },
-
+    '&:not(.cm-focused) .cm-selectionBackground': { backgroundColor: selectionInactive },
     '&:not(.cm-focused) .cm-activeLine .cm-selectionBackground': {
       backgroundColor: `${selectionInactive}CC`,
       border: `1px solid ${darkGray}80`,
     },
+    '.cm-hoverHighlight': { backgroundColor: hoverHighlight },
+    '.cm-wordHighlight': { backgroundColor: wordHighlight, borderRadius: '2px' },
+    '.cm-specialChar': { color: '#ffffff52' },
+    '.cm-indentGuide': { borderLeft: '1px solid #3B5364' },
+  },
+  highlight: [
+    { tag: t.macroName, color: lightPink, fontStyle: 'italic' },
+    { tag: [t.color, t.definition(t.name)] },
+    { tag: [t.special(t.keyword), t.special(t.variableName), t.special(t.propertyName)], color: cyan },
+    { tag: t.character, color: lightGreen },
+    { tag: [t.paren, t.function(t.propertyName)], color: cursor },
+    { tag: [t.standard(t.propertyName), t.standard(t.tagName)], color: supportTeal },
+    { tag: [t.special(t.string), t.special(t.monospace), t.special(t.character)], color: green },
+    { tag: t.definition(t.function(t.variableName)), color: parameterYellow },
+    { tag: t.definition(t.function(t.propertyName)), color: lightBlue },
+  ],
+};
 
-    // Search functionality
-    '.cm-searchMatch': {
-      backgroundColor: findMatchCurrent,
-      outline: `1px solid ${orange}`,
-      color: foreground,
-      borderRadius: generalSearchField.borderRadius,
+const theme = defineTheme({
+  name: 'Cobalt2',
+  dark: true,
+  ui: {
+    background: background,
+    foreground: foreground,
+    cursor: cursor,
+    selection: selection,
+    activeLine: lineHighlight,
+    ghostText: gray,
+    searchMatch: {
+      background: findMatchCurrent,
+      outline: orange,
+      foreground: foreground,
+      selectedBackground: findMatchOther,
+      selectedForeground: foreground,
     },
-    '.cm-searchMatch.cm-searchMatch-selected': {
-      backgroundColor: findMatchOther,
-      color: foreground,
-    },
-    '.cm-search.cm-panel.cm-textfield': {
-      color: yellow,
-      backgroundColor: background,
-      border: `1px solid ${darkGray}`,
-      borderRadius: generalSearchField.borderRadius,
-      padding: generalSearchField.padding,
-    },
-
-    // Panels
-    '.cm-panels': {
-      backgroundColor: darkBackground,
-      color: gray,
-      borderRadius: '4px',
-    },
-    '.cm-panels.cm-panels-top': {
-      borderBottom: `1px solid ${yellow}`,
-    },
-    '.cm-panels.cm-panels-bottom': {
-      borderTop: `1px solid ${yellow}`,
-    },
-    '.cm-panel button': {
-      backgroundColor: blue,
-      color: foreground,
-      border: `1px solid ${darkGray}`,
-      borderRadius: generalPanel.borderRadius,
-      padding: generalPanel.padding,
-    },
-    '.cm-panel button:hover': {
-      backgroundColor: orange,
-      color: foreground,
-    },
-
-    // Line highlighting
-    '.cm-activeLine': {
-      backgroundColor: lineHighlight,
-      borderRadius: generalLine.borderRadius,
-    },
-
-    // Gutters
-    '.cm-gutters': {
-      backgroundColor: gutterBackground,
-      color: gray,
-      border: generalGutter.border,
-      borderRight: `1px solid ${darkGray}`,
-      paddingRight: generalGutter.paddingRight,
-    },
-    '.cm-activeLineGutter': {
-      backgroundColor: 'transparent',
-      color: foreground,
-      fontWeight: generalGutter.fontWeight,
-    },
-    '.cm-lineNumbers': {
-      fontSize: generalGutter.fontSize,
-      lineHeight: generalGutter.lineHeight,
-      color: gray,
-    },
-    '.cm-foldGutter': {
-      fontSize: generalGutter.fontSize,
-      lineHeight: generalGutter.lineHeight,
-    },
-    '.cm-foldGutter .cm-gutterElement': {
-      color: gray,
-      cursor: 'pointer',
-    },
-    '.cm-foldGutter .cm-gutterElement:hover': {
-      color: yellow,
-    },
-
-    // Diff/Merge View Styles
-    // Inserted/Added Content
-    '.cm-insertedLine': {
-      textDecoration: generalDiff.insertedTextDecoration,
-      backgroundColor: addedBackground,
-      color: addedText,
-      padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadius,
-    },
-    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': {
-      textDecoration: generalDiff.insertedTextDecoration,
-      backgroundColor: `${addedBackground} !important`,
-      color: addedText,
-      padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadius,
-      border: `1px solid ${addedText}30`,
-    },
-    'ins.cm-insertedLine .cm-changedText': {
-      background: 'transparent !important',
-    },
-
-    // Deleted/Removed Content
-    '.cm-deletedLine': {
-      textDecoration: generalDiff.deletedTextDecoration,
-      backgroundColor: removedBackground,
-      color: removedText,
-      padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadius,
-    },
-    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
-      textDecoration: generalDiff.deletedTextDecoration,
-      backgroundColor: `${removedBackground} !important`,
-      color: removedText,
-      padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadius,
-      border: `1px solid ${removedText}30`,
-    },
-    'del .cm-deletedText, del .cm-changedText': {
-      background: 'transparent !important',
-    },
-
-    // Tooltips and autocomplete
-    '.cm-tooltip': {
-      backgroundColor: panelBackground,
-      border: `1px solid ${darkGray}`,
-      borderRadius: generalTooltip.borderRadius,
-      padding: generalTooltip.padding,
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-      color: gray, // Tooltip text color from the original
-    },
-    '.cm-tooltip-autocomplete': {
-      '& > ul': {
-        backgroundColor: panelBackground,
-        border: 'none',
-      },
-      '& > ul > li': {
-        padding: generalTooltip.padding,
-        lineHeight: generalTooltip.lineHeight,
-        color: gray,
-      },
-      '& > ul > li[aria-selected]': {
-        backgroundColor: background,
-        color: yellow,
-        borderRadius: generalTooltip.borderRadiusSelected,
-      },
-      '& > ul > li > span.cm-completionIcon': {
-        color: blue,
-        paddingRight: generalTooltip.paddingRight,
-      },
-      '& > ul > li > span.cm-completionDetail': {
-        color: gray,
-        fontStyle: 'italic',
-      },
-    },
-
-    // Diagnostics styling
-    '.cm-diagnostic': {
-      '&-error': {
-        borderLeft: `3px solid ${errorRed}`,
-      },
-      '&-warning': {
-        borderLeft: `3px solid ${yellow}`,
-      },
-      '&-info': {
-        borderLeft: `3px solid ${blue}`,
-      },
-    },
-    '.cm-lintPoint-error': {
-      borderBottom: `2px wavy ${errorRed}`,
-    },
-    '.cm-lintPoint-warning': {
-      borderBottom: `2px wavy ${yellow}`,
-    },
-
-    // Matching brackets
-    '.cm-matchingBracket': {
-      backgroundColor: darkGray,
-      outline: `1px solid ${cursor}80`,
-      borderRadius: generalMatching.borderRadius,
-    },
-    '.cm-nonmatchingBracket': {
-      backgroundColor: `${errorRed}20`,
-      outline: `1px solid ${errorRed}`,
-      borderRadius: generalMatching.borderRadius,
-    },
-
-    // Selection matches
-    '.cm-selectionMatch': {
-      backgroundColor: selectionHighlight,
-      borderRadius: generalMatching.borderRadius,
-    },
-
-    '.cm-hoverHighlight': {
-      backgroundColor: hoverHighlight,
-    },
-
-    '.cm-wordHighlight': {
-      backgroundColor: wordHighlight,
-      borderRadius: generalMatching.borderRadius,
-    },
-
-    // Fold placeholder
-    '.cm-foldPlaceholder': {
-      backgroundColor: 'transparent',
-      color: gray,
-      border: `1px dotted ${blue}50`,
-      borderRadius: generalPlaceholder.borderRadius,
-      padding: generalPlaceholder.padding,
-      margin: generalPlaceholder.margin,
-    },
-
-    // Focus outline
-    '&.cm-focused': {
-      outline: 'none',
-    },
-
-    // Scrollbars - exact from original
-    '& .cm-scroller::-webkit-scrollbar': {
-      width: generalScroller.width,
-      height: generalScroller.height,
-    },
-    '& .cm-scroller::-webkit-scrollbar-track': {
+    selectionMatch: { background: selectionHighlight, outline: selectionHighlight },
+    matchingBracket: { background: darkGray, outline: `${cursor}80` },
+    nonMatchingBracket: { background: `${errorRed}20`, outline: errorRed },
+    panel: {
       background: darkBackground,
+      foreground: cursor,
+      border: cursor,
+      buttonBackground: blue,
+      buttonForeground: foreground,
+      buttonHoverBackground: orange,
     },
-    '& .cm-scroller::-webkit-scrollbar-thumb': {
-      backgroundColor: '#406179cc',
-      borderRadius: generalScroller.borderRadius,
-      border: `3px solid ${darkBackground}`,
+    gutter: {
+      background: gutterBackground,
+      foreground: gray,
+      border: darkGray,
+      activeBackground: 'transparent',
+      activeForeground: foreground,
+      foldHover: cursor,
     },
-    '& .cm-scroller::-webkit-scrollbar-thumb:hover': {
-      backgroundColor: '#437da3cc',
+    foldPlaceholder: { background: 'transparent', foreground: gray, border: `${blue}50` },
+    tooltip: {
+      background: panelBackground,
+      border: darkGray,
+      shadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+      listBackground: panelBackground,
+      selectedBackground: background,
+      selectedForeground: cursor,
+      icon: blue,
+      detail: gray,
     },
-
-    // Ghost text
-    '.cm-ghostText': {
-      opacity: '0.5',
-      color: gray,
+    diff: {
+      insertedBackground: addedBackground,
+      insertedForeground: lightGreen,
+      deletedBackground: removedBackground,
+      deletedForeground: pink,
     },
-
-    // Whitespace characters
-    '.cm-specialChar': {
-      color: '#ffffff52',
-    },
-
-    // Indent guides
-    '.cm-indentGuide': {
-      borderLeft: '1px solid #3B5364',
+    diagnostic: { error: errorRed, warning: cursor, info: blue },
+    scrollbar: { track: darkBackground, thumb: '#406179cc', thumbHover: '#437da3cc' },
+    focusRing: 'none',
+    merge: {
+      backgroundColor: panelBackground,
+      borderColor: darkGray,
+      buttonColor: gray,
+      buttonHoverColor: darkGray,
     },
   },
-  { dark: true },
-);
-
-/**
- * Enhanced syntax highlighting for the Cobalt2 theme
- */
-const cobalt2HighlightStyle = HighlightStyle.define([
-  // Comments
-  { tag: t.comment, color: blue, fontStyle: 'italic' },
-  { tag: t.docComment, color: blue, fontStyle: 'italic' },
-  { tag: t.lineComment, color: blue, fontStyle: 'italic' },
-  { tag: t.blockComment, color: blue, fontStyle: 'italic' },
-
-  // Keywords and control flow
-  { tag: t.keyword, color: orange },
-  { tag: t.controlKeyword, color: orange },
-  { tag: t.operatorKeyword, color: orange },
-  { tag: t.moduleKeyword, color: cyan },
-  { tag: t.definitionKeyword, color: hotPink },
-
-  // Special language constructs
-  { tag: t.self, color: hotPink },
-  { tag: t.special(t.variableName), color: cyan },
-  { tag: t.special(t.keyword), color: cyan },
-  { tag: t.special(t.propertyName), color: cyan },
-
-  // Variables - Enhanced for better distinction
-  { tag: t.variableName, color: foreground },
-  { tag: t.definition(t.variableName), color: foreground },
-  { tag: t.local(t.variableName), color: foreground },
-
-  // Classes and types
-  { tag: t.typeName, color: lightPink, fontStyle: 'italic' },
-  { tag: t.className, color: lightPink, fontStyle: 'italic' },
-  { tag: t.namespace, color: lightPink, fontStyle: 'italic' },
-  { tag: t.macroName, color: lightPink, fontStyle: 'italic' },
-
-  // Functions - specific function types first
-  { tag: t.function(t.variableName), color: yellow },
-  { tag: t.function(t.definition(t.variableName)), color: yellow },
-  { tag: t.function(t.propertyName), color: yellow },
-
-  // Properties
-  { tag: t.propertyName, color: lightBlue },
-  { tag: t.definition(t.propertyName), color: lightBlue },
-  { tag: t.standard(t.propertyName), color: supportTeal },
-
-  // Constants
-  { tag: t.constant(t.name), color: pink },
-  { tag: t.standard(t.name), color: pink },
-  { tag: t.number, color: pink },
-  { tag: t.integer, color: pink },
-  { tag: t.float, color: pink },
-  { tag: t.bool, color: pink },
-  { tag: t.atom, color: pink },
-  { tag: t.null, color: pink },
-
-  // Strings - specific string types first
-  { tag: t.special(t.string), color: green },
-  { tag: t.string, color: lightGreen },
-  { tag: t.regexp, color: lightGreen },
-
-  // String quotes
-  { tag: t.quote, color: stringQuotes },
-
-  // Parameters
-  { tag: t.definition(t.function(t.variableName)), color: parameterYellow },
-
-  // HTML/XML elements
-  { tag: t.tagName, color: lightBlue },
-  { tag: t.standard(t.tagName), color: supportTeal },
-  { tag: t.attributeName, color: yellow, fontStyle: 'italic' },
-  { tag: t.attributeValue, color: lightGreen },
-
-  // Operators and punctuation
-  { tag: t.operator, color: lightGray },
-  { tag: t.derefOperator, color: lightGray },
-  { tag: t.arithmeticOperator, color: lightGray },
-  { tag: t.logicOperator, color: lightGray },
-  { tag: t.bitwiseOperator, color: lightGray },
-  { tag: t.compareOperator, color: lightGray },
-  { tag: t.updateOperator, color: lightGray },
-  { tag: t.punctuation, color: lightGray },
-  { tag: t.bracket, color: lightGray },
-  { tag: t.brace, color: lightGray },
-  { tag: t.squareBracket, color: lightGray },
-  { tag: t.paren, color: yellow },
-  { tag: t.angleBracket, color: lightGray },
-
-  // Storage and function keywords
-  { tag: t.modifier, color: yellow, fontStyle: 'italic' },
-
-  // Meta and annotations
-  { tag: t.meta, color: lightBlue },
-  { tag: t.annotation, color: yellow, fontStyle: 'italic' },
-  { tag: t.processingInstruction, color: yellow },
-
-  // Markdown elements
-  { tag: t.heading, color: yellow, fontWeight: 'bold' },
-  { tag: t.heading1, color: yellow, fontWeight: 'bold' },
-  { tag: t.heading2, color: yellow, fontWeight: 'bold' },
-  { tag: t.heading3, color: yellow, fontWeight: 'bold' },
-  { tag: t.heading4, color: yellow, fontWeight: 'bold' },
-  { tag: t.heading5, color: yellow, fontWeight: 'bold' },
-  { tag: t.heading6, color: yellow, fontWeight: 'bold' },
-  { tag: t.contentSeparator, color: yellow },
-  { tag: t.strong, color: lightBlue, fontWeight: 'bold' },
-  { tag: t.emphasis, color: lightBlue, fontStyle: 'italic' },
-  { tag: t.list, color: yellow },
-
-  // Code blocks and inline code - Enhanced styling
-  { tag: t.monospace, color: lightBlue },
-  { tag: t.special(t.monospace), color: green },
-  { tag: t.strikethrough, color: gray, textDecoration: 'line-through' },
-
-  // Links and URLs
-  { tag: t.link, color: blue },
-  { tag: t.url, color: lightBlue },
-
-  // Special states
-  { tag: t.invalid, color: red },
-  { tag: t.deleted, color: pink },
-  { tag: t.inserted, color: lightGreen },
-  { tag: t.changed, color: yellow },
-
-  // Language-specific: CSS
-  { tag: t.unit, color: parameterYellow }, // CSS units
-
-  // Entity names
-  { tag: t.labelName, color: yellow },
-  { tag: t.escape, color: yellow },
-]);
+  syntax: {
+    keyword: { color: orange },
+    moduleKeyword: { color: cyan },
+    definitionKeyword: { color: hotPink },
+    operatorKeyword: { color: orange },
+    modifier: { color: cursor, fontStyle: 'italic' },
+    operator: { color: lightGray },
+    punctuation: { color: lightGray },
+    name: {},
+    variable: { color: foreground },
+    function: { color: cursor },
+    self: { color: hotPink },
+    label: { color: cursor },
+    property: { color: lightBlue },
+    type: { color: lightPink, fontStyle: 'italic' },
+    tag: { color: lightBlue },
+    attribute: { color: cursor, fontStyle: 'italic' },
+    string: { color: lightGreen },
+    escape: { color: cursor },
+    number: { color: pink },
+    unit: { color: parameterYellow },
+    constant: { color: pink },
+    comment: { color: blue, fontStyle: 'italic' },
+    meta: { color: lightBlue },
+    processingInstruction: { color: cursor },
+    annotation: { color: cursor, fontStyle: 'italic' },
+    heading: { color: cursor, fontWeight: 'bold' },
+    list: { color: cursor },
+    quote: { color: stringQuotes },
+    monospace: { color: lightBlue },
+    contentSeparator: { color: cursor },
+    link: { color: blue },
+    url: { color: lightBlue },
+    emphasis: { color: lightBlue, fontStyle: 'italic' },
+    strong: { color: lightBlue, fontWeight: 'bold' },
+    strikethrough: { color: gray, textDecoration: 'line-through' },
+    invalid: { color: red },
+    inserted: { color: lightGreen },
+    deleted: { color: pink },
+    changed: { color: cursor },
+  },
+  migration,
+});
 
 /**
  * Combined Cobalt2 theme extension
  */
-const cobalt2: Extension = [cobalt2Theme, syntaxHighlighting(cobalt2HighlightStyle)];
+const cobalt2: Extension = theme.extension;
 
 /**
  * Cobalt2 merge revert styles configuration
  */
-const cobalt2MergeStyles: IMergeRevertStyles = {
-  backgroundColor: panelBackground,
-  borderColor: darkGray,
-  buttonColor: gray,
-  buttonHoverColor: darkGray,
-};
+const cobalt2MergeStyles: IMergeRevertStyles = theme.mergeStyles;
 
 export { applyMergeRevertStyles, cobalt2, cobalt2MergeStyles };
