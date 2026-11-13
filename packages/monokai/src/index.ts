@@ -12,18 +12,18 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 // Base colors
 const base00 = '#272822', // Background
   base01 = '#f8f8f2', // Foreground
-  base02 = '#88846f', // Comments, invisibles
+  base02 = '#b3af99', // Comments, invisibles
   base03 = '#f8f8f0', // Cursor
   // Accent colors
-  base04 = '#F92672', // Keyword, Storage, Tag - Pink
+  base04 = '#ff809d', // Keyword, Storage, Tag - Pink
   base05 = '#FD971F', // Variable, Parameter - Orange
   base06 = '#66D9EF', // Function, Type - Blue
   base07 = '#E6DB74', // String, RegExp - Yellow
-  base08 = '#AE81FF', // Constant, Number - Purple
+  base08 = '#b897fc', // Constant, Number - Purple
   base09 = '#A6E22E'; // Class, Heading - Green
 
 // UI specific colors
-const invalid = '#F44747', // Error color - Red
+const invalid = '#fd867e', // Error color - Red
   darkBackground = '#414339', // Gutter background
   highlightBackground = '#3e3d3257', // Line highlight with opacity
   tooltipBackground = '#34352f', // Tooltip background - Slightly lighter than base00
@@ -46,8 +46,8 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: 'none',
     fatCursor: { background: `${base03}99`, border: 'none' },
-    selection: selection,
-    selectionInactive: selection,
+    selection: '#3f3e35',
+    selectionInactive: '#3f3e35',
     selectionForeground: null,
     selectionOutline: 'none',
     activeLine: highlightBackground,
@@ -97,7 +97,12 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base01,
     },
-    foldPlaceholder: { background: tooltipBackground, foreground: base02, border: `${base02}70` },
+    foldPlaceholder: {
+      background: tooltipBackground,
+      foreground: base02,
+      border: `${base02}70`,
+      borderStyle: 'dotted',
+    },
     tooltip: {
       background: tooltipBackground,
       foreground: base01,

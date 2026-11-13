@@ -117,7 +117,13 @@ export interface UiPalette {
     /** Fold marker color on hover. */
     foldHover: string;
   };
-  foldPlaceholder: { background: string; foreground: string; border: string };
+  foldPlaceholder: {
+    background: string;
+    foreground: string;
+    border: string;
+    /** Border style (`border-style` value): `'dotted'` for most themes, `'solid'` in high-contrast themes. */
+    borderStyle: string;
+  };
   tooltip: {
     background: string;
     foreground: string;
@@ -751,7 +757,7 @@ export function uiTemplate(ui: UiPalette): Record<string, UiDeclarations> {
     '.cm-foldPlaceholder': {
       backgroundColor: ui.foldPlaceholder.background,
       color: ui.foldPlaceholder.foreground,
-      border: `${ui.outlineWidth} dotted ${ui.foldPlaceholder.border}`,
+      border: `${ui.outlineWidth} ${ui.foldPlaceholder.borderStyle} ${ui.foldPlaceholder.border}`,
       borderRadius: generalPlaceholder.borderRadius,
       padding: generalPlaceholder.padding,
       margin: generalPlaceholder.margin,

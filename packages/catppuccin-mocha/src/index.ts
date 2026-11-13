@@ -12,8 +12,8 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 // Base colors (Mocha variant)
 const base00 = '#1e1e2e', // Background - dark navy
   base01 = '#313244', // Selection background
-  base02 = '#45475a', // Comments
-  base03 = '#585b70', // Dark grey
+  base02 = '#9c9fb5', // Comments
+  base03 = '#9b9fb6', // Dark grey
   base04 = '#cdd6f4', // Foreground - light blue
   base05 = '#f5e0dc', // Light foreground
   // Catppuccin Mocha colors
@@ -51,11 +51,11 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: 'none',
     fatCursor: { background: `${base05}99`, border: 'none' },
-    selection: `${base03}80`,
-    selectionInactive: `${base03}80`,
+    selection: '#585b7066',
+    selectionInactive: '#585b7066',
     selectionForeground: null,
     selectionOutline: `1px solid ${mauve}`,
-    activeLine: '#3a3a5266',
+    activeLine: '#3a3a525f',
     activeLineBorder: { left: `2px solid ${lavender}`, right: 'none' },
     ghostText: base02,
     ghostTextOpacity: '0.5',
@@ -102,7 +102,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base04,
     },
-    foldPlaceholder: { background: base01, foreground: base02, border: `${base02}70` },
+    foldPlaceholder: { background: base01, foreground: base02, border: `${base02}70`, borderStyle: 'dotted' },
     tooltip: {
       background: base01,
       foreground: base04,

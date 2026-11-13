@@ -15,12 +15,12 @@ const base00 = '#390000', // Background
   base02 = '#750000', // Selection background
   base03 = '#e7c0c0', // Comments, invisibles
   base04 = '#970000', // Cursor
-  base05 = '#f12727', // Default foreground
+  base05 = '#fc594d', // Default foreground
   base06 = '#580000', // Dark background for panels
   base07 = '#4a0000', // Darker background (gutter)
   // Accent colors
-  base08 = '#ec0d1e', // Errors, invalid
-  base09 = '#aa5507', // Numbers, constants
+  base08 = '#f95d54', // Errors, invalid
+  base09 = '#d47b3c', // Numbers, constants
   base0A = '#fec758', // Classes, attributes
   base0B = '#9df39f', // Success
   base0C = '#7df3f7', // Functions, parameters
@@ -30,7 +30,7 @@ const base00 = '#390000', // Background
 
 // UI specific colors
 const invalid = '#ffffff',
-  highlightBackground = '#ff000035', // Line highlight with transparency
+  highlightBackground = '#ff00001f', // Line highlight with transparency
   tooltipBackground = '#680000',
   selection = '#75000080', // Selection background with transparency
   selectionMatch = '#7500009a', // Selection match with transparency
@@ -51,8 +51,8 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: 'none',
     fatCursor: { background: `${base04}99`, border: 'none' },
-    selection: selection,
-    selectionInactive: selection,
+    selection: '#7500009c',
+    selectionInactive: '#7500009c',
     selectionForeground: null,
     selectionOutline: 'none',
     activeLine: highlightBackground,
@@ -102,7 +102,12 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base01,
     },
-    foldPlaceholder: { background: tooltipBackground, foreground: base03, border: `${base03}70` },
+    foldPlaceholder: {
+      background: tooltipBackground,
+      foreground: base03,
+      border: `${base03}70`,
+      borderStyle: 'dotted',
+    },
     tooltip: {
       background: tooltipBackground,
       foreground: base01,

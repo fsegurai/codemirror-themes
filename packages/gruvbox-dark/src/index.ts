@@ -15,18 +15,18 @@ const base00 = '#282828', // Background
   base02 = '#504945', // Selection background
   base03 = '#665c54', // Comments, invisibles, line highlighting
   base04 = '#7c6f64', // Dark foreground (status bars)
-  base05 = '#928374', // Comments, invisibles, line highlighting
+  base05 = '#b6a797', // Comments, invisibles, line highlighting
   // Light/foreground shades
   base06 = '#fbf1c7', // Light foreground (preferbase08)
   base07 = '#ebdbb2', // Light foreground (alternative)
   // Accent colors
-  base08 = '#fb4934', // Keywords, storage, operator
+  base08 = '#fb8a77', // Keywords, storage, operator
   base09 = '#b8bb26', // Strings, tag attributes
   base0A = '#fabd2f', // Functions, tag names
-  base0B = '#83a598', // Variables
-  base0C = '#d3869b', // Numbers, special constants
+  base0B = '#8eb1a3', // Variables
+  base0C = '#e193a8', // Numbers, special constants
   base0D = '#8ec07c', // Types
-  base0E = '#fe8019'; // Cursor, constants
+  base0E = '#fa8d44'; // Cursor, constants
 
 // UI specific colors
 const highlightBackground = '#3c383660', // Line highlight with transparency
@@ -48,8 +48,8 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: 'none',
     fatCursor: { background: `${base0E}99`, border: 'none' },
-    selection: base02,
-    selectionInactive: base02,
+    selection: '#443d39',
+    selectionInactive: '#443d39',
     selectionForeground: null,
     selectionOutline: 'none',
     activeLine: highlightBackground,
@@ -99,7 +99,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base07,
     },
-    foldPlaceholder: { background: base01, foreground: base05, border: base03 },
+    foldPlaceholder: { background: base01, foreground: base05, border: base03, borderStyle: 'dotted' },
     tooltip: {
       background: base01,
       foreground: base07,

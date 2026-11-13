@@ -14,22 +14,22 @@ const base00 = '#282b2e', // Background (authentic IntelliJ IDEA dark theme)
   base01 = '#a9b7c6', // Foreground (standard text)
   base02 = '#3f3f3f', // Selection background (slightly darker for contrast)
   base03 = '#3b3b3b', // Gutter background (slightly lighter than the main background)
-  base04 = '#606366', // Line numbers (slightly darker for less distraction)
+  base04 = '#989b9e', // Line numbers (slightly darker for less distraction)
   // Language syntax colors
-  base05 = '#cc7832', // Keywords (signature orange)
-  base06 = '#6897bb', // Numbers, constants (signature blue)
-  base07 = '#9876aa', // Variables (improved purple)
-  base08 = '#787878', // Comments (authentic gray)
+  base05 = '#e58f4b', // Keywords (signature orange)
+  base06 = '#79a8cd', // Numbers, constants (signature blue)
+  base07 = '#b996cc', // Variables (improved purple)
+  base08 = '#a3a3a3', // Comments (authentic gray)
   base09 = '#bbb529', // Meta, annotations (yellow-green)
-  base0A = '#6a8759', // Strings (signature green)
+  base0A = '#8dac7c', // Strings (signature green)
   base0B = '#ffc66d', // Class names, types (warmer gold)
-  base0D = '#629755', // Function names, docs (forest green)
+  base0D = '#7bb16d', // Function names, docs (forest green)
   base0E = '#d0d0ff', // Brackets, special constructs (soft purple)
   base0F = '#e8bf6a', // Tags (amber)
-  base10 = '#3c7abb', // Links (blue)
-  base11 = '#50a658', // URLs (green)
+  base10 = '#68a7eb', // Links (blue)
+  base11 = '#5fb566', // URLs (green)
   // UI-specific colors
-  invalid = '#ff5353', // Error highlighting (more visible)
+  invalid = '#fb7d76', // Error highlighting (more visible)
   cursor = '#ffffff', // Cursor color
   selectionBackground = '#2e5280', // Stronger selection background
   highlightBackground = '#323232', // Active line highlight
@@ -51,8 +51,8 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: 'none',
     fatCursor: { background: `${cursor}99`, border: 'none' },
-    selection: selectionBackground,
-    selectionInactive: selectionBackground,
+    selection: '#173a66',
+    selectionInactive: '#173a66',
     selectionForeground: null,
     selectionOutline: 'none',
     activeLine: `${highlightBackground}21`,
@@ -102,7 +102,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base01,
     },
-    foldPlaceholder: { background: base03, foreground: '#a1a1a1', border: base04 },
+    foldPlaceholder: { background: base03, foreground: '#a1a1a1', border: base04, borderStyle: 'dotted' },
     tooltip: {
       background: base03,
       foreground: base01,

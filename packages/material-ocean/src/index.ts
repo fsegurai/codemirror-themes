@@ -7,9 +7,9 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 const base00 = '#0F111A', // Background
   base01 = '#151825', // Slightly lighter background (popups, statuslines)
   base02 = 'rgba(113, 124, 180, 0.2)', // Selection background
-  base03 = '#464B5D', // Comments, invisibles, line highlighting, gutter
+  base03 = '#868ca0', // Comments, invisibles, line highlighting, gutter
   base04 = '#FFCC00', // Cursor
-  base05 = '#8F93A2', // Default foreground
+  base05 = '#9599a8', // Default foreground
   base06 = '#EEFFFF', // Light foreground
   // Accent colors (token colors)
   base08 = '#C792EA', // Keywords, attributes, properties
@@ -43,8 +43,8 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: 'none',
     fatCursor: { background: `${base04}75`, border: 'none' },
-    selection: base02,
-    selectionInactive: base02,
+    selection: '#717cb430',
+    selectionInactive: '#717cb430',
     selectionForeground: null,
     selectionOutline: 'none',
     activeLine: highlightBackground,
@@ -94,7 +94,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base05,
     },
-    foldPlaceholder: { background: base01, foreground: base03, border: `${base03}70` },
+    foldPlaceholder: { background: base01, foreground: base03, border: `${base03}70`, borderStyle: 'dotted' },
     tooltip: {
       background: base01,
       foreground: base05,

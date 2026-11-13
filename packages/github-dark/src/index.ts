@@ -13,7 +13,7 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 const base00 = '#0d1117', // Background (GitHub dark mode background)
   base01 = '#c9d1d9', // Foreground (main text color)
   base02 = '#264F78', // Selection - brighter blue for better visibility
-  base03 = '#8b949e', // Comment and Bracket color
+  base03 = '#8d96a0', // Comment and Bracket color
   base04 = '#ffffff', // Caret color (pure white for better visibility,
   // Syntax highlighting colors
   base05 = '#7ee787', // TagName, Name, Quote - signature GitHub green
@@ -54,8 +54,8 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: 'none',
     fatCursor: { background: `${base04}99`, border: 'none' },
-    selection: base02,
-    selectionInactive: base02,
+    selection: '#032f56',
+    selectionInactive: '#032f56',
     selectionForeground: null,
     selectionOutline: 'none',
     activeLine: highlightBackground,
@@ -105,7 +105,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base01,
     },
-    foldPlaceholder: { background: base0F, foreground: base03, border: `${base0E}70` },
+    foldPlaceholder: { background: base0F, foreground: base03, border: `${base0E}70`, borderStyle: 'dotted' },
     tooltip: {
       background: base0F,
       foreground: base01,

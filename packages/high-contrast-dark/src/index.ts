@@ -13,18 +13,18 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 const base00 = '#000000', // Background - pure black
   base01 = '#0a0a0a', // Darker background
   base02 = '#1f1f1f', // Selection background
-  base03 = '#808080', // Comments - medium grey
+  base03 = '#a1a1a1', // Comments - medium grey
   base04 = '#b0b0b0', // Dark grey
   base05 = '#ffffff', // Foreground - pure white
   // High contrast accent colors
   brightYellow = '#ffff00',
   brightCyan = '#00ffff',
   brightGreen = '#00ff00',
-  brightRed = '#ff0000',
-  brightMagenta = '#ff00ff',
-  brightBlue = '#0099ff',
+  brightRed = '#ff7967',
+  brightMagenta = '#fe5dfb',
+  brightBlue = '#42a6ff',
   brightOrange = '#ff9900',
-  brightPurple = '#cc66ff';
+  brightPurple = '#cf81f9';
 
 // UI specific colors
 const tooltipBackground = '#1a1a1a',
@@ -46,11 +46,11 @@ const theme = defineTheme({
     cursorWidth: '3px',
     cursorShadow: 'none',
     fatCursor: { background: brightYellow, border: `2px solid ${base05}` },
-    selection: '#3a5a8a',
-    selectionInactive: '#3a5a8a',
+    selection: '#1a3865',
+    selectionInactive: '#1a3865',
     selectionForeground: null,
     selectionOutline: `2px solid ${brightCyan}`,
-    activeLine: '#2a2a2aa6',
+    activeLine: '#2a2a2a82',
     activeLineBorder: { left: `3px solid ${brightCyan}`, right: `1px solid ${base04}` },
     ghostText: base03,
     ghostTextOpacity: '0.7',
@@ -95,7 +95,12 @@ const theme = defineTheme({
       activeBorder: `1px solid ${base03}`,
       foldHover: brightCyan,
     },
-    foldPlaceholder: { background: tooltipBackground, foreground: brightCyan, border: brightCyan },
+    foldPlaceholder: {
+      background: tooltipBackground,
+      foreground: brightCyan,
+      border: brightCyan,
+      borderStyle: 'solid',
+    },
     tooltip: {
       background: tooltipBackground,
       foreground: base05,

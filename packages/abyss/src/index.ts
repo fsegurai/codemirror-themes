@@ -6,7 +6,7 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 // Base colors - Ocean depths
 const base00 = '#000c18', // - Background (deep ocean blue)
   base01 = '#a3c9e9', // - Foreground (lighter blue for enhanced readability)
-  base02 = '#0e6299', // - Selection (more vibrant blue for better visibility)
+  base02 = '#032d4a', // - Selection (more vibrant blue for better visibility)
   base03 = '#b4a2f7', // - Gutter background (darker for contrast)
   base04 = '#e6d4a3', // - Cursor (warmer gold for better visibility)
   base05 = '#0066ff20', // - Active line (subtle blue tint)
@@ -87,7 +87,7 @@ const theme = defineTheme({
     },
     gutter: {
       background: darkBackground,
-      foreground: '#5f7e97',
+      foreground: '#62829b',
       activeBackground: highlightBackground,
       activeForeground: base01,
       activeFontWeight: '500',
@@ -95,7 +95,7 @@ const theme = defineTheme({
       foldHover: base01,
       border: '#0a3555',
     },
-    foldPlaceholder: { background: 'transparent', foreground: '#5f7e97', border: base0F },
+    foldPlaceholder: { background: 'transparent', foreground: '#62829b', border: base0F, borderStyle: 'dotted' },
     tooltip: {
       background: tooltipBackground,
       foreground: base01,
@@ -104,8 +104,8 @@ const theme = defineTheme({
       selectedBackground: '#084671',
       selectedForeground: '#e0edff',
       selectedBorder: 'none',
-      icon: '#5f7e97',
-      detail: '#5f7e97',
+      icon: '#62829b',
+      detail: '#62829b',
       listBackground: tooltipBackground,
       listBorder: 'none',
       hoverBackground: 'transparent',
@@ -132,7 +132,7 @@ const theme = defineTheme({
     scrollbar: {
       track: darkBackground,
       trackBorder: 'none',
-      thumb: '#5f7e97',
+      thumb: '#62829b',
       thumbBorder: `3px solid ${darkBackground}`,
       thumbHover: '#4cc9ff',
       thumbHoverShadow: 'none',

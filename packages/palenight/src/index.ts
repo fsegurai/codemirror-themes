@@ -11,9 +11,9 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 
 // Base colors
 const base00 = '#292D3E', // Background - deep indigo
-  base01 = '#A6ACCD', // Foreground - lavender blue
+  base01 = '#adb4d5', // Foreground - lavender blue
   base02 = '#444267', // Selection background - muted indigo
-  base03 = '#676E95', // Comments, invisible - steel blue
+  base03 = '#9ca5ce', // Comments, invisible - steel blue
   base04 = '#BFC7D5', // Cursor - lighter lavender
   // Accent colors
   base05 = '#C3E88D', // Strings - light green
@@ -22,8 +22,8 @@ const base00 = '#292D3E', // Background - deep indigo
   base08 = '#F78C6C', // Numbers, Constants - orange
   base09 = '#FFCB6B', // Classes, Attributes - yellow
   base0A = '#89DDFF', // Punctuation, Operators - light blue
-  base0B = '#FF5370', // Tags, Errors - red
-  base0C = '#BB80B3', // Special elements - mauve
+  base0B = '#fe7f8d', // Tags, Errors - red
+  base0C = '#cf93c7', // Special elements - mauve
   base0D = '#80CBC4'; // Properties - seafoam
 
 // UI specific colors
@@ -48,8 +48,8 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: 'none',
     fatCursor: { background: `${base04}99`, border: 'none' },
-    selection: base02,
-    selectionInactive: base02,
+    selection: '#3b385d',
+    selectionInactive: '#3b385d',
     selectionForeground: null,
     selectionOutline: 'none',
     activeLine: highlightBackground,
@@ -99,7 +99,12 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base01,
     },
-    foldPlaceholder: { background: tooltipBackground, foreground: base03, border: `${base03}70` },
+    foldPlaceholder: {
+      background: tooltipBackground,
+      foreground: base03,
+      border: `${base03}70`,
+      borderStyle: 'dotted',
+    },
     tooltip: {
       background: tooltipBackground,
       foreground: base01,

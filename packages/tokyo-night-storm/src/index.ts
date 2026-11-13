@@ -13,12 +13,12 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 const base00 = '#24283b', // Background
   // const base01 = '#7982a9'; // Foreground
   base02 = '#414868', // Selection background
-  base03 = '#565f89', // Comments, invisible
+  base03 = '#96a1cf', // Comments, invisible
   base04 = '#c0caf5', // Default foreground (bright blue)
   base05 = '#282e44', // Dark background for panels
   base06 = '#1f2335', // Darker background (gutter)
   // Accent colors
-  base07 = '#f7768e', // Errors, invalid
+  base07 = '#fb7991', // Errors, invalid
   base08 = '#ff9e64', // Numbers, constants
   base09 = '#e0af68', // Classes, attributes
   base0A = '#9ece6a', // Strings, success
@@ -98,7 +98,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base04,
     },
-    foldPlaceholder: { background: base05, foreground: base03, border: `${base03}70` },
+    foldPlaceholder: { background: base05, foreground: base03, border: `${base03}70`, borderStyle: 'dotted' },
     tooltip: {
       background: base05,
       foreground: base04,

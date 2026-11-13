@@ -13,27 +13,27 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 const base00 = '#ffffff', // Background - pure white for clean look
   base01 = '#f5f5f5', // Lighter background (popups, statuslines)
   base02 = '#212121', // Main text - nearly black for contrast
-  base03 = '#757575', // Comments, invisibles - gray 600
+  base03 = '#676767', // Comments, invisibles - gray 600
   base04 = '#9e9e9e', // Cursor and line numbers - gray 500
   base05 = '#424242', // Default foreground - gray 800
   base06 = '#eeeeee', // Light borders or divisions - gray 200
   base07 = '#fafafa', // Light background (gutter) - gray 50
   // Accent colors - using standard Material Design palette
-  base08 = '#f44336', // Red 500
-  base09 = '#ff3e00', // Deep Orange 500
-  base0A = '#FF00E9FF', // Pink 500
+  base08 = '#ce0f0e', // Red 500
+  base09 = '#c22f06', // Deep Orange 500
+  base0A = '#b719a7ff', // Pink 500
   base0B = '#ffc107', // Amber 500 (better than yellow for light theme)
-  base0C = '#ff9800', // Orange 500
-  base0D = '#00acc1', // Cyan 600 (better contrast for light theme)
+  base0C = '#95590e', // Orange 500
+  base0D = '#15717f', // Cyan 600 (better contrast for light theme)
   base0E = '#3949ab', // Indigo 600 (better contrast for light theme)
   base0F = '#8e24aa', // Purple 600 (better contrast for light theme)
-  base10 = '#43a047', // Green 600 (better contrast for light theme)
-  base11 = '#00897b', // Teal 600 (better contrast for light theme)
-  base12 = '#1e88e5'; // Blue 600 (better contrast for light theme)
+  base10 = '#0d771c', // Green 600 (better contrast for light theme)
+  base11 = '#0b7468', // Teal 600 (better contrast for light theme)
+  base12 = '#0c69b6'; // Blue 600 (better contrast for light theme)
 
 // UI specific colors
 const highlightBackground = '#00000008', // Line highlight
-  selection = '#DDEEFF', // Selection background
+  selection = '#d7e8f9', // Selection background
   selectionMatch = '#90a4ae26', // Selection match background
   activeBracketBg = '#DDEEFF80', // Active bracket background
   hoverHighlight = '#ECEFF180'; // Hover highlight
@@ -106,7 +106,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base02,
     },
-    foldPlaceholder: { background: base01, foreground: base03, border: `${base03}70` },
+    foldPlaceholder: { background: base01, foreground: base03, border: `${base03}70`, borderStyle: 'dotted' },
     tooltip: {
       background: base01,
       foreground: base02,

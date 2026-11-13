@@ -12,16 +12,16 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 // Base colors - Pure white and black for maximum contrast
 const base00 = '#ffffff', // Background - pure white
   base01 = '#e0e0e0', // Selection background
-  base02 = '#707070', // Comments - medium grey
+  base02 = '#4f4f4f', // Comments - medium grey
   base03 = '#505050', // Dark grey
   base04 = '#000000', // Foreground - pure black
   // High contrast accent colors for a light background
   darkBlue = '#0000ff',
-  darkCyan = '#008080',
-  darkGreen = '#008000',
-  darkRed = '#c80000',
+  darkCyan = '#095959',
+  darkGreen = '#0e5d0c',
+  darkRed = '#a40000',
   darkMagenta = '#800080',
-  darkOrange = '#d04800',
+  darkOrange = '#8e3003',
   darkPurple = '#6600cc',
   darkBrown = '#7c3400';
 
@@ -45,8 +45,8 @@ const theme = defineTheme({
     cursorWidth: '3px',
     cursorShadow: 'none',
     fatCursor: { background: darkBlue, border: `2px solid ${base04}` },
-    selection: '#4d90fe',
-    selectionInactive: '#4d90fe',
+    selection: '#9fc3fe',
+    selectionInactive: '#9fc3fe',
     selectionForeground: null,
     selectionOutline: `2px solid ${darkBlue}`,
     activeLine: '#ffffccba',
@@ -94,7 +94,7 @@ const theme = defineTheme({
       activeBorder: `1px solid ${base02}`,
       foldHover: darkCyan,
     },
-    foldPlaceholder: { background: tooltipBackground, foreground: darkBlue, border: darkBlue },
+    foldPlaceholder: { background: tooltipBackground, foreground: darkBlue, border: darkBlue, borderStyle: 'solid' },
     tooltip: {
       background: tooltipBackground,
       foreground: base04,

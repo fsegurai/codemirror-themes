@@ -16,16 +16,16 @@ const base00 = '#1e2124', // Background (slightly darker for better contrast)
   base03 = '#b8b8b8', // Comments, line numbers (slightly lighter)
   base04 = '#ffffff', // Cursor (pure white for better visibility)
   base05 = '#e4e4e4', // Panels foreground
-  base06 = '#909090', // Comments (slightly more visible gray)
+  base06 = '#a2a2a2', // Comments (slightly more visible gray)
   base07 = '#000000', // Pure black for contrast elements
-  base08 = '#e06c75', // Error, deleted (more vibrant red)
+  base08 = '#f47e86', // Error, deleted (more vibrant red)
   base09 = '#f39c12', // Number, boolean (warmer orange)
   base0A = '#ffcb6b', // Keywords (warmer yellow)
   base0B = '#98c379', // Strings (more vibrant green)
   base0C = '#56b6c2', // Classes, types (cyan blue)
   base0D = '#61afef', // Functions, methods (bright blue)
-  base0E = '#c678dd', // Operators, brackets (brighter purple)
-  base0F = '#be5046', // Special elements (darker red)
+  base0E = '#d284e9', // Operators, brackets (brighter purple)
+  base0F = '#f48073', // Special elements (darker red)
   // UI-specific colors
   darkBackground = '#252529', // Panel background (slightly darker)
   selectionBackground = '#3a5991aa', // Selection background (semi-transparent blue)
@@ -49,11 +49,11 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: 'none',
     fatCursor: { background: `${base04}99`, border: 'none' },
-    selection: selectionBackground,
-    selectionInactive: selectionBackground,
+    selection: '#3a59916f',
+    selectionInactive: '#3a59916f',
     selectionForeground: base01,
     selectionOutline: 'none',
-    activeLine: highlightBackground,
+    activeLine: '#3a3d415f',
     activeLineBorder: { left: 'none', right: 'none' },
     ghostText: base03,
     ghostTextOpacity: '0.5',
@@ -100,7 +100,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base01,
     },
-    foldPlaceholder: { background: 'transparent', foreground: base02, border: `${base02}70` },
+    foldPlaceholder: { background: 'transparent', foreground: base02, border: `${base02}70`, borderStyle: 'dotted' },
     tooltip: {
       background: tooltipBackground,
       foreground: base01,

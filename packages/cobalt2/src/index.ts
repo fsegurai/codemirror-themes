@@ -13,10 +13,10 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 const background = '#193549', // Main editor background
   foreground = '#fff', // Main text color (exact from original)
   cursor = '#ffc600', // Cursor color (bright yellow)
-  selection = '#0050A4', // Selection background
+  selection = '#09478e', // Selection background
   selectionInactive = '#003b8b', // Inactive selection
   selectionHighlight = '#0050A480', // Selection highlights (with transparency)
-  lineHighlight = '#99eeff33', // The current line highlights
+  lineHighlight = '#99eeff0d', // The current line highlights
   // UI backgrounds (exact from original)
   darkBackground = '#122738', // Sidebar, panels, gutter
   panelBackground = '#15232d', // Panel background
@@ -25,19 +25,19 @@ const background = '#193549', // Main editor background
   findMatchCurrent = '#FF720066', // Currently found item
   findMatchOther = '#CAD40F66', // Other found items
   // Accent colors from tokenColors (exact from original)
-  blue = '#0088ff', // Comments, links
+  blue = '#83bafe', // Comments, links
   cyan = '#80fcff', // Special keywords, module exports
   lightBlue = '#9effff', // Meta, variables, properties
-  orange = '#ff9d00', // Keywords, support functions
-  pink = '#ff628c', // Constants, deleted text
+  orange = '#fea22f', // Keywords, support functions
+  pink = '#fb9caf', // Constants, deleted text
   hotPink = '#fb94ff', // Language variables, storage.type.function
-  lightPink = '#FF68B8', // Types, interfaces (semantic)
+  lightPink = '#fb99c8', // Types, interfaces (semantic)
   green = '#3ad900', // Template strings
   lightGreen = '#a5ff90', // Regular strings, markup inserted
-  red = '#f44542', // Invalid, errors
+  red = '#ff9d93', // Invalid, errors
   errorRed = '#A22929', // Error foreground
   // Additional colors from the original palette
-  gray = '#aaa', // Comments, secondary text
+  gray = '#b7b7b7', // Comments, secondary text
   lightGray = '#e1efff', // Punctuation, variables
   darkGray = '#0d3a58', // Borders, inactive elements
   parameterYellow = '#ffee80', // Parameters, template expressions
@@ -108,7 +108,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: cursor,
     },
-    foldPlaceholder: { background: 'transparent', foreground: gray, border: `${blue}50` },
+    foldPlaceholder: { background: 'transparent', foreground: gray, border: `${blue}50`, borderStyle: 'dotted' },
     tooltip: {
       background: panelBackground,
       foreground: gray,

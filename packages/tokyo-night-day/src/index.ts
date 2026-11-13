@@ -11,24 +11,24 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 
 // Base colors
 const base00 = '#e1e2e7', // Background
-  base01 = '#3760bf', // Primary foreground
+  base01 = '#1f44a1', // Primary foreground
   base02 = '#99a7df', // Selection background
-  base03 = '#848cb5', // Comments, invisibles
+  base03 = '#4d5379', // Comments, invisibles
   base04 = '#8c91a8', // Dark foreground (status)
   base06 = '#e9e9ec', // Light background
   base07 = '#d5d6db', // Light background (gutter)
   // Accent colors
-  base_red = '#f52a65', // Errors, invalid
-  base_orange = '#b15c00', // Numbers, constants
-  base_yellow = '#8c6c3e', // Classes, attributes
-  base_green = '#587539', // Strings, success
-  base_cyan = '#007197', // Functions, keywords
-  base_blue = '#2e7de9', // Variables, parameters
-  base_purple = '#7847bd', // Operators, tags
-  base_magenta = '#9854f1'; // Special characters
+  base_red = '#ab0640', // Errors, invalid
+  base_orange = '#854403', // Numbers, constants
+  base_yellow = '#6f5022', // Classes, attributes
+  base_green = '#425e22', // Strings, success
+  base_cyan = '#015c7c', // Functions, keywords
+  base_blue = '#0d53ac', // Variables, parameters
+  base_purple = '#6c39af', // Operators, tags
+  base_magenta = '#7427c6'; // Special characters
 
 // UI specific colors
-const highlightBackground = '#5F5FAF5A', // Line highlight with improved transparency
+const highlightBackground = '#5f5faf1e', // Line highlight with improved transparency
   selection = '#99a7df40', // Selection background with transparency
   selectionMatch = '#99a7df60', // Selection match with transparency
   activeBracketBg = '#0e639c20'; // Active bracket background with transparency
@@ -48,8 +48,8 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: 'none',
     fatCursor: { background: `${base01}99`, border: 'none' },
-    selection: selection,
-    selectionInactive: selection,
+    selection: '#99a7df66',
+    selectionInactive: '#99a7df66',
     selectionForeground: null,
     selectionOutline: 'none',
     activeLine: highlightBackground,
@@ -99,7 +99,7 @@ const theme = defineTheme({
       foldHover: base01,
       activeBackground: base06,
     },
-    foldPlaceholder: { background: base06, foreground: base03, border: `${base03}70` },
+    foldPlaceholder: { background: base06, foreground: base03, border: `${base03}70`, borderStyle: 'dotted' },
     tooltip: {
       background: base06,
       foreground: base01,

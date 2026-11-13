@@ -13,31 +13,31 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 const base00 = '#ffffff', // Background
   base01 = '#f3f3f3', // Lighter background (popups, statuslines)
   base02 = '#d6d6d6', // Selection background
-  base03 = '#6b6b6b', // Comments, invisibles
+  base03 = '#5f5f5f', // Comments, invisibles
   base04 = '#000000', // Cursor color
   base05 = '#383a42', // Default foreground
   base06 = '#1f1f1f', // Dark foreground
   base07 = '#f5f5f5', // Light background (gutter)
   // Accent colors
-  base08 = '#0064ff', // Keywords, storage
-  base09 = '#af00db', // Control keywords, operators
-  base0A = '#0070c1', // Variables, parameters
-  base0B = '#267f99', // Classes, types
-  base0C = '#795e26', // Functions, attributes
-  base0D = '#098658', // Numbers, constants
+  base08 = '#0756d7', // Keywords, storage
+  base09 = '#9f02c8', // Control keywords, operators
+  base0A = '#0f62a7', // Variables, parameters
+  base0B = '#116880', // Classes, types
+  base0C = '#765b23', // Functions, attributes
+  base0D = '#076e47', // Numbers, constants
   base0E = '#a31515', // Strings
-  base0F = '#e51400', // Errors, invalid
-  base11 = '#008000'; // Comments
+  base0F = '#bf1404', // Errors, invalid
+  base11 = '#0f6f0d'; // Comments
 
 // UI specific colors
 const highlightBackground = '#99999926', // Line highlight with transparency
-  selection = '#add6ff', // Selection background
+  selection = '#bddeff', // Selection background
   selectionMatch = '#a8ac9480', // Selection match background with transparency
   activeBracketBg = '#007acc20', // Active bracket background with transparency
   activeBracketBorder = '#007acc', // Active bracket border
   diagnosticWarning = '#bf8803', // Warning color
-  linkColor = '#006ab1', // Link color
-  visitedLinkColor = '#9e46d0'; // Visited link color
+  linkColor = '#0763a4', // Link color
+  visitedLinkColor = '#8c32bd'; // Visited link color
 
 // Diff/merge specific colors
 const addedBackground = '#ddfbe0', // Light green with transparency for insertions
@@ -106,7 +106,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: '#0b216f',
     },
-    foldPlaceholder: { background: base01, foreground: base03, border: `${base03}70` },
+    foldPlaceholder: { background: base01, foreground: base03, border: `${base03}70`, borderStyle: 'dotted' },
     tooltip: {
       background: base01,
       foreground: base05,

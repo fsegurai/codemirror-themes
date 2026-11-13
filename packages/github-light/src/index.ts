@@ -13,16 +13,16 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 const base00 = '#ffffff', // Background (GitHub light mode background)
   base01 = '#24292e', // Foreground (main text color)
   base02 = '#BBDFFF', // Selection - light blue
-  base03 = '#6e7781', // Comments, subdued text
+  base03 = '#6a737d', // Comments, subdued text
   base04 = '#f6f8fa', // Light gray (gutter, panels)
   // Syntax highlighting colors
   base05 = '#116329', // Tag names - GitHub green
-  base06 = '#6a737d', // Comments, brackets - GitHub gray
+  base06 = '#58616b', // Comments, brackets - GitHub gray
   base07 = '#6f42c1', // Classes, properties - GitHub purple
   base08 = '#005cc5', // Variables, attributes - GitHub blue
-  base09 = '#cf222e', // Keywords, types - GitHub red
+  base09 = '#c10722', // Keywords, types - GitHub red
   base0A = '#032f62', // Strings, regexps - GitHub navy
-  base0B = '#22863a', // Names, quotes - GitHub green
+  base0B = '#0e6f2a', // Names, quotes - GitHub green
   base0C = '#953800', // Atoms, booleans - GitHub orange
   // Background variants
   base0D = '#f1f8ff', // Active line gutter background
@@ -30,14 +30,14 @@ const base00 = '#ffffff', // Background (GitHub light mode background)
   base0F = '#f8f9fa'; // Tooltip background
 
 // Special states
-const invalid = '#cb2431', // Invalid color - error red
+const invalid = '#bf1127', // Invalid color - error red
   highlightBackground = '#BBDFFF20', // Line highlight (light blue and opacity)
   activeBracketBg = '#e8f0fe', // Active bracket background
   activeBracketBorder = '#0366d6', // Active bracket border
   diagnosticWarning = '#b08800', // Warning color
   selectionMatch = '#79b8ff40', // Selection match background
-  linkColor = '#0969da', // Bright blue for links
-  visitedLinkColor = '#8250df'; // Purple for visited links
+  linkColor = '#035cc3', // Bright blue for links
+  visitedLinkColor = '#743fcd'; // Purple for visited links
 
 // Diff/merge specific colors
 const addedBackground = '#e6ffec80', // GitHub light green with transparency
@@ -106,7 +106,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base01,
     },
-    foldPlaceholder: { background: selectionMatch, foreground: base03, border: `${base0E}70` },
+    foldPlaceholder: { background: selectionMatch, foreground: base03, border: `${base0E}70`, borderStyle: 'dotted' },
     tooltip: {
       background: base0F,
       foreground: base01,

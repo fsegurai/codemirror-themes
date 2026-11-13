@@ -13,20 +13,20 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 const base00 = '#212121', // Background
   base01 = '#505d64', // Lighter background (popups, statuslines)
   base02 = '#606f7a', // Selection background
-  base03 = '#707d8b', // Comments, invisibles, line highlighting
+  base03 = '#96a4b2', // Comments, invisibles, line highlighting
   base04 = '#a0a4ae', // Dark foreground (cursor)
   base05 = '#bdbdbd', // Default foreground
   base06 = '#e0e0e0', // Light foreground
   base07 = '#202325', // Dark background (gutter)
   // Accent colors
-  base08 = '#ff5f52', // Keywords, storage, errors
-  base09 = '#ff6e40', // Constants, attributes
-  base0A = '#fa5788', // Regex, special symbols
+  base08 = '#fc7c6e', // Keywords, storage, errors
+  base09 = '#fb7e57', // Constants, attributes
+  base0A = '#fb789a', // Regex, special symbols
   base0B = '#facf4e', // Classes, numbers
   base0C = '#ffad42', // Strings, values
   base0D = '#56c8d8', // Support, functions
-  base0E = '#7186f0', // Variables, parameters
-  base0F = '#cf6edf', // Operators, tags
+  base0E = '#889dfa', // Variables, parameters
+  base0F = '#de7cee', // Operators, tags
   base10 = '#6abf69', // Added elements
   base11 = '#99d066', // Modified elements
   base12 = '#4ebaaa'; // Markup headings
@@ -52,8 +52,8 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: 'none',
     fatCursor: { background: `${base04}99`, border: 'none' },
-    selection: selection,
-    selectionInactive: selection,
+    selection: '#ffffff1c',
+    selectionInactive: '#ffffff1c',
     selectionForeground: null,
     selectionOutline: 'none',
     activeLine: highlightBackground,
@@ -103,7 +103,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base05,
     },
-    foldPlaceholder: { background: base01, foreground: base03, border: `${base03}70` },
+    foldPlaceholder: { background: base01, foreground: base03, border: `${base03}70`, borderStyle: 'dotted' },
     tooltip: {
       background: base01,
       foreground: base05,

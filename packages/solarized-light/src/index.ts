@@ -10,8 +10,8 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
  */
 
 // Base colors from Solarized palette
-const base00 = '#657b83', // Body text/default text color
-  base01 = '#586e75', // Optional emphasized content
+const base00 = '#50656d', // Body text/default text color
+  base01 = '#4d6269', // Optional emphasized content
   base02 = '#073642', // Background highlights
   base03 = '#002b36', // Comments, invisible, line highlighting
   base04 = '#dfd9c8', // Dark background tint
@@ -20,17 +20,17 @@ const base00 = '#657b83', // Body text/default text color
   base07 = '#fdf6e3', // Background - light base
   base08 = '#eee8d5', // Background tint - light secondary
   // Accent colors from Solarized palette
-  base09 = '#dc322f', // Red
-  base0A = '#cb4b16', // Orange
-  base0B = '#b58900', // Yellow
-  base0C = '#859900', // Green
-  base0D = '#2aa198', // Cyan
-  base0E = '#268bd2', // Blue
-  base0F = '#6c71c4', // Violet
-  base10 = '#d33682'; // Magenta
+  base09 = '#c40e18', // Red
+  base0A = '#af3a03', // Orange
+  base0B = '#7c5d05', // Yellow
+  base0C = '#5a6804', // Green
+  base0D = '#0c6e68', // Cyan
+  base0E = '#0a66a1', // Blue
+  base0F = '#565aaa', // Violet
+  base10 = '#ba166e'; // Magenta
 
 // UI specific colors
-const invalid = '#d30102', // Bright red for errors
+const invalid = '#c50f0a', // Bright red for errors
   tooltipBackground = '#f0e9d7', // Tooltip background
   selection = '#ffd07a', // Selection background
   selectionMatch = '#e1dbca90', // Selection match with opacity
@@ -51,8 +51,8 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: 'none',
     fatCursor: { background: `${base01}99`, border: 'none' },
-    selection: selection,
-    selectionInactive: selection,
+    selection: '#fed996',
+    selectionInactive: '#fed996',
     selectionForeground: null,
     selectionOutline: 'none',
     activeLine: base06,
@@ -102,7 +102,12 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base00,
     },
-    foldPlaceholder: { background: tooltipBackground, foreground: base03, border: `${base05}70` },
+    foldPlaceholder: {
+      background: tooltipBackground,
+      foreground: base03,
+      border: `${base05}70`,
+      borderStyle: 'dotted',
+    },
     tooltip: {
       background: tooltipBackground,
       foreground: base00,

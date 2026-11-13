@@ -13,29 +13,29 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 const base00 = '#1e1e1e', // Background
   base01 = '#252526', // Lighter background (popups, statuslines)
   base02 = '#2d2d30', // Selection background
-  base03 = '#838383', // Comments, invisibles
+  base03 = '#9f9f9f', // Comments, invisibles
   base04 = '#c6c6c6', // Cursor color
   base05 = '#d4d4d4', // Default foreground
   base06 = '#e9e9e9', // Light foreground
   base07 = '#1c1c1c', // Dark background (gutter)
   // Accent colors
-  base08 = '#569cd6', // Keywords, storage
-  base09 = '#c586c0', // Control keywords, operators
+  base08 = '#5fa5df', // Keywords, storage
+  base09 = '#c98ac4', // Control keywords, operators
   base0A = '#9cdcfe', // Variables, parameters
   base0B = '#4ec9b0', // Classes, types
   base0C = '#dcdcaa', // Functions, attributes
   base0D = '#b5cea8', // Numbers, constants
   base0E = '#ce9178', // Strings
-  base0F = '#f44747', // Errors, invalid
+  base0F = '#fd746d', // Errors, invalid
   base10 = '#d7ba7d', // Modified elements
-  base11 = '#6a9955'; // Comments
+  base11 = '#7cac67'; // Comments
 
 // UI specific colors
 const highlightBackground = '#FFFFFF08', // Line highlight with transparency
-  selection = '#264F7899', // Selection background with transparency
+  selection = '#264f7889', // Selection background with transparency
   selectionMatch = '#72a1ff59', // Selection match background with transparency
   activeBracketBg = '#ffffff15', // Active bracket background with transparency
-  linkColor = '#3794ff'; // Link color
+  linkColor = '#54a1fd'; // Link color
 
 // Diff/merge specific colors
 const addedBackground = '#1e3f1e80', // Dark green with transparency for insertions
@@ -105,7 +105,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base06,
     },
-    foldPlaceholder: { background: base01, foreground: base03, border: `${base03}70` },
+    foldPlaceholder: { background: base01, foreground: base03, border: `${base03}70`, borderStyle: 'dotted' },
     tooltip: {
       background: base01,
       foreground: base05,
@@ -176,7 +176,7 @@ const theme = defineTheme({
     attribute: { color: base0A },
     content: { color: base05 },
     string: { color: base0E },
-    regexp: { color: '#d16969' },
+    regexp: { color: '#eb807f' },
     constantName: { color: base0A },
     standardName: { color: base0A },
     null: { color: base0D },

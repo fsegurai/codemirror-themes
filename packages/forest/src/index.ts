@@ -13,30 +13,30 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 const base00 = '#1a2a33'; // Background - deeper forest shade for better contrast
 const base01 = '#d0d8e0'; // Foreground - clearer moonlight for better readability
 // const base02 = '#2d3c44'; // Selection - dark forest floor, more defined
-const base03 = '#607d8b'; // Comments - silvery bark gray, more legible
+const base03 = '#8faebd'; // Comments - silvery bark gray, more legible
 
 // Flora elements (accent colors)
 const base04 = '#c594c5'; // Cursor - forest wildflower
 const base05 = '#a9d3ab'; // Keywords - lighter, fresher leaf green
-const base06 = '#4db6ac'; // Variables - clearer water reflection
-const base07 = '#78aadc'; // Functions - brighter dusk sky
-const base08 = '#ef5350'; // Strings - vibrant woodland berries
-const base09 = '#bc8f6a'; // Numbers - rich forest soil
+const base06 = '#51baaf'; // Variables - clearer water reflection
+const base07 = '#7caee0'; // Functions - brighter dusk sky
+const base08 = '#fd887f'; // Strings - vibrant woodland berries
+const base09 = '#cfa17b'; // Numbers - rich forest soil
 const base0A = '#ffb74d'; // Classes - golden sunlight through canopy
 const base0B = '#9ccc65'; // Properties - fresh moss
 const base0C = '#4dd0e1'; // Special chars - forest stream
-const base0D = '#7986cb'; // Tags - morning mist
-const base0E = '#ba68c8'; // Operators - purple wildflowers
+const base0D = '#97a6ed'; // Tags - morning mist
+const base0E = '#de8aed'; // Operators - purple wildflowers
 // const base0F = '#f57f17'; // Metadata - autumn leaves
 
 // UI-specific colors
-const invalid = '#ff5252'; // Error highlight - warning red berry
+const invalid = '#fe8780'; // Error highlight - warning red berry
 const darkBackground = '#233039'; // Panel background - shadowy forest
 const highlightBackground = '#314443aa'; // Active line - forest clearing with dappled light
 const tooltipBackground = '#2a3b42'; // Tooltip background - darker canopy shadow
 const selection = '#2c5a3acc'; // Selection - translucent forest green
 const selectionMatch = '#5d482faa'; // Selection match - amber forest light
-const lineNumbers = '#607d8b90'; // Line numbers - faded tree bark
+const lineNumbers = '#7c9aa8'; // Line numbers - faded tree bark
 const activeBracketBg = '#2c5a3a80'; // Active bracket - forest green
 
 // Diff/merge specific colors
@@ -54,11 +54,11 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: 'none',
     fatCursor: { background: `${base04}99`, border: 'none' },
-    selection: selection,
-    selectionInactive: selection,
+    selection: '#2c5a3a92',
+    selectionInactive: '#2c5a3a92',
     selectionForeground: base01,
     selectionOutline: 'none',
-    activeLine: highlightBackground,
+    activeLine: '#31444366',
     activeLineBorder: { left: 'none', right: 'none' },
     ghostText: '#8fa7b5',
     ghostTextOpacity: '0.5',
@@ -105,7 +105,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base01,
     },
-    foldPlaceholder: { background: 'transparent', foreground: base03, border: `${base0A}70` },
+    foldPlaceholder: { background: 'transparent', foreground: base03, border: `${base0A}70`, borderStyle: 'dotted' },
     tooltip: {
       background: tooltipBackground,
       foreground: base01,

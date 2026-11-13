@@ -9,19 +9,27 @@ export function colorOf(decls: Record<string, string> | undefined, key: string):
   return value ? parseColor(value) : undefined;
 }
 
-/** Failure keys for one theme, e.g. `#4c566a on active-line (1.52)`. */
-export function themeFailures(extension: Parameters<typeof editorCss>[0]): string[] {
+/** Editor background plus the active line and selection composited over it, when the theme styles them. */
+export function themeSurfaces(extension: Parameters<typeof editorCss>[0]): Array<[string, Rgba]> | undefined {
   const css = editorCss(extension);
-  const root = ruleFor(css, '&');
-  const background = colorOf(root, 'background-color');
-  const foreground = colorOf(root, 'color');
-  if (!background || background[3] < 1 || !foreground) return ['unresolved editor background or foreground'];
-
+  const background = colorOf(ruleFor(css, '&'), 'background-color');
+  if (!background || background[3] < 1) return undefined;
   const surfaces: Array<[string, Rgba]> = [['background', background]];
   const activeLine = colorOf(ruleFor(css, '.cm-activeLine'), 'background-color');
   if (activeLine) surfaces.push(['active-line', composite(activeLine, background)]);
   const selection = colorOf(ruleFor(css, '.cm-selectionBackground'), 'background-color');
   if (selection) surfaces.push(['selection', composite(selection, background)]);
+  return surfaces;
+}
+
+/** Failure keys for one theme, e.g. `#4c566a on active-line (1.52)`. */
+export function themeFailures(extension: Parameters<typeof editorCss>[0]): string[] {
+  const css = editorCss(extension);
+  const root = ruleFor(css, '&');
+  const foreground = colorOf(root, 'color');
+  const surfaces = themeSurfaces(extension);
+  if (!surfaces || !foreground) return ['unresolved editor background or foreground'];
+  const background = surfaces[0][1];
 
   const failures = new Map<string, number>();
   const check = (label: string, color: Rgba, surfaceName: string, surface: Rgba) => {

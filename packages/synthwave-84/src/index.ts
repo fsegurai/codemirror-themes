@@ -13,8 +13,8 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 const base00 = '#262335', // Background - deep purple-black
   base01 = '#2a2139', // Darker background
   base02 = '#34294f', // Selection background
-  base03 = '#495495', // Comments - muted blue
-  base04 = '#848bbd', // Dark foreground
+  base03 = '#8b9ae1', // Comments - muted blue
+  base04 = '#939bce', // Dark foreground
   base05 = '#ffffff', // Foreground - white
   // Neon colors
   neonPink = '#ff7edb',
@@ -23,7 +23,7 @@ const base00 = '#262335', // Background - deep purple-black
   neonOrange = '#f97e72',
   neonPurple = '#b893ce',
   neonBlue = '#36f9f6',
-  neonRed = '#fe4450',
+  neonRed = '#fa7473',
   darkPurple = '#241b2f',
   glowPink = '#ff6ad5',
   glowYellow = '#f3e877';
@@ -48,8 +48,8 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: `0 0 8px ${neonPink}`,
     fatCursor: { background: `${neonPink}99`, border: 'none' },
-    selection: base02,
-    selectionInactive: base02,
+    selection: '#3a2f56',
+    selectionInactive: '#3a2f56',
     selectionForeground: null,
     selectionOutline: 'none',
     activeLine: highlightBackground,
@@ -99,7 +99,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: neonCyan,
     },
-    foldPlaceholder: { background: base01, foreground: neonCyan, border: `${neonCyan}70` },
+    foldPlaceholder: { background: base01, foreground: neonCyan, border: `${neonCyan}70`, borderStyle: 'dotted' },
     tooltip: {
       background: base01,
       foreground: base05,

@@ -12,24 +12,24 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 // Base colors from Solarized palette
 const base00 = '#002b36', // Background - dark blue
   base01 = '#073642', // Lighter background (popups, statuslines)
-  base02 = '#586e75', // Selection background
+  base02 = '#8ba2aa', // Selection background
   base03 = '#657b83', // Comments, invisibles
-  base04 = '#839496', // Body text
-  base05 = '#93a1a1', // Default foreground
+  base04 = '#91a2a4', // Body text
+  base05 = '#a0afaf', // Default foreground
   base06 = '#eee8d5', // Light foreground
   base07 = '#fdf6e3', // Light background
   // Accent colors from Solarized palette
-  base08 = '#dc322f', // Red
-  base09 = '#cb4b16', // Orange
-  base0A = '#b58900', // Yellow
-  base0B = '#859900', // Green
-  base0C = '#2aa198', // Cyan
-  base0D = '#268bd2', // Blue
-  base0E = '#6c71c4', // Violet
-  base0F = '#d33682'; // Magenta
+  base08 = '#fb7569', // Red
+  base09 = '#fb7748', // Orange
+  base0A = '#c49823', // Yellow
+  base0B = '#93a823', // Green
+  base0C = '#3cafa5', // Cyan
+  base0D = '#45a5ee', // Blue
+  base0E = '#9097ed', // Violet
+  base0F = '#fd6baa'; // Magenta
 
 // UI specific colors
-const invalid = '#d30102', // Bright red for errors
+const invalid = '#fb7565', // Bright red for errors
   darkBackground = '#00252f', // Darker background for panels
   highlightBackground = '#99eeff0f', // Active line highlight
   selection = '#02B8FF3F', // Selection background with opacity
@@ -51,11 +51,11 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: 'none',
     fatCursor: { background: `${base04}99`, border: 'none' },
-    selection: selection,
-    selectionInactive: selection,
+    selection: '#02b8ff1d',
+    selectionInactive: '#02b8ff1d',
     selectionForeground: null,
     selectionOutline: 'none',
-    activeLine: highlightBackground,
+    activeLine: '#99eeff0d',
     activeLineBorder: { left: 'none', right: 'none' },
     ghostText: base03,
     ghostTextOpacity: '0.5',
@@ -102,7 +102,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base04,
     },
-    foldPlaceholder: { background: base01, foreground: base03, border: `${base02}70` },
+    foldPlaceholder: { background: base01, foreground: base03, border: `${base02}70`, borderStyle: 'dotted' },
     tooltip: {
       background: base01,
       foreground: base05,

@@ -14,14 +14,14 @@ const base00 = '#0a0e14', // Background (slightly deeper for better contrast)
   base07 = '#1a2030', // Dark background for panels
   base08 = '#efbb24', // Keyword (warm gold instead of darkgoldenrod)
   base09 = '#7799ff', // Atom (brighter blue)
-  base0A = '#8c8f93', // Comment (slightly bluer gray)
+  base0A = '#919498', // Comment (slightly bluer gray)
   base0B = '#c792ea', // Number (softer purple)
   base0C = '#ffee99', // Definition, Function (softer yellow)
   base0D = '#abcdef', // Variable (keeping the theme's signature color)
   base0E = '#ffcc44', // Type Name (warmer yellow)
   base0F = '#99c2ff', // Tag Name (light blue)
   // UI elements
-  invalid = '#ff5370', // Invalid color (more visible red)
+  invalid = '#fa5c74', // Invalid color (more visible red)
   tooltipBackground = '#0f1521', // Darker tooltip for better contrast
   selectionForeground = '#ffffff', // Selection text color
   activeBracketBg = '#3a4a5f60', // Active bracket background
@@ -42,8 +42,8 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: 'none',
     fatCursor: { background: `${base05}99`, border: 'none' },
-    selection: base02,
-    selectionInactive: base02,
+    selection: '#1e2d41',
+    selectionInactive: '#1e2d41',
     selectionForeground: null,
     selectionOutline: 'none',
     activeLine: base06,
@@ -93,7 +93,7 @@ const theme = defineTheme({
       foldHover: base0D,
       border: '#1c2838',
     },
-    foldPlaceholder: { background: base06, foreground: base0D, border: base0D },
+    foldPlaceholder: { background: base06, foreground: base0D, border: base0D, borderStyle: 'dotted' },
     tooltip: {
       background: tooltipBackground,
       foreground: base01,

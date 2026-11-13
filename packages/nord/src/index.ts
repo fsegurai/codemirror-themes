@@ -13,21 +13,21 @@ import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 const base00 = '#2e3440', // Background - deep navy blue
   base01 = '#3b4252', // Lighter background (popups, statuslines)
   base02 = '#434c5e', // Selection background
-  base03 = '#4c566a', // Comments, invisibles
+  base03 = '#acb8cf', // Comments, invisibles
   // Snow Storm
   base04 = '#d8dee9', // Foreground - light blue-grey
   base05 = '#eceff4', // Light background
   // Frost
-  base06 = '#8fbcbb', // Moss green - function names
+  base06 = '#92c0be', // Moss green - function names
   base07 = '#88c0d0', // Ice blue - classes, attributes
-  base08 = '#81a1c1', // Water blue - methods
-  base09 = '#5e81ac', // Deep blue - keywords
+  base08 = '#9abbdc', // Water blue - methods
+  base09 = '#96bbe9', // Deep blue - keywords
   // Aurora
-  base0A = '#bf616a', // Red - errors, brackets
-  base0B = '#d08770', // Orange - numbers, constants
+  base0A = '#fb9ea4', // Red - errors, brackets
+  base0B = '#f1a58d', // Orange - numbers, constants
   base0C = '#ebcb8b', // Yellow - types, classes
-  base0D = '#a3be8c', // Green - strings
-  base0E = '#b48ead'; // Purple - operators, special characters
+  base0D = '#a5c08e', // Green - strings
+  base0E = '#d3accc'; // Purple - operators, special characters
 
 // UI specific colors
 const invalid = '#d30102', // Bright red for errors
@@ -51,8 +51,8 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: 'none',
     fatCursor: { background: `${base04}99`, border: 'none' },
-    selection: base02,
-    selectionInactive: base02,
+    selection: '#40495b',
+    selectionInactive: '#40495b',
     selectionForeground: null,
     selectionOutline: 'none',
     activeLine: highlightBackground,
@@ -102,7 +102,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base04,
     },
-    foldPlaceholder: { background: base01, foreground: base03, border: `${base03}70` },
+    foldPlaceholder: { background: base01, foreground: base03, border: `${base03}70`, borderStyle: 'dotted' },
     tooltip: {
       background: base01,
       foreground: base04,

@@ -15,18 +15,18 @@ const base00 = '#1b1e26', // Background (slightly darker for better contrast)
   base02 = '#db45a270', // Selection and Selection Match (reduced opacity)
   base03 = '#2b303b', // Dropdown Background
   base04 = '#ffffff', // Cursor (pure white for better visibility)
-  base05 = '#d667ff', // Keyword, Storage (brighter purple)
+  base05 = '#d679fa', // Keyword, Storage (brighter purple)
   base06 = '#24e3c3', // Variable, Parameter (slightly desaturated teal)
   base07 = '#ffdd80', // Function, Type, Class (warmer yellow)
   base08 = '#a6e07a', // String, RegExp (slightly muted green for better readability)
-  base09 = '#ff7057', // Constant, Number (brighter orange-red)
+  base09 = '#fc7860', // Constant, Number (brighter orange-red)
   base0A = '#a8aab9', // Comment (higher contrast gray)
-  base0B = '#ff40b3', // Heading (slightly desaturated magenta)
-  base0C = '#fd3681', // Tag (adjusted pink)
+  base0B = '#fe6bbc', // Heading (slightly desaturated magenta)
+  base0C = '#fe7099', // Tag (adjusted pink)
   base0D = '#c7c7ff', // New color for brackets/punctuation
   base0E = '#6ae4b9', // New color for special elements
-  base0F = '#3c94ff', // New color for attributes and links
-  invalid = '#ff3162', // Invalid (more visible red)
+  base0F = '#59a2fe', // New color for attributes and links
+  invalid = '#fb7586', // Invalid (more visible red)
   // UI-specific colors
   darkBackground = '#242830',
   highlightBackground = '#30343d40',
@@ -48,8 +48,8 @@ const theme = defineTheme({
     cursorWidth: '2px',
     cursorShadow: 'none',
     fatCursor: { background: `${base04}99`, border: 'none' },
-    selection: base02,
-    selectionInactive: base02,
+    selection: '#db45a248',
+    selectionInactive: '#db45a248',
     selectionForeground: base04,
     selectionOutline: 'none',
     activeLine: highlightBackground,
@@ -91,7 +91,7 @@ const theme = defineTheme({
     },
     gutter: {
       background: darkBackground,
-      foreground: '#748099',
+      foreground: '#828fa8',
       border: '#33384550',
       activeBackground: highlightBackground,
       activeForeground: base01,
@@ -99,7 +99,7 @@ const theme = defineTheme({
       activeBorder: 'none',
       foldHover: base01,
     },
-    foldPlaceholder: { background: 'transparent', foreground: base02, border: `${base05}70` },
+    foldPlaceholder: { background: 'transparent', foreground: base02, border: `${base05}70`, borderStyle: 'dotted' },
     tooltip: {
       background: tooltipBackground,
       foreground: base01,
@@ -111,8 +111,8 @@ const theme = defineTheme({
       selectedBackground: '#db45a240',
       selectedForeground: base01,
       selectedBorder: 'none',
-      icon: '#748099',
-      detail: '#748099',
+      icon: '#828fa8',
+      detail: '#828fa8',
     },
     diff: {
       insertedBackground: addedBackground,
