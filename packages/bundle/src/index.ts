@@ -4,8 +4,10 @@ export { androidStudio, androidStudioMergeStyles } from '@fsegurai/codemirror-th
 export { andromeda, andromedaMergeStyles } from '@fsegurai/codemirror-theme-andromeda';
 export { basicDark, basicDarkMergeStyles } from '@fsegurai/codemirror-theme-basic-dark';
 export { basicLight, basicLightMergeStyles } from '@fsegurai/codemirror-theme-basic-light';
+export { catppuccinLatte, catppuccinLatteMergeStyles } from '@fsegurai/codemirror-theme-catppuccin-latte';
 export { catppuccinMocha, catppuccinMochaMergeStyles } from '@fsegurai/codemirror-theme-catppuccin-mocha';
 export { cobalt2, cobalt2MergeStyles } from '@fsegurai/codemirror-theme-cobalt2';
+export { dracula, draculaMergeStyles } from '@fsegurai/codemirror-theme-dracula';
 export { forest, forestMergeStyles } from '@fsegurai/codemirror-theme-forest';
 export { githubDark, githubDarkMergeStyles } from '@fsegurai/codemirror-theme-github-dark';
 export { githubLight, githubLightMergeStyles } from '@fsegurai/codemirror-theme-github-light';
@@ -18,7 +20,9 @@ export { materialLight, materialLightMergeStyles } from '@fsegurai/codemirror-th
 export { materialOcean, materialOceanMergeStyles } from '@fsegurai/codemirror-theme-material-ocean';
 export { monokai, monokaiMergeStyles } from '@fsegurai/codemirror-theme-monokai';
 export { nord, nordMergeStyles } from '@fsegurai/codemirror-theme-nord';
+export { oneDark, oneDarkMergeStyles } from '@fsegurai/codemirror-theme-one-dark';
 export { palenight, palenightMergeStyles } from '@fsegurai/codemirror-theme-palenight';
+export { rosePineDawn, rosePineDawnMergeStyles } from '@fsegurai/codemirror-theme-rose-pine-dawn';
 export { solarizedDark, solarizedDarkMergeStyles } from '@fsegurai/codemirror-theme-solarized-dark';
 export { solarizedLight, solarizedLightMergeStyles } from '@fsegurai/codemirror-theme-solarized-light';
 export { synthwave84, synthwave84MergeStyles } from '@fsegurai/codemirror-theme-synthwave-84';

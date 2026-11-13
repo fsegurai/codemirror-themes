@@ -125,8 +125,10 @@
         "@fsegurai/codemirror-theme-andromeda": "6.2.7",
         "@fsegurai/codemirror-theme-basic-dark": "6.2.7",
         "@fsegurai/codemirror-theme-basic-light": "6.2.7",
+        "@fsegurai/codemirror-theme-catppuccin-latte": "6.2.7",
         "@fsegurai/codemirror-theme-catppuccin-mocha": "6.0.4",
         "@fsegurai/codemirror-theme-cobalt2": "6.0.6",
+        "@fsegurai/codemirror-theme-dracula": "6.2.7",
         "@fsegurai/codemirror-theme-forest": "6.2.7",
         "@fsegurai/codemirror-theme-github-dark": "6.2.7",
         "@fsegurai/codemirror-theme-github-light": "6.2.7",
@@ -139,7 +141,9 @@
         "@fsegurai/codemirror-theme-material-ocean": "6.0.3",
         "@fsegurai/codemirror-theme-monokai": "6.2.7",
         "@fsegurai/codemirror-theme-nord": "6.2.7",
+        "@fsegurai/codemirror-theme-one-dark": "6.2.7",
         "@fsegurai/codemirror-theme-palenight": "6.2.7",
+        "@fsegurai/codemirror-theme-rose-pine-dawn": "6.2.7",
         "@fsegurai/codemirror-theme-solarized-dark": "6.2.7",
         "@fsegurai/codemirror-theme-solarized-light": "6.2.7",
         "@fsegurai/codemirror-theme-synthwave-84": "6.0.4",
@@ -149,6 +153,19 @@
         "@fsegurai/codemirror-theme-vscode-dark": "6.2.8",
         "@fsegurai/codemirror-theme-vscode-light": "6.2.8",
       },
+      "devDependencies": {
+        "@codemirror/buildhelper": "^1.0.2",
+      },
+      "peerDependencies": {
+        "@codemirror/language": "^6.0.0",
+        "@codemirror/state": "^6.0.0",
+        "@codemirror/view": "^6.0.0",
+        "@lezer/highlight": "^1.0.0",
+      },
+    },
+    "packages/catppuccin-latte": {
+      "name": "@fsegurai/codemirror-theme-catppuccin-latte",
+      "version": "6.2.7",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -175,6 +192,19 @@
     "packages/cobalt2": {
       "name": "@fsegurai/codemirror-theme-cobalt2",
       "version": "6.0.6",
+      "devDependencies": {
+        "@codemirror/buildhelper": "^1.0.2",
+      },
+      "peerDependencies": {
+        "@codemirror/language": "^6.0.0",
+        "@codemirror/state": "^6.0.0",
+        "@codemirror/view": "^6.0.0",
+        "@lezer/highlight": "^1.0.0",
+      },
+    },
+    "packages/dracula": {
+      "name": "@fsegurai/codemirror-theme-dracula",
+      "version": "6.2.7",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
       },
@@ -341,8 +371,34 @@
         "@lezer/highlight": "^1.0.0",
       },
     },
+    "packages/one-dark": {
+      "name": "@fsegurai/codemirror-theme-one-dark",
+      "version": "6.2.7",
+      "devDependencies": {
+        "@codemirror/buildhelper": "^1.0.2",
+      },
+      "peerDependencies": {
+        "@codemirror/language": "^6.0.0",
+        "@codemirror/state": "^6.0.0",
+        "@codemirror/view": "^6.0.0",
+        "@lezer/highlight": "^1.0.0",
+      },
+    },
     "packages/palenight": {
       "name": "@fsegurai/codemirror-theme-palenight",
+      "version": "6.2.7",
+      "devDependencies": {
+        "@codemirror/buildhelper": "^1.0.2",
+      },
+      "peerDependencies": {
+        "@codemirror/language": "^6.0.0",
+        "@codemirror/state": "^6.0.0",
+        "@codemirror/view": "^6.0.0",
+        "@lezer/highlight": "^1.0.0",
+      },
+    },
+    "packages/rose-pine-dawn": {
+      "name": "@fsegurai/codemirror-theme-rose-pine-dawn",
       "version": "6.2.7",
       "devDependencies": {
         "@codemirror/buildhelper": "^1.0.2",
@@ -572,9 +628,13 @@
 
     "@fsegurai/codemirror-theme-bundle": ["@fsegurai/codemirror-theme-bundle@workspace:packages/bundle"],
 
+    "@fsegurai/codemirror-theme-catppuccin-latte": ["@fsegurai/codemirror-theme-catppuccin-latte@workspace:packages/catppuccin-latte"],
+
     "@fsegurai/codemirror-theme-catppuccin-mocha": ["@fsegurai/codemirror-theme-catppuccin-mocha@workspace:packages/catppuccin-mocha"],
 
     "@fsegurai/codemirror-theme-cobalt2": ["@fsegurai/codemirror-theme-cobalt2@workspace:packages/cobalt2"],
+
+    "@fsegurai/codemirror-theme-dracula": ["@fsegurai/codemirror-theme-dracula@workspace:packages/dracula"],
 
     "@fsegurai/codemirror-theme-forest": ["@fsegurai/codemirror-theme-forest@workspace:packages/forest"],
 
@@ -600,7 +660,11 @@
 
     "@fsegurai/codemirror-theme-nord": ["@fsegurai/codemirror-theme-nord@workspace:packages/nord"],
 
+    "@fsegurai/codemirror-theme-one-dark": ["@fsegurai/codemirror-theme-one-dark@workspace:packages/one-dark"],
+
     "@fsegurai/codemirror-theme-palenight": ["@fsegurai/codemirror-theme-palenight@workspace:packages/palenight"],
+
+    "@fsegurai/codemirror-theme-rose-pine-dawn": ["@fsegurai/codemirror-theme-rose-pine-dawn@workspace:packages/rose-pine-dawn"],
 
     "@fsegurai/codemirror-theme-solarized-dark": ["@fsegurai/codemirror-theme-solarized-dark@workspace:packages/solarized-dark"],
 
