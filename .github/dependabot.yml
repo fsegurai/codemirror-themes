@@ -1,20 +1,29 @@
 version: 2
 updates:
-  # Root dependencies (includes all monorepo workspaces)
-  - package-ecosystem: "npm"
+  # Root and workspace dependencies (bun.lock, text format, Bun >= 1.1.39)
+  - package-ecosystem: "bun"
     directory: "/"
     schedule:
       interval: "weekly"
+    # Match bunfig.toml `minimumReleaseAge` (3 days) so Dependabot never proposes versions bun refuses to install.
+    cooldown:
+      default-days: 3
     labels:
-      - "infra"
       - "dependencies"
     open-pull-requests-limit: 10
     assignees:
       - fsegurai
     commit-message:
-      prefix: "npm"
-      include: "scope"
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
     groups:
+      codemirror:
+        patterns:
+          - "@codemirror/*"
+          - "@lezer/*"
+        update-types:
+          - "minor"
+          - "patch"
       dev-dependencies:
         dependency-type: "development"
         update-types:
@@ -26,17 +35,21 @@ updates:
           - "minor"
           - "patch"
 
-
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "monthly"
+    cooldown:
+      default-days: 3
     labels:
       - "ci-cd"
-      - "infra"
     open-pull-requests-limit: 5
     assignees:
       - fsegurai
     commit-message:
       prefix: "ci(actions)"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
