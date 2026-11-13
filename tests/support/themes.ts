@@ -111,15 +111,14 @@ export function resolvedHighlights(extension: Extension): Record<string, string>
 /** Editor UI CSS of the theme (style modules other than the syntax highlighter), with generated class names normalized. */
 export function editorCss(extension: Extension): string {
   const state = editorState(extension);
-  const highlightClasses = new Set<string>();
-  for (const [, tag] of allTags())
-    for (const cls of highlightingFor(state, [tag])?.split(' ') ?? []) highlightClasses.add(cls);
+  // A HighlightStyle module only contains single-class rules (`.ͼx {…}`); the EditorView.theme module has scoped,
+  // descendant selectors. Dead (never-resolving) highlight rules make class-based detection unreliable.
   const css = state
     .facet(EditorView.styleModule)
     .map((mod) => mod.getRules())
     .filter((rules) => {
-      const classes = [...rules.matchAll(/\.(ͼ[\w-]+)\s*\{/g)].map((m) => m[1]);
-      return !(classes.length > 0 && classes.every((cls) => highlightClasses.has(cls)));
+      const selectors = [...rules.matchAll(/([^{}]+)\{[^}]*\}/g)].map((m) => m[1].trim());
+      return !selectors.every((selector) => /^\.ͼ[\w-]+$/.test(selector));
     })
     .join('\n');
   const names = new Map<string, string>();
@@ -127,6 +126,34 @@ export function editorCss(extension: Extension): string {
     if (!names.has(cls)) names.set(cls, `ͼ${names.size}`);
     return names.get(cls) as string;
   });
+}
+
+/**
+ * Order-insensitive form of {@link editorCss}: one line per individual selector with its merged, sorted declarations.
+ * Moving rules into a shared template or splitting selector lists keeps this identical when the styling is unchanged.
+ */
+export function editorRules(extension: Extension): string {
+  const merged = new Map<string, Record<string, string>>();
+  for (const match of editorCss(extension).matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+    const decls: Record<string, string> = {};
+    for (const part of match[2].split(';')) {
+      const index = part.indexOf(':');
+      if (index > 0) decls[part.slice(0, index).trim()] = part.slice(index + 1).trim();
+    }
+    for (const selector of match[1].split(',').map((s) => s.trim().replace(/\s+/g, ' '))) {
+      merged.set(selector, { ...(merged.get(selector) ?? {}), ...decls });
+    }
+  }
+  return [...merged]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([selector, decls]) => {
+      const body = Object.keys(decls)
+        .sort()
+        .map((key) => `${key}: ${decls[key]}`)
+        .join('; ');
+      return `${selector} { ${body} }`;
+    })
+    .join('\n');
 }
 
 /** Declarations of the first rule whose selector list contains `selector` (exact selector part match). */
