@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <h2>1. A theme built from a palette</h2>
+    <form id="palette" class="toolbar palette">
+      <fieldset id="colors">
+        <legend>Palette</legend>
+      </fieldset>
+      <label class="check"><input id="dark" type="checkbox" checked /> Dark theme</label>
+    </form>
+    <div id="custom" class="frame"></div>
+    <details>
+      <summary>Palette object</summary>
+      <pre><code id="palette-code"></code></pre>
+    </details>
+
+    <h2>2. One token recolored on top of a packaged theme</h2>
+    <div class="toolbar">
+      <label class="check"><input id="override" type="checkbox" checked /> Override comments</label>
+      <label for="comment-color">Comment color</label>
+      <input id="comment-color" type="color" value="#3fb950" />
+    </div>
+    <div id="packaged" class="frame"></div>
+  </body>
+</html>
