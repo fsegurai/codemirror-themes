@@ -32,8 +32,7 @@ describe.each(themes.map((theme) => [theme.id, theme] as const))('%s', (_id, the
   });
 });
 
-describe('focus indicator survives forced-colors mode (Windows High Contrast)', async () => {
-  const themes = await loadAllThemes();
+describe('focus indicator survives forced-colors mode (Windows High Contrast)', () => {
   // Forced-colors mode drops box-shadow; a transparent outline is repainted with the system color instead.
   test.each(themes.map((theme) => [theme.id, theme] as const))(
     '%s keeps a transparent >= 2px outline on focus',
