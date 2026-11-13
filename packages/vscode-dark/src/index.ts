@@ -63,7 +63,7 @@ const theme = defineTheme({
     ghostText: base03,
     ghostTextOpacity: '0.5',
     specialChar: base0F,
-    focusRing: `0 0 0 1px ${base02}`,
+    focusRing: `0 0 0 2px ${base03}`,
     outlineWidth: '1px',
     searchMatch: {
       background: '#72a1ff40',
@@ -72,11 +72,11 @@ const theme = defineTheme({
       shadow: 'none',
       selectedBackground: `${linkColor}90`,
       selectedForeground: base06,
-      selectedOutline: `1px solid ${base08}90`,
+      selectedOutline: `1px solid ${base08}99`,
       selectedShadow: 'none',
     },
     selectionMatch: { background: selectionMatch, outline: `${base02}70` },
-    matchingBracket: { background: activeBracketBg, outline: `${base08}80`, shadow: 'none' },
+    matchingBracket: { background: activeBracketBg, outline: `${base08}99`, shadow: 'none' },
     nonMatchingBracket: { background: `${base0F}40`, outline: base0F },
     panel: {
       background: base01,

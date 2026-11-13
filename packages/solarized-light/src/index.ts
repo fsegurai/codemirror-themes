@@ -60,7 +60,7 @@ const theme = defineTheme({
     ghostText: base01,
     ghostTextOpacity: '0.5',
     specialChar: base09,
-    focusRing: `0 0 0 2px ${base07}, 0 0 0 3px ${base0E}40`,
+    focusRing: `0 0 0 2px ${base07}, 0 0 0 4px ${base0E}`,
     outlineWidth: '1px',
     searchMatch: {
       background: `${base05}80`,

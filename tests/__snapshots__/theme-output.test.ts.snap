@@ -556,6 +556,10 @@ exports[`abcdef resolved syntax highlighting per tag 1`] = `
 
 exports[`abcdef editor UI rules 1`] = `
 ".ͼ0 { background-color: #0a0e14; border: none; color: #e0edff; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #391d1d08 !important; border: 1px solid #ff8a8040; border-radius: 3px; color: #ff8a80; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #391d1d08 !important; border: 1px solid #ff8a8040; border-radius: 3px; color: #ff8a80; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #3a4a5f40; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #3a4a5f40; border: none; color: #ffffff; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #3a4a5f; background-image: none; border: none; border-radius: 4px; color: #e0edff; padding: 2px 10px }
@@ -644,16 +648,15 @@ exports[`abcdef editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #e0edff; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #3a4a5f }
 .ͼ0 .cm-trailingSpace { background-color: #391d1d08 }
-.ͼ0 del { background-color: #391d1d08 !important; border: 1px solid #ff8a8040; border-radius: 3px; color: #ff8a80; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #391d1d08 !important; border: 1px solid #ff8a8040; border-radius: 3px; color: #ff8a80; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #391d1d08 !important; border: 1px solid #ff8a8040; border-radius: 3px; color: #ff8a80; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #391d1d08 !important; border: 1px solid #ff8a8040; border-radius: 3px; color: #ff8a80; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #1d391d4d !important; border: 1px solid #7aecb340; border-radius: 3px; color: #7aecb3; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #1d391d4d !important; border: 1px solid #7aecb340; border-radius: 3px; color: #7aecb3; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #1e2d41 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #0a0e14, 0 0 0 3px #abcdef40; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #0a0e14, 0 0 0 4px #abcdef; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #1e2d41; outline: none }"
 `;
 
@@ -1221,6 +1224,10 @@ exports[`abyss resolved syntax highlighting per tag 1`] = `
 
 exports[`abyss editor UI rules 1`] = `
 ".ͼ0 { background-color: #000c18; border: none; color: #a3c9e9; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #78112240 !important; border: 1px solid #ff6b7d40; border-radius: 3px; color: #ff6b7d; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #78112240 !important; border: 1px solid #ff6b7d40; border-radius: 3px; color: #ff6b7d; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #0055ff15; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #0055ff15; border: none; color: #a3c9e9; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #0a1422; background-image: none; border: none; border-radius: 4px; color: #a3c9e9; padding: 2px 10px }
@@ -1309,16 +1316,15 @@ exports[`abyss editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #a3c9e9; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #084671 }
 .ͼ0 .cm-trailingSpace { background-color: #78112240 }
-.ͼ0 del { background-color: #78112240 !important; border: 1px solid #ff6b7d40; border-radius: 3px; color: #ff6b7d; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #78112240 !important; border: 1px solid #ff6b7d40; border-radius: 3px; color: #ff6b7d; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #78112240 !important; border: 1px solid #ff6b7d40; border-radius: 3px; color: #ff6b7d; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #78112240 !important; border: 1px solid #ff6b7d40; border-radius: 3px; color: #ff6b7d; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #0e4e1d50 !important; border: 1px solid #4ce66040; border-radius: 3px; color: #4ce660; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #0e4e1d50 !important; border: 1px solid #4ce66040; border-radius: 3px; color: #4ce660; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #032d4a }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #0066ff20, 0 0 0 4px #000c18; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #0066ff20, 0 0 0 4px #5caeff; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #032d4a; outline: none }"
 `;
 
@@ -1886,6 +1892,10 @@ exports[`android-studio resolved syntax highlighting per tag 1`] = `
 
 exports[`android-studio editor UI rules 1`] = `
 ".ͼ0 { background-color: #282b2e; border: none; color: #a9b7c6; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #484a4a !important; border: 1px solid #e58f4b40; border-radius: 3px; color: #e58f4b; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #484a4a !important; border: 1px solid #e58f4b40; border-radius: 3px; color: #e58f4b; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #32323221; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #323232; border: none; color: #c0c0c0; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #313335; background-image: none; border: none; border-radius: 4px; color: #a9b7c6; padding: 2px 10px }
@@ -1893,7 +1903,7 @@ exports[`android-studio editor UI rules 1`] = `
 .ͼ0 .cm-changeGutter { background-color: #313335 }
 .ͼ0 .cm-collapsedLines { background: #3b3b3b; color: #a1a1a1 }
 .ͼ0 .cm-completionInfo { background-color: #3b3b3b; border: 1px solid #5b5b5b; color: #a9b7c6; padding: 4px 8px }
-.ͼ0 .cm-completionMatchedText { color: inherit; font-weight: bold; text-decoration: underline; text-decoration-color: #43705c }
+.ͼ0 .cm-completionMatchedText { color: inherit; font-weight: bold; text-decoration: underline; text-decoration-color: #4c7e68 }
 .ͼ0 .cm-content { caret-color: #ffffff; line-height: 1.6 }
 .ͼ0 .cm-content ::selection { background-color: #173a66; outline: none }
 .ͼ0 .cm-crosshair { cursor: crosshair }
@@ -1932,7 +1942,7 @@ exports[`android-studio editor UI rules 1`] = `
 .ͼ0 .cm-lintRange-hint { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%237bb16d%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
 .ͼ0 .cm-lintRange-info { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%237bb16d%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
 .ͼ0 .cm-lintRange-warning { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%23e8bf6a%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
-.ͼ0 .cm-matchingBracket { background-color: #3b514d; border-radius: 2px; box-shadow: none; outline: 1px solid #43705c }
+.ͼ0 .cm-matchingBracket { background-color: #3b514d; border-radius: 2px; box-shadow: none; outline: 1px solid #4c7e68 }
 .ͼ0 .cm-merge-a .cm-changedLine { background-color: #484a4a }
 .ͼ0 .cm-merge-a .cm-changedLineGutter { background: #e58f4b }
 .ͼ0 .cm-merge-b .cm-changedLine { background-color: #294436 }
@@ -1974,16 +1984,15 @@ exports[`android-studio editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #a9b7c6; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #5b5b5b }
 .ͼ0 .cm-trailingSpace { background-color: #484a4a }
-.ͼ0 del { background-color: #484a4a !important; border: 1px solid #e58f4b40; border-radius: 3px; color: #e58f4b; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #484a4a !important; border: 1px solid #e58f4b40; border-radius: 3px; color: #e58f4b; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #484a4a !important; border: 1px solid #e58f4b40; border-radius: 3px; color: #e58f4b; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #484a4a !important; border: 1px solid #e58f4b40; border-radius: 3px; color: #e58f4b; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #294436 !important; border: 1px solid #8dac7c40; border-radius: 3px; color: #8dac7c; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #294436 !important; border: 1px solid #8dac7c40; border-radius: 3px; color: #8dac7c; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #173a66 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #3f3f3f, 0 0 0 4px #282b2e; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #989b9e, 0 0 0 4px #282b2e; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #173a66; outline: none }"
 `;
 
@@ -2551,6 +2560,10 @@ exports[`andromeda resolved syntax highlighting per tag 1`] = `
 
 exports[`andromeda editor UI rules 1`] = `
 ".ͼ0 { background-color: #1b1e26; border: none; color: #e4dff0; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #78112230 !important; border: 1px solid #ff5d7a40; border-radius: 3px; color: #ff5d7a; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #78112230 !important; border: 1px solid #ff5d7a40; border-radius: 3px; color: #ff5d7a; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #30343d40; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #30343d40; border: none; color: #e4dff0; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #242830; background-image: none; border: none; border-radius: 4px; color: #24e3c3; padding: 2px 10px }
@@ -2558,7 +2571,7 @@ exports[`andromeda editor UI rules 1`] = `
 .ͼ0 .cm-changeGutter { background-color: #242830 }
 .ͼ0 .cm-collapsedLines { background: transparent; color: #db45a270 }
 .ͼ0 .cm-completionInfo { background-color: #1f232d; border: 1px solid #3a3e4c; color: #e4dff0; padding: 4px 8px }
-.ͼ0 .cm-completionMatchedText { color: inherit; font-weight: bold; text-decoration: underline; text-decoration-color: #d679fa50 }
+.ͼ0 .cm-completionMatchedText { color: inherit; font-weight: bold; text-decoration: underline; text-decoration-color: #d679fa99 }
 .ͼ0 .cm-content { caret-color: #ffffff; line-height: 1.6 }
 .ͼ0 .cm-content ::selection { background-color: #db45a248; color: #ffffff; outline: none }
 .ͼ0 .cm-crosshair { cursor: crosshair }
@@ -2597,7 +2610,7 @@ exports[`andromeda editor UI rules 1`] = `
 .ͼ0 .cm-lintRange-hint { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%2359a2fe%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
 .ͼ0 .cm-lintRange-info { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%2359a2fe%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
 .ͼ0 .cm-lintRange-warning { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%23ffdd80%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
-.ͼ0 .cm-matchingBracket { background-color: #db45a230; border-radius: 2px; box-shadow: none; outline: 1px solid #d679fa50 }
+.ͼ0 .cm-matchingBracket { background-color: #db45a230; border-radius: 2px; box-shadow: none; outline: 1px solid #d679fa99 }
 .ͼ0 .cm-merge-a .cm-changedLine { background-color: #78112230 }
 .ͼ0 .cm-merge-a .cm-changedLineGutter { background: #ff5d7a }
 .ͼ0 .cm-merge-b .cm-changedLine { background-color: #0f3a2440 }
@@ -2618,7 +2631,7 @@ exports[`andromeda editor UI rules 1`] = `
 .ͼ0 .cm-search.cm-panel.cm-textfield { border-radius: 4px; color: #24e3c3; padding: 2px 6px }
 .ͼ0 .cm-searchMatch { background-color: #db45a230; border-radius: 4px; box-shadow: none; color: #e4dff0; outline: 1px solid #d679fa30 }
 .ͼ0 .cm-searchMatch span { color: #e4dff0 }
-.ͼ0 .cm-searchMatch.cm-searchMatch-selected { background-color: #db45a280; box-shadow: none; color: #e4dff0; outline: 1px solid #d679fa30; padding: 2px 6px }
+.ͼ0 .cm-searchMatch.cm-searchMatch-selected { background-color: #db45a280; box-shadow: none; color: #e4dff0; outline: 1px solid #d679fa99; padding: 2px 6px }
 .ͼ0 .cm-searchMatch.cm-searchMatch-selected span { color: #e4dff0 }
 .ͼ0 .cm-selectionBackground { background-color: #db45a248; color: #ffffff; outline: none }
 .ͼ0 .cm-selectionLayer { z-index: 100 }
@@ -2639,16 +2652,15 @@ exports[`andromeda editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #e4dff0; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #3a3e4c }
 .ͼ0 .cm-trailingSpace { background-color: #78112230 }
-.ͼ0 del { background-color: #78112230 !important; border: 1px solid #ff5d7a40; border-radius: 3px; color: #ff5d7a; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #78112230 !important; border: 1px solid #ff5d7a40; border-radius: 3px; color: #ff5d7a; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #78112230 !important; border: 1px solid #ff5d7a40; border-radius: 3px; color: #ff5d7a; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #78112230 !important; border: 1px solid #ff5d7a40; border-radius: 3px; color: #ff5d7a; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #0f3a2440 !important; border: 1px solid #a6e07a40; border-radius: 3px; color: #a6e07a; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #0f3a2440 !important; border: 1px solid #a6e07a40; border-radius: 3px; color: #a6e07a; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #db45a248 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #1b1e26, 0 0 0 3px #d679fa40; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #1b1e26, 0 0 0 4px #d679fa; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #db45a248; color: #ffffff; outline: none }"
 `;
 
@@ -3216,6 +3228,10 @@ exports[`basic-dark resolved syntax highlighting per tag 1`] = `
 
 exports[`basic-dark editor UI rules 1`] = `
 ".ͼ0 { background-color: #1e2124; border: none; color: #e2e2e2; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #5c1e2340 !important; border: 1px solid #f0717840; border-radius: 3px; color: #f07178; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #5c1e2340 !important; border: 1px solid #f0717840; border-radius: 3px; color: #f07178; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #3a3d415f; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #3a3d4166; border: none; color: #b8b8b8; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #252529; background-image: none; border: none; border-radius: 4px; color: #e4e4e4; padding: 2px 10px }
@@ -3223,7 +3239,7 @@ exports[`basic-dark editor UI rules 1`] = `
 .ͼ0 .cm-changeGutter { background-color: #252529 }
 .ͼ0 .cm-collapsedLines { background: transparent; color: #5c88da }
 .ͼ0 .cm-completionInfo { background-color: #2a2c31; border: 1px solid #3a3a3a; color: #e2e2e2; padding: 4px 8px }
-.ͼ0 .cm-completionMatchedText { color: inherit; font-weight: bold; text-decoration: underline; text-decoration-color: #d284e960 }
+.ͼ0 .cm-completionMatchedText { color: inherit; font-weight: bold; text-decoration: underline; text-decoration-color: #d284e9a0 }
 .ͼ0 .cm-content { caret-color: #ffffff; line-height: 1.6 }
 .ͼ0 .cm-content ::selection { background-color: #3a59916f; color: #e2e2e2; outline: none }
 .ͼ0 .cm-crosshair { cursor: crosshair }
@@ -3262,7 +3278,7 @@ exports[`basic-dark editor UI rules 1`] = `
 .ͼ0 .cm-lintRange-hint { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%2361afef%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
 .ͼ0 .cm-lintRange-info { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%2361afef%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
 .ͼ0 .cm-lintRange-warning { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%23ffcb6b%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
-.ͼ0 .cm-matchingBracket { background-color: #3a599140; border-radius: 2px; box-shadow: none; outline: 1px solid #d284e960 }
+.ͼ0 .cm-matchingBracket { background-color: #3a599140; border-radius: 2px; box-shadow: none; outline: 1px solid #d284e9a0 }
 .ͼ0 .cm-merge-a .cm-changedLine { background-color: #5c1e2340 }
 .ͼ0 .cm-merge-a .cm-changedLineGutter { background: #f07178 }
 .ͼ0 .cm-merge-b .cm-changedLine { background-color: #1e462c50 }
@@ -3304,16 +3320,15 @@ exports[`basic-dark editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #e2e2e2; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #3a3a3a }
 .ͼ0 .cm-trailingSpace { background-color: #5c1e2340 }
-.ͼ0 del { background-color: #5c1e2340 !important; border: 1px solid #f0717840; border-radius: 3px; color: #f07178; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #5c1e2340 !important; border: 1px solid #f0717840; border-radius: 3px; color: #f07178; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #5c1e2340 !important; border: 1px solid #f0717840; border-radius: 3px; color: #f07178; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #5c1e2340 !important; border: 1px solid #f0717840; border-radius: 3px; color: #f07178; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #1e462c50 !important; border: 1px solid #73c99140; border-radius: 3px; color: #73c991; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #1e462c50 !important; border: 1px solid #73c99140; border-radius: 3px; color: #73c991; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #3a59916f }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #1e2124, 0 0 0 3px #5c88da40; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #1e2124, 0 0 0 4px #5c88da; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #3a59916f; color: #e2e2e2; outline: none }"
 `;
 
@@ -3881,6 +3896,10 @@ exports[`basic-light resolved syntax highlighting per tag 1`] = `
 
 exports[`basic-light editor UI rules 1`] = `
 ".ͼ0 { background-color: #ffffff; border: none; color: #1c2434; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #ffebe9a0 !important; border: 1px solid #cf222e30; border-radius: 3px; color: #cf222e; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #ffebe9a0 !important; border: 1px solid #cf222e30; border-radius: 3px; color: #cf222e; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #ebf4ff40; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #edf2f750; border: none; color: #1c2434; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #f0f4f8; background-image: none; border: none; border-radius: 4px; color: #4a5568; padding: 2px 10px }
@@ -3969,16 +3988,15 @@ exports[`basic-light editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #1c2434; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #e2e8f0 }
 .ͼ0 .cm-trailingSpace { background-color: #ffebe9a0 }
-.ͼ0 del { background-color: #ffebe9a0 !important; border: 1px solid #cf222e30; border-radius: 3px; color: #cf222e; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #ffebe9a0 !important; border: 1px solid #cf222e30; border-radius: 3px; color: #cf222e; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #ffebe9a0 !important; border: 1px solid #cf222e30; border-radius: 3px; color: #cf222e; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #ffebe9a0 !important; border: 1px solid #cf222e30; border-radius: 3px; color: #cf222e; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #e6ffec60 !important; border: 1px solid #24783b30; border-radius: 3px; color: #24783b; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #e6ffec60 !important; border: 1px solid #24783b30; border-radius: 3px; color: #24783b; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #90cdf480 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #ffffff, 0 0 0 3px #2566aa30; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #2566aa; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #90cdf480; color: #1a365d; outline: none }"
 `;
 
@@ -4546,6 +4564,10 @@ exports[`catppuccin-mocha resolved syntax highlighting per tag 1`] = `
 
 exports[`catppuccin-mocha editor UI rules 1`] = `
 ".ͼ0 { background-color: #1e1e2e; border: none; color: #cdd6f4; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #f38ba840 !important; border: 1px solid #f38ba840; border-radius: 3px; color: #f38ba8; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #f38ba840 !important; border: 1px solid #f38ba840; border-radius: 3px; color: #f38ba8; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #3a3a525f; border-left: 2px solid #b4befe; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #313244; border: none; color: #cdd6f4; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #313244; background-image: none; border: none; border-radius: 4px; color: #cdd6f4; padding: 2px 10px }
@@ -4634,16 +4656,15 @@ exports[`catppuccin-mocha editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #cdd6f4; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #9c9fb5 }
 .ͼ0 .cm-trailingSpace { background-color: #f38ba840 }
-.ͼ0 del { background-color: #f38ba840 !important; border: 1px solid #f38ba840; border-radius: 3px; color: #f38ba8; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #f38ba840 !important; border: 1px solid #f38ba840; border-radius: 3px; color: #f38ba8; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #f38ba840 !important; border: 1px solid #f38ba840; border-radius: 3px; color: #f38ba8; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #f38ba840 !important; border: 1px solid #f38ba840; border-radius: 3px; color: #f38ba8; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #a6e3a140 !important; border: 1px solid #a6e3a140; border-radius: 3px; color: #a6e3a1; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #a6e3a140 !important; border: 1px solid #a6e3a140; border-radius: 3px; color: #a6e3a1; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #585b7066 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #1e1e2e, 0 0 0 3px #b4befe40; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #1e1e2e, 0 0 0 4px #b4befe; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #585b7066; outline: 1px solid #cba6f7 }"
 `;
 
@@ -5211,6 +5232,10 @@ exports[`cobalt2 resolved syntax highlighting per tag 1`] = `
 
 exports[`cobalt2 editor UI rules 1`] = `
 ".ͼ0 { background-color: #193549; border: none; color: #fff; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #ee3a4333 !important; border: 1px solid #fb9caf30; border-radius: 3px; color: #fb9caf; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #ee3a4333 !important; border: 1px solid #fb9caf30; border-radius: 3px; color: #fb9caf; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #99eeff0d; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: transparent; border: none; color: #fff; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #83bafe; background-image: none; border: 1px solid #0d3a58; border-radius: 4px; color: #fff; padding: 2px 10px }
@@ -5218,7 +5243,7 @@ exports[`cobalt2 editor UI rules 1`] = `
 .ͼ0 .cm-changeGutter { background-color: #12273866 }
 .ͼ0 .cm-collapsedLines { background: transparent; color: #b7b7b7 }
 .ͼ0 .cm-completionInfo { background-color: #15232d; border: 1px solid #0d3a58; color: #b7b7b7; padding: 4px 8px }
-.ͼ0 .cm-completionMatchedText { color: inherit; font-weight: bold; text-decoration: underline; text-decoration-color: #ffc60080 }
+.ͼ0 .cm-completionMatchedText { color: inherit; font-weight: bold; text-decoration: underline; text-decoration-color: #ffc60088 }
 .ͼ0 .cm-content { caret-color: #ffc600; line-height: 1.6 }
 .ͼ0 .cm-content ::selection { background-color: #09478e; color: #fff; outline: none }
 .ͼ0 .cm-crosshair { cursor: crosshair }
@@ -5257,7 +5282,7 @@ exports[`cobalt2 editor UI rules 1`] = `
 .ͼ0 .cm-lintRange-hint { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%2383bafe%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
 .ͼ0 .cm-lintRange-info { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%2383bafe%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
 .ͼ0 .cm-lintRange-warning { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%23ffc600%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
-.ͼ0 .cm-matchingBracket { background-color: #0d3a58; border-radius: 2px; box-shadow: none; outline: 1px solid #ffc60080 }
+.ͼ0 .cm-matchingBracket { background-color: #0d3a58; border-radius: 2px; box-shadow: none; outline: 1px solid #ffc60088 }
 .ͼ0 .cm-merge-a .cm-changedLine { background-color: #ee3a4333 }
 .ͼ0 .cm-merge-a .cm-changedLineGutter { background: #fb9caf }
 .ͼ0 .cm-merge-b .cm-changedLine { background-color: #3ad90033 }
@@ -5299,16 +5324,15 @@ exports[`cobalt2 editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #b7b7b7; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #0d3a58 }
 .ͼ0 .cm-trailingSpace { background-color: #ee3a4333 }
-.ͼ0 del { background-color: #ee3a4333 !important; border: 1px solid #fb9caf30; border-radius: 3px; color: #fb9caf; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #ee3a4333 !important; border: 1px solid #fb9caf30; border-radius: 3px; color: #fb9caf; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #ee3a4333 !important; border: 1px solid #fb9caf30; border-radius: 3px; color: #fb9caf; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #ee3a4333 !important; border: 1px solid #fb9caf30; border-radius: 3px; color: #fb9caf; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #3ad90033 !important; border: 1px solid #a5ff9030; border-radius: 3px; color: #a5ff90; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #3ad90033 !important; border: 1px solid #a5ff9030; border-radius: 3px; color: #a5ff90; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #003b8b }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #193549, 0 0 0 3px #80fcff40; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #193549, 0 0 0 4px #80fcff; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #09478e; color: #fff; outline: none }"
 `;
 
@@ -5876,6 +5900,10 @@ exports[`forest resolved syntax highlighting per tag 1`] = `
 
 exports[`forest editor UI rules 1`] = `
 ".ͼ0 { background-color: #1a2a33; border: none; color: #d0d8e0; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #763c3c70 !important; border: 1px solid #fd887f40; border-radius: 3px; color: #fd887f; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #763c3c70 !important; border: 1px solid #fd887f40; border-radius: 3px; color: #fd887f; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #31444366; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #314443aa; border: none; color: #d0d8e0; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #233039; background-image: none; border: none; border-radius: 4px; color: #d0d8e0; padding: 2px 10px }
@@ -5964,16 +5992,15 @@ exports[`forest editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #d0d8e0; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #3e5059 }
 .ͼ0 .cm-trailingSpace { background-color: #763c3c70 }
-.ͼ0 del { background-color: #763c3c70 !important; border: 1px solid #fd887f40; border-radius: 3px; color: #fd887f; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #763c3c70 !important; border: 1px solid #fd887f40; border-radius: 3px; color: #fd887f; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #763c3c70 !important; border: 1px solid #fd887f40; border-radius: 3px; color: #fd887f; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #763c3c70 !important; border: 1px solid #fd887f40; border-radius: 3px; color: #fd887f; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #28513a80 !important; border: 1px solid #9ccc6540; border-radius: 3px; color: #9ccc65; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #28513a80 !important; border: 1px solid #9ccc6540; border-radius: 3px; color: #9ccc65; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #2c5a3a92 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #1a2a33, 0 0 0 3px #ffb74d40; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #1a2a33, 0 0 0 4px #ffb74d; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #2c5a3a92; color: #d0d8e0; outline: none }"
 `;
 
@@ -6541,6 +6568,10 @@ exports[`github-dark resolved syntax highlighting per tag 1`] = `
 
 exports[`github-dark editor UI rules 1`] = `
 ".ͼ0 { background-color: #0d1117; border: none; color: #c9d1d9; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #f8514940 !important; border: 1px solid #ff7b7240; border-radius: 3px; color: #ff7b72; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #f8514940 !important; border: 1px solid #ff7b7240; border-radius: 3px; color: #ff7b72; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #2d333b1a; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #21262d; border: none; color: #c9d1d9; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #21262d; background-image: none; border: none; border-radius: 4px; color: #c9d1d9; padding: 2px 10px }
@@ -6629,16 +6660,15 @@ exports[`github-dark editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #c9d1d9; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #30363d }
 .ͼ0 .cm-trailingSpace { background-color: #f8514940 }
-.ͼ0 del { background-color: #f8514940 !important; border: 1px solid #ff7b7240; border-radius: 3px; color: #ff7b72; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #f8514940 !important; border: 1px solid #ff7b7240; border-radius: 3px; color: #ff7b72; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #f8514940 !important; border: 1px solid #ff7b7240; border-radius: 3px; color: #ff7b72; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #f8514940 !important; border: 1px solid #ff7b7240; border-radius: 3px; color: #ff7b72; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #2ea04350 !important; border: 1px solid #7ee78740; border-radius: 3px; color: #7ee787; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #2ea04350 !important; border: 1px solid #7ee78740; border-radius: 3px; color: #7ee787; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #032f56 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #0d1117, 0 0 0 3px #58a6ff40; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #0d1117, 0 0 0 4px #58a6ff; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #032f56; outline: none }"
 `;
 
@@ -7206,6 +7236,10 @@ exports[`github-light resolved syntax highlighting per tag 1`] = `
 
 exports[`github-light editor UI rules 1`] = `
 ".ͼ0 { background-color: #ffffff; border: none; color: #24292e; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #ffebe980 !important; border: 1px solid #c1072230; border-radius: 3px; color: #c10722; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #ffebe980 !important; border: 1px solid #c1072230; border-radius: 3px; color: #c10722; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #BBDFFF20; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #f1f8ff; border: none; color: #24292e; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #ffffff; background-image: none; border: none; border-radius: 4px; color: #24292e; padding: 2px 10px }
@@ -7213,7 +7247,7 @@ exports[`github-light editor UI rules 1`] = `
 .ͼ0 .cm-changeGutter { background-color: #f6f8fa }
 .ͼ0 .cm-collapsedLines { background: #79b8ff40; color: #6a737d }
 .ͼ0 .cm-completionInfo { background-color: #f8f9fa; border: 1px solid #e1e4e8; color: #24292e; padding: 4px 8px }
-.ͼ0 .cm-completionMatchedText { color: inherit; font-weight: bold; text-decoration: underline; text-decoration-color: #0366d680 }
+.ͼ0 .cm-completionMatchedText { color: inherit; font-weight: bold; text-decoration: underline; text-decoration-color: #0366d6b0 }
 .ͼ0 .cm-content { caret-color: #24292e; line-height: 1.6 }
 .ͼ0 .cm-content ::selection { background-color: #BBDFFF; color: #24292e; outline: none }
 .ͼ0 .cm-crosshair { cursor: crosshair }
@@ -7252,7 +7286,7 @@ exports[`github-light editor UI rules 1`] = `
 .ͼ0 .cm-lintRange-hint { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%23035cc3%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
 .ͼ0 .cm-lintRange-info { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%23035cc3%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
 .ͼ0 .cm-lintRange-warning { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%23b08800%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
-.ͼ0 .cm-matchingBracket { background-color: #e8f0fe; border-radius: 2px; box-shadow: none; outline: 1px solid #0366d680 }
+.ͼ0 .cm-matchingBracket { background-color: #e8f0fe; border-radius: 2px; box-shadow: none; outline: 1px solid #0366d6b0 }
 .ͼ0 .cm-merge-a .cm-changedLine { background-color: #ffebe980 }
 .ͼ0 .cm-merge-a .cm-changedLineGutter { background: #c10722 }
 .ͼ0 .cm-merge-b .cm-changedLine { background-color: #e6ffec80 }
@@ -7294,16 +7328,15 @@ exports[`github-light editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #24292e; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #e1e4e8 }
 .ͼ0 .cm-trailingSpace { background-color: #ffebe980 }
-.ͼ0 del { background-color: #ffebe980 !important; border: 1px solid #c1072230; border-radius: 3px; color: #c10722; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #ffebe980 !important; border: 1px solid #c1072230; border-radius: 3px; color: #c10722; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #ffebe980 !important; border: 1px solid #c1072230; border-radius: 3px; color: #c10722; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #ffebe980 !important; border: 1px solid #c1072230; border-radius: 3px; color: #c10722; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #e6ffec80 !important; border: 1px solid #0f6d3130; border-radius: 3px; color: #0f6d31; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #e6ffec80 !important; border: 1px solid #0f6d3130; border-radius: 3px; color: #0f6d31; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #BBDFFF }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #ffffff, 0 0 0 3px #035cc340; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #035cc3; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #BBDFFF; color: #24292e; outline: none }"
 `;
 
@@ -7871,6 +7904,10 @@ exports[`gruvbox-dark resolved syntax highlighting per tag 1`] = `
 
 exports[`gruvbox-dark editor UI rules 1`] = `
 ".ͼ0 { background-color: #282828; border: none; color: #ebdbb2; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #3c1f1e80 !important; border: 1px solid #fb8a7740; border-radius: 3px; color: #fb8a77; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #3c1f1e80 !important; border: 1px solid #fb8a7740; border-radius: 3px; color: #fb8a77; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #3c383660; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #3c3836; border: none; color: #ebdbb2; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #3c3836; background-image: none; border: none; border-radius: 4px; color: #ebdbb2; padding: 2px 10px }
@@ -7959,16 +7996,15 @@ exports[`gruvbox-dark editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #ebdbb2; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #665c54 }
 .ͼ0 .cm-trailingSpace { background-color: #3c1f1e80 }
-.ͼ0 del { background-color: #3c1f1e80 !important; border: 1px solid #fb8a7740; border-radius: 3px; color: #fb8a77; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #3c1f1e80 !important; border: 1px solid #fb8a7740; border-radius: 3px; color: #fb8a77; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #3c1f1e80 !important; border: 1px solid #fb8a7740; border-radius: 3px; color: #fb8a77; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #3c1f1e80 !important; border: 1px solid #fb8a7740; border-radius: 3px; color: #fb8a77; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #32361a80 !important; border: 1px solid #b8bb2640; border-radius: 3px; color: #b8bb26; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #32361a80 !important; border: 1px solid #b8bb2640; border-radius: 3px; color: #b8bb26; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #443d39 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #282828, 0 0 0 3px #fa8d4440; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #282828, 0 0 0 4px #fa8d44; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #443d39; outline: none }"
 `;
 
@@ -8536,6 +8572,10 @@ exports[`gruvbox-light resolved syntax highlighting per tag 1`] = `
 
 exports[`gruvbox-light editor UI rules 1`] = `
 ".ͼ0 { background-color: #fbf1c7; border: none; color: #3c3836; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #f7cfcf80 !important; border: 1px solid #9d000640; border-radius: 3px; color: #9d0006; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #f7cfcf80 !important; border: 1px solid #9d000640; border-radius: 3px; color: #9d0006; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #ffc42e25; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #d5c4a1; border: none; color: #3c3836; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #fbf1c7; background-image: none; border: none; border-radius: 4px; color: #3c3836; padding: 2px 10px }
@@ -8624,16 +8664,15 @@ exports[`gruvbox-light editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #3c3836; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #bdae93 }
 .ͼ0 .cm-trailingSpace { background-color: #f7cfcf80 }
-.ͼ0 del { background-color: #f7cfcf80 !important; border: 1px solid #9d000640; border-radius: 3px; color: #9d0006; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #f7cfcf80 !important; border: 1px solid #9d000640; border-radius: 3px; color: #9d0006; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #f7cfcf80 !important; border: 1px solid #9d000640; border-radius: 3px; color: #9d0006; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #f7cfcf80 !important; border: 1px solid #9d000640; border-radius: 3px; color: #9d0006; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #d8e5bc80 !important; border: 1px solid #65600d40; border-radius: 3px; color: #65600d; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #d8e5bc80 !important; border: 1px solid #65600d40; border-radius: 3px; color: #65600d; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #e7d7ae }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #fbf1c7, 0 0 0 3px #a63b0f40; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #fbf1c7, 0 0 0 4px #a63b0f; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #e7d7ae; color: #3c3836; outline: none }"
 `;
 
@@ -9201,6 +9240,10 @@ exports[`high-contrast-dark resolved syntax highlighting per tag 1`] = `
 
 exports[`high-contrast-dark editor UI rules 1`] = `
 ".ͼ0 { background-color: #000000; border: 1px solid #b0b0b0; color: #ffffff; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #55000060 !important; border: 1px solid #ff7967; border-radius: 3px; color: #ff7967; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #55000060 !important; border: 1px solid #ff7967; border-radius: 3px; color: #ff7967; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #2a2a2a82; border-left: 3px solid #00ffff; border-radius: 2px; border-right: 1px solid #b0b0b0; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #1f1f1f; border: 1px solid #a1a1a1; color: #ffff00; font-weight: bold }
 .ͼ0 .cm-button { background-color: #1a1a1a; background-image: none; border: 1px solid #b0b0b0; border-radius: 4px; color: #00ffff; padding: 2px 10px }
@@ -9289,11 +9332,10 @@ exports[`high-contrast-dark editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #ffffff; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #00ffff }
 .ͼ0 .cm-trailingSpace { background-color: #55000060 }
-.ͼ0 del { background-color: #55000060 !important; border: 1px solid #ff7967; border-radius: 3px; color: #ff7967; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #55000060 !important; border: 1px solid #ff7967; border-radius: 3px; color: #ff7967; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #55000060 !important; border: 1px solid #ff7967; border-radius: 3px; color: #ff7967; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #55000060 !important; border: 1px solid #ff7967; border-radius: 3px; color: #ff7967; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #00550060 !important; border: 1px solid #00ff00; border-radius: 3px; color: #00ff00; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #00550060 !important; border: 1px solid #00ff00; border-radius: 3px; color: #00ff00; padding: 1px 3px; text-decoration: none }
@@ -9866,6 +9908,10 @@ exports[`high-contrast-light resolved syntax highlighting per tag 1`] = `
 
 exports[`high-contrast-light editor UI rules 1`] = `
 ".ͼ0 { background-color: #ffffff; border: 2px solid #000000; color: #000000; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #c8000040 !important; border: 2px solid #a40000; border-radius: 3px; color: #a40000; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #c8000040 !important; border: 2px solid #a40000; border-radius: 3px; color: #a40000; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #ffffccba; border-left: 3px solid #0000ff; border-radius: 2px; border-right: 1px solid #4f4f4f; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #e0e0e0; border: 1px solid #4f4f4f; color: #0000ff; font-weight: bold }
 .ͼ0 .cm-button { background-color: #f0f0f0; background-image: none; border: 2px solid #000000; border-radius: 4px; color: #0000ff; padding: 2px 10px }
@@ -9954,11 +10000,10 @@ exports[`high-contrast-light editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #000000; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #0000ff }
 .ͼ0 .cm-trailingSpace { background-color: #c8000040 }
-.ͼ0 del { background-color: #c8000040 !important; border: 2px solid #a40000; border-radius: 3px; color: #a40000; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #c8000040 !important; border: 2px solid #a40000; border-radius: 3px; color: #a40000; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #c8000040 !important; border: 2px solid #a40000; border-radius: 3px; color: #a40000; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #c8000040 !important; border: 2px solid #a40000; border-radius: 3px; color: #a40000; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #00800040 !important; border: 2px solid #0e5d0c; border-radius: 3px; color: #0e5d0c; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #00800040 !important; border: 2px solid #0e5d0c; border-radius: 3px; color: #0e5d0c; padding: 1px 3px; text-decoration: none }
@@ -10531,6 +10576,10 @@ exports[`material-dark resolved syntax highlighting per tag 1`] = `
 
 exports[`material-dark editor UI rules 1`] = `
 ".ͼ0 { background-color: #212121; border: none; color: #bdbdbd; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #4e282880 !important; border: 1px solid #fc7c6e40; border-radius: 3px; color: #fc7c6e; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #4e282880 !important; border: 1px solid #fc7c6e40; border-radius: 3px; color: #fc7c6e; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #2d333b30; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #252a2c; border: none; color: #bdbdbd; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #505d64; background-image: none; border: none; border-radius: 4px; color: #bdbdbd; padding: 2px 10px }
@@ -10619,16 +10668,15 @@ exports[`material-dark editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #bdbdbd; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #96a4b2 }
 .ͼ0 .cm-trailingSpace { background-color: #4e282880 }
-.ͼ0 del { background-color: #4e282880 !important; border: 1px solid #fc7c6e40; border-radius: 3px; color: #fc7c6e; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #4e282880 !important; border: 1px solid #fc7c6e40; border-radius: 3px; color: #fc7c6e; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #4e282880 !important; border: 1px solid #fc7c6e40; border-radius: 3px; color: #fc7c6e; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #4e282880 !important; border: 1px solid #fc7c6e40; border-radius: 3px; color: #fc7c6e; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #1e3d2780 !important; border: 1px solid #6abf6940; border-radius: 3px; color: #6abf69; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #1e3d2780 !important; border: 1px solid #6abf6940; border-radius: 3px; color: #6abf69; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #ffffff1c }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #212121, 0 0 0 3px #56c8d840; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #212121, 0 0 0 4px #56c8d8; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #ffffff1c; outline: none }"
 `;
 
@@ -11196,6 +11244,10 @@ exports[`material-light resolved syntax highlighting per tag 1`] = `
 
 exports[`material-light editor UI rules 1`] = `
 ".ͼ0 { background-color: #ffffff; border: none; color: #212121; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #ffebe980 !important; border: 1px solid #d73a4930; border-radius: 3px; color: #d73a49; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #ffebe980 !important; border: 1px solid #d73a4930; border-radius: 3px; color: #d73a49; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #00000008; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #E0E0E0; border: none; color: #212121; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #f5f5f5; background-image: none; border: none; border-radius: 4px; color: #212121; padding: 2px 10px }
@@ -11204,11 +11256,11 @@ exports[`material-light editor UI rules 1`] = `
 .ͼ0 .cm-collapsedLines { background: #f5f5f5; color: #676767 }
 .ͼ0 .cm-completionInfo { background-color: #f5f5f5; border: 1px solid #9e9e9e; color: #212121; padding: 4px 8px }
 .ͼ0 .cm-completionMatchedText { color: inherit; font-weight: bold; text-decoration: underline; text-decoration-color: #15717f }
-.ͼ0 .cm-content { caret-color: #9e9e9e; line-height: 1.6 }
+.ͼ0 .cm-content { caret-color: #8f8f8f; line-height: 1.6 }
 .ͼ0 .cm-content ::selection { background-color: #d7e8f9; outline: none }
 .ͼ0 .cm-crosshair { cursor: crosshair }
-.ͼ0 .cm-cursor { border-left-color: #9e9e9e; border-left-width: 2px; box-shadow: none }
-.ͼ0 .cm-cursor-secondary { border-left-color: #9e9e9e; opacity: 0.6 }
+.ͼ0 .cm-cursor { border-left-color: #8f8f8f; border-left-width: 2px; box-shadow: none }
+.ͼ0 .cm-cursor-secondary { border-left-color: #8f8f8f; opacity: 0.6 }
 .ͼ0 .cm-deletedChunk { background-color: #ffebe980 }
 .ͼ0 .cm-deletedLine { background-color: #ffebe980; border-radius: 3px; color: #d73a49; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-deletedLineGutter { background: #d73a49 }
@@ -11217,7 +11269,7 @@ exports[`material-light editor UI rules 1`] = `
 .ͼ0 .cm-diagnostic-info { background-color: transparent; border-left: 3px solid #15717f }
 .ͼ0 .cm-diagnostic-warning { background-color: transparent; border-left: 3px solid #95590e }
 .ͼ0 .cm-diagnosticAction { background-color: #f5f5f5; border: none; border-radius: 4px; color: #212121 }
-.ͼ0 .cm-dropCursor { border-left-color: #9e9e9e; border-left-width: 2px; box-shadow: none }
+.ͼ0 .cm-dropCursor { border-left-color: #8f8f8f; border-left-width: 2px; box-shadow: none }
 .ͼ0 .cm-fat-cursor { background-color: #21212199; border: none; box-shadow: none; color: #ffffff }
 .ͼ0 .cm-foldGutter { font-size: 0.9em; line-height: 1.78 }
 .ͼ0 .cm-foldGutter .cm-gutterElement { color: #676767; cursor: pointer }
@@ -11269,7 +11321,7 @@ exports[`material-light editor UI rules 1`] = `
 .ͼ0 .cm-selectionLayer { z-index: 100 }
 .ͼ0 .cm-selectionMatch { background-color: #90a4ae26; border-radius: 2px; outline: 1px solid #67676730 }
 .ͼ0 .cm-snippetField { background-color: #90a4ae26; border-radius: 2px; outline: 1px dashed #67676730 }
-.ͼ0 .cm-snippetFieldPosition { border-left: 1px dotted #9e9e9e }
+.ͼ0 .cm-snippetFieldPosition { border-left: 1px dotted #8f8f8f }
 .ͼ0 .cm-specialChar { color: #ce0f0e }
 .ͼ0 .cm-textfield { background-color: #ffffff; border: 1px solid #9e9e9e; border-radius: 4px; color: #212121; padding: 2px 6px }
 .ͼ0 .cm-tooltip { background-color: #f5f5f5; border: 1px solid #9e9e9e; border-radius: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); color: #212121; padding: 4px 8px }
@@ -11284,16 +11336,15 @@ exports[`material-light editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #212121; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #9e9e9e }
 .ͼ0 .cm-trailingSpace { background-color: #ffebe980 }
-.ͼ0 del { background-color: #ffebe980 !important; border: 1px solid #d73a4930; border-radius: 3px; color: #d73a49; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #ffebe980 !important; border: 1px solid #d73a4930; border-radius: 3px; color: #d73a49; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #ffebe980 !important; border: 1px solid #d73a4930; border-radius: 3px; color: #d73a49; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #ffebe980 !important; border: 1px solid #d73a4930; border-radius: 3px; color: #d73a49; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #e6ffed80 !important; border: 1px solid #28a74530; border-radius: 3px; color: #28a745; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #e6ffed80 !important; border: 1px solid #28a74530; border-radius: 3px; color: #28a745; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #d7e8f9 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #ffffff, 0 0 0 3px #15717f40; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #15717f; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #d7e8f9; outline: none }"
 `;
 
@@ -11861,6 +11912,10 @@ exports[`material-ocean resolved syntax highlighting per tag 1`] = `
 
 exports[`material-ocean editor UI rules 1`] = `
 ".ͼ0 { background-color: #0F111A; border: none; color: #9599a8; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #3b1c2480 !important; border: 1px solid #FF537040; border-radius: 3px; color: #FF5370; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #3b1c2480 !important; border: 1px solid #FF537040; border-radius: 3px; color: #FF5370; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: rgba(0, 0, 0, 0.5); border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #151823; border: none; color: #9599a8; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #151825; background-image: none; border: none; border-radius: 4px; color: #9599a8; padding: 2px 10px }
@@ -11949,16 +12004,15 @@ exports[`material-ocean editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #9599a8; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #868ca0 }
 .ͼ0 .cm-trailingSpace { background-color: #3b1c2480 }
-.ͼ0 del { background-color: #3b1c2480 !important; border: 1px solid #FF537040; border-radius: 3px; color: #FF5370; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #3b1c2480 !important; border: 1px solid #FF537040; border-radius: 3px; color: #FF5370; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #3b1c2480 !important; border: 1px solid #FF537040; border-radius: 3px; color: #FF5370; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #3b1c2480 !important; border: 1px solid #FF537040; border-radius: 3px; color: #FF5370; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #13343a80 !important; border: 1px solid #80CBC440; border-radius: 3px; color: #80CBC4; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #13343a80 !important; border: 1px solid #80CBC440; border-radius: 3px; color: #80CBC4; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #717cb430 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #0F111A, 0 0 0 3px #89DDFF40; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #0F111A, 0 0 0 4px #89DDFF; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #717cb430; outline: none }"
 `;
 
@@ -12526,6 +12580,10 @@ exports[`monokai resolved syntax highlighting per tag 1`] = `
 
 exports[`monokai editor UI rules 1`] = `
 ".ͼ0 { background-color: #272822; border: none; color: #f8f8f2; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #4d393980 !important; border: 1px solid #ff809d40; border-radius: 3px; color: #ff809d; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #4d393980 !important; border: 1px solid #ff809d40; border-radius: 3px; color: #ff809d; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #3e3d3257; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #35352c; border: none; color: #f8f8f2; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #34352f; background-image: none; border: none; border-radius: 4px; color: #f8f8f2; padding: 2px 10px }
@@ -12614,16 +12672,15 @@ exports[`monokai editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #f8f8f2; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #49483E }
 .ͼ0 .cm-trailingSpace { background-color: #4d393980 }
-.ͼ0 del { background-color: #4d393980 !important; border: 1px solid #ff809d40; border-radius: 3px; color: #ff809d; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #4d393980 !important; border: 1px solid #ff809d40; border-radius: 3px; color: #ff809d; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #4d393980 !important; border: 1px solid #ff809d40; border-radius: 3px; color: #ff809d; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #4d393980 !important; border: 1px solid #ff809d40; border-radius: 3px; color: #ff809d; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #3d4d3880 !important; border: 1px solid #A6E22E40; border-radius: 3px; color: #A6E22E; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #3d4d3880 !important; border: 1px solid #A6E22E40; border-radius: 3px; color: #A6E22E; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #3f3e35 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #272822, 0 0 0 3px #66D9EF40; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #272822, 0 0 0 4px #66D9EF; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #3f3e35; outline: none }"
 `;
 
@@ -13191,6 +13248,10 @@ exports[`nord resolved syntax highlighting per tag 1`] = `
 
 exports[`nord editor UI rules 1`] = `
 ".ͼ0 { background-color: #2e3440; border: none; color: #d8dee9; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #4a393a80 !important; border: 1px solid #fb9ea440; border-radius: 3px; color: #fb9ea4; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #4a393a80 !important; border: 1px solid #fb9ea440; border-radius: 3px; color: #fb9ea4; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #3b425277; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #3b4252; border: none; color: #d8dee9; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #3b4252; background-image: none; border: none; border-radius: 4px; color: #d8dee9; padding: 2px 10px }
@@ -13279,16 +13340,15 @@ exports[`nord editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #d8dee9; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #acb8cf }
 .ͼ0 .cm-trailingSpace { background-color: #4a393a80 }
-.ͼ0 del { background-color: #4a393a80 !important; border: 1px solid #fb9ea440; border-radius: 3px; color: #fb9ea4; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #4a393a80 !important; border: 1px solid #fb9ea440; border-radius: 3px; color: #fb9ea4; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #4a393a80 !important; border: 1px solid #fb9ea440; border-radius: 3px; color: #fb9ea4; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #4a393a80 !important; border: 1px solid #fb9ea440; border-radius: 3px; color: #fb9ea4; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #3b4a3880 !important; border: 1px solid #a5c08e40; border-radius: 3px; color: #a5c08e; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #3b4a3880 !important; border: 1px solid #a5c08e40; border-radius: 3px; color: #a5c08e; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #40495b }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #2e3440, 0 0 0 3px #88c0d040; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #2e3440, 0 0 0 4px #88c0d0; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #40495b; outline: none }"
 `;
 
@@ -13856,6 +13916,10 @@ exports[`palenight resolved syntax highlighting per tag 1`] = `
 
 exports[`palenight editor UI rules 1`] = `
 ".ͼ0 { background-color: #292D3E; border: none; color: #adb4d5; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #3e2e3180 !important; border: 1px solid #fe7f8d40; border-radius: 3px; color: #fe7f8d; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #3e2e3180 !important; border: 1px solid #fe7f8d40; border-radius: 3px; color: #fe7f8d; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #2e324817; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #2A2D40; border: none; color: #adb4d5; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #343A50; background-image: none; border: none; border-radius: 4px; color: #adb4d5; padding: 2px 10px }
@@ -13944,16 +14008,15 @@ exports[`palenight editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #adb4d5; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #3A4058 }
 .ͼ0 .cm-trailingSpace { background-color: #3e2e3180 }
-.ͼ0 del { background-color: #3e2e3180 !important; border: 1px solid #fe7f8d40; border-radius: 3px; color: #fe7f8d; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #3e2e3180 !important; border: 1px solid #fe7f8d40; border-radius: 3px; color: #fe7f8d; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #3e2e3180 !important; border: 1px solid #fe7f8d40; border-radius: 3px; color: #fe7f8d; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #3e2e3180 !important; border: 1px solid #fe7f8d40; border-radius: 3px; color: #fe7f8d; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #2c3c2e80 !important; border: 1px solid #C3E88D40; border-radius: 3px; color: #C3E88D; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #2c3c2e80 !important; border: 1px solid #C3E88D40; border-radius: 3px; color: #C3E88D; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #3b385d }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #292D3E, 0 0 0 3px #82AAFF40; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #292D3E, 0 0 0 4px #82AAFF; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #3b385d; outline: none }"
 `;
 
@@ -14521,7 +14584,11 @@ exports[`solarized-dark resolved syntax highlighting per tag 1`] = `
 
 exports[`solarized-dark editor UI rules 1`] = `
 ".ͼ0 { background-color: #002b36; border: none; color: #a0afaf; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
-.ͼ0 .cm-activeLine { background-color: #99eeff0d; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #dc322f20 !important; border: 1px solid #fb756940; border-radius: 3px; color: #fb7569; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #dc322f20 !important; border: 1px solid #fb756940; border-radius: 3px; color: #fb7569; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 .cm-activeLine { background-color: #99eeff07; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #073642; border: none; color: #a0afaf; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #073642; background-image: none; border: none; border-radius: 4px; color: #a0afaf; padding: 2px 10px }
 .ͼ0 .cm-button:hover { background-color: #99eeff0f; border: none; box-shadow: none; color: #a0afaf }
@@ -14609,16 +14676,15 @@ exports[`solarized-dark editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #a0afaf; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #8ba2aa }
 .ͼ0 .cm-trailingSpace { background-color: #dc322f20 }
-.ͼ0 del { background-color: #dc322f20 !important; border: 1px solid #fb756940; border-radius: 3px; color: #fb7569; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #dc322f20 !important; border: 1px solid #fb756940; border-radius: 3px; color: #fb7569; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #dc322f20 !important; border: 1px solid #fb756940; border-radius: 3px; color: #fb7569; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #dc322f20 !important; border: 1px solid #fb756940; border-radius: 3px; color: #fb7569; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #2aa19820 !important; border: 1px solid #93a82340; border-radius: 3px; color: #93a823; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #2aa19820 !important; border: 1px solid #93a82340; border-radius: 3px; color: #93a823; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #02b8ff1d }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #002b36, 0 0 0 3px #45a5ee40; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #002b36, 0 0 0 4px #45a5ee; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #02b8ff1d; outline: none }"
 `;
 
@@ -15186,6 +15252,10 @@ exports[`solarized-light resolved syntax highlighting per tag 1`] = `
 
 exports[`solarized-light editor UI rules 1`] = `
 ".ͼ0 { background-color: #fdf6e3; border: none; color: #50656d; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #dc322f20 !important; border: 1px solid #c40e1840; border-radius: 3px; color: #c40e18; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #dc322f20 !important; border: 1px solid #c40e1840; border-radius: 3px; color: #c40e18; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #cceeff7a; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #cceeff7a; border: none; color: #50656d; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #f0e9d7; background-image: none; border: none; border-radius: 4px; color: #50656d; padding: 2px 10px }
@@ -15274,16 +15344,15 @@ exports[`solarized-light editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #50656d; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #4d6269 }
 .ͼ0 .cm-trailingSpace { background-color: #dc322f20 }
-.ͼ0 del { background-color: #dc322f20 !important; border: 1px solid #c40e1840; border-radius: 3px; color: #c40e18; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #dc322f20 !important; border: 1px solid #c40e1840; border-radius: 3px; color: #c40e18; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #dc322f20 !important; border: 1px solid #c40e1840; border-radius: 3px; color: #c40e18; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #dc322f20 !important; border: 1px solid #c40e1840; border-radius: 3px; color: #c40e18; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #85990020 !important; border: 1px solid #5a680440; border-radius: 3px; color: #5a6804; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #85990020 !important; border: 1px solid #5a680440; border-radius: 3px; color: #5a6804; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #fed996 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #fdf6e3, 0 0 0 3px #0a66a140; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #fdf6e3, 0 0 0 4px #0a66a1; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #fed996; outline: none }"
 `;
 
@@ -15851,6 +15920,10 @@ exports[`synthwave-84 resolved syntax highlighting per tag 1`] = `
 
 exports[`synthwave-84 editor UI rules 1`] = `
 ".ͼ0 { background-color: #262335; border: none; color: #ffffff; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #fe445030 !important; border: 1px solid #fa747340; border-radius: 3px; color: #fa7473; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #fe445030 !important; border: 1px solid #fa747340; border-radius: 3px; color: #fa7473; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #2a213955; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #34294f; border: none; color: #ff7edb; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #2a2139; background-image: none; border: none; border-radius: 4px; color: #72f1b8; padding: 2px 10px }
@@ -15939,16 +16012,15 @@ exports[`synthwave-84 editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #ffffff; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #72f1b8 }
 .ͼ0 .cm-trailingSpace { background-color: #fe445030 }
-.ͼ0 del { background-color: #fe445030 !important; border: 1px solid #fa747340; border-radius: 3px; color: #fa7473; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #fe445030 !important; border: 1px solid #fa747340; border-radius: 3px; color: #fa7473; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #fe445030 !important; border: 1px solid #fa747340; border-radius: 3px; color: #fa7473; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #fe445030 !important; border: 1px solid #fa747340; border-radius: 3px; color: #fa7473; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #72f1b830 !important; border: 1px solid #72f1b840; border-radius: 3px; color: #72f1b8; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #72f1b830 !important; border: 1px solid #72f1b840; border-radius: 3px; color: #72f1b8; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #3a2f56 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #262335, 0 0 0 3px #ff7edb40; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #262335, 0 0 0 4px #ff7edb; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #3a2f56; outline: none }"
 `;
 
@@ -16516,7 +16588,11 @@ exports[`tokyo-night-day resolved syntax highlighting per tag 1`] = `
 
 exports[`tokyo-night-day editor UI rules 1`] = `
 ".ͼ0 { background-color: #e1e2e7; border: none; color: #1f44a1; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
-.ͼ0 .cm-activeLine { background-color: #5f5faf1e; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #f52a6520 !important; border: 1px solid #ab064040; border-radius: 3px; color: #ab0640; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #f52a6520 !important; border: 1px solid #ab064040; border-radius: 3px; color: #ab0640; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 .cm-activeLine { background-color: #5f5faf12; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #e9e9ec; border: none; color: #1f44a1; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #e9e9ec; background-image: none; border: none; border-radius: 4px; color: #1f44a1; padding: 2px 10px }
 .ͼ0 .cm-button:hover { background-color: #d5d6db; border: 1px solid #99a7df; box-shadow: none; color: #1f44a1 }
@@ -16604,16 +16680,15 @@ exports[`tokyo-night-day editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #1f44a1; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #8c91a840 }
 .ͼ0 .cm-trailingSpace { background-color: #f52a6520 }
-.ͼ0 del { background-color: #f52a6520 !important; border: 1px solid #ab064040; border-radius: 3px; color: #ab0640; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #f52a6520 !important; border: 1px solid #ab064040; border-radius: 3px; color: #ab0640; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #f52a6520 !important; border: 1px solid #ab064040; border-radius: 3px; color: #ab0640; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #f52a6520 !important; border: 1px solid #ab064040; border-radius: 3px; color: #ab0640; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #58753920 !important; border: 1px solid #425e2240; border-radius: 3px; color: #425e22; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #58753920 !important; border: 1px solid #425e2240; border-radius: 3px; color: #425e22; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #99a7df66 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #e1e2e7, 0 0 0 3px #015c7c40; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #e1e2e7, 0 0 0 4px #015c7c; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #99a7df66; outline: none }"
 `;
 
@@ -17181,6 +17256,10 @@ exports[`tokyo-night-storm resolved syntax highlighting per tag 1`] = `
 
 exports[`tokyo-night-storm editor UI rules 1`] = `
 ".ͼ0 { background-color: #24283b; border: none; color: #c0caf5; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #4a393a80 !important; border: 1px solid #fb799140; border-radius: 3px; color: #fb7991; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #4a393a80 !important; border: 1px solid #fb799140; border-radius: 3px; color: #fb7991; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #292e427a; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #1f2335; border: none; color: #c0caf5; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #282e44; background-image: none; border: none; border-radius: 4px; color: #c0caf5; padding: 2px 10px }
@@ -17269,16 +17348,15 @@ exports[`tokyo-night-storm editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #c0caf5; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #96a1cf }
 .ͼ0 .cm-trailingSpace { background-color: #4a393a80 }
-.ͼ0 del { background-color: #4a393a80 !important; border: 1px solid #fb799140; border-radius: 3px; color: #fb7991; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #4a393a80 !important; border: 1px solid #fb799140; border-radius: 3px; color: #fb7991; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #4a393a80 !important; border: 1px solid #fb799140; border-radius: 3px; color: #fb7991; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #4a393a80 !important; border: 1px solid #fb799140; border-radius: 3px; color: #fb7991; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #3b4a3880 !important; border: 1px solid #9ece6a40; border-radius: 3px; color: #9ece6a; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #3b4a3880 !important; border: 1px solid #9ece6a40; border-radius: 3px; color: #9ece6a; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #6f7bb630 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #24283b, 0 0 0 3px #7aa2f740; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #24283b, 0 0 0 4px #7aa2f7; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #6f7bb630; outline: none }"
 `;
 
@@ -17846,7 +17924,11 @@ exports[`volcano resolved syntax highlighting per tag 1`] = `
 
 exports[`volcano editor UI rules 1`] = `
 ".ͼ0 { background-color: #390000; border: none; color: #F8F8F8; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
-.ͼ0 .cm-activeLine { background-color: #ff00001f; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #750000a0 !important; border: 1px solid #f95d5440; border-radius: 3px; color: #f95d54; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #750000a0 !important; border: 1px solid #f95d5440; border-radius: 3px; color: #f95d54; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 .cm-activeLine { background-color: #ff000013; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #550000; border: none; color: #F8F8F8; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #4a0000; background-image: none; border: none; border-radius: 4px; color: #F8F8F8; padding: 2px 10px }
 .ͼ0 .cm-button:hover { background-color: #750000; border: none; box-shadow: 0 0 4px #ff550080; color: #F8F8F8 }
@@ -17854,11 +17936,11 @@ exports[`volcano editor UI rules 1`] = `
 .ͼ0 .cm-collapsedLines { background: #680000; color: #e7c0c0 }
 .ͼ0 .cm-completionInfo { background-color: #680000; border: 1px solid #f95d5460; color: #F8F8F8; padding: 4px 8px }
 .ͼ0 .cm-completionMatchedText { color: inherit; font-weight: bold; text-decoration: underline; text-decoration-color: #f95d54 }
-.ͼ0 .cm-content { caret-color: #970000; line-height: 1.6 }
+.ͼ0 .cm-content { caret-color: #dd0000; line-height: 1.6 }
 .ͼ0 .cm-content ::selection { background-color: #7500009c; outline: none }
 .ͼ0 .cm-crosshair { cursor: crosshair }
-.ͼ0 .cm-cursor { border-left-color: #970000; border-left-width: 2px; box-shadow: none }
-.ͼ0 .cm-cursor-secondary { border-left-color: #970000; opacity: 0.6 }
+.ͼ0 .cm-cursor { border-left-color: #dd0000; border-left-width: 2px; box-shadow: none }
+.ͼ0 .cm-cursor-secondary { border-left-color: #dd0000; opacity: 0.6 }
 .ͼ0 .cm-deletedChunk { background-color: #750000a0 }
 .ͼ0 .cm-deletedLine { background-color: #750000a0; border-radius: 3px; color: #f95d54; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-deletedLineGutter { background: #f95d54 }
@@ -17867,8 +17949,8 @@ exports[`volcano editor UI rules 1`] = `
 .ͼ0 .cm-diagnostic-info { background-color: transparent; border-left: 3px solid #7df3f7 }
 .ͼ0 .cm-diagnostic-warning { background-color: transparent; border-left: 3px solid #d47b3c }
 .ͼ0 .cm-diagnosticAction { background-color: #4a0000; border: none; border-radius: 4px; color: #F8F8F8 }
-.ͼ0 .cm-dropCursor { border-left-color: #970000; border-left-width: 2px; box-shadow: none }
-.ͼ0 .cm-fat-cursor { background-color: #97000099; border: none; box-shadow: none; color: #390000 }
+.ͼ0 .cm-dropCursor { border-left-color: #dd0000; border-left-width: 2px; box-shadow: none }
+.ͼ0 .cm-fat-cursor { background-color: #dd000099; border: none; box-shadow: none; color: #390000 }
 .ͼ0 .cm-foldGutter { font-size: 0.9em; line-height: 1.78 }
 .ͼ0 .cm-foldGutter .cm-gutterElement { color: #e7c0c0; cursor: pointer }
 .ͼ0 .cm-foldGutter .cm-gutterElement:hover { color: #F8F8F8 }
@@ -17919,7 +18001,7 @@ exports[`volcano editor UI rules 1`] = `
 .ͼ0 .cm-selectionLayer { z-index: 100 }
 .ͼ0 .cm-selectionMatch { background-color: #7500009a; border-radius: 2px; outline: 1px solid #75000050 }
 .ͼ0 .cm-snippetField { background-color: #7500009a; border-radius: 2px; outline: 1px dashed #75000050 }
-.ͼ0 .cm-snippetFieldPosition { border-left: 1px dotted #970000 }
+.ͼ0 .cm-snippetFieldPosition { border-left: 1px dotted #dd0000 }
 .ͼ0 .cm-specialChar { color: #f95d54 }
 .ͼ0 .cm-textfield { background-color: #390000; border: 1px solid #390000; border-radius: 4px; color: #F8F8F8; padding: 2px 6px }
 .ͼ0 .cm-tooltip { background-color: #680000; border: 1px solid #f95d5460; border-radius: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); color: #F8F8F8; padding: 4px 8px }
@@ -17934,16 +18016,15 @@ exports[`volcano editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #F8F8F8; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #f95d5460 }
 .ͼ0 .cm-trailingSpace { background-color: #750000a0 }
-.ͼ0 del { background-color: #750000a0 !important; border: 1px solid #f95d5440; border-radius: 3px; color: #f95d54; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #750000a0 !important; border: 1px solid #f95d5440; border-radius: 3px; color: #f95d54; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #750000a0 !important; border: 1px solid #f95d5440; border-radius: 3px; color: #f95d54; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #750000a0 !important; border: 1px solid #f95d5440; border-radius: 3px; color: #f95d54; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #2a4a0080 !important; border: 1px solid #9df39f40; border-radius: 3px; color: #9df39f; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #2a4a0080 !important; border: 1px solid #9df39f40; border-radius: 3px; color: #9df39f; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #7500009c }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #390000, 0 0 0 3px #f95d5470; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #390000, 0 0 0 4px #f95d54; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #7500009c; outline: none }"
 `;
 
@@ -18511,6 +18592,10 @@ exports[`vscode-dark resolved syntax highlighting per tag 1`] = `
 
 exports[`vscode-dark editor UI rules 1`] = `
 ".ͼ0 { background-color: #1e1e1e; border: none; color: #d4d4d4; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #4b1c1c80 !important; border: 1px solid #f14c4c40; border-radius: 3px; color: #f14c4c; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #4b1c1c80 !important; border: 1px solid #f14c4c40; border-radius: 3px; color: #f14c4c; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #FFFFFF08; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #FFFFFF08; border: none; color: #e9e9e9; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #2d2d30; background-image: none; border: 1px solid #2d2d30; border-radius: 4px; color: #d4d4d4; padding: 2px 10px }
@@ -18518,7 +18603,7 @@ exports[`vscode-dark editor UI rules 1`] = `
 .ͼ0 .cm-changeGutter { background-color: #1c1c1c }
 .ͼ0 .cm-collapsedLines { background: #252526; color: #9f9f9f }
 .ͼ0 .cm-completionInfo { background-color: #252526; border: 1px solid #2d2d30; color: #d4d4d4; padding: 4px 8px }
-.ͼ0 .cm-completionMatchedText { color: inherit; font-weight: bold; text-decoration: underline; text-decoration-color: #5fa5df80 }
+.ͼ0 .cm-completionMatchedText { color: inherit; font-weight: bold; text-decoration: underline; text-decoration-color: #5fa5df99 }
 .ͼ0 .cm-content { caret-color: #c6c6c6; line-height: 1.6 }
 .ͼ0 .cm-content ::selection { background-color: #264f7889; outline: none }
 .ͼ0 .cm-crosshair { cursor: crosshair }
@@ -18557,7 +18642,7 @@ exports[`vscode-dark editor UI rules 1`] = `
 .ͼ0 .cm-lintRange-hint { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%2354a1fd%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
 .ͼ0 .cm-lintRange-info { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%2354a1fd%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
 .ͼ0 .cm-lintRange-warning { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%23d7ba7d%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
-.ͼ0 .cm-matchingBracket { background-color: #ffffff15; border-radius: 2px; box-shadow: none; outline: 1px solid #5fa5df80 }
+.ͼ0 .cm-matchingBracket { background-color: #ffffff15; border-radius: 2px; box-shadow: none; outline: 1px solid #5fa5df99 }
 .ͼ0 .cm-merge-a .cm-changedLine { background-color: #4b1c1c80 }
 .ͼ0 .cm-merge-a .cm-changedLineGutter { background: #f14c4c }
 .ͼ0 .cm-merge-b .cm-changedLine { background-color: #1e3f1e80 }
@@ -18578,7 +18663,7 @@ exports[`vscode-dark editor UI rules 1`] = `
 .ͼ0 .cm-search.cm-panel.cm-textfield { border-radius: 4px; color: #d4d4d4; padding: 2px 6px }
 .ͼ0 .cm-searchMatch { background-color: #72a1ff40; border-radius: 4px; box-shadow: none; color: #e9e9e9; outline: 1px solid #5fa5df90 }
 .ͼ0 .cm-searchMatch span { color: #e9e9e9 }
-.ͼ0 .cm-searchMatch.cm-searchMatch-selected { background-color: #54a1fd90; box-shadow: none; color: #e9e9e9; outline: 1px solid #5fa5df90; padding: 2px 6px }
+.ͼ0 .cm-searchMatch.cm-searchMatch-selected { background-color: #54a1fd90; box-shadow: none; color: #e9e9e9; outline: 1px solid #5fa5df99; padding: 2px 6px }
 .ͼ0 .cm-searchMatch.cm-searchMatch-selected span { color: #e9e9e9 }
 .ͼ0 .cm-selectionBackground { background-color: #264f7889; outline: none }
 .ͼ0 .cm-selectionLayer { z-index: 100 }
@@ -18599,16 +18684,15 @@ exports[`vscode-dark editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #d4d4d4; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #2d2d30 }
 .ͼ0 .cm-trailingSpace { background-color: #4b1c1c80 }
-.ͼ0 del { background-color: #4b1c1c80 !important; border: 1px solid #f14c4c40; border-radius: 3px; color: #f14c4c; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #4b1c1c80 !important; border: 1px solid #f14c4c40; border-radius: 3px; color: #f14c4c; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #4b1c1c80 !important; border: 1px solid #f14c4c40; border-radius: 3px; color: #f14c4c; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #4b1c1c80 !important; border: 1px solid #f14c4c40; border-radius: 3px; color: #f14c4c; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #1e3f1e80 !important; border: 1px solid #6cc26f40; border-radius: 3px; color: #6cc26f; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #1e3f1e80 !important; border: 1px solid #6cc26f40; border-radius: 3px; color: #6cc26f; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #264f7889 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 1px #2d2d30; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #9f9f9f; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #264f7889; outline: none }"
 `;
 
@@ -19176,6 +19260,10 @@ exports[`vscode-light resolved syntax highlighting per tag 1`] = `
 
 exports[`vscode-light editor UI rules 1`] = `
 ".ͼ0 { background-color: #ffffff; border: none; color: #383a42; font-family: JetBrains Mono, Consolas, monospace; font-size: 14px }
+.ͼ0 :where(.cm-deletedChunk) del { background-color: #ffebec !important; border: 1px solid #bf140440; border-radius: 3px; color: #bf1404; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 :where(.cm-deletedChunk) del .cm-changedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del .cm-deletedText { background: transparent !important }
+.ͼ0 :where(.cm-deletedChunk) del:not(:has(.cm-deletedText)) { background-color: #ffebec !important; border: 1px solid #bf140440; border-radius: 3px; color: #bf1404; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 .cm-activeLine { background-color: #99999926; border-left: none; border-radius: 2px; border-right: none; z-index: 1 }
 .ͼ0 .cm-activeLineGutter { background-color: #99999926; border: none; color: #0b216f; font-weight: 500 }
 .ͼ0 .cm-button { background-color: #ffffff; background-image: none; border: 1px solid #d6d6d6; border-radius: 4px; color: #383a42; padding: 2px 10px }
@@ -19183,7 +19271,7 @@ exports[`vscode-light editor UI rules 1`] = `
 .ͼ0 .cm-changeGutter { background-color: #f5f5f5 }
 .ͼ0 .cm-collapsedLines { background: #f3f3f3; color: #5f5f5f }
 .ͼ0 .cm-completionInfo { background-color: #f3f3f3; border: 1px solid #d6d6d6; color: #383a42; padding: 4px 8px }
-.ͼ0 .cm-completionMatchedText { color: inherit; font-weight: bold; text-decoration: underline; text-decoration-color: #007acc80 }
+.ͼ0 .cm-completionMatchedText { color: inherit; font-weight: bold; text-decoration: underline; text-decoration-color: #007accd0 }
 .ͼ0 .cm-content { caret-color: #000000; line-height: 1.6 }
 .ͼ0 .cm-content ::selection { background-color: #bddeff; outline: none }
 .ͼ0 .cm-crosshair { cursor: crosshair }
@@ -19222,7 +19310,7 @@ exports[`vscode-light editor UI rules 1`] = `
 .ͼ0 .cm-lintRange-hint { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%230763a4%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
 .ͼ0 .cm-lintRange-info { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%230763a4%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
 .ͼ0 .cm-lintRange-warning { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">%3Cpath%20d%3D%22m0%202.5%20l2%20-1.5%20l1%200%20l2%201.5%20l1%200%22%20stroke%3D%22%23bf8803%22%20fill%3D%22none%22%20stroke-width%3D%22.7%22%2F%3E</svg>') }
-.ͼ0 .cm-matchingBracket { background-color: #007acc20; border-radius: 2px; box-shadow: none; outline: 1px solid #007acc80 }
+.ͼ0 .cm-matchingBracket { background-color: #007acc20; border-radius: 2px; box-shadow: none; outline: 1px solid #007accd0 }
 .ͼ0 .cm-merge-a .cm-changedLine { background-color: #ffebec }
 .ͼ0 .cm-merge-a .cm-changedLineGutter { background: #bf1404 }
 .ͼ0 .cm-merge-b .cm-changedLine { background-color: #ddfbe0 }
@@ -19243,7 +19331,7 @@ exports[`vscode-light editor UI rules 1`] = `
 .ͼ0 .cm-search.cm-panel.cm-textfield { border-radius: 4px; color: #383a42; padding: 2px 6px }
 .ͼ0 .cm-searchMatch { background-color: #bbdefb; border-radius: 4px; box-shadow: none; color: #1f1f1f; outline: 1px solid #0f62a790 }
 .ͼ0 .cm-searchMatch span { color: #1f1f1f }
-.ͼ0 .cm-searchMatch.cm-searchMatch-selected { background-color: #90caf9; box-shadow: none; color: #1f1f1f; outline: 1px solid #0f62a790; padding: 2px 6px }
+.ͼ0 .cm-searchMatch.cm-searchMatch-selected { background-color: #90caf9; box-shadow: none; color: #1f1f1f; outline: 1px solid #0f62a7a8; padding: 2px 6px }
 .ͼ0 .cm-searchMatch.cm-searchMatch-selected span { color: #1f1f1f }
 .ͼ0 .cm-selectionBackground { background-color: #bddeff; outline: none }
 .ͼ0 .cm-selectionLayer { z-index: 100 }
@@ -19264,16 +19352,15 @@ exports[`vscode-light editor UI rules 1`] = `
 .ͼ0 .cm-tooltip-lint { color: #383a42; padding: 0 }
 .ͼ0 .cm-tooltip-section:not(:first-child) { border-top: 1px solid #d6d6d6 }
 .ͼ0 .cm-trailingSpace { background-color: #ffebec }
-.ͼ0 del { background-color: #ffebec !important; border: 1px solid #bf140440; border-radius: 3px; color: #bf1404; padding: 1px 3px; text-decoration: line-through }
-.ͼ0 del .cm-changedText { background: transparent !important }
-.ͼ0 del .cm-deletedText { background: transparent !important }
-.ͼ0 del:not(:has(.cm-deletedText)) { background-color: #ffebec !important; border: 1px solid #bf140440; border-radius: 3px; color: #bf1404; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del:where(.cm-deletedLine) .cm-changedText { background: transparent !important }
+.ͼ0 del:where(.cm-deletedLine) .cm-deletedText { background: transparent !important }
 .ͼ0 del.cm-deletedLine { background-color: #ffebec !important; border: 1px solid #bf140440; border-radius: 3px; color: #bf1404; padding: 1px 3px; text-decoration: line-through }
+.ͼ0 del.cm-deletedText { background-color: #ffebec !important; border: 1px solid #bf140440; border-radius: 3px; color: #bf1404; padding: 1px 3px; text-decoration: line-through }
 .ͼ0 ins.cm-insertedLine { background-color: #ddfbe0 !important; border: 1px solid #22863a40; border-radius: 3px; color: #22863a; padding: 1px 3px; text-decoration: none }
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #ddfbe0 !important; border: 1px solid #22863a40; border-radius: 3px; color: #22863a; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #bddeff }
-.ͼ0.cm-focused { box-shadow: 0 0 0 1px #d6d6d6; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #5f5f5f; outline: none }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #bddeff; outline: none }"
 `;
 

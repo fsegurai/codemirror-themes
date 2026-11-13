@@ -79,7 +79,7 @@ const theme = defineTheme({
       selectedShadow: 'none',
     },
     selectionMatch: { background: selectionHighlight, outline: `${cyan}40` },
-    matchingBracket: { background: darkGray, outline: `${cursor}80`, shadow: 'none' },
+    matchingBracket: { background: darkGray, outline: `${cursor}88`, shadow: 'none' },
     nonMatchingBracket: { background: `${errorRed}20`, outline: errorRed },
     panel: {
       background: darkBackground,
@@ -150,7 +150,7 @@ const theme = defineTheme({
       thumbHover: '#437da3cc',
       thumbHoverShadow: 'none',
     },
-    focusRing: `0 0 0 2px ${background}, 0 0 0 3px ${cyan}40`,
+    focusRing: `0 0 0 2px ${background}, 0 0 0 4px ${cyan}`,
     outlineWidth: '1px',
     merge: {
       backgroundColor: panelBackground,

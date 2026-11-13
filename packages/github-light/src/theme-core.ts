@@ -649,15 +649,19 @@ export function uiTemplate(ui: UiPalette): Record<string, UiDeclarations> {
       padding: generalDiff.insertedLinePadding,
       borderRadius: generalDiff.borderRadius,
     },
-    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': {
-      textDecoration: generalDiff.deletedTextDecoration,
-      backgroundColor: `${ui.diff.deletedBackground} !important`,
-      color: ui.diff.deletedForeground,
-      padding: generalDiff.insertedLinePadding,
-      borderRadius: generalDiff.borderRadius,
-      border: ui.diff.deletedBorder,
-    },
-    'del .cm-deletedText, del .cm-changedText': { background: 'transparent !important' },
+    // Merge view deletions only: `del` decorations, inline deletion widgets and the lines of deleted chunks. `:where()`
+    // keeps the specificity of the former bare `del` selector without styling other `del` elements.
+    'del.cm-deletedLine, del.cm-deletedText, :where(.cm-deletedChunk) del, :where(.cm-deletedChunk) del:not(:has(.cm-deletedText))':
+      {
+        textDecoration: generalDiff.deletedTextDecoration,
+        backgroundColor: `${ui.diff.deletedBackground} !important`,
+        color: ui.diff.deletedForeground,
+        padding: generalDiff.insertedLinePadding,
+        borderRadius: generalDiff.borderRadius,
+        border: ui.diff.deletedBorder,
+      },
+    ':where(.cm-deletedChunk) del .cm-deletedText, :where(.cm-deletedChunk) del .cm-changedText, del:where(.cm-deletedLine) .cm-deletedText, del:where(.cm-deletedLine) .cm-changedText':
+      { background: 'transparent !important' },
     '.cm-merge-b .cm-changedLine, .cm-inlineChangedLine': { backgroundColor: ui.diff.insertedBackground },
     '.cm-merge-a .cm-changedLine, .cm-deletedChunk': { backgroundColor: ui.diff.deletedBackground },
     '.cm-collapsedLines': {

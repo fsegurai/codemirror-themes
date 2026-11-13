@@ -28,7 +28,7 @@ const base00 = '#e1e2e7', // Background
   base_magenta = '#7427c6'; // Special characters
 
 // UI specific colors
-const highlightBackground = '#5f5faf1e', // Line highlight with improved transparency
+const highlightBackground = '#5f5faf12', // Line highlight with improved transparency
   selection = '#99a7df40', // Selection background with transparency
   selectionMatch = '#99a7df60', // Selection match with transparency
   activeBracketBg = '#0e639c20'; // Active bracket background with transparency
@@ -57,7 +57,7 @@ const theme = defineTheme({
     ghostText: base03,
     ghostTextOpacity: '0.5',
     specialChar: base_red,
-    focusRing: `0 0 0 2px ${base00}, 0 0 0 3px ${base_cyan}40`,
+    focusRing: `0 0 0 2px ${base00}, 0 0 0 4px ${base_cyan}`,
     outlineWidth: '1px',
     searchMatch: {
       background: '#0e639c40',

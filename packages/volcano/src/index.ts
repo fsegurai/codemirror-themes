@@ -14,7 +14,7 @@ const base00 = '#390000', // Background
   base01 = '#F8F8F8', // Foreground
   base02 = '#750000', // Selection background
   base03 = '#e7c0c0', // Comments, invisibles
-  base04 = '#970000', // Cursor
+  base04 = '#dd0000', // Cursor
   base05 = '#fc594d', // Default foreground
   base06 = '#580000', // Dark background for panels
   base07 = '#4a0000', // Darker background (gutter)
@@ -30,7 +30,7 @@ const base00 = '#390000', // Background
 
 // UI specific colors
 const invalid = '#ffffff',
-  highlightBackground = '#ff00001f', // Line highlight with transparency
+  highlightBackground = '#ff000013', // Line highlight with transparency
   tooltipBackground = '#680000',
   selection = '#75000080', // Selection background with transparency
   selectionMatch = '#7500009a', // Selection match with transparency
@@ -60,7 +60,7 @@ const theme = defineTheme({
     ghostText: base03,
     ghostTextOpacity: '0.5',
     specialChar: base08,
-    focusRing: `0 0 0 2px ${base00}, 0 0 0 3px ${base08}70`,
+    focusRing: `0 0 0 2px ${base00}, 0 0 0 4px ${base08}`,
     outlineWidth: '1px',
     searchMatch: {
       background: selection,

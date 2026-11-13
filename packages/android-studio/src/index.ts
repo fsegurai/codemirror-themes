@@ -35,7 +35,7 @@ const base00 = '#282b2e', // Background (authentic IntelliJ IDEA dark theme)
   highlightBackground = '#323232', // Active line highlight
   gutterBackground = '#313335', // Gutter background
   activeBracketBg = '#3b514d',
-  activeBracketBorder = '#43705c',
+  activeBracketBorder = '#4c7e68',
   // Diff/merge specific colors
   addedBackground = '#294436', // Dark green for insertions, matching IntelliJ
   removedBackground = '#484a4a'; // Dark gray/red for deletions
@@ -60,7 +60,7 @@ const theme = defineTheme({
     ghostText: '#a9a9a9',
     ghostTextOpacity: '0.5',
     specialChar: invalid,
-    focusRing: `0 0 0 2px ${base02}, 0 0 0 4px ${base00}`,
+    focusRing: `0 0 0 2px ${base04}, 0 0 0 4px ${base00}`,
     outlineWidth: '1px',
     searchMatch: {
       background: '#32593d',
