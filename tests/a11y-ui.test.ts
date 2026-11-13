@@ -5,7 +5,7 @@
  * - merge-view `del`/`ins` rules never style plain `del`/`ins` elements of the editor content or host page.
  */
 import { describe, expect, test } from 'bun:test';
-import { loadAllThemes } from './support/themes';
+import { editorCss, loadAllThemes, ruleFor } from './support/themes';
 import {
   NON_TEXT_MIN,
   nonTextFailures,
@@ -30,4 +30,16 @@ describe.each(themes.map((theme) => [theme.id, theme] as const))('%s', (_id, the
   test('no rule targets a del or ins element outside a .cm-* context', () => {
     expect(unscopedDiffSelectors(theme.extension)).toEqual([]);
   });
+});
+
+describe('focus indicator survives forced-colors mode (Windows High Contrast)', async () => {
+  const themes = await loadAllThemes();
+  // Forced-colors mode drops box-shadow; a transparent outline is repainted with the system color instead.
+  test.each(themes.map((theme) => [theme.id, theme] as const))(
+    '%s keeps a transparent >= 2px outline on focus',
+    (_id, theme) => {
+      const focused = ruleFor(editorCss(theme.extension), '&.cm-focused');
+      expect(focused?.outline).toMatch(/^(?:[2-9]|\d{2,})px solid transparent$/);
+    },
+  );
 });

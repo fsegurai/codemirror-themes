@@ -766,7 +766,8 @@ export function uiTemplate(ui: UiPalette): Record<string, UiDeclarations> {
       padding: generalPlaceholder.padding,
       margin: generalPlaceholder.margin,
     },
-    '&.cm-focused': { outline: 'none', boxShadow: ui.focusRing },
+    // Transparent outline: invisible normally, repainted with the system color in forced-colors mode (drops box-shadow).
+    '&.cm-focused': { outline: '2px solid transparent', boxShadow: ui.focusRing },
     '& .cm-scroller::-webkit-scrollbar': { width: generalScroller.width, height: generalScroller.height },
     '& .cm-scroller::-webkit-scrollbar-track': { background: ui.scrollbar.track, border: ui.scrollbar.trackBorder },
     '& .cm-scroller::-webkit-scrollbar-thumb': {

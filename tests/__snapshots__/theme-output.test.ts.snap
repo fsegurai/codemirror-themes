@@ -656,7 +656,7 @@ exports[`abcdef editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #1d391d4d !important; border: 1px solid #7aecb340; border-radius: 3px; color: #7aecb3; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #1e2d41 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #0a0e14, 0 0 0 4px #abcdef; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #0a0e14, 0 0 0 4px #abcdef; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #1e2d41; outline: none }"
 `;
 
@@ -1324,7 +1324,7 @@ exports[`abyss editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #0e4e1d50 !important; border: 1px solid #4ce66040; border-radius: 3px; color: #4ce660; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #032d4a }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #0066ff20, 0 0 0 4px #5caeff; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #0066ff20, 0 0 0 4px #5caeff; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #032d4a; outline: none }"
 `;
 
@@ -1992,7 +1992,7 @@ exports[`android-studio editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #294436 !important; border: 1px solid #8dac7c40; border-radius: 3px; color: #8dac7c; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #173a66 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #989b9e, 0 0 0 4px #282b2e; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #989b9e, 0 0 0 4px #282b2e; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #173a66; outline: none }"
 `;
 
@@ -2660,7 +2660,7 @@ exports[`andromeda editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #0f3a2440 !important; border: 1px solid #a6e07a40; border-radius: 3px; color: #a6e07a; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #db45a248 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #1b1e26, 0 0 0 4px #d679fa; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #1b1e26, 0 0 0 4px #d679fa; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #db45a248; color: #ffffff; outline: none }"
 `;
 
@@ -3328,7 +3328,7 @@ exports[`basic-dark editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #1e462c50 !important; border: 1px solid #73c99140; border-radius: 3px; color: #73c991; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #3a59916f }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #1e2124, 0 0 0 4px #5c88da; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #1e2124, 0 0 0 4px #5c88da; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #3a59916f; color: #e2e2e2; outline: none }"
 `;
 
@@ -3996,7 +3996,7 @@ exports[`basic-light editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #e6ffec60 !important; border: 1px solid #24783b30; border-radius: 3px; color: #24783b; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #90cdf480 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #2566aa; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #2566aa; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #90cdf480; color: #1a365d; outline: none }"
 `;
 
@@ -4664,7 +4664,7 @@ exports[`catppuccin-mocha editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #a6e3a140 !important; border: 1px solid #a6e3a140; border-radius: 3px; color: #a6e3a1; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #585b7066 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #1e1e2e, 0 0 0 4px #b4befe; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #1e1e2e, 0 0 0 4px #b4befe; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #585b7066; outline: 1px solid #cba6f7 }"
 `;
 
@@ -5332,7 +5332,7 @@ exports[`cobalt2 editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #3ad90033 !important; border: 1px solid #a5ff9030; border-radius: 3px; color: #a5ff90; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #003b8b }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #193549, 0 0 0 4px #80fcff; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #193549, 0 0 0 4px #80fcff; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #09478e; color: #fff; outline: none }"
 `;
 
@@ -6000,7 +6000,7 @@ exports[`forest editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #28513a80 !important; border: 1px solid #9ccc6540; border-radius: 3px; color: #9ccc65; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #2c5a3a92 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #1a2a33, 0 0 0 4px #ffb74d; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #1a2a33, 0 0 0 4px #ffb74d; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #2c5a3a92; color: #d0d8e0; outline: none }"
 `;
 
@@ -6668,7 +6668,7 @@ exports[`github-dark editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #2ea04350 !important; border: 1px solid #7ee78740; border-radius: 3px; color: #7ee787; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #032f56 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #0d1117, 0 0 0 4px #58a6ff; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #0d1117, 0 0 0 4px #58a6ff; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #032f56; outline: none }"
 `;
 
@@ -7336,7 +7336,7 @@ exports[`github-light editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #e6ffec80 !important; border: 1px solid #0f6d3130; border-radius: 3px; color: #0f6d31; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #BBDFFF }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #035cc3; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #035cc3; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #BBDFFF; color: #24292e; outline: none }"
 `;
 
@@ -8004,7 +8004,7 @@ exports[`gruvbox-dark editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #32361a80 !important; border: 1px solid #b8bb2640; border-radius: 3px; color: #b8bb26; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #443d39 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #282828, 0 0 0 4px #fa8d44; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #282828, 0 0 0 4px #fa8d44; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #443d39; outline: none }"
 `;
 
@@ -8672,7 +8672,7 @@ exports[`gruvbox-light editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #d8e5bc80 !important; border: 1px solid #65600d40; border-radius: 3px; color: #65600d; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #e7d7ae }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #fbf1c7, 0 0 0 4px #a63b0f; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #fbf1c7, 0 0 0 4px #a63b0f; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #e7d7ae; color: #3c3836; outline: none }"
 `;
 
@@ -9340,7 +9340,7 @@ exports[`high-contrast-dark editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #00550060 !important; border: 1px solid #00ff00; border-radius: 3px; color: #00ff00; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #1a3865 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #000000, 0 0 0 5px #00ffff; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #000000, 0 0 0 5px #00ffff; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #1a3865; outline: 2px solid #00ffff }"
 `;
 
@@ -10008,7 +10008,7 @@ exports[`high-contrast-light editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #00800040 !important; border: 2px solid #0e5d0c; border-radius: 3px; color: #0e5d0c; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #9fc3fe }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #ffffff, 0 0 0 5px #0000ff; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #ffffff, 0 0 0 5px #0000ff; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #9fc3fe; outline: 2px solid #0000ff }"
 `;
 
@@ -10676,7 +10676,7 @@ exports[`material-dark editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #1e3d2780 !important; border: 1px solid #6abf6940; border-radius: 3px; color: #6abf69; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #ffffff1c }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #212121, 0 0 0 4px #56c8d8; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #212121, 0 0 0 4px #56c8d8; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #ffffff1c; outline: none }"
 `;
 
@@ -11344,7 +11344,7 @@ exports[`material-light editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #e6ffed80 !important; border: 1px solid #28a74530; border-radius: 3px; color: #28a745; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #d7e8f9 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #15717f; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #15717f; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #d7e8f9; outline: none }"
 `;
 
@@ -12012,7 +12012,7 @@ exports[`material-ocean editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #13343a80 !important; border: 1px solid #80CBC440; border-radius: 3px; color: #80CBC4; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #717cb430 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #0F111A, 0 0 0 4px #89DDFF; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #0F111A, 0 0 0 4px #89DDFF; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #717cb430; outline: none }"
 `;
 
@@ -12680,7 +12680,7 @@ exports[`monokai editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #3d4d3880 !important; border: 1px solid #A6E22E40; border-radius: 3px; color: #A6E22E; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #3f3e35 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #272822, 0 0 0 4px #66D9EF; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #272822, 0 0 0 4px #66D9EF; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #3f3e35; outline: none }"
 `;
 
@@ -13348,7 +13348,7 @@ exports[`nord editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #3b4a3880 !important; border: 1px solid #a5c08e40; border-radius: 3px; color: #a5c08e; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #40495b }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #2e3440, 0 0 0 4px #88c0d0; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #2e3440, 0 0 0 4px #88c0d0; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #40495b; outline: none }"
 `;
 
@@ -14016,7 +14016,7 @@ exports[`palenight editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #2c3c2e80 !important; border: 1px solid #C3E88D40; border-radius: 3px; color: #C3E88D; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #3b385d }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #292D3E, 0 0 0 4px #82AAFF; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #292D3E, 0 0 0 4px #82AAFF; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #3b385d; outline: none }"
 `;
 
@@ -14684,7 +14684,7 @@ exports[`solarized-dark editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #2aa19820 !important; border: 1px solid #93a82340; border-radius: 3px; color: #93a823; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #02b8ff1d }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #002b36, 0 0 0 4px #45a5ee; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #002b36, 0 0 0 4px #45a5ee; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #02b8ff1d; outline: none }"
 `;
 
@@ -15352,7 +15352,7 @@ exports[`solarized-light editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #85990020 !important; border: 1px solid #5a680440; border-radius: 3px; color: #5a6804; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #fed996 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #fdf6e3, 0 0 0 4px #0a66a1; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #fdf6e3, 0 0 0 4px #0a66a1; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #fed996; outline: none }"
 `;
 
@@ -16020,7 +16020,7 @@ exports[`synthwave-84 editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #72f1b830 !important; border: 1px solid #72f1b840; border-radius: 3px; color: #72f1b8; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #3a2f56 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #262335, 0 0 0 4px #ff7edb; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #262335, 0 0 0 4px #ff7edb; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #3a2f56; outline: none }"
 `;
 
@@ -16688,7 +16688,7 @@ exports[`tokyo-night-day editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #58753920 !important; border: 1px solid #425e2240; border-radius: 3px; color: #425e22; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #99a7df66 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #e1e2e7, 0 0 0 4px #015c7c; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #e1e2e7, 0 0 0 4px #015c7c; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #99a7df66; outline: none }"
 `;
 
@@ -17356,7 +17356,7 @@ exports[`tokyo-night-storm editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #3b4a3880 !important; border: 1px solid #9ece6a40; border-radius: 3px; color: #9ece6a; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #6f7bb630 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #24283b, 0 0 0 4px #7aa2f7; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #24283b, 0 0 0 4px #7aa2f7; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #6f7bb630; outline: none }"
 `;
 
@@ -18024,7 +18024,7 @@ exports[`volcano editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #2a4a0080 !important; border: 1px solid #9df39f40; border-radius: 3px; color: #9df39f; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #7500009c }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #390000, 0 0 0 4px #f95d54; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #390000, 0 0 0 4px #f95d54; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #7500009c; outline: none }"
 `;
 
@@ -18692,7 +18692,7 @@ exports[`vscode-dark editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #1e3f1e80 !important; border: 1px solid #6cc26f40; border-radius: 3px; color: #6cc26f; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #264f7889 }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #9f9f9f; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #9f9f9f; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #264f7889; outline: none }"
 `;
 
@@ -19360,7 +19360,7 @@ exports[`vscode-light editor UI rules 1`] = `
 .ͼ0 ins.cm-insertedLine .cm-changedText { background: transparent !important }
 .ͼ0 ins.cm-insertedLine:not(:has(.cm-changedText)) { background-color: #ddfbe0 !important; border: 1px solid #22863a40; border-radius: 3px; color: #22863a; padding: 1px 3px; text-decoration: none }
 .ͼ0:not(.cm-focused) .cm-selectionBackground { background-color: #bddeff }
-.ͼ0.cm-focused { box-shadow: 0 0 0 2px #5f5f5f; outline: none }
+.ͼ0.cm-focused { box-shadow: 0 0 0 2px #5f5f5f; outline: 2px solid transparent }
 .ͼ0.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background-color: #bddeff; outline: none }"
 `;
 
