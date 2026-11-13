@@ -20,6 +20,7 @@ const THEME_TITLE_OVERRIDES: Record<string, string> = {
   bundle: 'All - Bundle',
   'github-dark': 'GitHub Dark',
   'github-light': 'GitHub Light',
+  'rose-pine-dawn': 'Rosé Pine Dawn',
   'vscode-dark': 'VS Code Dark',
   'vscode-light': 'VS Code Light',
 };
