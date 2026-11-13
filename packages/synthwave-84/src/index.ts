@@ -1,7 +1,6 @@
 import type { Extension } from '@codemirror/state';
-import { tags as t } from '@lezer/highlight';
 
-import { defineTheme, type ThemeMigration } from './theme-core';
+import { defineTheme } from './theme-core';
 import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 
 /**
@@ -38,54 +37,57 @@ const highlightBackground = '#2a213955',
 const addedBackground = '#72f1b830',
   removedBackground = '#fe445030';
 
-/**
- * TEMPORARY: differences between the canonical structure and this theme's pre-6.31 output, kept so the move onto
- * `defineTheme` changes nothing visually. To be removed when the theme is completed on the shared structure.
- */
-const migration: ThemeMigration = {
-  ui: {
-    '.cm-cursor, .cm-dropCursor': { boxShadow: `0 0 8px ${neonPink}` },
-    '.cm-fat-cursor': { boxShadow: `0 0 8px ${neonPink}` },
-    '.cm-searchMatch': { boxShadow: `0 0 4px ${neonBlue}` },
-    '.cm-searchMatch.cm-searchMatch-selected': { boxShadow: `0 0 8px ${neonBlue}` },
-    '.cm-panel button:hover': { boxShadow: `0 0 8px ${neonCyan}` },
-    '.cm-matchingBracket': { boxShadow: `0 0 8px ${neonCyan}40` },
-    '& .cm-scroller::-webkit-scrollbar-thumb:hover': { boxShadow: `0 0 8px ${neonPurple}` },
-  },
-  highlight: [
-    { tag: [t.separator, t.definition(t.name), t.angleBracket], color: neonCyan },
-    { tag: t.brace, color: glowPink },
-  ],
-};
-
 const theme = defineTheme({
   name: "Synthwave '84",
   dark: true,
   ui: {
     background: base00,
     foreground: base05,
+    border: 'none',
     cursor: neonPink,
+    cursorWidth: '2px',
+    cursorShadow: `0 0 8px ${neonPink}`,
+    fatCursor: { background: `${neonPink}99`, border: 'none' },
     selection: base02,
+    selectionInactive: base02,
+    selectionForeground: null,
+    selectionOutline: 'none',
     activeLine: highlightBackground,
+    activeLineBorder: { left: 'none', right: 'none' },
     ghostText: base03,
+    ghostTextOpacity: '0.5',
+    specialChar: neonRed,
     focusRing: `0 0 0 2px ${base00}, 0 0 0 3px ${neonPink}40`,
+    outlineWidth: '1px',
     searchMatch: {
       background: `${neonBlue}40`,
       outline: neonBlue,
       foreground: base05,
+      shadow: `0 0 4px ${neonBlue}`,
       selectedBackground: neonBlue,
       selectedForeground: base00,
+      selectedOutline: `1px solid ${neonBlue}`,
+      selectedShadow: `0 0 8px ${neonBlue}`,
     },
     selectionMatch: { background: selectionMatch, outline: `${base02}50` },
-    matchingBracket: { background: activeBracketBg, outline: neonCyan },
+    matchingBracket: { background: activeBracketBg, outline: neonCyan, shadow: `0 0 8px ${neonCyan}40` },
     nonMatchingBracket: { background: `${neonRed}40`, outline: neonRed },
     panel: {
       background: darkPurple,
       foreground: base05,
       border: base03,
+      borderWidth: '1px',
+      outline: 'none',
+      shadow: 'none',
       buttonBackground: base01,
       buttonForeground: neonCyan,
+      buttonBorder: 'none',
       buttonHoverBackground: base02,
+      buttonHoverForeground: neonCyan,
+      buttonHoverBorder: 'none',
+      buttonHoverShadow: `0 0 8px ${neonCyan}`,
+      inputBackground: base00,
+      inputBorder: `1px solid ${base03}`,
     },
     gutter: {
       background: darkPurple,
@@ -93,27 +95,52 @@ const theme = defineTheme({
       border: base02,
       activeBackground: base02,
       activeForeground: neonPink,
+      activeFontWeight: '500',
+      activeBorder: 'none',
       foldHover: neonCyan,
     },
     foldPlaceholder: { background: base01, foreground: neonCyan, border: `${neonCyan}70` },
     tooltip: {
       background: base01,
+      foreground: base05,
       border: neonCyan,
       shadow: `0 2px 16px ${neonCyan}40`,
       listBackground: base01,
+      listBorder: 'none',
+      hoverBackground: 'transparent',
       selectedBackground: base02,
       selectedForeground: neonPink,
+      selectedBorder: 'none',
       icon: neonCyan,
       detail: neonYellow,
     },
     diff: {
       insertedBackground: addedBackground,
       insertedForeground: neonCyan,
+      insertedBorder: `1px solid ${neonCyan}40`,
       deletedBackground: removedBackground,
       deletedForeground: neonRed,
+      deletedBorder: `1px solid ${neonRed}40`,
     },
-    diagnostic: { error: neonRed, warning: neonYellow, info: neonBlue },
-    scrollbar: { track: darkPurple, thumb: base02, thumbHover: neonPurple },
+    diagnostic: {
+      error: neonRed,
+      warning: neonYellow,
+      info: neonBlue,
+      hint: neonBlue,
+      errorBackground: 'transparent',
+      warningBackground: 'transparent',
+      infoBackground: 'transparent',
+      borderWidth: '3px',
+      underlineWidth: '2px',
+    },
+    scrollbar: {
+      track: darkPurple,
+      trackBorder: 'none',
+      thumb: base02,
+      thumbBorder: `3px solid ${darkPurple}`,
+      thumbHover: neonPurple,
+      thumbHoverShadow: `0 0 8px ${neonPurple}`,
+    },
     merge: {
       backgroundColor: darkPurple,
       borderColor: neonCyan,
@@ -125,12 +152,16 @@ const theme = defineTheme({
     keyword: { color: neonPink, fontWeight: 'bold' },
     definitionKeyword: { color: neonPink },
     modifier: { color: neonPurple, fontStyle: 'italic' },
+    separator: { color: neonCyan },
     operator: { color: neonCyan },
     punctuation: { color: base04 },
     bracket: { color: glowYellow },
+    angleBracket: { color: neonCyan },
+    brace: { color: glowPink },
     name: { color: base05 },
     localVariable: { color: neonOrange },
     variableDefinition: { color: neonOrange },
+    nameDefinition: { color: neonCyan },
     function: { color: neonCyan },
     self: { color: neonRed },
     label: { color: neonCyan },
@@ -141,6 +172,7 @@ const theme = defineTheme({
     namespace: { color: neonOrange, fontStyle: 'italic' },
     tag: { color: neonPink },
     attribute: { color: neonYellow },
+    content: { color: base05 },
     string: { color: neonCyan },
     regexp: { color: glowPink },
     number: { color: neonOrange },
@@ -174,7 +206,6 @@ const theme = defineTheme({
     deleted: { color: neonRed },
     changed: { color: neonYellow },
   },
-  migration,
 });
 
 /**

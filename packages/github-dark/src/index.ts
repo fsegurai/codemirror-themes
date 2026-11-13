@@ -1,7 +1,6 @@
 import type { Extension } from '@codemirror/state';
-import { tags as t } from '@lezer/highlight';
 
-import { defineTheme, type ThemeMigration } from './theme-core';
+import { defineTheme } from './theme-core';
 import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 
 /**
@@ -44,42 +43,57 @@ const invalid = '#f97583', // Invalid color - error red
 const addedBackground = '#2ea04350', // GitHub green with transparency
   removedBackground = '#f8514940'; // GitHub red with transparency
 
-/**
- * TEMPORARY: differences between the canonical structure and this theme's pre-6.31 output, kept so the move onto
- * `defineTheme` changes nothing visually. To be removed when the theme is completed on the shared structure.
- */
-const migration: ThemeMigration = {
-  highlight: [{ tag: t.definition(t.function(t.variableName)), color: base07 }],
-};
-
 const theme = defineTheme({
   name: 'GitHub Dark',
   dark: true,
   ui: {
     background: base00,
     foreground: base01,
+    border: 'none',
     cursor: base04,
+    cursorWidth: '2px',
+    cursorShadow: 'none',
+    fatCursor: { background: `${base04}99`, border: 'none' },
     selection: base02,
+    selectionInactive: base02,
+    selectionForeground: null,
+    selectionOutline: 'none',
     activeLine: highlightBackground,
+    activeLineBorder: { left: 'none', right: 'none' },
     ghostText: base03,
+    ghostTextOpacity: '0.5',
+    specialChar: invalid,
     focusRing: `0 0 0 2px ${base00}, 0 0 0 3px ${linkColor}40`,
+    outlineWidth: '1px',
     searchMatch: {
       background: '#3a587a',
       outline: base07,
       foreground: base01,
+      shadow: 'none',
       selectedBackground: activeBracketBorder,
       selectedForeground: base04,
+      selectedOutline: `1px solid ${base07}`,
+      selectedShadow: 'none',
     },
     selectionMatch: { background: selectionMatch, outline: `${base02}50` },
-    matchingBracket: { background: activeBracketBg, outline: activeBracketBorder },
+    matchingBracket: { background: activeBracketBg, outline: activeBracketBorder, shadow: 'none' },
     nonMatchingBracket: { background: `${invalid}40`, outline: invalid },
     panel: {
       background: base0F,
       foreground: base01,
       border: base0E,
+      borderWidth: '1px',
+      outline: 'none',
+      shadow: 'none',
       buttonBackground: base0F,
       buttonForeground: base01,
+      buttonBorder: 'none',
       buttonHoverBackground: base0A,
+      buttonHoverForeground: base01,
+      buttonHoverBorder: 'none',
+      buttonHoverShadow: 'none',
+      inputBackground: base00,
+      inputBorder: `1px solid ${base0E}`,
     },
     gutter: {
       background: base0D,
@@ -87,27 +101,52 @@ const theme = defineTheme({
       border: base0E,
       activeBackground: base0F,
       activeForeground: base01,
+      activeFontWeight: '500',
+      activeBorder: 'none',
       foldHover: base01,
     },
     foldPlaceholder: { background: base0F, foreground: base03, border: `${base0E}70` },
     tooltip: {
       background: base0F,
+      foreground: base01,
       border: base0E,
       shadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
       listBackground: base0F,
+      listBorder: 'none',
+      hoverBackground: 'transparent',
       selectedBackground: base02,
       selectedForeground: base04,
+      selectedBorder: 'none',
       icon: base03,
       detail: base03,
     },
     diff: {
       insertedBackground: addedBackground,
       insertedForeground: base05,
+      insertedBorder: `1px solid ${base05}40`,
       deletedBackground: removedBackground,
       deletedForeground: base08,
+      deletedBorder: `1px solid ${base08}40`,
     },
-    diagnostic: { error: invalid, warning: diagnosticWarning, info: linkColor },
-    scrollbar: { track: base0D, thumb: base0E, thumbHover: base0B },
+    diagnostic: {
+      error: invalid,
+      warning: diagnosticWarning,
+      info: linkColor,
+      hint: linkColor,
+      errorBackground: 'transparent',
+      warningBackground: 'transparent',
+      infoBackground: 'transparent',
+      borderWidth: '3px',
+      underlineWidth: '2px',
+    },
+    scrollbar: {
+      track: base0D,
+      trackBorder: 'none',
+      thumb: base0E,
+      thumbBorder: `3px solid ${base0D}`,
+      thumbHover: base0B,
+      thumbHoverShadow: 'none',
+    },
     merge: {
       backgroundColor: base0F,
       borderColor: base0E,
@@ -119,6 +158,7 @@ const theme = defineTheme({
     keyword: { color: base08, fontWeight: 'bold' },
     definitionKeyword: { color: base08 },
     modifier: { color: base0C, fontStyle: 'italic' },
+    functionDefinition: { color: base07 },
     operator: { color: base01 },
     punctuation: { color: base03 },
     name: { color: base07 },
@@ -132,6 +172,7 @@ const theme = defineTheme({
     namespace: { color: base07, fontStyle: 'italic' },
     tag: { color: base05 },
     attribute: { color: base06 },
+    content: { color: base01 },
     string: { color: base09 },
     number: { color: base0C },
     constant: { color: base0C },
@@ -163,7 +204,6 @@ const theme = defineTheme({
     deleted: { color: invalid },
     changed: { color: base0C },
   },
-  migration,
 });
 
 /**

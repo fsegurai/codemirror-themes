@@ -1,7 +1,6 @@
 import type { Extension } from '@codemirror/state';
-import { tags as t } from '@lezer/highlight';
 
-import { defineTheme, type ThemeMigration } from './theme-core';
+import { defineTheme } from './theme-core';
 import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 
 /**
@@ -38,81 +37,110 @@ const highlightBackground = '#5F5FAF5A', // Line highlight with improved transpa
 const addedBackground = '#58753920', // Green with transparency for insertions
   removedBackground = '#f52a6520'; // Red with transparency for deletions
 
-/**
- * TEMPORARY: differences between the canonical structure and this theme's pre-6.31 output, kept so the move onto
- * `defineTheme` changes nothing visually. To be removed when the theme is completed on the shared structure.
- */
-const migration: ThemeMigration = {
-  ui: {
-    '.cm-searchMatch span': { color: null },
-    '.cm-panels': { boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' },
-    '.cm-panel button:hover': { border: `1px solid ${base02}` },
-    '.cm-activeLineGutter': { backgroundColor: null },
-    '.cm-tooltip-autocomplete > ul': { maxHeight: '300px' },
-  },
-  highlight: [
-    { tag: t.separator, color: base_blue },
-    { tag: t.heading1, color: base_orange, fontWeight: 'bold' },
-    { tag: [t.heading2, t.heading3], color: base_orange },
-  ],
-};
-
 const theme = defineTheme({
   name: 'Tokyo Night Day',
   dark: false,
   ui: {
     background: base00,
     foreground: base01,
+    border: 'none',
     cursor: base01,
+    cursorWidth: '2px',
+    cursorShadow: 'none',
+    fatCursor: { background: `${base01}99`, border: 'none' },
     selection: selection,
+    selectionInactive: selection,
+    selectionForeground: null,
+    selectionOutline: 'none',
     activeLine: highlightBackground,
+    activeLineBorder: { left: 'none', right: 'none' },
     ghostText: base03,
+    ghostTextOpacity: '0.5',
+    specialChar: base_red,
     focusRing: `0 0 0 2px ${base00}, 0 0 0 3px ${base_cyan}40`,
+    outlineWidth: '1px',
     searchMatch: {
       background: '#0e639c40',
       outline: base_cyan,
       foreground: base01,
+      shadow: 'none',
       selectedBackground: base_cyan,
       selectedForeground: base00,
+      selectedOutline: `1px solid ${base_cyan}`,
+      selectedShadow: 'none',
     },
     selectionMatch: { background: selectionMatch, outline: `${base02}50` },
-    matchingBracket: { background: activeBracketBg, outline: base_cyan },
+    matchingBracket: { background: activeBracketBg, outline: base_cyan, shadow: 'none' },
     nonMatchingBracket: { background: removedBackground, outline: base_red },
     panel: {
       background: base06,
       foreground: base01,
       border: `${base03}30`,
+      borderWidth: '1px',
+      outline: 'none',
+      shadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
       buttonBackground: base06,
       buttonForeground: base01,
+      buttonBorder: 'none',
       buttonHoverBackground: base07,
+      buttonHoverForeground: base01,
+      buttonHoverBorder: `1px solid ${base02}`,
+      buttonHoverShadow: 'none',
+      inputBackground: base00,
+      inputBorder: `1px solid ${base03}30`,
     },
     gutter: {
       background: base07,
       foreground: base03,
       border: base07,
       activeForeground: base01,
+      activeFontWeight: '500',
+      activeBorder: 'none',
       foldHover: base01,
-      activeBackground: base01,
+      activeBackground: base06,
     },
     foldPlaceholder: { background: base06, foreground: base03, border: `${base03}70` },
     tooltip: {
       background: base06,
+      foreground: base01,
       border: `${base04}40`,
       shadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
       listBackground: base06,
+      listBorder: 'none',
+      hoverBackground: 'transparent',
       selectedBackground: selection,
       selectedForeground: base01,
+      selectedBorder: 'none',
       icon: base03,
       detail: base03,
     },
     diff: {
       insertedBackground: addedBackground,
       insertedForeground: base_green,
+      insertedBorder: `1px solid ${base_green}40`,
       deletedBackground: removedBackground,
       deletedForeground: base_red,
+      deletedBorder: `1px solid ${base_red}40`,
     },
-    diagnostic: { error: base_red, warning: base_orange, info: base_cyan },
-    scrollbar: { track: base07, thumb: base03, thumbHover: base02 },
+    diagnostic: {
+      error: base_red,
+      warning: base_orange,
+      info: base_cyan,
+      hint: base_cyan,
+      errorBackground: 'transparent',
+      warningBackground: 'transparent',
+      infoBackground: 'transparent',
+      borderWidth: '3px',
+      underlineWidth: '2px',
+    },
+    scrollbar: {
+      track: base07,
+      trackBorder: 'none',
+      thumb: base03,
+      thumbBorder: `3px solid ${base07}`,
+      thumbHover: base02,
+      thumbHoverShadow: 'none',
+    },
     merge: {
       backgroundColor: base07,
       borderColor: base03,
@@ -124,6 +152,7 @@ const theme = defineTheme({
     keyword: { color: base_cyan, fontWeight: 'bold' },
     definitionKeyword: { color: base_cyan },
     modifier: { color: base_orange, fontStyle: 'italic' },
+    separator: { color: base_blue },
     operator: { color: base_purple },
     punctuation: { color: base03 },
     name: { color: base_blue },
@@ -140,6 +169,7 @@ const theme = defineTheme({
     namespace: { color: base_purple, fontStyle: 'italic' },
     tag: { color: base_purple },
     attribute: { color: base_yellow },
+    content: { color: base01 },
     string: { color: base_green },
     regexp: { color: base_magenta },
     number: { color: base_orange },
@@ -150,6 +180,9 @@ const theme = defineTheme({
     annotation: { color: base_red, fontStyle: 'italic' },
     heading: { fontWeight: 'bold', color: base_orange },
     headingLevel: { color: base_cyan },
+    heading1: { color: base_orange, fontWeight: 'bold' },
+    heading2: { color: base_orange },
+    heading3: { color: base_orange },
     list: { color: base_orange },
     quote: { color: base03 },
     monospace: { color: base01 },
@@ -173,7 +206,6 @@ const theme = defineTheme({
     deleted: { color: base_red },
     changed: { color: base_orange },
   },
-  migration,
 });
 
 /**

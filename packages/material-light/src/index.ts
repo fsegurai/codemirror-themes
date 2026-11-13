@@ -1,7 +1,6 @@
 import type { Extension } from '@codemirror/state';
-import { tags as t } from '@lezer/highlight';
 
-import { defineTheme, type ThemeMigration } from './theme-core';
+import { defineTheme } from './theme-core';
 import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 
 /**
@@ -45,61 +44,57 @@ const addedBackground = '#e6ffed80', // Light green with transparency for insert
   addedText = '#28a745', // Bright green for added text
   removedText = '#d73a49'; // Bright red for removed text
 
-/**
- * TEMPORARY: differences between the canonical structure and this theme's pre-6.31 output, kept so the move onto
- * `defineTheme` changes nothing visually. To be removed when the theme is completed on the shared structure.
- */
-const migration: ThemeMigration = {
-  ui: {
-    '.cm-fat-cursor': { backgroundColor: `${base02}99` },
-    '.cm-panels': { boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)' },
-    '.cm-foldGutter .cm-gutterElement': { transition: 'color 0.15s ease' },
-    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': { border: `1px solid ${addedText}30` },
-    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': { border: `1px solid ${removedText}30` },
-    '.cm-tooltip-autocomplete > ul > li:hover': { backgroundColor: hoverHighlight },
-  },
-  highlight: [
-    { tag: [t.bool, t.atom, t.heading5], color: base0F },
-    { tag: t.separator, color: base0A },
-    { tag: t.constant(t.name), color: base09 },
-    { tag: t.angleBracket, color: base02 },
-    { tag: t.squareBracket, color: base08 },
-    { tag: t.heading2, color: base0C },
-    { tag: t.heading3, color: base0D },
-    { tag: t.heading4, color: base0E },
-    { tag: t.heading6, color: base10 },
-    { tag: t.special(t.variableName), color: base05 },
-  ],
-};
-
 const theme = defineTheme({
   name: 'Material Light',
   dark: false,
   ui: {
     background: base00,
     foreground: base02,
+    border: 'none',
     cursor: base04,
+    cursorWidth: '2px',
+    cursorShadow: 'none',
+    fatCursor: { background: `${base02}99`, border: 'none' },
     selection: selection,
+    selectionInactive: selection,
+    selectionForeground: null,
+    selectionOutline: 'none',
     activeLine: highlightBackground,
+    activeLineBorder: { left: 'none', right: 'none' },
     ghostText: base03,
+    ghostTextOpacity: '0.5',
+    specialChar: base08,
     focusRing: `0 0 0 2px ${base00}, 0 0 0 3px ${base0D}40`,
+    outlineWidth: '1px',
     searchMatch: {
       background: '#FFA72680',
       outline: base0B,
       foreground: base02,
+      shadow: 'none',
       selectedBackground: base0D,
       selectedForeground: base00,
+      selectedOutline: `1px solid ${base0B}`,
+      selectedShadow: 'none',
     },
     selectionMatch: { background: selectionMatch, outline: `${base03}30` },
-    matchingBracket: { background: activeBracketBg, outline: base0D },
+    matchingBracket: { background: activeBracketBg, outline: base0D, shadow: 'none' },
     nonMatchingBracket: { background: `${base08}20`, outline: base08 },
     panel: {
       background: base06,
       foreground: base02,
       border: base04,
+      borderWidth: '1px',
+      outline: 'none',
+      shadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
       buttonBackground: base01,
       buttonForeground: base02,
+      buttonBorder: 'none',
       buttonHoverBackground: '#CFD8DC',
+      buttonHoverForeground: base02,
+      buttonHoverBorder: 'none',
+      buttonHoverShadow: 'none',
+      inputBackground: base00,
+      inputBorder: `1px solid ${base04}`,
     },
     gutter: {
       background: base07,
@@ -107,27 +102,52 @@ const theme = defineTheme({
       border: base04,
       activeBackground: '#E0E0E0',
       activeForeground: base02,
+      activeFontWeight: '500',
+      activeBorder: 'none',
       foldHover: base02,
     },
     foldPlaceholder: { background: base01, foreground: base03, border: `${base03}70` },
     tooltip: {
       background: base01,
+      foreground: base02,
       border: base04,
       shadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
       listBackground: base01,
+      listBorder: 'none',
+      hoverBackground: hoverHighlight,
       selectedBackground: hoverHighlight,
       selectedForeground: base02,
+      selectedBorder: 'none',
       icon: base03,
       detail: base03,
     },
     diff: {
       insertedBackground: addedBackground,
       insertedForeground: addedText,
+      insertedBorder: `1px solid ${addedText}30`,
       deletedBackground: removedBackground,
       deletedForeground: removedText,
+      deletedBorder: `1px solid ${removedText}30`,
     },
-    diagnostic: { error: base08, warning: base0C, info: base0D },
-    scrollbar: { track: base07, thumb: base03, thumbHover: base02 },
+    diagnostic: {
+      error: base08,
+      warning: base0C,
+      info: base0D,
+      hint: base0D,
+      errorBackground: 'transparent',
+      warningBackground: 'transparent',
+      infoBackground: 'transparent',
+      borderWidth: '3px',
+      underlineWidth: '2px',
+    },
+    scrollbar: {
+      track: base07,
+      trackBorder: 'none',
+      thumb: base03,
+      thumbBorder: `3px solid ${base07}`,
+      thumbHover: base02,
+      thumbHoverShadow: 'none',
+    },
     merge: {
       backgroundColor: base01,
       borderColor: base04,
@@ -139,9 +159,12 @@ const theme = defineTheme({
     keyword: { color: base0D, fontWeight: 'bold' },
     definitionKeyword: { color: base0D },
     modifier: { color: base0C, fontStyle: 'italic' },
+    separator: { color: base0A },
     operator: { color: base0E },
     punctuation: { color: base03 },
     bracket: { color: base0F },
+    angleBracket: { color: base02 },
+    squareBracket: { color: base08 },
     name: { color: base05 },
     localVariable: { color: base0A },
     variableDefinition: { color: base0A },
@@ -155,8 +178,12 @@ const theme = defineTheme({
     namespace: { color: base0E, fontStyle: 'italic' },
     tag: { color: base09 },
     attribute: { color: base05 },
+    content: { color: base02 },
     string: { color: base10 },
     regexp: { color: base0A },
+    atom: { color: base0F },
+    constantName: { color: base09 },
+    specialVariable: { color: base05 },
     number: { color: base0C },
     constant: { color: base0C },
     comment: { fontStyle: 'italic', color: base03 },
@@ -165,6 +192,11 @@ const theme = defineTheme({
     annotation: { color: base08, fontStyle: 'italic' },
     heading: { fontWeight: 'bold', color: base11 },
     headingLevel: { color: base12 },
+    heading5: { color: base0F },
+    heading2: { color: base0C },
+    heading3: { color: base0D },
+    heading4: { color: base0E },
+    heading6: { color: base10 },
     list: { color: base11 },
     monospace: { color: base02 },
     contentSeparator: { color: base0D },
@@ -187,7 +219,6 @@ const theme = defineTheme({
     deleted: { color: base08 },
     changed: { color: base0C },
   },
-  migration,
 });
 
 /**

@@ -1,7 +1,6 @@
 import type { Extension } from '@codemirror/state';
-import { tags as t } from '@lezer/highlight';
 
-import { defineTheme, type ThemeMigration } from './theme-core';
+import { defineTheme } from './theme-core';
 import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 
 /**
@@ -44,51 +43,57 @@ const activeBracketBg = '#2c5a3a80'; // Active bracket - forest green
 const addedBackground = '#28513a80', // Forest green with transparency for insertions
   removedBackground = '#763c3c70'; // Deep red with transparency for deletions
 
-/**
- * TEMPORARY: differences between the canonical structure and this theme's pre-6.31 output, kept so the move onto
- * `defineTheme` changes nothing visually. To be removed when the theme is completed on the shared structure.
- */
-const migration: ThemeMigration = {
-  ui: {
-    '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
-      { color: base01 },
-    '.cm-panels': { borderRadius: '0 0 4px 4px' },
-  },
-  highlight: [
-    { tag: [t.color, t.standard(t.name)], color: base09, fontWeight: 'bold' },
-    { tag: t.definition(t.name), color: base06 },
-    { tag: [t.heading5, t.heading6], color: base0A },
-  ],
-};
-
 const theme = defineTheme({
   name: 'Forest',
   dark: true,
   ui: {
     background: base00,
     foreground: base01,
+    border: 'none',
     cursor: base04,
+    cursorWidth: '2px',
+    cursorShadow: 'none',
+    fatCursor: { background: `${base04}99`, border: 'none' },
     selection: selection,
+    selectionInactive: selection,
+    selectionForeground: base01,
+    selectionOutline: 'none',
     activeLine: highlightBackground,
+    activeLineBorder: { left: 'none', right: 'none' },
     ghostText: '#8fa7b5',
+    ghostTextOpacity: '0.5',
+    specialChar: invalid,
     focusRing: `0 0 0 2px ${base00}, 0 0 0 3px ${base0A}40`,
+    outlineWidth: '1px',
     searchMatch: {
       background: '#4d653b80',
       outline: `${base0A}90`,
       foreground: base01,
+      shadow: 'none',
       selectedBackground: '#42855c',
       selectedForeground: base01,
+      selectedOutline: `1px solid ${base0A}90`,
+      selectedShadow: 'none',
     },
     selectionMatch: { background: selectionMatch, outline: `${base0A}40` },
-    matchingBracket: { background: activeBracketBg, outline: `${base0A}80` },
+    matchingBracket: { background: activeBracketBg, outline: `${base0A}80`, shadow: 'none' },
     nonMatchingBracket: { background: '#5d482f80', outline: `${invalid}80` },
     panel: {
       background: darkBackground,
       foreground: base01,
       border: '#3e5059',
+      borderWidth: '1px',
+      outline: 'none',
+      shadow: 'none',
       buttonBackground: darkBackground,
       buttonForeground: base01,
+      buttonBorder: 'none',
       buttonHoverBackground: '#2d3d47',
+      buttonHoverForeground: base01,
+      buttonHoverBorder: 'none',
+      buttonHoverShadow: 'none',
+      inputBackground: base00,
+      inputBorder: '1px solid #3e5059',
     },
     gutter: {
       background: darkBackground,
@@ -96,27 +101,52 @@ const theme = defineTheme({
       border: '#3e505980',
       activeBackground: highlightBackground,
       activeForeground: base01,
+      activeFontWeight: '500',
+      activeBorder: 'none',
       foldHover: base01,
     },
     foldPlaceholder: { background: 'transparent', foreground: base03, border: `${base0A}70` },
     tooltip: {
       background: tooltipBackground,
+      foreground: base01,
       border: '#3e5059',
       shadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
       listBackground: tooltipBackground,
+      listBorder: 'none',
+      hoverBackground: 'transparent',
       selectedBackground: selection,
       selectedForeground: base01,
+      selectedBorder: 'none',
       icon: base03,
       detail: base03,
     },
     diff: {
       insertedBackground: addedBackground,
       insertedForeground: base0B,
+      insertedBorder: `1px solid ${base0B}40`,
       deletedBackground: removedBackground,
       deletedForeground: base08,
+      deletedBorder: `1px solid ${base08}40`,
     },
-    diagnostic: { error: invalid, warning: base0A, info: base0C },
-    scrollbar: { track: darkBackground, thumb: '#3e5059', thumbHover: '#4e616a' },
+    diagnostic: {
+      error: invalid,
+      warning: base0A,
+      info: base0C,
+      hint: base0C,
+      errorBackground: 'transparent',
+      warningBackground: 'transparent',
+      infoBackground: 'transparent',
+      borderWidth: '3px',
+      underlineWidth: '2px',
+    },
+    scrollbar: {
+      track: darkBackground,
+      trackBorder: 'none',
+      thumb: '#3e5059',
+      thumbBorder: `3px solid ${darkBackground}`,
+      thumbHover: '#4e616a',
+      thumbHoverShadow: 'none',
+    },
     merge: {
       backgroundColor: darkBackground,
       borderColor: '#3e5059',
@@ -133,6 +163,7 @@ const theme = defineTheme({
     name: { color: base06 },
     localVariable: { color: base07 },
     variableDefinition: { color: base07 },
+    nameDefinition: { color: base06 },
     function: { color: base07 },
     self: { color: base09 },
     label: { color: base07 },
@@ -143,12 +174,16 @@ const theme = defineTheme({
     namespace: { color: base06, fontStyle: 'italic' },
     tag: { color: base0D },
     attribute: { color: base0C },
+    content: { color: base01 },
     string: { color: base08 },
     number: { color: base09 },
     constant: { color: base09 },
     comment: { fontStyle: 'italic', color: base03 },
     meta: { color: base03 },
     processingInstruction: { color: base08 },
+    standardName: { color: base09, fontWeight: 'bold' },
+    heading5: { color: base0A },
+    heading6: { color: base0A },
     annotation: { color: invalid, fontStyle: 'italic' },
     heading: { fontWeight: 'bold', color: base0A },
     list: { color: base0A },
@@ -174,7 +209,6 @@ const theme = defineTheme({
     deleted: { color: invalid },
     changed: { color: base09 },
   },
-  migration,
 });
 
 /**

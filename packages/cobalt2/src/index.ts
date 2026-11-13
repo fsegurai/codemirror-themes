@@ -1,7 +1,6 @@
 import type { Extension } from '@codemirror/state';
-import { tags as t } from '@lezer/highlight';
 
-import { defineTheme, type ThemeMigration } from './theme-core';
+import { defineTheme } from './theme-core';
 import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 
 /**
@@ -25,9 +24,6 @@ const background = '#193549', // Main editor background
   // Searches and finds colors (exact from original)
   findMatchCurrent = '#FF720066', // Currently found item
   findMatchOther = '#CAD40F66', // Other found items
-  hoverHighlight = '#ffc60033', // Hover highlight
-  // Word highlights (exact from original)
-  wordHighlight = '#ffffff21', // Word highlight background
   // Accent colors from tokenColors (exact from original)
   blue = '#0088ff', // Comments, links
   cyan = '#80fcff', // Special keywords, module exports
@@ -52,91 +48,55 @@ const background = '#193549', // Main editor background
 const addedBackground = '#3ad90033', // Light green with transparency for insertions
   removedBackground = '#ee3a4333'; // Light red with transparency for deletions
 
-/**
- * TEMPORARY: differences between the canonical structure and this theme's pre-6.31 output, kept so the move onto
- * `defineTheme` changes nothing visually. To be removed when the theme is completed on the shared structure.
- */
-const migration: ThemeMigration = {
-  ui: {
-    '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
-      { color: foreground },
-    '.cm-searchMatch span': { color: null },
-    '.cm-searchMatch.cm-searchMatch-selected': { padding: null },
-    '.cm-searchMatch.cm-searchMatch-selected span': { color: null },
-    '.cm-search.cm-panel.cm-textfield': { backgroundColor: background, border: `1px solid ${darkGray}` },
-    '.cm-panels': { color: gray },
-    '.cm-panel button': { border: `1px solid ${darkGray}` },
-    '.cm-panel button:hover': { color: foreground },
-    '.cm-activeLine': { zIndex: null },
-    '.cm-lineNumbers': { color: gray },
-    'ins.cm-insertedLine, ins.cm-insertedLine:not(:has(.cm-changedText))': { border: `1px solid ${lightGreen}30` },
-    'del.cm-deletedLine, del, del:not(:has(.cm-deletedText))': { border: `1px solid ${pink}30` },
-    '.cm-tooltip': { color: gray },
-    '.cm-tooltip-autocomplete > ul > li': { color: gray },
-    '.cm-tooltip .cm-tooltip-arrow:before': { borderTopColor: null, borderBottomColor: null },
-    '.cm-tooltip .cm-tooltip-arrow:after': { borderTopColor: null, borderBottomColor: null },
-    '.cm-selectionMatch': { outline: null },
-    '&.cm-focused': { boxShadow: null },
-    '.cm-activeLine .cm-selectionBackground': {
-      backgroundColor: `${selection}DD`,
-      border: `1px solid ${cyan}40`,
-      borderRadius: '2px',
-    },
-    '&.cm-focused .cm-activeLine .cm-selectionBackground': {
-      backgroundColor: `${selection}FF`,
-      border: `1px solid ${cyan}60`,
-      boxShadow: `0 0 3px ${cyan}30`,
-    },
-    '&:not(.cm-focused) .cm-selectionBackground': { backgroundColor: selectionInactive },
-    '&:not(.cm-focused) .cm-activeLine .cm-selectionBackground': {
-      backgroundColor: `${selectionInactive}CC`,
-      border: `1px solid ${darkGray}80`,
-    },
-    '.cm-hoverHighlight': { backgroundColor: hoverHighlight },
-    '.cm-wordHighlight': { backgroundColor: wordHighlight, borderRadius: '2px' },
-    '.cm-specialChar': { color: '#ffffff52' },
-    '.cm-indentGuide': { borderLeft: '1px solid #3B5364' },
-  },
-  highlight: [
-    { tag: t.macroName, color: lightPink, fontStyle: 'italic' },
-    { tag: [t.color, t.definition(t.name)] },
-    { tag: [t.special(t.keyword), t.special(t.variableName), t.special(t.propertyName)], color: cyan },
-    { tag: t.character, color: lightGreen },
-    { tag: [t.paren, t.function(t.propertyName)], color: cursor },
-    { tag: [t.standard(t.propertyName), t.standard(t.tagName)], color: supportTeal },
-    { tag: [t.special(t.string), t.special(t.monospace), t.special(t.character)], color: green },
-    { tag: t.definition(t.function(t.variableName)), color: parameterYellow },
-    { tag: t.definition(t.function(t.propertyName)), color: lightBlue },
-  ],
-};
-
 const theme = defineTheme({
   name: 'Cobalt2',
   dark: true,
   ui: {
     background: background,
     foreground: foreground,
+    border: 'none',
     cursor: cursor,
+    cursorWidth: '2px',
+    cursorShadow: 'none',
+    fatCursor: { background: `${cursor}99`, border: 'none' },
     selection: selection,
+    selectionInactive: selectionInactive,
+    selectionForeground: foreground,
+    selectionOutline: 'none',
     activeLine: lineHighlight,
+    activeLineBorder: { left: 'none', right: 'none' },
     ghostText: gray,
+    ghostTextOpacity: '0.5',
+    specialChar: '#ffffff52',
     searchMatch: {
       background: findMatchCurrent,
       outline: orange,
       foreground: foreground,
+      shadow: 'none',
       selectedBackground: findMatchOther,
       selectedForeground: foreground,
+      selectedOutline: `1px solid ${orange}`,
+      selectedShadow: 'none',
     },
-    selectionMatch: { background: selectionHighlight, outline: selectionHighlight },
-    matchingBracket: { background: darkGray, outline: `${cursor}80` },
+    selectionMatch: { background: selectionHighlight, outline: `${cyan}40` },
+    matchingBracket: { background: darkGray, outline: `${cursor}80`, shadow: 'none' },
     nonMatchingBracket: { background: `${errorRed}20`, outline: errorRed },
     panel: {
       background: darkBackground,
-      foreground: cursor,
+      foreground: gray,
       border: cursor,
+      borderWidth: '1px',
+      outline: 'none',
+      shadow: 'none',
       buttonBackground: blue,
       buttonForeground: foreground,
+      buttonBorder: `1px solid ${darkGray}`,
       buttonHoverBackground: orange,
+      buttonHoverForeground: foreground,
+      buttonHoverBorder: `1px solid ${darkGray}`,
+      buttonHoverShadow: 'none',
+      inputBackground: background,
+      inputBorder: `1px solid ${darkGray}`,
     },
     gutter: {
       background: gutterBackground,
@@ -144,28 +104,54 @@ const theme = defineTheme({
       border: darkGray,
       activeBackground: 'transparent',
       activeForeground: foreground,
+      activeFontWeight: '500',
+      activeBorder: 'none',
       foldHover: cursor,
     },
     foldPlaceholder: { background: 'transparent', foreground: gray, border: `${blue}50` },
     tooltip: {
       background: panelBackground,
+      foreground: gray,
       border: darkGray,
       shadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
       listBackground: panelBackground,
+      listBorder: 'none',
+      hoverBackground: 'transparent',
       selectedBackground: background,
       selectedForeground: cursor,
+      selectedBorder: 'none',
       icon: blue,
       detail: gray,
     },
     diff: {
       insertedBackground: addedBackground,
       insertedForeground: lightGreen,
+      insertedBorder: `1px solid ${lightGreen}30`,
       deletedBackground: removedBackground,
       deletedForeground: pink,
+      deletedBorder: `1px solid ${pink}30`,
     },
-    diagnostic: { error: errorRed, warning: cursor, info: blue },
-    scrollbar: { track: darkBackground, thumb: '#406179cc', thumbHover: '#437da3cc' },
-    focusRing: 'none',
+    diagnostic: {
+      error: errorRed,
+      warning: cursor,
+      info: blue,
+      hint: blue,
+      errorBackground: 'transparent',
+      warningBackground: 'transparent',
+      infoBackground: 'transparent',
+      borderWidth: '3px',
+      underlineWidth: '2px',
+    },
+    scrollbar: {
+      track: darkBackground,
+      trackBorder: 'none',
+      thumb: '#406179cc',
+      thumbBorder: `3px solid ${darkBackground}`,
+      thumbHover: '#437da3cc',
+      thumbHoverShadow: 'none',
+    },
+    focusRing: `0 0 0 2px ${background}, 0 0 0 3px ${cyan}40`,
+    outlineWidth: '1px',
     merge: {
       backgroundColor: panelBackground,
       borderColor: darkGray,
@@ -179,25 +165,38 @@ const theme = defineTheme({
     definitionKeyword: { color: hotPink },
     operatorKeyword: { color: orange },
     modifier: { color: cursor, fontStyle: 'italic' },
+    character: { color: lightGreen },
+    macroName: { color: lightPink, fontStyle: 'italic' },
+    paren: { color: cursor },
     operator: { color: lightGray },
     punctuation: { color: lightGray },
     name: {},
     variable: { color: foreground },
+    nameDefinition: {},
+    functionDefinition: { color: parameterYellow },
     function: { color: cursor },
     self: { color: hotPink },
     label: { color: cursor },
+    specialProperty: { color: cyan },
+    method: { color: cursor },
+    standardTag: { color: supportTeal },
+    methodDefinition: { color: lightBlue },
     property: { color: lightBlue },
     type: { color: lightPink, fontStyle: 'italic' },
     tag: { color: lightBlue },
     attribute: { color: cursor, fontStyle: 'italic' },
+    content: { color: foreground },
     string: { color: lightGreen },
     escape: { color: cursor },
     number: { color: pink },
     unit: { color: parameterYellow },
+    color: {},
+    specialVariable: { color: cyan },
     constant: { color: pink },
     comment: { color: blue, fontStyle: 'italic' },
     meta: { color: lightBlue },
     processingInstruction: { color: cursor },
+    specialString: { color: green },
     annotation: { color: cursor, fontStyle: 'italic' },
     heading: { color: cursor, fontWeight: 'bold' },
     list: { color: cursor },
@@ -214,7 +213,6 @@ const theme = defineTheme({
     deleted: { color: pink },
     changed: { color: cursor },
   },
-  migration,
 });
 
 /**

@@ -1,7 +1,6 @@
 import type { Extension } from '@codemirror/state';
-import { tags as t } from '@lezer/highlight';
 
-import { defineTheme, type ThemeMigration } from './theme-core';
+import { defineTheme } from './theme-core';
 import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 
 /**
@@ -41,51 +40,57 @@ const invalid = '#d30102', // Bright red for errors
 const addedBackground = '#2aa19820', // Solarized cyan with transparency for insertions
   removedBackground = '#dc322f20'; // Solarized red with transparency for deletions
 
-/**
- * TEMPORARY: differences between the canonical structure and this theme's pre-6.31 output, kept so the move onto
- * `defineTheme` changes nothing visually. To be removed when the theme is completed on the shared structure.
- */
-const migration: ThemeMigration = {
-  ui: {
-    '.cm-panels': { color: base04 },
-  },
-  highlight: [
-    { tag: [t.color, t.constant(t.name), t.standard(t.name)], color: base0A },
-    { tag: t.separator, color: base0C },
-    { tag: t.angleBracket, color: base02 },
-    { tag: t.squareBracket, color: base08 },
-    { tag: t.heading1, color: base07 },
-  ],
-};
-
 const theme = defineTheme({
   name: 'Solarized Dark',
   dark: true,
   ui: {
     background: base00,
     foreground: base05,
+    border: 'none',
     cursor: base04,
+    cursorWidth: '2px',
+    cursorShadow: 'none',
+    fatCursor: { background: `${base04}99`, border: 'none' },
     selection: selection,
+    selectionInactive: selection,
+    selectionForeground: null,
+    selectionOutline: 'none',
     activeLine: highlightBackground,
+    activeLineBorder: { left: 'none', right: 'none' },
     ghostText: base03,
+    ghostTextOpacity: '0.5',
+    specialChar: base08,
     focusRing: `0 0 0 2px ${base00}, 0 0 0 3px ${base0D}40`,
+    outlineWidth: '1px',
     searchMatch: {
       background: `${base02}99`,
       outline: base0D,
       foreground: base06,
+      shadow: 'none',
       selectedBackground: base0D,
       selectedForeground: base07,
+      selectedOutline: `1px solid ${base0D}`,
+      selectedShadow: 'none',
     },
     selectionMatch: { background: selectionMatch, outline: `${base02}50` },
-    matchingBracket: { background: activeBracketBg, outline: base0D },
+    matchingBracket: { background: activeBracketBg, outline: base0D, shadow: 'none' },
     nonMatchingBracket: { background: `${base08}40`, outline: invalid },
     panel: {
       background: darkBackground,
-      foreground: base05,
+      foreground: base04,
       border: base01,
+      borderWidth: '1px',
+      outline: 'none',
+      shadow: 'none',
       buttonBackground: base01,
       buttonForeground: base05,
+      buttonBorder: 'none',
       buttonHoverBackground: highlightBackground,
+      buttonHoverForeground: base05,
+      buttonHoverBorder: 'none',
+      buttonHoverShadow: 'none',
+      inputBackground: base00,
+      inputBorder: `1px solid ${base01}`,
     },
     gutter: {
       background: darkBackground,
@@ -93,27 +98,52 @@ const theme = defineTheme({
       border: base01,
       activeBackground: base01,
       activeForeground: base05,
+      activeFontWeight: '500',
+      activeBorder: 'none',
       foldHover: base04,
     },
     foldPlaceholder: { background: base01, foreground: base03, border: `${base02}70` },
     tooltip: {
       background: base01,
+      foreground: base05,
       border: base02,
       shadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
       listBackground: base01,
+      listBorder: 'none',
+      hoverBackground: 'transparent',
       selectedBackground: selection,
       selectedForeground: base06,
+      selectedBorder: 'none',
       icon: base03,
       detail: base03,
     },
     diff: {
       insertedBackground: addedBackground,
       insertedForeground: base0B,
+      insertedBorder: `1px solid ${base0B}40`,
       deletedBackground: removedBackground,
       deletedForeground: base08,
+      deletedBorder: `1px solid ${base08}40`,
     },
-    diagnostic: { error: base08, warning: base0A, info: base0D },
-    scrollbar: { track: darkBackground, thumb: base01, thumbHover: base02 },
+    diagnostic: {
+      error: base08,
+      warning: base0A,
+      info: base0D,
+      hint: base0D,
+      errorBackground: 'transparent',
+      warningBackground: 'transparent',
+      infoBackground: 'transparent',
+      borderWidth: '3px',
+      underlineWidth: '2px',
+    },
+    scrollbar: {
+      track: darkBackground,
+      trackBorder: 'none',
+      thumb: base01,
+      thumbBorder: `3px solid ${darkBackground}`,
+      thumbHover: base02,
+      thumbHoverShadow: 'none',
+    },
     merge: {
       backgroundColor: darkBackground,
       borderColor: base02,
@@ -125,9 +155,12 @@ const theme = defineTheme({
     keyword: { color: base0B, fontWeight: 'bold' },
     definitionKeyword: { color: base0B },
     modifier: { color: base0F, fontStyle: 'italic' },
+    separator: { color: base0C },
     operator: { color: base0E },
     punctuation: { color: base04 },
     bracket: { color: base0F },
+    angleBracket: { color: base02 },
+    squareBracket: { color: base08 },
     name: { color: base0C },
     variable: { color: base05 },
     localVariable: { color: base0C },
@@ -142,8 +175,11 @@ const theme = defineTheme({
     namespace: { color: base0F, fontStyle: 'italic' },
     tag: { color: base0D },
     attribute: { color: base05 },
+    content: { color: base05 },
     string: { color: base0A },
     regexp: { color: invalid },
+    constantName: { color: base0A },
+    standardName: { color: base0A },
     number: { color: base0F },
     constant: { color: base0F },
     comment: { fontStyle: 'italic', color: base02 },
@@ -152,6 +188,7 @@ const theme = defineTheme({
     annotation: { color: invalid, fontStyle: 'italic' },
     heading: { fontWeight: 'bold', color: base0A },
     headingLevel: { color: base06 },
+    heading1: { color: base07 },
     list: { color: base0A },
     quote: { color: base0B },
     monospace: { color: base05 },
@@ -175,7 +212,6 @@ const theme = defineTheme({
     deleted: { color: base08 },
     changed: { color: base0F },
   },
-  migration,
 });
 
 /**

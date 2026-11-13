@@ -1,7 +1,6 @@
 import type { Extension } from '@codemirror/state';
-import { tags as t } from '@lezer/highlight';
 
-import { defineTheme, type ThemeMigration } from './theme-core';
+import { defineTheme } from './theme-core';
 import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 
 /**
@@ -41,55 +40,57 @@ const base00 = '#282b2e', // Background (authentic IntelliJ IDEA dark theme)
   addedBackground = '#294436', // Dark green for insertions, matching IntelliJ
   removedBackground = '#484a4a'; // Dark gray/red for deletions
 
-/**
- * TEMPORARY: differences between the canonical structure and this theme's pre-6.31 output, kept so the move onto
- * `defineTheme` changes nothing visually. To be removed when the theme is completed on the shared structure.
- */
-const migration: ThemeMigration = {
-  ui: {
-    '.cm-selectionLayer': { zIndex: null },
-    '.cm-searchMatch': { color: null },
-    '.cm-panels': { borderRadius: null },
-    '.cm-panels.cm-panels-top': { borderBottom: '2px solid #5b5b5b' },
-    '.cm-panels.cm-panels-bottom': { borderTop: '2px solid #5b5b5b' },
-    '.cm-activeLine': { zIndex: null },
-    '.cm-tooltip-autocomplete > ul': { backgroundColor: null, border: null },
-  },
-  highlight: [
-    { tag: [t.bool, t.atom, t.special(t.variableName)], color: base05 },
-    { tag: t.brace, color: base01 },
-    { tag: t.definition(t.function(t.variableName)), color: base07 },
-  ],
-};
-
 const theme = defineTheme({
   name: 'Android Studio',
   dark: true,
   ui: {
     background: base00,
     foreground: base01,
+    border: 'none',
     cursor: cursor,
+    cursorWidth: '2px',
+    cursorShadow: 'none',
+    fatCursor: { background: `${cursor}99`, border: 'none' },
     selection: selectionBackground,
+    selectionInactive: selectionBackground,
+    selectionForeground: null,
+    selectionOutline: 'none',
     activeLine: `${highlightBackground}21`,
+    activeLineBorder: { left: 'none', right: 'none' },
     ghostText: '#a9a9a9',
+    ghostTextOpacity: '0.5',
+    specialChar: invalid,
     focusRing: `0 0 0 2px ${base02}, 0 0 0 4px ${base00}`,
+    outlineWidth: '1px',
     searchMatch: {
       background: '#32593d',
       outline: cursor,
       foreground: cursor,
+      shadow: 'none',
       selectedBackground: '#375580',
       selectedForeground: cursor,
+      selectedOutline: `1px solid ${cursor}`,
+      selectedShadow: 'none',
     },
     selectionMatch: { background: '#32593d40', outline: base0D },
-    matchingBracket: { background: activeBracketBg, outline: activeBracketBorder },
+    matchingBracket: { background: activeBracketBg, outline: activeBracketBorder, shadow: 'none' },
     nonMatchingBracket: { background: '#53383e', outline: invalid },
     panel: {
       background: gutterBackground,
       foreground: base01,
       border: '#5b5b5b',
+      borderWidth: '2px',
+      outline: 'none',
+      shadow: 'none',
       buttonBackground: gutterBackground,
       buttonForeground: base01,
+      buttonBorder: 'none',
       buttonHoverBackground: '#404040',
+      buttonHoverForeground: base01,
+      buttonHoverBorder: 'none',
+      buttonHoverShadow: 'none',
+      inputBackground: base00,
+      inputBorder: '1px solid #5b5b5b',
     },
     gutter: {
       background: gutterBackground,
@@ -97,27 +98,52 @@ const theme = defineTheme({
       border: base02,
       activeBackground: highlightBackground,
       activeForeground: '#c0c0c0',
+      activeFontWeight: '500',
+      activeBorder: 'none',
       foldHover: base01,
     },
     foldPlaceholder: { background: base03, foreground: '#a1a1a1', border: base04 },
     tooltip: {
       background: base03,
+      foreground: base01,
       border: '#5b5b5b',
       shadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
       selectedBackground: selectionBackground,
       selectedForeground: cursor,
+      selectedBorder: 'none',
       icon: base04,
       detail: base04,
       listBackground: base03,
+      listBorder: 'none',
+      hoverBackground: 'transparent',
     },
     diff: {
       insertedBackground: addedBackground,
       insertedForeground: base0A,
+      insertedBorder: `1px solid ${base0A}40`,
       deletedBackground: removedBackground,
       deletedForeground: base05,
+      deletedBorder: `1px solid ${base05}40`,
     },
-    diagnostic: { error: invalid, warning: base0F, info: base0D },
-    scrollbar: { track: gutterBackground, thumb: '#5a5a5a', thumbHover: '#6e6e6e' },
+    diagnostic: {
+      error: invalid,
+      warning: base0F,
+      info: base0D,
+      hint: base0D,
+      errorBackground: 'transparent',
+      warningBackground: 'transparent',
+      infoBackground: 'transparent',
+      borderWidth: '3px',
+      underlineWidth: '2px',
+    },
+    scrollbar: {
+      track: gutterBackground,
+      trackBorder: 'none',
+      thumb: '#5a5a5a',
+      thumbBorder: `3px solid ${gutterBackground}`,
+      thumbHover: '#6e6e6e',
+      thumbHoverShadow: 'none',
+    },
     merge: {
       backgroundColor: gutterBackground,
       borderColor: '#5b5b5b',
@@ -132,6 +158,8 @@ const theme = defineTheme({
     operator: { color: base05 },
     punctuation: { color: base01 },
     bracket: { color: base0E },
+    brace: { color: base01 },
+    functionDefinition: { color: base07 },
     name: { color: base07 },
     function: { color: base01 },
     self: { color: base05 },
@@ -143,6 +171,7 @@ const theme = defineTheme({
     namespace: { color: base07, fontStyle: 'italic' },
     tag: { color: base0F },
     attribute: { color: base01 },
+    content: { color: base01 },
     string: { color: base0A },
     number: { color: base06 },
     constant: { color: base06 },
@@ -150,6 +179,8 @@ const theme = defineTheme({
     docComment: { fontStyle: 'italic', color: base0D },
     meta: { color: base08 },
     processingInstruction: { color: base0A },
+    atom: { color: base05 },
+    specialVariable: { color: base05 },
     annotation: { color: base09, fontStyle: 'italic' },
     heading: { fontWeight: 'bold', color: base0B },
     headingLevel: { color: base0B },
@@ -166,7 +197,6 @@ const theme = defineTheme({
     deleted: { color: invalid },
     changed: { color: base06 },
   },
-  migration,
 });
 
 /**
