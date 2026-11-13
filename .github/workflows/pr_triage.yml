@@ -1,24 +1,38 @@
 name: "Pull Request Triage"
+
+# Security: pull_request_target runs with a write token in the context of the base repository.
+# This workflow must never check out, build or execute code from the pull request, and must never
+# interpolate ${{ github.event.* }} values into run/script bodies (read them from context.payload).
 on:
   pull_request_target:
-    types: [ opened, ready_for_review, reopened ]
+    types: [opened, ready_for_review, reopened, synchronize]
 
 permissions:
   contents: read
-  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   triage:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      # Grab sources to get latest labeler.yml
+      # Grab the trusted base sources only to read .github/labeler.yml (never the PR head).
       - name: Fetch sources
         uses: actions/checkout@v6
         with:
-          # Ensure we pin the source origin as pull_request_target run under forks.
-          fetch-depth: 0
           repository: fsegurai/codemirror-themes
           ref: main
+          persist-credentials: false
 
       - name: Update labels based on changes
         uses: actions/labeler@v5
@@ -26,81 +40,78 @@ jobs:
           sync-labels: true
           dot: true
 
-      - name: Assign PR creator and add welcome comment
-        uses: actions/github-script@v6
+      - name: Assign PR creator
+        if: github.event.action != 'synchronize'
+        uses: actions/github-script@v9
         with:
           script: |
             const pr = context.payload.pull_request;
             const assignees = pr.assignees.map(assignee => assignee.login);
-            let assignee = pr.user.login;
+            const author = pr.user.login;
 
-            // Assign PR creator
-            if (!assignees.includes(assignee)) {
-              if (assignee.includes('bot')) {
-                await github.rest.pulls.requestReviewers({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: pr.number,
-                  reviewers: ['fsegurai']
-                });
-              } else {
-                await github.rest.issues.addAssignees({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: pr.number,
-                  assignees: [assignee]
-                });
-              }
+            if (assignees.includes(author)) {
+              return;
             }
 
-      - name: Add first-time contributor welcome
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const pr = context.payload.pull_request;
-            const author = pr.user.login;
-            
-            // Get all PRs from this author
-            const userPRs = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              creator: author,
-              state: 'all'
-            });
-            
-            // If this is their first PR, send welcome message
-            if (userPRs.data.length === 1) {
-              await github.rest.issues.createComment({
+            if (pr.user.type === 'Bot') {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                reviewers: ['fsegurai']
+              });
+            } else {
+              await github.rest.issues.addAssignees({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: pr.number,
-                body: '👋 **Welcome, @' + author + '!**\n\nThank you for your contribution to codemirror-themes! Here\'s what to expect:\n\n- **Tests run automatically** - our CI pipeline validates linting and builds\n- **Reviews** - a maintainer will review your changes\n- **Labels** - we auto-tag PRs to help organize discussions\n- **Questions?** - feel free to ask in the comments\n\n📚 **Helpful Resources:**\n- [Contributing Guide](./CONTRIBUTING.md)\n- [AGENTS Guide](./AGENTS.md) - Project architecture\n- [Development Setup](./README.md#development)\n\nWe appreciate your help! 🎉'
+                assignees: [author]
               });
             }
 
-      - name: Add Dependabot PR comment
-        uses: actions/github-script@v6
+      - name: Add first-time contributor welcome
+        if: github.event.action == 'opened'
+        uses: actions/github-script@v9
         with:
           script: |
             const pr = context.payload.pull_request;
-            const author = pr.user.login;
-            
-            // Check if this is a Dependabot PR
-            if (!author.includes('dependabot')) {
+            const firstTime = ['FIRST_TIME_CONTRIBUTOR', 'FIRST_TIMER'].includes(pr.author_association);
+
+            if (!firstTime || pr.user.type === 'Bot') {
               return;
             }
-            
-            // Check if we already commented
-            const comments = await github.rest.issues.listComments({
+
+            const docs = 'https://github.com/fsegurai/codemirror-themes/blob/main';
+            await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: pr.number
+              issue_number: pr.number,
+              body: '👋 **Welcome, @' + pr.user.login + '!**\n\nThank you for your contribution to codemirror-themes! Here\'s what to expect:\n\n- **Tests run automatically** - our CI pipeline validates linting, tests and builds\n- **Reviews** - a maintainer will review your changes\n- **Labels** - we auto-tag PRs to help organize discussions\n- **Questions?** - feel free to ask in the comments\n\n📚 **Helpful Resources:**\n- [Contributing Guide](' + docs + '/CONTRIBUTING.md)\n- [AGENTS Guide](' + docs + '/AGENTS.md) - Project architecture\n- [README](' + docs + '/README.md)\n\nWe appreciate your help! 🎉'
             });
-            
-            const hasDepbotComment = comments.data.some(c => 
-              c.body.includes('Dependabot Update') || c.body.includes('@dependabot')
+
+      - name: Add Dependabot PR comment
+        if: github.event.action != 'synchronize'
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+
+            if (pr.user.type !== 'Bot' || !pr.user.login.startsWith('dependabot')) {
+              return;
+            }
+
+            // Check if we already commented
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              per_page: 100
+            });
+
+            const hasDepbotComment = comments.some(c =>
+              (c.body || '').includes('Dependabot Update')
             );
-            
+
             if (!hasDepbotComment) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
@@ -110,39 +121,40 @@ jobs:
               });
             }
 
-      - name: Request specific reviewers for themes
-        uses: actions/github-script@v6
+      - name: Note modified themes in PR body
+        uses: actions/github-script@v9
         with:
           script: |
             const pr = context.payload.pull_request;
-            const files = await github.rest.pulls.listFiles({
+            const files = await github.paginate(github.rest.pulls.listFiles, {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: pr.number
+              pull_number: pr.number,
+              per_page: 100
             });
-            
+
             // Check if it's a theme-specific change
-            const themeFiles = files.data.filter(f => f.filename.startsWith('packages/'));
-            
+            const themeFiles = files.filter(f => f.filename.startsWith('packages/'));
+
             if (themeFiles.length > 0 && themeFiles.length <= 5) {
               const themes = new Set();
               themeFiles.forEach(f => {
                 const match = f.filename.match(/packages\/([^/]+)\//);
                 if (match) themes.add(match[1]);
               });
-            
+
               if (themes.size > 0) {
-                const body = `📦 **Theme(s) Modified:** ${Array.from(themes).join(', ')}`;
-            
+                const note = `📦 **Theme(s) Modified:** ${Array.from(themes).join(', ')}`;
+                const body = pr.body || '';
+
                 // Add to PR body if not already there
-                if (!pr.body.includes(body)) {
+                if (!body.includes(note)) {
                   await github.rest.pulls.update({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     pull_number: pr.number,
-                    body: pr.body ? pr.body + '\n\n' + body : body
+                    body: body ? body + '\n\n' + note : note
                   });
                 }
               }
             }
-

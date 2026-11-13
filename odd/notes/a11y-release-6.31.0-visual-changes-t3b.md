@@ -1,0 +1,31 @@
+| theme | tags newly styled | tags changed | UI added | UI changed | UI removed | exports |
+|---|---|---|---|---|---|---|
+| abcdef | 14 | 0 | 43 | 24 | 0 | same |
+| abyss | 14 | 0 | 43 | 24 | 0 | same |
+| android-studio | 14 | 0 | 43 | 22 | 0 | same |
+| andromeda | 14 | 0 | 41 | 22 | 0 | same |
+| basic-dark | 14 | 0 | 41 | 22 | 0 | same |
+| basic-light | 14 | 0 | 41 | 23 | 0 | same |
+| catppuccin-mocha | 14 | 0 | 41 | 19 | 0 | same |
+| cobalt2 | 14 | 4 | 43 | 26 | 6 | same |
+| forest | 14 | 0 | 41 | 22 | 0 | same |
+| github-dark | 14 | 0 | 41 | 22 | 0 | same |
+| github-light | 14 | 0 | 40 | 23 | 0 | same |
+| gruvbox-dark | 14 | 0 | 41 | 22 | 0 | same |
+| gruvbox-light | 14 | 0 | 40 | 23 | 0 | same |
+| high-contrast-dark | 14 | 0 | 41 | 17 | 0 | same |
+| high-contrast-light | 14 | 0 | 41 | 17 | 0 | same |
+| material-dark | 14 | 0 | 41 | 22 | 0 | same |
+| material-light | 14 | 0 | 40 | 23 | 0 | same |
+| material-ocean | 14 | 0 | 41 | 22 | 0 | same |
+| monokai | 14 | 0 | 41 | 22 | 0 | same |
+| nord | 14 | 0 | 41 | 22 | 0 | same |
+| palenight | 14 | 0 | 41 | 22 | 0 | same |
+| solarized-dark | 14 | 0 | 41 | 23 | 0 | same |
+| solarized-light | 14 | 0 | 41 | 22 | 0 | same |
+| synthwave-84 | 14 | 0 | 41 | 17 | 0 | same |
+| tokyo-night-day | 14 | 0 | 42 | 23 | 0 | same |
+| tokyo-night-storm | 14 | 0 | 42 | 22 | 0 | same |
+| volcano | 14 | 0 | 42 | 23 | 0 | same |
+| vscode-dark | 14 | 0 | 42 | 23 | 0 | same |
+| vscode-light | 14 | 0 | 42 | 23 | 0 | same |

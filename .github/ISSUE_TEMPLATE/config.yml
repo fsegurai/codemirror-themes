@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: @fsegurai/codemirror-themes Issues
-    url: https://github.com/fsegurai/codemirror-themes/issues
-    about: This is for development, support and technical issues/questions.
+  - name: '@fsegurai/codemirror-themes Documentation'
+    url: https://github.com/fsegurai/codemirror-themes#readme
+    about: Read the documentation for installation, usage and available themes before opening an issue.

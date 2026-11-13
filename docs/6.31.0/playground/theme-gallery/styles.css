@@ -1,0 +1,107 @@
+body {
+  font-family: var(--pg-font);
+}
+
+/* Page chrome uses the --pg-* variables of the preview, so it reads well in light and dark. */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--pg-border);
+  border-radius: var(--pg-radius);
+  background: var(--pg-surface);
+  color: var(--pg-text);
+}
+
+.toolbar label {
+  color: var(--pg-text-muted);
+  font-weight: 600;
+}
+
+.toolbar select {
+  min-width: 12rem;
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--pg-accent);
+  outline-offset: 2px;
+}
+
+.badge {
+  padding: 2px 10px;
+  border: 1px solid var(--pg-border);
+  border-radius: 999px;
+  background: var(--pg-surface-alt);
+  color: var(--pg-text-muted);
+  font-size: 0.85em;
+}
+
+/*
+ * The frame around the editor; the CodeMirror theme colors everything inside it. The padding leaves room for the
+ * theme's focus ring (a box-shadow outside the editor), so the frame neither clips nor replaces it.
+ */
+.frame {
+  padding: 4px;
+  border: 1px solid var(--pg-border);
+  border-radius: var(--pg-radius);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--pg-text) 12%, transparent);
+}
+
+.toolbar fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.toolbar legend {
+  float: left;
+  margin-right: 8px;
+  color: var(--pg-text-muted);
+  font-weight: 600;
+}
+
+.toolbar fieldset label {
+  color: var(--pg-text);
+  font-weight: normal;
+}
+
+/* One card per theme; the grid wraps to as many columns as the preview is wide. */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gallery figure {
+  margin: 0;
+}
+
+.gallery figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-family: var(--pg-mono);
+  font-size: 0.85em;
+}
+
+.gallery .frame {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Smaller text so the snippet fits in a card. */
+.gallery .cm-editor {
+  font-size: 12px;
+}

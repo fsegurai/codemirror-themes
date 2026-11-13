@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-themes",
-  "version": "6.30.6",
+  "version": "6.31.0",
   "description": "Theme packages for the CodeMirror editor",
   "type": "module",
   "license": "MIT",
@@ -89,42 +89,49 @@
     "generate:helpers": "bun packages/.helper/utils/generate-utils.ts",
     "generate:bundle": "bun packages/.helper/utils/generate-bundle.ts",
     "generate:readme": "bun packages/.helper/docs/generate-readme.ts",
+    "generate:theme-docs": "bun packages/.helper/docs/generate-theme-docs.ts",
     "generate:manifest": "manifest-generator --route ./docs/$npm_package_version/content --output ./docs/$npm_package_version",
     "version:update": "bun packages/.helper/versions/update-packages-versions.ts --write",
     "version:preview": "bun packages/.helper/versions/update-packages-versions.ts --dry-run",
-    "version:skip": "bun packages/.helper/versions/update-packages-versions.ts --dry-run --skip '@fsegurai/codemirror-theme-bundle'"
+    "version:skip": "bun packages/.helper/versions/update-packages-versions.ts --dry-run --skip '@fsegurai/codemirror-theme-bundle'",
+    "test": "bun test",
+    "test:types": "tsc --noEmit -p tests && tsc --noEmit -p packages/.helper",
+    "generate:playground-pins": "bun packages/.helper/docs/sync-playground-pins.ts && biome format --write docs/$npm_package_version/playground/playground.json"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.2",
-    "@codemirror/language": "6.12.4",
+    "@codemirror/language": "6.13.1",
     "@codemirror/language-data": "^6.5.2",
-    "@codemirror/legacy-modes": "^6.5.4",
-    "@codemirror/merge": "^6.12.2",
-    "@codemirror/state": "^6.7.4",
+    "@codemirror/legacy-modes": "^6.5.5",
+    "@codemirror/merge": "^6.12.3",
+    "@codemirror/state": "^6.7.6",
     "@fsegurai/codemirror-theme-bundle": "workspace:*",
     "@material/web": "^2.5.0",
     "clipboard": "^2.0.11",
     "codemirror": "^6.0.2",
-    "marked": "^18.0.11",
+    "marked": "^18.2.0",
     "marked-highlight": "^2.2.4",
     "prismjs": "^1.30.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.12",
+    "@biomejs/biome": "2.6.7",
     "@codemirror/buildhelper": "^1.0.2",
+    "@codemirror/view": "6.43.15",
     "@fsegurai/manifest-generator": "^1.1.0",
-    "@types/node": "26.4.1",
+    "@lezer/highlight": "1.2.5",
+    "@types/bun": "^1.4.4",
+    "@types/node": "26.6.6",
     "@types/prismjs": "^1.26.6",
     "@typescript/typescript6": "^6.0.2",
     "husky": "^9.1.7",
-    "portless": "^0.15.6",
-    "rimraf": "^6.1.3",
+    "portless": "^0.17.0",
+    "rimraf": "^6.1.4",
     "terser": "^5.51.2",
     "typescript": "7.0.2",
-    "vite": "^8.2.2"
+    "vite": "^8.3.8"
   },
   "overrides": {
-    "@codemirror/view": "6.43.8",
+    "@codemirror/view": "6.43.15",
     "serialize-javascript": "7.0.5"
   }
 }

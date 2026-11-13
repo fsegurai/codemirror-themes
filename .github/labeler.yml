@@ -1,218 +1,257 @@
+# actions/labeler v5 configuration. Read from the base branch by .github/workflows/pr_triage.yml.
+
 infra:
   - changed-files:
-      - any-glob-to-any-file: [
-        '!.github/workflows/**',
-        '.github/**',
-        '.editorconfig',
-        '.env*',
-        'Makefile',
-        'babel.config.js',
-        'eslint*.js',
-        'jest.config.js',
-        'release.config.js',
-        'vite.config.ts',
-        'tsconfig*.json',
-      ]
+      - any-glob-to-any-file:
+          - '.github/*.yml'
+          - '.github/ISSUE_TEMPLATE/**'
+          - '.editorconfig'
+          - '.gitignore'
+          - 'env.example'
+          - 'Makefile'
+          - 'biome.json'
+          - 'bunfig.toml'
+          - '.husky/**'
+          - 'vite.config.ts'
+          - 'vite-env.d.ts'
+          - 'tsconfig*.json'
 
 dependencies:
   - changed-files:
-      - any-glob-to-any-file: [
-        'bun.lock',
-        'package-lock.json',
-        'yarn.lock',
-      ]
+      - any-glob-to-any-file:
+          - 'bun.lock'
+          - 'package.json'
+          - 'packages/*/package.json'
 
 ci-cd:
   - changed-files:
-      - any-glob-to-any-file: [
-        '.github/workflows/**',
-        'Dockerfile',
-        'Jenkinsfile',
-      ]
+      - any-glob-to-any-file:
+          - '.github/workflows/**'
+          - 'pipelines/**'
 
 demo:
   - changed-files:
-      - any-glob-to-any-file: [
-        'demo/**'
-      ]
+      - any-glob-to-any-file:
+          - 'demo/**'
 
 demo-assets:
   - changed-files:
-      - any-glob-to-any-file: [
-        'demo/public/**'
-      ]
+      - any-glob-to-any-file:
+          - 'demo/public/**'
 
 demo-styles:
   - changed-files:
-      - any-glob-to-any-file: [
-        'demo/styles/**',
-      ]
+      - any-glob-to-any-file:
+          - 'demo/styles/**'
 
 demo-scripts:
   - changed-files:
-      - any-glob-to-any-file: [
-        'demo/scripts/**',
-      ]
+      - any-glob-to-any-file:
+          - 'demo/scripts/**'
 
 styles:
   - changed-files:
-      - any-glob-to-any-file: [
-        '**/*.scss',
-        '**/*.css',
-      ]
+      - any-glob-to-any-file:
+          - '**/*.scss'
+          - '**/*.css'
 
 library:
   - changed-files:
-      - any-glob-to-any-file: [
-        'packages/**',
-      ]
+      - any-glob-to-any-file:
+          - 'packages/**'
 
 theme-bundle:
   - changed-files:
-      - any-glob-to-any-file: [
-        'packages/bundle/**'
-      ]
+      - any-glob-to-any-file:
+          - 'packages/bundle/**'
 
 theme-helper:
   - changed-files:
-      - any-glob-to-any-file: [
-        'packages/.helper/**'
-      ]
+      - any-glob-to-any-file:
+          - 'packages/.helper/**'
 
 theme-abcdef:
   - changed-files:
-      - any-glob-to-any-file: ['packages/abcdef/**']
+      - any-glob-to-any-file:
+          - 'packages/abcdef/**'
 
 theme-abyss:
   - changed-files:
-      - any-glob-to-any-file: ['packages/abyss/**']
+      - any-glob-to-any-file:
+          - 'packages/abyss/**'
 
 theme-android-studio:
   - changed-files:
-      - any-glob-to-any-file: ['packages/android-studio/**']
+      - any-glob-to-any-file:
+          - 'packages/android-studio/**'
 
 theme-andromeda:
   - changed-files:
-      - any-glob-to-any-file: ['packages/andromeda/**']
+      - any-glob-to-any-file:
+          - 'packages/andromeda/**'
 
 theme-basic-dark:
   - changed-files:
-      - any-glob-to-any-file: ['packages/basic-dark/**']
+      - any-glob-to-any-file:
+          - 'packages/basic-dark/**'
 
 theme-basic-light:
   - changed-files:
-      - any-glob-to-any-file: ['packages/basic-light/**']
+      - any-glob-to-any-file:
+          - 'packages/basic-light/**'
+
+theme-catppuccin-latte:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'packages/catppuccin-latte/**'
 
 theme-catppuccin-mocha:
   - changed-files:
-      - any-glob-to-any-file: ['packages/catppuccin-mocha/**']
+      - any-glob-to-any-file:
+          - 'packages/catppuccin-mocha/**'
 
 theme-cobalt2:
   - changed-files:
-      - any-glob-to-any-file: ['packages/cobalt2/**']
+      - any-glob-to-any-file:
+          - 'packages/cobalt2/**'
+
+theme-dracula:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'packages/dracula/**'
 
 theme-forest:
   - changed-files:
-      - any-glob-to-any-file: ['packages/forest/**']
+      - any-glob-to-any-file:
+          - 'packages/forest/**'
 
 theme-github-dark:
   - changed-files:
-      - any-glob-to-any-file: ['packages/github-dark/**']
+      - any-glob-to-any-file:
+          - 'packages/github-dark/**'
 
 theme-github-light:
   - changed-files:
-      - any-glob-to-any-file: ['packages/github-light/**']
+      - any-glob-to-any-file:
+          - 'packages/github-light/**'
 
 theme-gruvbox-dark:
   - changed-files:
-      - any-glob-to-any-file: ['packages/gruvbox-dark/**']
+      - any-glob-to-any-file:
+          - 'packages/gruvbox-dark/**'
 
 theme-gruvbox-light:
   - changed-files:
-      - any-glob-to-any-file: ['packages/gruvbox-light/**']
+      - any-glob-to-any-file:
+          - 'packages/gruvbox-light/**'
 
 theme-high-contrast-dark:
   - changed-files:
-      - any-glob-to-any-file: ['packages/high-contrast-dark/**']
+      - any-glob-to-any-file:
+          - 'packages/high-contrast-dark/**'
 
 theme-high-contrast-light:
   - changed-files:
-      - any-glob-to-any-file: ['packages/high-contrast-light/**']
+      - any-glob-to-any-file:
+          - 'packages/high-contrast-light/**'
 
 theme-material-dark:
   - changed-files:
-      - any-glob-to-any-file: ['packages/material-dark/**']
+      - any-glob-to-any-file:
+          - 'packages/material-dark/**'
 
 theme-material-light:
   - changed-files:
-      - any-glob-to-any-file: ['packages/material-light/**']
+      - any-glob-to-any-file:
+          - 'packages/material-light/**'
 
 theme-material-ocean:
   - changed-files:
-      - any-glob-to-any-file: ['packages/material-ocean/**']
+      - any-glob-to-any-file:
+          - 'packages/material-ocean/**'
 
 theme-monokai:
   - changed-files:
-      - any-glob-to-any-file: ['packages/monokai/**']
+      - any-glob-to-any-file:
+          - 'packages/monokai/**'
 
 theme-nord:
   - changed-files:
-      - any-glob-to-any-file: ['packages/nord/**']
+      - any-glob-to-any-file:
+          - 'packages/nord/**'
+
+theme-one-dark:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'packages/one-dark/**'
 
 theme-palenight:
   - changed-files:
-      - any-glob-to-any-file: ['packages/palenight/**']
+      - any-glob-to-any-file:
+          - 'packages/palenight/**'
+
+theme-rose-pine-dawn:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'packages/rose-pine-dawn/**'
 
 theme-solarized-dark:
   - changed-files:
-      - any-glob-to-any-file: ['packages/solarized-dark/**']
+      - any-glob-to-any-file:
+          - 'packages/solarized-dark/**'
 
 theme-solarized-light:
   - changed-files:
-      - any-glob-to-any-file: ['packages/solarized-light/**']
+      - any-glob-to-any-file:
+          - 'packages/solarized-light/**'
 
 theme-synthwave-84:
   - changed-files:
-      - any-glob-to-any-file: ['packages/synthwave-84/**']
+      - any-glob-to-any-file:
+          - 'packages/synthwave-84/**'
 
 theme-tokyo-night-day:
   - changed-files:
-      - any-glob-to-any-file: ['packages/tokyo-night-day/**']
+      - any-glob-to-any-file:
+          - 'packages/tokyo-night-day/**'
 
 theme-tokyo-night-storm:
   - changed-files:
-      - any-glob-to-any-file: ['packages/tokyo-night-storm/**']
+      - any-glob-to-any-file:
+          - 'packages/tokyo-night-storm/**'
 
 theme-volcano:
   - changed-files:
-      - any-glob-to-any-file: ['packages/volcano/**']
+      - any-glob-to-any-file:
+          - 'packages/volcano/**'
 
 theme-vscode-dark:
   - changed-files:
-      - any-glob-to-any-file: ['packages/vscode-dark/**']
+      - any-glob-to-any-file:
+          - 'packages/vscode-dark/**'
 
 theme-vscode-light:
   - changed-files:
-      - any-glob-to-any-file: ['packages/vscode-light/**']
+      - any-glob-to-any-file:
+          - 'packages/vscode-light/**'
 
 tests-library:
   - changed-files:
-      - any-glob-to-any-file: [
-        'tests/**',
-        'test/**',
-        '**/spec/**',
-        '**/*.test.*',
-        '**/*.test-d.*',
-        '**/*.spec.*',
-      ]
+      - any-glob-to-any-file:
+          - 'tests/**'
+          - 'test/**'
+          - '**/spec/**'
+          - '**/*.test.*'
+          - '**/*.test-d.*'
+          - '**/*.spec.*'
 
 documentation:
   - changed-files:
-      - any-glob-to-any-file: [
-        'docs/**',
-        'AGENTS.md',
-        'CHANGELOG.md',
-        'CONTRIBUTING.md',
-        'LICENSE',
-        'README.md',
-      ]
+      - any-glob-to-any-file:
+          - 'docs/**'
+          - 'AGENTS.md'
+          - 'CHANGELOG.md'
+          - 'CONTRIBUTING.md'
+          - 'LICENSE'
+          - 'README.md'
+          - 'packages/*/README.md'
