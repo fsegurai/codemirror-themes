@@ -38,8 +38,8 @@ describe('focus indicator survives forced-colors mode (Windows High Contrast)', 
   test.each(themes.map((theme) => [theme.id, theme] as const))(
     '%s keeps a transparent >= 2px outline on focus',
     (_id, theme) => {
-      const focused = ruleFor(editorCss(theme.extension), '&.cm-focused');
-      expect(focused?.outline).toMatch(/^(?:[2-9]|\d{2,})px solid transparent$/);
+      const { outline } = ruleFor(editorCss(theme.extension), '&.cm-focused') ?? {};
+      expect(outline).toMatch(/^(?:[2-9]|\d{2,})px solid transparent$/);
     },
   );
 });
