@@ -9,23 +9,32 @@ on:
       - 'package.json'
       - 'bun.lock'
       - 'packages/*/package.json'
+      - '.github/workflows/dependency-audit.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
-  pull-requests: write
-  issues: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   audit:
     name: Dependency Health Audit
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -39,19 +48,22 @@ jobs:
         id: security
         run: |
           echo "Running security audit..."
-          bun audit --production > audit-security.txt 2>&1 || true
-          
-          if grep -q "vulnerabilities" audit-security.txt; then
-            echo "SECURITY_ISSUES=true" >> $GITHUB_ENV
+          # bun audit exits non-zero when advisories at or above the audit level exist.
+          AUDIT_STATUS=0
+          bun audit --audit-level=high > audit-security.txt 2>&1 || AUDIT_STATUS=$?
+          cat audit-security.txt
+
+          if [ "$AUDIT_STATUS" -ne 0 ]; then
+            echo "SECURITY_ISSUES=true" >> "$GITHUB_ENV"
           else
-            echo "SECURITY_ISSUES=false" >> $GITHUB_ENV
+            echo "SECURITY_ISSUES=false" >> "$GITHUB_ENV"
           fi
 
       - name: Check outdated packages
         id: outdated
         run: |
           echo "Checking for outdated packages..."
-          
+
           # List all packages and their versions
           {
             echo "# Dependency Report"
@@ -61,16 +73,19 @@ jobs:
             bun pm ls --depth=0
             echo "\`\`\`"
             echo ""
-            echo "## Top-level Outdated Packages"
-            echo "\`\`\`"
-            npm outdated --all 2>&1 || echo "All dependencies up to date"
+            echo "## Outdated Packages (all workspaces)"
             echo "\`\`\`"
           } > outdated-report.txt
-          
-          if grep -q "extraneous\|missing\|invalid" outdated-report.txt; then
-            echo "OUTDATED_ISSUES=true" >> $GITHUB_ENV
+
+          bun outdated --recursive > outdated.txt 2>&1 || true
+          cat outdated.txt >> outdated-report.txt
+          echo "\`\`\`" >> outdated-report.txt
+
+          # bun outdated prints a "| Package | Current | ..." table only when something is outdated.
+          if grep -qE '^\|[[:space:]]*Package[[:space:]]*\|' outdated.txt; then
+            echo "OUTDATED_ISSUES=true" >> "$GITHUB_ENV"
           else
-            echo "OUTDATED_ISSUES=false" >> $GITHUB_ENV
+            echo "OUTDATED_ISSUES=false" >> "$GITHUB_ENV"
           fi
 
       - name: Analyze dependency age
@@ -81,14 +96,14 @@ jobs:
             echo ""
             echo "Last update timestamps for key dependencies:"
             echo "\`\`\`"
-            
+
             # Check key dependencies
             for dep in "codemirror" "@codemirror/view" "@codemirror/state" "@lezer/highlight" "typescript" "@biomejs/biome"; do
               VERSION=$(npm view "$dep@latest" version 2>/dev/null || echo "unknown")
-              INSTALLED=$(grep -oP "\"$dep\":\s*\"\K[^\"]+?" package.json | head -1)
+              INSTALLED=$(grep -oP "\"$dep\":\s*\"\K[^\"]+?" package.json | head -1 || true)
               echo "$dep: installed=$INSTALLED, latest=$VERSION"
             done
-            
+
             echo "\`\`\`"
           } > age-report.txt
 
@@ -100,7 +115,7 @@ jobs:
             echo ""
             echo "**Scan Date:** $(date -u +'%Y-%m-%d %H:%M UTC')"
             echo ""
-            
+
             if [ "${{ env.SECURITY_ISSUES }}" = "true" ]; then
               echo "### ⚠️ Security Issues Found"
               echo "\`\`\`"
@@ -109,29 +124,33 @@ jobs:
             else
               echo "### ✅ No Security Vulnerabilities"
             fi
-            
+
             echo ""
-            
+
             if [ "${{ env.OUTDATED_ISSUES }}" = "true" ]; then
               echo "### 🔄 Outdated Packages Detected"
               tail -20 outdated-report.txt
             else
               echo "### ✅ All Dependencies Current"
             fi
-            
+
             echo ""
             cat age-report.txt
           } >> audit-comment.txt
 
+      - name: Write audit summary
+        run: cat audit-comment.txt >> "$GITHUB_STEP_SUMMARY"
+
       - name: Comment on PR
-        if: github.event_name == 'pull_request'
+        # Fork PRs get a read-only token; they rely on the step summary above.
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
             const comment = fs.readFileSync('audit-comment.txt', 'utf8');
-            
-            github.rest.issues.createComment({
+
+            await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -156,7 +175,7 @@ jobs:
           script: |
             const fs = require('fs');
             const audit = fs.readFileSync('audit-security.txt', 'utf8');
-            
+
             // Check if issue already exists
             const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
@@ -164,11 +183,11 @@ jobs:
               labels: 'security',
               state: 'open'
             });
-            
+
             const existingIssue = issues.data.find(issue => 
               issue.title.includes('Dependency vulnerabilities')
             );
-            
+
             if (!existingIssue) {
               await github.rest.issues.create({
                 owner: context.repo.owner,

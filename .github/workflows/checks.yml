@@ -3,22 +3,28 @@ name: PR Validation
 on:
   pull_request:
     branches: ['main']
+    # Path filters are evaluated in order and the last matching pattern wins.
+    # Documentation and configuration-only changes are skipped; workflow changes always run.
     paths:
       - '**'
-      - '.github/workflows/*.yml'
+      - '!**/*.md'
+      - '!**/*.yml'
+      - '!**/*.yaml'
+      - '!**/*.config'
       - '!.github/**'
-      - '!*.yml'
-      - '!*.config'
-      - '!*.md'
+      - '.github/workflows/*.yml'
   workflow_dispatch:
 
 permissions:
-  pull-requests: write
   contents: read
 
 concurrency:
-  group: pr-validation-${{ github.event.number }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   quick-checks:
@@ -43,6 +49,12 @@ jobs:
       - name: Lint check (fail on warnings)
         run: bun run lint:check
 
+      - name: Run tests
+        run: bun run test
+
+      - name: Type-check tests
+        run: bun run test:types
+
   pr_integration:
     name: Build Integration Test
     runs-on: ubuntu-latest
@@ -62,6 +74,7 @@ jobs:
       - name: Build packages (quick validation)
         run: |
           echo "Building packages to validate compilation..."
+          # bash runs with -o pipefail, so a failing build fails this step despite the tail.
           bun run build:packages 2>&1 | tail -20
           echo "✅ Build successful"
 
@@ -71,10 +84,12 @@ jobs:
           error=0
           for pkg in packages/*/; do
             name=$(basename "$pkg")
-            [ "$name" = "bundle" ] || [ "$name" = ".helper" ] && continue
-            pkg_json="$pkg/package.json"
+            if [ "$name" = "bundle" ] || [ "$name" = ".helper" ]; then
+              continue
+            fi
+            pkg_json="${pkg}package.json"
             if [ -f "$pkg_json" ]; then
-              pkg_name=$(grep '"name":' "$pkg_json" | head -1 | sed 's/.*"name": "\(.*\)",.*/\1/')
+              pkg_name=$(jq -r .name "$pkg_json")
               if ! grep -q "$pkg_name" packages/bundle/src/index.ts; then
                 echo "❌ Missing export for $pkg_name in packages/bundle/src/index.ts"
                 error=1
@@ -83,7 +98,7 @@ jobs:
               fi
             fi
           done
-          if [ $error -eq 0 ]; then
+          if [ "$error" -eq 0 ]; then
             echo "✅ All themes exported in bundle"
           else
             exit 1
@@ -94,17 +109,19 @@ jobs:
     if: always()
     needs: [quick-checks, pr_integration]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Report validation status
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const quickChecks = '${{ needs.quick-checks.result }}';
-            const buildIntegration = '${{ needs.pr_integration.result }}';
-
-            let summary = '## ✅ PR Validation Summary\n\n';
-            summary += `- Quick Checks: ${quickChecks === 'success' ? '✅' : '⚠️'}\n`;
-            summary += `- Build Integration: ${buildIntegration === 'success' ? '✅' : '⚠️'}\n`;
-            summary += '\n💡 Full build and tests run in Azure DevOps Pipelines';
-
-            console.log(summary);
+        env:
+          QUICK_CHECKS: ${{ needs.quick-checks.result }}
+          BUILD_INTEGRATION: ${{ needs.pr_integration.result }}
+        run: |
+          icon() { [ "$1" = "success" ] && echo '✅' || echo "⚠️ ($1)"; }
+          {
+            echo "## PR Validation Summary"
+            echo ""
+            echo "- Quick Checks (types, lint, tests): $(icon "$QUICK_CHECKS")"
+            echo "- Build Integration: $(icon "$BUILD_INTEGRATION")"
+            echo ""
+            echo "💡 Release builds run in Azure DevOps Pipelines"
+          } | tee -a "$GITHUB_STEP_SUMMARY"

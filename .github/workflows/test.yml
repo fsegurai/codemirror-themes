@@ -16,13 +16,23 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   lint-packages:
     name: Lint - Packages
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -38,22 +48,35 @@ jobs:
       - name: Lint Packages
         run: bun run lint:packages
 
+      - name: Report lint failure
+        if: failure()
+        run: |
+          {
+            echo "## ⚠️ Linting Failed - Packages"
+            echo ""
+            echo "Run \`bun run lint:fix\` locally to fix formatting issues."
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Comment on PR if failed
-        if: failure() && github.event_name == 'pull_request'
-        uses: actions/github-script@v6
+        # Fork PRs get a read-only token; they rely on the step summary above.
+        if: failure() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v9
         with:
           script: |
-            github.rest.issues.createComment({
+            await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: '⚠️ **Linting Failed - Packages**\n\nRun `bun run lint:fix` locally to fix formatting issues.'
-            })
+            });
 
   lint-demo:
     name: Lint - Demo
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -69,23 +92,34 @@ jobs:
       - name: Lint Demo
         run: bun run lint:demo
 
+      - name: Report lint failure
+        if: failure()
+        run: |
+          {
+            echo "## ⚠️ Linting Failed - Demo"
+            echo ""
+            echo "Run \`bun run lint:fix\` locally to fix formatting issues."
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Comment on PR if failed
-        if: failure() && github.event_name == 'pull_request'
-        uses: actions/github-script@v6
+        # Fork PRs get a read-only token; they rely on the step summary above.
+        if: failure() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v9
         with:
           script: |
-            github.rest.issues.createComment({
+            await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: '⚠️ **Linting Failed - Demo**\n\nRun `bun run lint:fix` locally to fix formatting issues.'
-            })
+            });
 
   quality-summary:
     name: Quality Check
     if: always()
     needs: [lint-packages, lint-demo]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Report quality status
         run: |
@@ -96,4 +130,4 @@ jobs:
             echo "|-----------|--------|"
             echo "| Packages | ${{ needs.lint-packages.result == 'success' && '✅' || '❌' }} |"
             echo "| Demo | ${{ needs.lint-demo.result == 'success' && '✅' || '❌' }} |"
-          } >> $GITHUB_STEP_SUMMARY
+          } >> "$GITHUB_STEP_SUMMARY"
