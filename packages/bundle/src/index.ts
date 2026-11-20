@@ -7,6 +7,20 @@ export { basicLight, basicLightMergeStyles } from '@fsegurai/codemirror-theme-ba
 export { catppuccinLatte, catppuccinLatteMergeStyles } from '@fsegurai/codemirror-theme-catppuccin-latte';
 export { catppuccinMocha, catppuccinMochaMergeStyles } from '@fsegurai/codemirror-theme-catppuccin-mocha';
 export { cobalt2, cobalt2MergeStyles } from '@fsegurai/codemirror-theme-cobalt2';
+export {
+  type BaseSyntaxRoles,
+  type CssVariableThemeOptions,
+  cssVariableNames,
+  cssVariableTheme,
+  type DefinedTheme,
+  defineTheme,
+  type FineSyntaxRoles,
+  type RoleStyle,
+  type SyntaxRole,
+  type SyntaxRoles,
+  type ThemeDefinition,
+  type UiPalette,
+} from '@fsegurai/codemirror-theme-core';
 export { dracula, draculaMergeStyles } from '@fsegurai/codemirror-theme-dracula';
 export { forest, forestMergeStyles } from '@fsegurai/codemirror-theme-forest';
 export { githubDark, githubDarkMergeStyles } from '@fsegurai/codemirror-theme-github-dark';

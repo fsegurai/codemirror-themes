@@ -32,3 +32,22 @@ test.if(fs.existsSync(playgroundPath))('playground import map pins match workspa
   }
   expect(mismatches).toEqual([]);
 });
+
+test.if(fs.existsSync(playgroundPath))(
+  'playground import map pins every workspace package a package depends on',
+  () => {
+    const { imports } = JSON.parse(fs.readFileSync(playgroundPath, 'utf8')) as { imports: Record<string, string> };
+    const missing = new Set<string>();
+    for (const dir of fs.readdirSync(packagesDir)) {
+      const pkgPath = path.join(packagesDir, dir, 'package.json');
+      if (!fs.existsSync(pkgPath) || !(JSON.parse(fs.readFileSync(pkgPath, 'utf8')).name in imports)) continue;
+      const { dependencies = {} } = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as {
+        dependencies?: Record<string, string>;
+      };
+      for (const dep of Object.keys(dependencies)) {
+        if (workspaceVersions.has(dep) && !(dep in imports)) missing.add(dep);
+      }
+    }
+    expect([...missing]).toEqual([]);
+  },
+);

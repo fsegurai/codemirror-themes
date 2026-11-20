@@ -1,17 +1,31 @@
-name: Code Quality
+# Tests: the Bun test suite (`bun run test`) and the type check of the tests (`bun run test:types`).
+# Triggers: pull requests and pushes to main that change the tested code or the test setup, and on demand. Lint, type
+# checks and the build run in `checks.yml`.
+# Azure DevOps is the source repository: its build pipeline (`pipelines/.ado/build-pipeline.yml`, MIRROR stage) pushes
+# main to this public GitHub mirror, so a merge on GitHub is overwritten by the next push; changes are applied in Azure
+# DevOps. The ADO PR pipeline (`pipelines/.ado/pr-pipeline.yml`) runs the same test scripts.
+name: Tests
 
 on:
   pull_request:
-    branches: ['main']
+    branches: [main]
     paths:
-      - 'packages/*/src/**'
+      - 'packages/**'
+      - 'tests/**'
       - 'demo/scripts/**'
+      - 'package.json'
+      - 'bun.lock'
+      - 'bunfig.toml'
       - '.github/workflows/test.yml'
   push:
-    branches: ['main']
+    branches: [main]
     paths:
-      - 'packages/*/src/**'
+      - 'packages/**'
+      - 'tests/**'
       - 'demo/scripts/**'
+      - 'package.json'
+      - 'bun.lock'
+      - 'bunfig.toml'
   workflow_dispatch:
 
 permissions:
@@ -21,113 +35,44 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# Explicit bash runs every step with `-eo pipefail`, so a failing command fails its step even when piped.
 defaults:
   run:
     shell: bash
 
 jobs:
-  lint-packages:
-    name: Lint - Packages
+  test:
+    name: Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-      pull-requests: write
+    timeout-minutes: 15
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: ${{ vars.BUN_VERSION || '1.4.3' }}
 
+      # --ignore-scripts skips the Husky `prepare` hook; no step below needs a lifecycle script.
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile --ignore-scripts
 
-      - name: Lint Packages
-        run: bun run lint:packages
+      - name: Run tests
+        run: bun run test
 
-      - name: Report lint failure
-        if: failure()
-        run: |
-          {
-            echo "## ⚠️ Linting Failed - Packages"
-            echo ""
-            echo "Run \`bun run lint:fix\` locally to fix formatting issues."
-          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Type-check tests
+        run: bun run test:types
 
-      - name: Comment on PR if failed
-        # Fork PRs get a read-only token; they rely on the step summary above.
-        if: failure() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/github-script@v9
+      - name: Upload coverage
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
         with:
-          script: |
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '⚠️ **Linting Failed - Packages**\n\nRun `bun run lint:fix` locally to fix formatting issues.'
-            });
-
-  lint-demo:
-    name: Lint - Demo
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Lint Demo
-        run: bun run lint:demo
-
-      - name: Report lint failure
-        if: failure()
-        run: |
-          {
-            echo "## ⚠️ Linting Failed - Demo"
-            echo ""
-            echo "Run \`bun run lint:fix\` locally to fix formatting issues."
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Comment on PR if failed
-        # Fork PRs get a read-only token; they rely on the step summary above.
-        if: failure() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/github-script@v9
-        with:
-          script: |
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '⚠️ **Linting Failed - Demo**\n\nRun `bun run lint:fix` locally to fix formatting issues.'
-            });
-
-  quality-summary:
-    name: Quality Check
-    if: always()
-    needs: [lint-packages, lint-demo]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Report quality status
-        run: |
-          {
-            echo "## 📊 Code Quality Report"
-            echo ""
-            echo "| Component | Status |"
-            echo "|-----------|--------|"
-            echo "| Packages | ${{ needs.lint-packages.result == 'success' && '✅' || '❌' }} |"
-            echo "| Demo | ${{ needs.lint-demo.result == 'success' && '✅' || '❌' }} |"
-          } >> "$GITHUB_STEP_SUMMARY"
+          name: coverage
+          path: |
+            coverage/
+            packages/*/coverage/
+          if-no-files-found: ignore
+          retention-days: 14

@@ -66,10 +66,13 @@ const packageNames = fs.readdirSync(packagesDir).filter((name) => {
   }
 });
 
+/** Packages that are not themes and keep a hand-written README (the shared theme core). */
+const HAND_WRITTEN = new Set(['core']);
+
 /** Build the "Available Themes" table once, from every publishable package. */
 const themeEntries: { folder: string; npmPackage: string }[] = [];
 for (const pkgFolder of packageNames) {
-  if (pkgFolder === '.helper') continue;
+  if (pkgFolder === '.helper' || HAND_WRITTEN.has(pkgFolder)) continue;
   const pkgJsonPath = path.join(packagesDir, pkgFolder, 'package.json');
   if (!fs.existsSync(pkgJsonPath)) continue;
   try {
@@ -98,6 +101,7 @@ const perPackageCount: Record<string, number> = {};
 const errors: string[] = [];
 
 for (const pkgFolder of packageNames) {
+  if (HAND_WRITTEN.has(pkgFolder)) continue;
   const pkgDir = path.join(packagesDir, pkgFolder);
   const pkgJsonPath = path.join(pkgDir, 'package.json');
   if (!fs.existsSync(pkgJsonPath)) continue;

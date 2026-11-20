@@ -19,11 +19,11 @@ export interface LoadedTheme {
 
 export const camelCase = (id: string) => id.replace(/-(\w)/g, (_, c: string) => c.toUpperCase());
 
-/** Theme package folders (everything under `packages/` except the bundle and dot folders). */
+/** Theme package folders (everything under `packages/` except the bundle, the core and dot folders). */
 export function themeIds(): string[] {
   return fs
     .readdirSync(packagesDir)
-    .filter((name) => !name.startsWith('.') && name !== 'bundle')
+    .filter((name) => !name.startsWith('.') && name !== 'bundle' && name !== 'core')
     .filter((name) => fs.existsSync(path.join(packagesDir, name, 'src', 'index.ts')))
     .sort();
 }

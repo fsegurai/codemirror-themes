@@ -29,6 +29,7 @@ for (const name of Object.keys(themes)) select.add(new Option(name, name));
 // A Compartment holds the theme so it can be swapped without rebuilding the editor state.
 const themeConfig = new Compartment();
 const view = new EditorView({
+  // biome-ignore lint/suspicious/noTemplateCurlyInString: the sample code shows a JavaScript template literal
   doc: 'function greet(name) {\n  // Template literals, keywords and comments get theme colors\n  return `Hello, ${name}!`;\n}\n\nconsole.log(greet("CodeMirror"));\n',
   extensions: [basicSetup, javascript(), themeConfig.of(themes[select.value])],
   parent: document.querySelector('#editor'),

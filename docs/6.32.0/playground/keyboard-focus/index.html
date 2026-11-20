@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <div class="toolbar">
+      <label for="theme">Theme</label>
+      <select id="theme"></select>
+      <label class="check"><input id="forced" type="checkbox" /> Preview forced-colors behaviour</label>
+    </div>
+
+    <h2>Keyboard only</h2>
+    <ol class="steps">
+      <li>Press <kbd>Tab</kbd> until the editor is focused: the theme draws a 2px ring around it.</li>
+      <li>Type, move with the arrow keys, select with <kbd>Shift</kbd> + arrows. <kbd>Tab</kbd> indents here.</li>
+      <li>
+        To leave the editor, press <kbd>Esc</kbd> and then <kbd>Tab</kbd> (within two seconds), or toggle tab focus
+        mode with <kbd>Ctrl</kbd> + <kbd>M</kbd> (<kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>M</kbd> on macOS).
+      </li>
+      <li><kbd>Shift</kbd> + <kbd>Tab</kbd> moves focus back the same way.</li>
+    </ol>
+
+    <button id="before" type="button">Focus target before the editor</button>
+    <div id="editor" class="frame"></div>
+    <button id="after" type="button">Focus target after the editor</button>
+
+    <h2>What the theme does</h2>
+    <dl id="status" class="status" aria-live="polite"></dl>
+    <p class="hint">
+      The focus ring is a <code>box-shadow</code>, so it follows the theme colors and is never clipped by the editor
+      border. In forced-colors mode (for example Windows Contrast themes) browsers remove box-shadows; the themes also
+      set <code>outline: 2px solid transparent</code> on <code>.cm-focused</code>, which forced-colors mode repaints in
+      a system color, so a ring stays visible. Never reset that outline with <code>outline: none</code> in your own CSS.
+    </p>
+  </body>
+</html>

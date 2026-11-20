@@ -1,12 +1,19 @@
-name: Security Scan
+# Security scan: CodeQL (JavaScript/TypeScript, results in the Security tab) and a `bun audit` reported in the job
+# summary, never a failure.
+# Triggers: pushes and pull requests to main, weekly (Monday 02:00 UTC), and on demand.
+# Azure DevOps is the source repository: its build pipeline (`pipelines/.ado/build-pipeline.yml`, MIRROR stage) pushes
+# main to this public GitHub mirror, so a merge on GitHub is overwritten by the next push; changes are applied in Azure
+# DevOps. Trivy runs in the Node.js template's security stage of the ADO PR pipeline (`pipelines/.ado/pr-pipeline.yml`,
+# `security: true`), so its GitHub action is left out here.
+# The mirror is public, so CodeQL needs no GitHub Advanced Security licence and is not gated by a variable.
+name: Security scan
 
 on:
   push:
-    branches: ['main']
+    branches: [main]
   pull_request:
-    branches: ['main']
+    branches: [main]
   schedule:
-    # Run weekly on Monday at 2 AM UTC
     - cron: '0 2 * * 1'
   workflow_dispatch:
 
@@ -17,25 +24,29 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# Explicit bash runs every step with `-eo pipefail`, so a failing command fails its step even when piped.
 defaults:
   run:
     shell: bash
 
 jobs:
   codeql:
-    name: CodeQL Analysis
+    name: CodeQL
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     permissions:
+      actions: read # CodeQL reads the workflow run metadata
       contents: read
-      security-events: write
+      security-events: write # uploads the results to code scanning
     strategy:
       fail-fast: false
       matrix:
-        language: ['javascript']
+        language: [javascript-typescript]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
@@ -44,134 +55,45 @@ jobs:
           # JavaScript/TypeScript is analyzed from source; no build is needed.
           build-mode: none
 
-      - name: Perform CodeQL Analysis
+      - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v4
         with:
           category: '/language:${{ matrix.language }}'
 
-  dependency-check:
-    name: Dependency Vulnerability Scan
+  audit:
+    name: Dependency audit
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    permissions:
-      contents: read
-      pull-requests: write
-    outputs:
-      audit: ${{ steps.audit.outcome }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: ${{ vars.BUN_VERSION || '1.4.3' }}
 
+      # --ignore-scripts skips the Husky `prepare` hook; no step below needs a lifecycle script.
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile --ignore-scripts
 
-      - name: Run bun audit
-        id: audit
-        # Intentionally non-blocking: advisories are reported (summary, PR comment, job output)
-        # but do not fail the workflow, since fixes often depend on upstream releases.
-        # The step outcome stays "failure" so the reporting steps below can react to it.
-        continue-on-error: true
+      - name: Bun audit (reported, not failing)
         run: |
-          echo "Running dependency audit..."
-          bun audit --audit-level=high
-
-      - name: Report vulnerabilities
-        if: steps.audit.outcome == 'failure'
-        run: |
+          status=0
+          bun audit > audit.txt 2>&1 || status=$?
+          cat audit.txt
           {
-            echo "## ⚠️ Dependency Audit Warning"
+            echo "## Bun audit"
             echo ""
-            echo "High or critical vulnerabilities detected in dependencies. Run \`bun audit\` locally for details."
+            if [ "$status" -eq 0 ]; then
+              echo "No advisories."
+            else
+              echo "Advisories found (exit code $status): reported, not a failure. Fixes are applied in Azure DevOps."
+            fi
+            echo ""
+            echo '```'
+            cat audit.txt
+            echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Comment on PR if vulnerabilities found
-        # Fork PRs get a read-only token; they rely on the step summary above.
-        if: steps.audit.outcome == 'failure' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/github-script@v9
-        with:
-          script: |
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '⚠️ **Dependency Audit Warning**\n\nHigh or critical vulnerabilities detected in dependencies. Run `bun audit` locally for details.'
-            });
-
-  trivy-fs-scan:
-    name: Trivy Filesystem Scan
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Run Trivy filesystem scan
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
-
-      - name: Upload Trivy results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
-          category: 'trivy-fs'
-
-      - name: Upload Trivy report
-        uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: trivy-fs-report
-          path: trivy-results.sarif
-          retention-days: 30
-
-  security-summary:
-    name: Security Summary
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    needs: [codeql, dependency-check, trivy-fs-scan]
-    if: always()
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Create security summary
-        env:
-          CODEQL_STATUS: ${{ needs.codeql.result }}
-          DEP_STATUS: ${{ needs.dependency-check.result }}
-          AUDIT_OUTCOME: ${{ needs.dependency-check.outputs.audit }}
-          TRIVY_STATUS: ${{ needs.trivy-fs-scan.result }}
-        run: |
-          icon() { [ "$1" = "success" ] && echo '✅' || echo "⚠️ ($1)"; }
-          {
-            echo "## 🔒 Security Scan Summary"
-            echo ""
-            echo "- CodeQL: $(icon "$CODEQL_STATUS")"
-            echo "- Dependency Audit: $(icon "${AUDIT_OUTCOME:-$DEP_STATUS}")"
-            echo "- Trivy Scan: $(icon "$TRIVY_STATUS")"
-          } | tee security-summary.md >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Comment on PR
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/github-script@v9
-        with:
-          script: |
-            const fs = require('fs');
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: fs.readFileSync('security-summary.md', 'utf8')
-            });

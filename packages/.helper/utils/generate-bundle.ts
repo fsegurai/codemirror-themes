@@ -5,6 +5,23 @@ const packagesDir = path.resolve(process.cwd(), 'packages');
 const bundleDir = path.join(packagesDir, 'bundle');
 const bundleIndexPath = path.join(bundleDir, 'src', 'index.ts');
 const bundlePkgPath = path.join(bundleDir, 'package.json');
+const corePkgPath = path.join(packagesDir, 'core', 'package.json');
+
+/** The bundle also re-exports the public API of the core package (`defineTheme`, `cssVariableTheme`, types). */
+const CORE_EXPORTS = [
+  'type BaseSyntaxRoles',
+  'type CssVariableThemeOptions',
+  'cssVariableNames',
+  'cssVariableTheme',
+  'type DefinedTheme',
+  'defineTheme',
+  'type FineSyntaxRoles',
+  'type RoleStyle',
+  'type SyntaxRole',
+  'type SyntaxRoles',
+  'type ThemeDefinition',
+  'type UiPalette',
+];
 
 /**
  * Packages whose exported name doesn't match the naive camelCase derivation
@@ -31,7 +48,7 @@ if (!fs.existsSync(packagesDir)) {
 
 const themeFolders = fs
   .readdirSync(packagesDir)
-  .filter((name) => name !== '.helper' && name !== 'bundle')
+  .filter((name) => name !== '.helper' && name !== 'bundle' && name !== 'core')
   .filter((name) => fs.statSync(path.join(packagesDir, name)).isDirectory())
   .sort((a, b) => a.localeCompare(b));
 
@@ -63,6 +80,11 @@ const indexLines = entries.map(({ npmPackage, exportName }, i) => {
       : `${exportName}, ${exportName}MergeStyles`;
   return `export { ${symbols} } from '${npmPackage}';`;
 });
+const corePkg = JSON.parse(fs.readFileSync(corePkgPath, 'utf8'));
+// Written in the multi-line form Biome formats it to, and at its sorted position, so regenerating is a no-op.
+const coreLine = `export {\n${CORE_EXPORTS.map((name) => `  ${name},\n`).join('')}} from '${corePkg.name}';`;
+const coreIndex = entries.filter(({ npmPackage }) => npmPackage.localeCompare(corePkg.name) < 0).length;
+indexLines.splice(coreIndex, 0, coreLine);
 const newIndexContent = `${indexLines.join('\n')}\n`;
 
 const oldIndexContent = fs.existsSync(bundleIndexPath) ? fs.readFileSync(bundleIndexPath, 'utf8') : '';
@@ -78,14 +100,17 @@ if (newIndexContent !== oldIndexContent) {
 // packages/.helper/versions/update-packages-versions.ts.
 const bundlePkg = JSON.parse(fs.readFileSync(bundlePkgPath, 'utf8'));
 const currentDeps: Record<string, string> = bundlePkg.dependencies ?? {};
-const validNames = new Set(entries.map((e) => e.npmPackage));
+const depEntries = [...entries, { npmPackage: corePkg.name as string, version: corePkg.version as string }].sort(
+  (a, b) => a.npmPackage.localeCompare(b.npmPackage),
+);
+const validNames = new Set(depEntries.map((e) => e.npmPackage));
 
 const nextDeps: Record<string, string> = {};
-for (const { npmPackage, version } of entries) {
+for (const { npmPackage, version } of depEntries) {
   nextDeps[npmPackage] = currentDeps[npmPackage] ?? version;
 }
 
-const added = entries.filter((e) => !(e.npmPackage in currentDeps)).map((e) => e.npmPackage);
+const added = depEntries.filter((e) => !(e.npmPackage in currentDeps)).map((e) => e.npmPackage);
 const removed = Object.keys(currentDeps).filter((name) => !validNames.has(name));
 
 const depsChanged = added.length > 0 || removed.length > 0 || JSON.stringify(currentDeps) !== JSON.stringify(nextDeps);

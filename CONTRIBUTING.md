@@ -85,7 +85,11 @@ This project uses a monorepo structure with individual theme packages in the `pa
 - `package.json` - Package configuration
 - `README.md` - Theme-specific documentation
 - `src/index.ts` - Main theme export
-- `src/utils.ts` - Theme utilities (if needed)
+- `src/utils.ts` - Shared styling helpers, generated from `packages/.helper/utils/utils.ts`
+
+Themes are built with `defineTheme` from `packages/core` (published as `@fsegurai/codemirror-theme-core`), which every
+theme lists in `dependencies`. Edit the theme structure only in `packages/core/src/theme-core.ts`; there are no
+per-package copies. `bun run build:packages` builds the core first (Bun follows workspace dependency order).
 
 ### Adding a New Theme
 
@@ -99,8 +103,8 @@ This project uses a monorepo structure with individual theme packages in the `pa
 Once you've finished working on your theme, run the following to build and verify your changes:
 
 ```bash
-bun run generate:helpers
-bun run generate:bundle  # adds your theme to the @fsegurai/codemirror-theme-bundle re-exports
+bun run generate:helpers # copies utils.ts into every theme and the core package
+bun run generate:bundle  # adds your theme to the @fsegurai/codemirror-theme-bundle re-exports (plus the core API)
 bun run generate:readme  # regenerates every package's README.md, including the themes table
 bun run version:update # You must update the `versions.json` file as it is the source of truth for the packages versions
 ```

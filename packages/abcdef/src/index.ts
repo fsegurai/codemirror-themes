@@ -1,6 +1,6 @@
 import type { Extension } from '@codemirror/state';
 
-import { defineTheme } from './theme-core';
+import { defineTheme } from '@fsegurai/codemirror-theme-core';
 import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 
 // Enhanced Abcdef theme colors with improved contrast and harmony

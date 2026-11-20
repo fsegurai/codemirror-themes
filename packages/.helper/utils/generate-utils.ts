@@ -5,9 +5,10 @@ const helperDir = path.resolve(__dirname); // helper files live next to this scr
 const packagesDir = path.resolve(process.cwd(), 'packages'); // repo packages folder
 const scriptName = path.basename(__filename);
 
-// CLI args: list of filenames relative to `helperDir`. Defaults to every shared helper (`utils.ts`, `theme-core.ts`)
+// CLI args: list of filenames relative to `helperDir`. Defaults to every shared helper (`utils.ts`). The theme core is
+// not copied: it is the `@fsegurai/codemirror-theme-core` package (`packages/core`), which also receives `utils.ts`.
 const requestedFiles = process.argv.slice(2);
-const filesToCopy = requestedFiles.length > 0 ? requestedFiles : ['utils.ts', 'theme-core.ts'];
+const filesToCopy = requestedFiles.length > 0 ? requestedFiles : ['utils.ts'];
 
 if (!fs.existsSync(helperDir)) {
   console.error('Helper directory not found:', `\`${helperDir}\``);
