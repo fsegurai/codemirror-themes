@@ -1,6 +1,6 @@
 /**
  * Compile-time contract of the shared theme structure. The probes are type-checked by `tsc` against the real
- * `theme-core` (the tests project cannot import package sources: its rootDir is `tests/`). Each `@ts-expect-error`
+ * core package `packages/core` (the tests project cannot import package sources: its rootDir is `tests/`). Each `@ts-expect-error`
  * makes the probe fail to compile if the line below it ever compiles.
  */
 import { afterAll, expect, test } from 'bun:test';
@@ -10,7 +10,7 @@ import path from 'node:path';
 import { repoRoot } from './support/themes';
 
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'theme-type-contract-'));
-const core = path.join(repoRoot, 'packages', 'nord', 'src', 'theme-core');
+const core = path.join(repoRoot, 'packages', 'core', 'src', 'index');
 
 afterAll(() => fs.rmSync(scratch, { recursive: true, force: true }));
 

@@ -1,6 +1,6 @@
 {
   "name": "@fsegurai/codemirror-theme-material-ocean",
-  "version": "6.1.0",
+  "version": "6.2.0",
   "description": "Material Ocean theme for the CodeMirror editor",
   "type": "module",
   "main": "dist/index.cjs",
@@ -46,6 +46,9 @@
     "@codemirror/language": "^6.0.0",
     "@codemirror/state": "^6.0.0",
     "@codemirror/view": "^6.0.0"
+  },
+  "dependencies": {
+    "@fsegurai/codemirror-theme-core": "6.0.0"
   },
   "devDependencies": {
     "@codemirror/buildhelper": "^1.0.2"

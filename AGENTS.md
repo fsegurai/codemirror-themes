@@ -9,10 +9,12 @@
 ```
 Root (workspace config, shared tsconfig, build tools)
 ├── packages/[theme-name]/          ← Individual theme packages (26 total)
-│   ├── src/index.ts               ← Theme definition (exports theme + mergeStyles)
-│   ├── src/utils.ts               ← Shared styling helpers (colors, layouts)
+│   ├── src/index.ts               ← Theme definition: imports defineTheme from @fsegurai/codemirror-theme-core
+│   ├── src/utils.ts               ← Shared styling helpers, generated from packages/.helper/utils/utils.ts
 │   └── package.json               ← Scoped package (@fsegurai/codemirror-theme-*)
-├── packages/bundle/               ← Re-exports all themes for convenience
+├── packages/core/                 ← @fsegurai/codemirror-theme-core: defineTheme, ThemeDefinition, cssVariableTheme
+│   └── src/theme-core.ts          ← SINGLE source of the theme structure (no per-package copies)
+├── packages/bundle/               ← Re-exports all themes (and the core API) for convenience
 ├── demo/                          ← Development & showcase application
 │   ├── scripts/index.ts           ← README renderer & demo UI
 │   ├── scripts/playground.ts      ← Interactive theme switcher
@@ -33,6 +35,10 @@ bun run start              # Dev server with live reload (vite)
 bun test                   # Runs tests across all packages
 bun run lint               # Biome lint + format check
 ```
+
+**Build order**: every theme and the bundle list `@fsegurai/codemirror-theme-core` in `dependencies`, and
+`bun run --filter '*' pkg:build` follows workspace dependency order, so `packages/core` builds first. cm-buildhelper
+keeps bare imports external: a theme's `dist` imports the core, it does not inline it. Publish the core before themes.
 
 **Important**: Theme packages use **cm-buildhelper** (a CodeMirror-specific build tool), NOT rollup. This happens automatically via the `prepare` script in each package.json.
 
@@ -120,7 +126,9 @@ See biome.json for full rules. Run `bun run lint` before commits. Biome owns for
 ### Cross-Component Communication
 1. **Bundle Package**: Acts as aggregator. Always keep `packages/bundle/src/index.ts` in sync when adding themes.
 2. **Demo Application**: Loads all themes dynamically. See `demo/scripts/themes.ts` for theme registry.
-3. **Utils.ts Re-export**: Each theme imports from its own utils.ts (not shared). This allows theme-specific customization while maintaining consistency.
+3. **Theme core**: every theme imports `defineTheme` from `@fsegurai/codemirror-theme-core` (`packages/core`); edit the
+   structure only in `packages/core/src/theme-core.ts`. `utils.ts` is still copied into each theme and the core by
+   `bun run generate:helpers` (`tests/helpers-sync.test.ts` fails on drift or on a reintroduced `theme-core.ts` copy).
 
 ### Build Output Structure
 ```
@@ -165,8 +173,16 @@ packages/[theme]/dist/
 ```
 codemirror-themes/
 ├── .github/
-│   ├── workflows/
-│   │   └── documentation.yml    ← CI/CD for markdown validation, link checking, demo build
+│   ├── workflows/              ← GitHub mirror checks (ADO is the source; see each file's header)
+│   │   ├── checks.yml           ← PR validation: tsc, Biome, package build, bundle exports
+│   │   ├── test.yml             ← bun test and the type check of the tests
+│   │   ├── documentation.yml    ← Markdown fences and links, README structure, docs version, demo build
+│   │   ├── security-scan.yml    ← CodeQL and a non-blocking bun audit (Trivy runs in ADO)
+│   │   ├── dependency-audit.yml ← Weekly and on dependency changes: audit, outdated packages
+│   │   ├── health-check.yml     ← Weekly build, lint, tests and audit report
+│   │   ├── perf-monitor.yml     ← Bundle size diff between base and PR
+│   │   └── pr_triage.yml        ← Labels, assignment and welcome comments
+│   ├── dependabot.yml          ← Monthly grouped notices; updates are applied in ADO
 │   └── labeler.yml             ← Auto-labeling for PRs (e.g., theme-abcdef, demo, infra)
 ├── packages/                   ← 26 individual theme packages
 │   ├── abcdef/
@@ -246,7 +262,7 @@ Hooks are installed automatically by the `prepare` script on `bun install` (Husk
 - **`pre-commit`**: runs `bun run lint:fix` (Biome `check --write`, the same command as `format`) and re-stages files, so fixes are baked into the commit.
 - **`pre-push`**: runs `bun run format:audit` (read-only `biome check`) — the gate that proves the pushed commit is clean. Auto-fixes must happen at commit time because a push never re-commits working-tree mutations.
 - Bypass single commands with `git commit -n` / `git push -n`, or all hooks with `HUSKY=0`.
-- CI should set `HUSKY=0` so hooks aren't installed there.
+- CI must not install hooks: the GitHub workflows run `bun install --frozen-lockfile --ignore-scripts`, which skips `prepare`.
 
 ### Adding a New Theme (Step-by-Step)
 ```bash
@@ -293,9 +309,8 @@ bun run build:packages                    # Verify cm-buildhelper succeeds
 
 ### 2. Code Block Validation in CI/CD
 The `.github/workflows/documentation.yml` validates markdown syntax:
-- Counts all lines starting with `` ` `` `` ` `` `` ` `` (code block markers)
-- Requires EVEN count (paired opening/closing markers)
-- Fails if any markdown file has unclosed code blocks
+- A fence opens with 3+ backticks or tildes and closes with the same character, at least as many times, alone on its line
+- Fails if any tracked markdown file (`git ls-files '*.md'`) has an unclosed code block or a broken relative link
 
 ### 3. Theme Export Pattern (STRICT)
 Every theme MUST export exactly three items:
@@ -329,7 +344,8 @@ Always follow this pattern for consistency:
 Reference: See `packages/abcdef/src/index.ts` lines 1-35
 
 ### 6. General* Utilities (Shared Across All Themes)
-These are defined in each theme's `utils.ts`:
+These have one source, `packages/.helper/utils/utils.ts`, copied into each theme's and the core's `utils.ts`
+(`bun run generate:helpers`); the core's `theme-core.ts` consumes them:
 - `generalContent`: Font family, size, line-height
 - `generalGutter`: Gutter styling
 - `generalDiff`: Diff/merge visual rules

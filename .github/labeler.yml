@@ -1,4 +1,5 @@
-# actions/labeler v5 configuration. Read from the base branch by .github/workflows/pr_triage.yml.
+# actions/labeler v7 configuration (the `changed-files` format introduced in v5 is unchanged in v6 and v7).
+# Read from the base branch by .github/workflows/pr_triage.yml.
 
 infra:
   - changed-files:
@@ -64,6 +65,11 @@ theme-bundle:
   - changed-files:
       - any-glob-to-any-file:
           - 'packages/bundle/**'
+
+theme-core:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'packages/core/**'
 
 theme-helper:
   - changed-files:

@@ -1,6 +1,6 @@
 import type { Extension } from '@codemirror/state';
 
-import { defineTheme } from './theme-core';
+import { defineTheme } from '@fsegurai/codemirror-theme-core';
 import { applyMergeRevertStyles, type IMergeRevertStyles } from './utils';
 
 // Base colors derived from the original CM5 Material Ocean theme

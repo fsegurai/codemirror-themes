@@ -1,18 +1,17 @@
-name: PR Validation
+# Checks: TypeScript and Biome checks, then the package build with a bundle export check.
+# Triggers: pull requests to main (except Markdown and `docs/` only changes), and on demand. Tests run in `test.yml`.
+# Azure DevOps is the source repository: its build pipeline (`pipelines/.ado/build-pipeline.yml`, MIRROR stage) pushes
+# main to this public GitHub mirror, so a merge on GitHub is overwritten by the next push; changes are applied in Azure
+# DevOps. The ADO PR pipeline (`pipelines/.ado/pr-pipeline.yml`) builds and runs `lint` and `format:audit`; this
+# workflow adds the type check and the bundle export check.
+name: Checks
 
 on:
   pull_request:
-    branches: ['main']
-    # Path filters are evaluated in order and the last matching pattern wins.
-    # Documentation and configuration-only changes are skipped; workflow changes always run.
-    paths:
-      - '**'
-      - '!**/*.md'
-      - '!**/*.yml'
-      - '!**/*.yaml'
-      - '!**/*.config'
-      - '!.github/**'
-      - '.github/workflows/*.yml'
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
   workflow_dispatch:
 
 permissions:
@@ -20,108 +19,102 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: true
 
+# Explicit bash runs every step with `-eo pipefail`, so a failing command fails its step even when piped.
 defaults:
   run:
     shell: bash
 
 jobs:
   quick-checks:
-    name: Quick Validation
+    name: Quick validation
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: ${{ vars.BUN_VERSION || '1.4.3' }}
 
+      # --ignore-scripts skips the Husky `prepare` hook; no step below needs a lifecycle script.
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile --ignore-scripts
 
-      - name: TypeScript strict check
+      - name: TypeScript check
         run: bun run -- tsc --noEmit
 
-      - name: Lint check (fail on warnings)
+      - name: Biome check
         run: bun run lint:check
 
-      - name: Run tests
-        run: bun run test
+      - name: Hint on failure
+        if: failure()
+        run: echo "Run \`bun run lint:fix\` locally to fix lint and formatting issues." >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Type-check tests
-        run: bun run test:types
-
-  pr_integration:
-    name: Build Integration Test
+  build:
+    name: Build integration
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: ${{ vars.BUN_VERSION || '1.4.3' }}
 
+      # --ignore-scripts skips the Husky `prepare` hook; no step below needs a lifecycle script.
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile --ignore-scripts
 
-      - name: Build packages (quick validation)
-        run: |
-          echo "Building packages to validate compilation..."
-          # bash runs with -o pipefail, so a failing build fails this step despite the tail.
-          bun run build:packages 2>&1 | tail -20
-          echo "✅ Build successful"
+      - name: Build packages
+        run: bun run build:packages
 
       - name: Validate bundle exports
         run: |
-          echo "Validating all themes are exported in bundle..."
-          error=0
+          # Every workspace package except the bundle itself is exported by the bundle.
+          status=0
           for pkg in packages/*/; do
             name=$(basename "$pkg")
-            if [ "$name" = "bundle" ] || [ "$name" = ".helper" ]; then
+            if [ "$name" = "bundle" ] || [ ! -f "${pkg}package.json" ]; then
               continue
             fi
-            pkg_json="${pkg}package.json"
-            if [ -f "$pkg_json" ]; then
-              pkg_name=$(jq -r .name "$pkg_json")
-              if ! grep -q "$pkg_name" packages/bundle/src/index.ts; then
-                echo "❌ Missing export for $pkg_name in packages/bundle/src/index.ts"
-                error=1
-              else
-                echo "  ✓ $pkg_name"
-              fi
+            pkg_name=$(jq -r .name "${pkg}package.json")
+            if grep -q "$pkg_name" packages/bundle/src/index.ts; then
+              echo "  ✓ $pkg_name"
+            else
+              echo "::error file=packages/bundle/src/index.ts::Missing export for $pkg_name"
+              status=1
             fi
           done
-          if [ "$error" -eq 0 ]; then
-            echo "✅ All themes exported in bundle"
-          else
-            exit 1
-          fi
+          exit "$status"
 
   validation-summary:
-    name: Validation Summary
+    name: Validation summary
     if: always()
-    needs: [quick-checks, pr_integration]
+    needs: [quick-checks, build]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Report validation status
         env:
           QUICK_CHECKS: ${{ needs.quick-checks.result }}
-          BUILD_INTEGRATION: ${{ needs.pr_integration.result }}
+          BUILD: ${{ needs.build.result }}
         run: |
-          icon() { [ "$1" = "success" ] && echo '✅' || echo "⚠️ ($1)"; }
+          icon() { if [ "$1" = "success" ]; then echo '✅'; else echo "❌ ($1)"; fi; }
           {
-            echo "## PR Validation Summary"
+            echo "## Checks summary"
             echo ""
-            echo "- Quick Checks (types, lint, tests): $(icon "$QUICK_CHECKS")"
-            echo "- Build Integration: $(icon "$BUILD_INTEGRATION")"
-            echo ""
-            echo "💡 Release builds run in Azure DevOps Pipelines"
-          } | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "| Check | Status |"
+            echo "|-------|--------|"
+            echo "| Quick validation (types, Biome) | $(icon "$QUICK_CHECKS") |"
+            echo "| Build integration (package build, bundle exports) | $(icon "$BUILD") |"
+          } >> "$GITHUB_STEP_SUMMARY"

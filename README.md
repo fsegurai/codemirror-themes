@@ -38,6 +38,7 @@ engaging and adaptable to different coding styles and user preferences.
 - [Installation](#installation)
 	- [@fsegurai/codemirror-theme-bundle](#@fseguraicodemirror-theme-bundle)
 	- [Using a Specific Theme](#using-a-specific-theme)
+- [Custom and CSS-Variable Themes](#custom-and-css-variable-themes)
 - [More Resources](#more-resources)
 	- [Available Themes](#available-themes)
 	- [Demo Application](#demo-application)
@@ -73,13 +74,44 @@ let editor = new EditorView({
 })
 ```
 
-Read the [CodeMirror documentation](https://codemirror.net/6/examples/styling/) for more details about themes.
+Every theme package depends on `@fsegurai/codemirror-theme-core` (installed automatically). Without a bundler (import
+maps, CDN), map the core too: the theme builds import it.
+
+Read the [CodeMirror documentation](https://codemirror.net/6/examples/styling/) for more details about themes. The
+versioned documentation of this release is in [`docs/6.32.0`](./docs/6.32.0/content/README.md).
+
+## Custom and CSS-Variable Themes
+
+Every theme is built by [`@fsegurai/codemirror-theme-core`](./packages/core/README.md), which every theme package
+depends on. It is public, so a theme of your own gets the same complete structure:
+
+- `defineTheme(definition)` turns a `ThemeDefinition` (a complete `UiPalette` plus syntax roles) into
+  `{ extension, theme, highlightStyle, mergeStyles }`.
+- `cssVariableTheme(options?)` is one theme whose colors are CSS custom properties with fallbacks
+  (`var(--cm-background, #ffffff)`, `var(--cm-syntax-keyword, #cf222e)`, …), so a single extension follows the page's
+  light, dark or high-contrast CSS. Pass `{ dark: true }` on dark pages (CSS variables cannot tell CodeMirror the
+  editor is dark), `prefix` to rename the variables and `variables` / `fallbacks` to map them to your own tokens.
+
+```typescript
+import { cssVariableTheme } from '@fsegurai/codemirror-theme-core';
+
+const extensions = [basicSetup, cssVariableTheme({ dark: false }).extension];
+```
+
+```css
+:root { --cm-background: var(--app-surface); --cm-foreground: var(--app-text); --cm-accent: var(--app-primary); }
+```
+
+The [core README](./packages/core/README.md) lists every variable it reads (14 base colors, then per-part and
+per-syntax-role overrides), its options, and an Angular example. Both functions are also exported by
+`@fsegurai/codemirror-theme-bundle`.
 
 ### Available Themes
 
 | Theme               | Package                                                                                                                        | Version                                                                             | Downloads |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|-----------|
 | All - Bundle        | [@fsegurai/codemirror-theme-bundle](https://www.npmjs.com/package/@fsegurai/codemirror-theme-bundle)                           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-bundle)              | ![downloads](https://img.shields.io/npm/dt/@fsegurai/codemirror-theme-bundle) |
+| Core (builder)      | [@fsegurai/codemirror-theme-core](https://www.npmjs.com/package/@fsegurai/codemirror-theme-core)                               | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-core)                | ![downloads](https://img.shields.io/npm/dt/@fsegurai/codemirror-theme-core)   |
 | Abcdef              | [@fsegurai/codemirror-theme-abcdef](https://www.npmjs.com/package/@fsegurai/codemirror-theme-abcdef)                           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-abcdef)              | ![downloads](https://img.shields.io/npm/dt/@fsegurai/codemirror-theme-abcdef) |
 | Abyss               | [@fsegurai/codemirror-theme-abyss](https://www.npmjs.com/package/@fsegurai/codemirror-theme-abyss)                             | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-abyss)               | ![downloads](https://img.shields.io/npm/dt/@fsegurai/codemirror-theme-abyss) |
 | Android Studio      | [@fsegurai/codemirror-theme-android-studio](https://www.npmjs.com/package/@fsegurai/codemirror-theme-android-studio)           | ![npm](https://img.shields.io/npm/v/@fsegurai/codemirror-theme-android-studio)      | ![downloads](https://img.shields.io/npm/dt/@fsegurai/codemirror-theme-android-studio) |

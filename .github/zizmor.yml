@@ -1,0 +1,11 @@
+# zizmor configuration (https://docs.zizmor.sh/configuration/), read by `zizmor .github/workflows`.
+# Like Arkenda, first-party and trusted publishers' actions are pinned to a release tag (`@v7`, never a branch such as
+# `@master`) and Dependabot reports new releases monthly (`dependabot.yml`); any other action must be pinned by SHA.
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        'actions/*': ref-pin
+        'github/*': ref-pin
+        'oven-sh/*': ref-pin
+        '*': hash-pin

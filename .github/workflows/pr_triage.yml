@@ -1,127 +1,140 @@
-name: "Pull Request Triage"
+# Pull request triage: labels from `.github/labeler.yml`, assigns the author (or requests the maintainer's review on bot
+# pull requests), welcomes first-time contributors, explains Dependabot pull requests and lists the modified packages in
+# the pull request body.
+# Triggers: pull requests opened, reopened, marked ready for review or updated (`pull_request_target`). Runs are queued,
+# never cancelled, so an update cannot cancel the welcome of the run before it.
+# Azure DevOps is the source repository: its build pipeline (`pipelines/.ado/build-pipeline.yml`, MIRROR stage) pushes
+# main to this public GitHub mirror, so a merge on GitHub is overwritten by the next push; changes are applied in Azure
+# DevOps. Accepted contributions are applied there by a maintainer.
+#
+# Security: pull_request_target runs with a write token in the context of the base repository, which is what lets it
+# label and comment on fork and Dependabot pull requests. This workflow never checks out, builds or runs pull request
+# code (the labeler reads its configuration from the base branch through the API), and never interpolates
+# `github.event.*` values into scripts (they read `context.payload`).
+name: Pull request triage
 
-# Security: pull_request_target runs with a write token in the context of the base repository.
-# This workflow must never check out, build or execute code from the pull request, and must never
-# interpolate ${{ github.event.* }} values into run/script bodies (read them from context.payload).
 on:
-  pull_request_target:
+  pull_request_target: # zizmor: ignore[dangerous-triggers] no pull request code is checked out or run (see above)
     types: [opened, ready_for_review, reopened, synchronize]
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
 
+# Explicit bash runs every step with `-eo pipefail`, so a failing command fails its step even when piped.
 defaults:
   run:
     shell: bash
 
 jobs:
   triage:
+    name: Triage
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: read
-      pull-requests: write
+      issues: write # labels (the labeler creates missing ones) and assignees go through the issues API
+      pull-requests: write # labels, review requests, comments and the description
     steps:
-      # Grab the trusted base sources only to read .github/labeler.yml (never the PR head).
-      - name: Fetch sources
-        uses: actions/checkout@v6
-        with:
-          repository: fsegurai/codemirror-themes
-          ref: main
-          persist-credentials: false
-
-      - name: Update labels based on changes
-        uses: actions/labeler@v5
+      - name: Label from changed files
+        uses: actions/labeler@v7
         with:
           sync-labels: true
           dot: true
 
-      - name: Assign PR creator
+      - name: Assign the author or request the maintainer review
         if: github.event.action != 'synchronize'
         uses: actions/github-script@v9
         with:
           script: |
             const pr = context.payload.pull_request;
-            const assignees = pr.assignees.map(assignee => assignee.login);
             const author = pr.user.login;
-
-            if (assignees.includes(author)) {
+            if (pr.assignees.some((assignee) => assignee.login === author)) {
               return;
             }
-
             if (pr.user.type === 'Bot') {
               await github.rest.pulls.requestReviewers({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 pull_number: pr.number,
-                reviewers: ['fsegurai']
+                reviewers: ['fsegurai'],
               });
             } else {
               await github.rest.issues.addAssignees({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: pr.number,
-                assignees: [author]
+                assignees: [author],
               });
             }
 
-      - name: Add first-time contributor welcome
+      - name: Welcome first-time contributors
         if: github.event.action == 'opened'
         uses: actions/github-script@v9
         with:
           script: |
             const pr = context.payload.pull_request;
             const firstTime = ['FIRST_TIME_CONTRIBUTOR', 'FIRST_TIMER'].includes(pr.author_association);
-
             if (!firstTime || pr.user.type === 'Bot') {
               return;
             }
-
-            const docs = 'https://github.com/fsegurai/codemirror-themes/blob/main';
+            const blob = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/blob/main`;
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: pr.number,
-              body: '👋 **Welcome, @' + pr.user.login + '!**\n\nThank you for your contribution to codemirror-themes! Here\'s what to expect:\n\n- **Tests run automatically** - our CI pipeline validates linting, tests and builds\n- **Reviews** - a maintainer will review your changes\n- **Labels** - we auto-tag PRs to help organize discussions\n- **Questions?** - feel free to ask in the comments\n\n📚 **Helpful Resources:**\n- [Contributing Guide](' + docs + '/CONTRIBUTING.md)\n- [AGENTS Guide](' + docs + '/AGENTS.md) - Project architecture\n- [README](' + docs + '/README.md)\n\nWe appreciate your help! 🎉'
+              body: [
+                `👋 **Welcome, @${pr.user.login}!** Thank you for contributing to ${context.repo.repo}.`,
+                '',
+                '- **Checks run automatically**: type checks, lint, tests, the build and the docs.',
+                '- **Review**: a maintainer will review your changes.',
+                '- **Labels** are added from the files the pull request changes.',
+                '- **Merging**: this repository is a mirror of the Azure DevOps source repository. Accepted changes',
+                '  are applied there and reach GitHub with the next mirror push, so this pull request is closed.',
+                '',
+                `📚 [Contributing guide](${blob}/CONTRIBUTING.md) · [AGENTS guide](${blob}/AGENTS.md) · ` +
+                  `[README](${blob}/README.md)`,
+              ].join('\n'),
             });
 
-      - name: Add Dependabot PR comment
+      - name: Explain Dependabot pull requests
         if: github.event.action != 'synchronize'
         uses: actions/github-script@v9
         with:
           script: |
             const pr = context.payload.pull_request;
-
-            if (pr.user.type !== 'Bot' || !pr.user.login.startsWith('dependabot')) {
+            if (pr.user.type !== 'Bot' || pr.user.login !== 'dependabot[bot]') {
               return;
             }
-
-            // Check if we already commented
             const comments = await github.paginate(github.rest.issues.listComments, {
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: pr.number,
-              per_page: 100
+              per_page: 100,
+            });
+            if (comments.some((comment) => comment.body?.includes('Dependabot notice'))) {
+              return;
+            }
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body: [
+                '🤖 **Dependabot notice**',
+                '',
+                'This pull request is a notice, not something to merge here: this repository is a mirror pushed from',
+                'Azure DevOps, so a merge on GitHub is overwritten by the next push.',
+                '',
+                '- **Apply it in Azure DevOps**: update the root `package.json` and `bun.lock` (Bun workspace) or the',
+                '  workflow named in the pull request, then let the mirror carry it; this pull request then closes.',
+                '- **Checks**: the pull request checks show whether the update builds and passes the tests.',
+              ].join('\n'),
             });
 
-            const hasDepbotComment = comments.some(c =>
-              (c.body || '').includes('Dependabot Update')
-            );
-
-            if (!hasDepbotComment) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pr.number,
-                body: '🤖 **Dependabot Update**\n\nThis is an automated dependency update. A few things to know:\n\n- **Bun workspace**: All dependencies are managed through the root `package.json`\n- **Build checks**: The PR build validates all packages can compile\n- **Security**: Our security scan pipeline reviews all updates\n- **Merge**: Maintainers will review and merge periodically\n\n💡 Tip: Use `@dependabot rebase` to update this PR if conflicts occur.'
-              });
-            }
-
-      - name: Note modified themes in PR body
+      - name: List modified packages in the description
         uses: actions/github-script@v9
         with:
           script: |
@@ -130,31 +143,36 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: pr.number,
-              per_page: 100
+              per_page: 100,
             });
 
-            // Check if it's a theme-specific change
-            const themeFiles = files.filter(f => f.filename.startsWith('packages/'));
-
-            if (themeFiles.length > 0 && themeFiles.length <= 5) {
-              const themes = new Set();
-              themeFiles.forEach(f => {
-                const match = f.filename.match(/packages\/([^/]+)\//);
-                if (match) themes.add(match[1]);
-              });
-
-              if (themes.size > 0) {
-                const note = `📦 **Theme(s) Modified:** ${Array.from(themes).join(', ')}`;
-                const body = pr.body || '';
-
-                // Add to PR body if not already there
-                if (!body.includes(note)) {
-                  await github.rest.pulls.update({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    pull_number: pr.number,
-                    body: body ? body + '\n\n' + note : note
-                  });
-                }
-              }
+            // Every workspace package (packages/<name>/, dot-directories such as .helper excluded).
+            const TITLE = 'Package(s) modified';
+            const listed = () => true;
+            const names = files
+              .map((file) => file.filename.match(/^packages\/([^/.][^/]*)\//)?.[1])
+              .filter((name) => name && listed(name));
+            const modified = new Set(names);
+            // Large pull requests (more than 20 package files) are not annotated.
+            if (modified.size === 0 || names.length > 20) {
+              return;
             }
+
+            const prefix = `📦 **${TITLE}:**`;
+            const line = `${prefix} ${[...modified].sort().join(', ')}`;
+            const body = pr.body ?? '';
+            if (body.includes(line)) {
+              return;
+            }
+            // Replace the line written by an earlier run (synchronize), otherwise append it.
+            const lines = body.split('\n');
+            const index = lines.findIndex((text) => text.startsWith(prefix));
+            if (index >= 0) {
+              lines[index] = line;
+            }
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              body: index >= 0 ? lines.join('\n') : body ? `${body}\n\n${line}` : line,
+            });

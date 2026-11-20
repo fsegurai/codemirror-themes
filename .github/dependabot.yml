@@ -1,55 +1,52 @@
+# Dependabot on the public GitHub mirror of codemirror-themes.
+#
+# The mirror is pushed from Azure DevOps (`pipelines/.ado/build-pipeline.yml`, MIRROR stage), so a Dependabot pull
+# request is a notice, not something to merge here: a merge on the mirror is overwritten by the next push. Apply the
+# update in the Azure DevOps repository instead (root `package.json` and `bun.lock`, or the action version named in the
+# pull request), then let the mirror carry it. Security updates (Dependabot alerts) follow the same path.
+#
+# Updates are grouped and monthly, so they arrive as a few pull requests at a time. Bun package majors are planned work
+# and are ignored; action majors are still proposed (as in Arkenda), since that is how a new action release shows up.
 version: 2
+
 updates:
-  # Root and workspace dependencies (bun.lock, text format, Bun >= 1.1.39)
-  - package-ecosystem: "bun"
-    directory: "/"
+  # The workflows' actions (checkout, setup-bun, github-script, labeler, upload-artifact, codeql).
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
-      interval: "weekly"
-    # Match bunfig.toml `minimumReleaseAge` (3 days) so Dependabot never proposes versions bun refuses to install.
+      interval: monthly
+    open-pull-requests-limit: 5
+    labels: [ci-cd, infra]
+    assignees: [fsegurai]
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ['*']
+
+  # The Bun workspace: root package.json, packages/*/package.json and bun.lock.
+  - package-ecosystem: bun
+    directory: /
+    schedule:
+      interval: monthly
+    # Matches bunfig.toml `minimumReleaseAge` (3 days), so `bun install --frozen-lockfile` accepts the update.
     cooldown:
       default-days: 3
-    labels:
-      - "dependencies"
-    open-pull-requests-limit: 10
-    assignees:
-      - fsegurai
+    open-pull-requests-limit: 5
+    labels: [dependencies, infra]
+    assignees: [fsegurai]
     commit-message:
-      prefix: "chore(deps)"
-      prefix-development: "chore(deps-dev)"
+      prefix: build
     groups:
       codemirror:
-        patterns:
-          - "@codemirror/*"
-          - "@lezer/*"
-        update-types:
-          - "minor"
-          - "patch"
-      dev-dependencies:
-        dependency-type: "development"
-        update-types:
-          - "minor"
-          - "patch"
-      production-dependencies:
-        dependency-type: "production"
-        update-types:
-          - "minor"
-          - "patch"
-
-  # GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "monthly"
-    cooldown:
-      default-days: 3
-    labels:
-      - "ci-cd"
-    open-pull-requests-limit: 5
-    assignees:
-      - fsegurai
-    commit-message:
-      prefix: "ci(actions)"
-    groups:
-      github-actions:
-        patterns:
-          - "*"
+        patterns: ['@codemirror/*', '@lezer/*', 'codemirror']
+      tooling:
+        dependency-type: development
+        patterns: ['*']
+      runtime:
+        dependency-type: production
+        patterns: ['*']
+    ignore:
+      # Majors (CodeMirror, TypeScript, Vite, Biome…) are planned work, never a monthly bump.
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']

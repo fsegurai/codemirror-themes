@@ -7,7 +7,70 @@ to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
-No changes have been made yet.
+---
+
+## [6.32.0] - 2026-11-19
+
+New package `@fsegurai/codemirror-theme-core` (`6.0.0`). Every theme package and the bundle now depend on it, so theme
+packages move to the next minor version (most to `6.4.0`; `catppuccin-mocha`, `cobalt2`, `high-contrast-dark`,
+`high-contrast-light`, `material-ocean` and `synthwave-84` to `6.2.0`) and the bundle to `6.6.0`. Theme exports and
+generated styles are unchanged (the output snapshots of every theme are identical).
+
+> **Release order:** publish `@fsegurai/codemirror-theme-core` before the theme packages and the bundle — their `dist`
+> imports it instead of inlining it, so a theme published first cannot be installed.
+
+### 🚀 Features
+
+- **`@fsegurai/codemirror-theme-core`** — the theme builder is public: `defineTheme`, `ThemeDefinition`, `UiPalette`
+  and the syntax role types, so applications can define a theme with the same complete structure as the published
+  ones. It replaces the identical `theme-core.ts` copied into every theme package; installing several themes now
+  shares one copy.
+- **`cssVariableTheme(options?)`** — one theme whose UI and syntax colors are CSS custom properties with fallbacks
+  (`var(--cm-background, #ffffff)`, `var(--cm-syntax-keyword, #cf222e)`, …), so one extension follows any CSS theme.
+  Options: `prefix` (default `--cm`), `dark` (marks the theme dark and selects dark fallbacks), `variables` (explicit
+  mapping) and `fallbacks`. `cssVariableNames()` lists every variable it reads; the core README documents them.
+- **Bundle** — `@fsegurai/codemirror-theme-bundle` also re-exports `defineTheme`, `cssVariableTheme`,
+  `cssVariableNames` and the theme types.
+- **Docs 6.32.0** — `docs/6.32.0` adds the Core Package and CSS Variable Theme API pages (with every variable), a
+  What's New page, a `css-variables` playground sample, and pins `@fsegurai/codemirror-theme-core` in the playground
+  import map (theme builds import it).
+
+### 🔧 Infrastructure
+
+- `packages/core/src/theme-core.ts` is the single source of the theme structure; `generate:helpers` copies only
+  `utils.ts` (into every theme and the core), and `tests/helpers-sync.test.ts` fails if a `theme-core.ts` copy returns.
+- `generate:bundle` adds the core re-exports and dependency; `generate:readme` keeps the hand-written core README.
+- `tests/playground.test.ts` also fails when a workspace package that a pinned package depends on (the core) has no
+  playground import-map pin.
+- `biome.json` schema migrated to `2.6.8` (`biome migrate --write`); the lint scope is unchanged (`*.md`, `*.yml`,
+  `*.yaml` stay excluded).
+- **manifest-generator 1.2.0** — the docs manifests use `@fsegurai/manifest-generator` `^1.2.0`, exempt from
+  `minimumReleaseAge` as a first-party package; the generated docs output is unchanged.
+- **GitHub workflows** — one layout shared with the other Bun libraries (same jobs, triggers, permissions and
+  concurrency; only the repository's own scripts differ). Every workflow states its purpose, triggers and relation to
+  Azure DevOps (the source repository that mirrors to GitHub); read-only token by default with write scopes only on
+  the job that needs them; `shell: bash` everywhere, so piped commands fail on error (pipefail); `timeout-minutes` on
+  every job; `actions/checkout@v7`, `actions/github-script@v9`, `actions/labeler@v7`, `actions/upload-artifact@v7` and
+  `github/codeql-action@v4`; Bun pinned through `vars.BUN_VERSION` (default `1.4.3`) with `bun install
+  --frozen-lockfile --ignore-scripts`; checkouts without persisted credentials. Results go to job summaries; only
+  `pr_triage.yml` comments on pull requests (labels, assignment, a welcome on `opened`, a Dependabot notice, the
+  modified packages in the description). Dependabot is monthly and grouped, ignores Bun majors (action majors are
+  still proposed), uses `ci`/`build` commit prefixes, and its pull requests are notices to apply in Azure DevOps. The
+  security scan runs CodeQL (`javascript-typescript`) and a reported `bun audit`; the Trivy job is removed because
+  Trivy runs in the Azure DevOps security stage. `test.yml` now runs `bun run test` and `test:types` (it only linted
+  before; lint stays in `checks.yml`). A `theme-core` PR label covers `packages/core`.
+
+### 🔐 Security
+
+- **Update dependencies** — address potential vulnerabilities and/or improvements in development dependencies.
+	- Dependencies
+		- `marked` from `18.2.0` to `18.2.1`
+	- Dev Dependencies
+		- `@biomejs/biome` from `2.6.7` to `2.6.8`
+        - `@types/bun` from `1.4.4` to `1.4.5`
+        - `portless` from `0.17.0` to `0.18.1`
+
+**Full Changelog**: https://github.com/fsegurai/codemirror-themes/compare/v6.31.0...v6.32.0
 
 ---
 
@@ -935,7 +998,9 @@ Theme packages move to the next minor version (most to `6.3.0`; `catppuccin-moch
 
 ---
 
-[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.31.0...HEAD
+[unreleased]: https://github.com/fsegurai/codemirror-themes/compare/v6.32.0...HEAD
+
+[6.32.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.31.0...v6.32.0
 
 [6.31.0]: https://github.com/fsegurai/codemirror-themes/compare/v6.30.6...v6.31.0
 
