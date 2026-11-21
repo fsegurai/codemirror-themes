@@ -6,7 +6,9 @@ import { EditorView } from 'codemirror';
 
 // The bundle re-exports every theme package, so the gallery always shows the themes of this release.
 const themes = Object.entries(bundle)
-  .filter(([name]) => !name.endsWith('MergeStyles') && name !== 'applyMergeRevertStyles')
+  // Helpers (merge styles, `applyMergeRevertStyles`, and functions such as `defineTheme` or `cssVariableTheme`) are not
+  // themes: a theme is an extension value, never a function.
+  .filter(([name, value]) => typeof value !== 'function' && !name.endsWith('MergeStyles'))
   .map(([name, extension]) => ({
     name,
     extension,
